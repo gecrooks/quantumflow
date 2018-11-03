@@ -12,7 +12,9 @@ with respect to the circuit's parameters, and circuits can be optimized to perfo
 using (stochastic) gradient descent. The torch and tensorflow backend can also accelerate the
 quantum simulation using commodity classical GPUs.
 
-guarantee about fixes or responses.
+and PRs but make no guarantee about fixes or responses.
+
+Please refer to the github repository https://github.com/gecrookscomputing/quantumflow for source code, and to submit issues and pull requests. Documentation is hosted at readthedocs https://quantumflow.readthedocs.io/ .
 
 
 .. toctree::
