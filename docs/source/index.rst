@@ -1,9 +1,10 @@
 
-===========
-QuantumFlow
-===========
 
 QuantumFlow: A Quantum Algorithms Development Toolkit
+-----------------------------------------------------
+
+* Code: https://github.com/gecrookscomputing/quantumflow
+* Docs: https://quantumflow.readthedocs.io/
 
 The core of QuantumFlow is a simulation of a gate based quantum computer, which can run  
 on top of modern optimized tensor libraries (numpy, tensorflow, or torch). The 
@@ -12,9 +13,7 @@ with respect to the circuit's parameters, and circuits can be optimized to perfo
 using (stochastic) gradient descent. The torch and tensorflow backend can also accelerate the
 quantum simulation using commodity classical GPUs.
 
-and PRs but make no guarantee about fixes or responses.
 
-Please refer to the github repository https://github.com/gecrookscomputing/quantumflow for source code, and to submit issues and pull requests. Documentation is hosted at readthedocs https://quantumflow.readthedocs.io/ .
 
 
 .. toctree::
