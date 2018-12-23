@@ -3,7 +3,7 @@
 QuantumFlow: A Quantum Algorithms Development Toolkit
 -----------------------------------------------------
 
-* Code: https://github.com/gecrookscomputing/quantumflow
+* Code: https://github.com/gecrooks/quantumflow
 * Docs: https://quantumflow.readthedocs.io/
 
 The core of QuantumFlow is a simulation of a gate based quantum computer, which can run  
