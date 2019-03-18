@@ -59,6 +59,7 @@ def test_gates_to_latex():
     circ += qf.CZ(1, 3)
     circ += qf.SWAP(1, 5)
     circ += qf.ISWAP(4, 2)
+    circ += qf.ISWAP(6, 5)
 
     # circ += qf.Barrier(0, 1, 2, 3, 4, 5, 6)  # Not yet supported
 
@@ -75,16 +76,25 @@ def test_gates_to_latex():
     # circ += qf.Reset()    # FIXME. Should fail with clear error message
 
     circ += qf.XX(0.25, 1, 3)
+    circ += qf.XX(0.25, 1, 2)
     circ += qf.YY(0.75, 1, 3)
     circ += qf.ZZ(1/3, 3, 1)
 
+    circ += qf.CPHASE(0, 1, 2)
+    circ += qf.CPHASE(pi*1/2, 1, 4)
+    circ += qf.CAN(1/3, 1/2, 1/2, 0, 1)
+
+    circ += qf.CAN(1/3, 1/2, 1/2, 2, 4)
+
+    circ += qf.CAN(1/3, 1/2, 1/2, 6, 5)
+
     circ += qf.Measure(0)
 
-    latex = qf.circuit_to_latex(circ)
+    qf.circuit_to_latex(circ)
 
-    print(latex)
+    # latex = qf.circuit_to_latex(circ)
+    # print(latex)
     # qf.render_latex(latex).show()
-
     # qf.circuit_to_image(circ)
 
 
