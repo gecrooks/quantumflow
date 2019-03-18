@@ -456,12 +456,13 @@ class CPHASE(Gate):
 
 class PSWAP(Gate):
     r"""A 2-qubit parametric-swap gate, as defined by Quil.
+    Interpolates between SWAP (theta=0) and iSWAP (theta=pi/2).
 
-    Locally equivalent to ``CAN(1/2, 1/2, t)``
+    Locally equivalent to ``CAN(1/2, 1/2, 1/2 - theta/pi)``
 
     .. math::
         \text{PSWAP}(\theta) \equiv \begin{pmatrix} 1&0&0&0 \\
-        0&0&e^{i\phi}&0 \\ 0&e^{i\phi}&0&0 \\ 0&0&0&1 \end{pmatrix}
+        0&0&e^{i\theta}&0 \\ 0&e^{i\theta}&0&0 \\ 0&0&0&1 \end{pmatrix}
     """
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
