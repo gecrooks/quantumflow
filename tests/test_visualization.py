@@ -62,7 +62,6 @@ def test_gates_to_latex():
     circ += qf.CZ(1, 3)
     circ += qf.SWAP(1, 5)
 
-
     # circ += qf.Barrier(0, 1, 2, 3, 4, 5, 6)  # Not yet supported
 
     circ += qf.CCNOT(1, 2, 3)
