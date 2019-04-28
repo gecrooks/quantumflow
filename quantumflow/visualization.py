@@ -19,9 +19,9 @@ import sympy
 from .qubits import Qubits
 from .gates import P0, P1
 from .stdgates import (I,  # X, Y, Z, H, T, S,
-                       T_H, S_H, RX, RY, RZ, TX, TY,
+                       T_H, S_H, RX, RY, RZ, TX, TY, TH,
                        TZ, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP,
-                       XX, YY, ZZ, CAN, CPHASE)
+                       XX, YY, ZZ, CAN, CPHASE, PSWAP)
 from .stdops import Reset, Measure
 from .utils import symbolize
 from .circuits import Circuit
@@ -36,17 +36,12 @@ __all__ = ('LATEX_GATESET',
 
 # TODO: Should be set of types to match GATESET in stdgates?
 LATEX_GATESET = ['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H', 'RX', 'RY',
-                 'RZ', 'TX', 'TY', 'TZ', 'CNOT', 'CZ', 'SWAP', 'ISWAP',
-                 'CCNOT', 'CSWAP', 'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1',
-                 'RESET']
+                 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT', 'CZ', 'SWAP', 'ISWAP',
+                 'PSWAP', 'CCNOT', 'CSWAP', 'XX', 'YY', 'ZZ', 'CAN',
+                 'P0', 'P1', 'RESET']
 
 # TODO: Gates not yet supported by latex: PISWAP, PHASE ...
 # Possibly convert unsupported gates to displayable gates?
-
-
-class NoWire(I):
-    """A dummy gate for visualization. Draw a gap in the circuit"""
-    pass
 
 
 def circuit_to_latex(circ: Circuit,
@@ -56,7 +51,7 @@ def circuit_to_latex(circ: Circuit,
     Create an image of a quantum circuit in LaTeX.
 
     Can currently draw X, Y, Z, H, T, S, T_H, S_H, RX, RY, RZ, TX, TY, TZ,
-    CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, P0 and P1 gates,
+    TH, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, CAN, P0 and P1 gates,
     and the RESET operation.
 
     Args:
@@ -102,10 +97,7 @@ def circuit_to_latex(circ: Circuit,
 
             name = gate.name
 
-            if isinstance(gate, NoWire):
-                for i in idx:
-                    code[i] = r'\push{ }'
-            elif isinstance(gate, I):
+            if isinstance(gate, I):
                 pass
             elif(len(idx) == 1) and name in ['X', 'Y', 'Z', 'H', 'T', 'S']:
                 code[idx[0]] = r'\gate{' + gate.name + '}'
@@ -131,6 +123,9 @@ def circuit_to_latex(circ: Circuit,
             elif isinstance(gate, TZ):
                 t = _latex_format(gate.params['t'])
                 code[idx[0]] = r'\gate{Z^{%s}}' % t
+            elif isinstance(gate, TH):
+                t = _latex_format(gate.params['t'])
+                code[idx[0]] = r'\gate{H^{%s}}' % t
             elif isinstance(gate, CNOT):
                 code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
                 code[idx[1]] = r'\targ'
@@ -150,7 +145,14 @@ def circuit_to_latex(circ: Circuit,
                 bot = max(idx)
                 code[top], code[bot] = _two_qubit_gate(top, bot, label)
             elif isinstance(gate, CPHASE):
-                label = r'\text{CPHASE}({%s})' % _latex_format(gate.params['theta'])
+                theta = _latex_format(gate.params['theta'])
+                label = r'\text{CPHASE}({%s})' % theta
+                top = min(idx)
+                bot = max(idx)
+                code[top], code[bot] = _two_qubit_gate(top, bot, label)
+            elif isinstance(gate, PSWAP):
+                theta = _latex_format(gate.params['theta'])
+                label = r'\text{PSWAP}({%s})' % theta
                 top = min(idx)
                 bot = max(idx)
                 code[top], code[bot] = _two_qubit_gate(top, bot, label)
