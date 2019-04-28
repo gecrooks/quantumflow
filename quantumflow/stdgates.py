@@ -951,7 +951,6 @@ class ZZ(Gate):
         t:
     """
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
-        t = t % 4
         theta = bk.ccast(pi * t)
         unitary = [[[[bk.cis(-theta / 2), 0], [0, 0]],
                     [[0, bk.cis(theta / 2)], [0, 0]]],
