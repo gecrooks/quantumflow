@@ -297,7 +297,7 @@ def test_gates_evolve():
 
 def test_su():
     su = qf.SWAP(0, 1).su()
-    assert np.linalg.det(su.asoperator()) == ALMOST_ONE
+    assert np.linalg.det(qf.asarray(su.asoperator())) == ALMOST_ONE
 
 
 # TODO: Move elsewhere
