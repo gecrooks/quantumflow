@@ -12,9 +12,9 @@ from itertools import zip_longest
 import numpy as np
 
 from quantumflow import (
-    I, H, X, Y, Z, CNOT, CZ, SWAP, ISWAP, CANONICAL, XX, YY, ZZ, S,
-    CCNOT, RZ, Circuit, ccnot_circuit, gates_close, RX, CPHASE, TZ,
-    CPHASE00, CPHASE10, CPHASE01)
+    I, H, X, Y, Z, CNOT, CZ, SWAP, ISWAP, XX, YY, ZZ, S, CAN,
+    CCNOT, RZ, Circuit, ccnot_circuit, gates_close, RX, CPHASE, TZ, TY,
+    CPHASE00, CPHASE10, CPHASE01, PSWAP)
 
 
 def identities():
@@ -70,6 +70,11 @@ def identities():
     name = "CZ to CNOT"
     circ0 = Circuit([CZ(0, 1)])
     circ1 = Circuit([H(1), CNOT(0, 1), H(1)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CZ to CNOT (2)"
+    circ0 = Circuit([CZ(0, 1)])
+    circ1 = Circuit([TY(+0.5, 1), CNOT(0, 1), TY(-0.5, 1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "SWAP to 3 CNOTs"
@@ -160,23 +165,23 @@ def identities():
 
     name = "Canonical gates: SWAP to Canonical"
     circ0 = Circuit([SWAP(0, 1)])
-    circ1 = Circuit([CANONICAL(0.5, 0.5, 0.5, 0, 1)])
+    circ1 = Circuit([CAN(0.5, 0.5, 0.5, 0, 1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "ISWAP to Canonical"
     circ0 = Circuit([ISWAP(0, 1)])
-    circ1 = Circuit([CANONICAL(0.5, 0.5, 1.0, 0, 1)])
+    circ1 = Circuit([CAN(0.5, 0.5, 1.0, 0, 1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "ISWAP to Canonical in Weyl chamber"
     circ0 = Circuit([ISWAP(0, 1)])
-    circ1 = Circuit([X(0), CANONICAL(0.5, 0.5, 0.0, 0, 1), X(1)])
+    circ1 = Circuit([X(0), CAN(0.5, 0.5, 0.0, 0, 1), X(1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "DCNOT to Canonical"
     circ0 = Circuit([CNOT(0, 1), CNOT(1, 0)])
     circ1 = Circuit([H(0), S(0).H, S(1).H, X(0),
-                     CANONICAL(0.5, 0.5, 0.0, 0, 1), X(1), H(1)])
+                     CAN(0.5, 0.5, 0.0, 0, 1), X(1), H(1)])
     circuit_identities.append([name, circ0, circ1])
 
     # Multi-qubit circuits
@@ -291,6 +296,16 @@ def identities():
     gate = CPHASE10(theta, 0, 1)
     circ0 = Circuit([gate])
     circ1 = cphase10_to_zz(gate)
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "PSWAP to Canonical"
+    gate = PSWAP(theta, 0, 1)
+    t = 0.5 - theta / np.pi
+    circ0 = Circuit([gate])
+    circ1 = Circuit()
+    circ1 += TY(1, 0)
+    circ1 += CAN(0.5, 0.5, t)
+    circ1 += TY(1, 1)
     circuit_identities.append([name, circ0, circ1])
 
     return circuit_identities
