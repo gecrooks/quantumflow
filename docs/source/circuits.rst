@@ -28,16 +28,6 @@ Standard circuits
 .. autofunction:: ghz_circuit
 
 
-Gate decompositions
-###################
-
-.. autofunction:: bloch_decomposition
-.. autofunction:: zyz_decomposition
-.. autofunction:: kronecker_decomposition
-.. autofunction:: canonical_decomposition
-.. autofunction:: canonical_coords
-
-
 Visualizations
 ##############
 
