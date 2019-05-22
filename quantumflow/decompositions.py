@@ -18,7 +18,7 @@ from .qubits import asarray
 from .config import TOLERANCE
 from .gates import Gate
 from .measures import gates_close
-from .stdgates import RN, CANONICAL, TX, TY, TZ, Y, S_H, I
+from .stdgates import RN, CAN, TX, TY, TZ, Y, S_H, I
 from .circuits import Circuit
 
 __all__ = ['bloch_decomposition',
@@ -209,7 +209,7 @@ def canonical_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     """Decompose a 2-qubit gate by removing local 1-qubit gates to leave
     the non-local canonical two-qubit gate. [1]_ [2]_ [3]_ [4]_
 
-    Returns: A Circuit of 5 gates: two initial 1-qubit gates; a CANONICAL
+    Returns: A Circuit of 5 gates: two initial 1-qubit gates; a canonical
     gate, with coordinates in the Weyl chamber; two final 1-qubit gates
 
     The canonical coordinates can be found in circ.elements[2].params
@@ -283,7 +283,7 @@ def canonical_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     K2 = Q @ O2 @ Q_H
 
     assert gates_close(Gate(U), Gate(K1 @ A @ K2))  # Sanity check
-    canon = CANONICAL(coords[0], coords[1], coords[2], 0, 1)
+    canon = CAN(coords[0], coords[1], coords[2], 0, 1)
 
     # Sanity check
     assert gates_close(Gate(A, qubits=gate.qubits), canon, tolerance=1e-4)

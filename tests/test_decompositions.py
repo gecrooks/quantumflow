@@ -125,7 +125,7 @@ def test_canonical_decomposition():
                 circ0 = qf.Circuit()
                 circ0 += qf.ZYZ(0.2, 0.2, 0.2, q0=0)
                 circ0 += qf.ZYZ(0.3, 0.3, 0.3, q0=1)
-                circ0 += qf.CANONICAL(t1, t2, t3, 0, 1)
+                circ0 += qf.CAN(t1, t2, t3, 0, 1)
                 circ0 += qf.ZYZ(0.15, 0.2, 0.3, q0=0)
                 circ0 += qf.ZYZ(0.15, 0.22, 0.3, q0=1)
                 gate0 = circ0.asgate()
@@ -217,10 +217,10 @@ def test_decomp_stdgates():
 
 def test_decomp_sqrtswap_sandwich():
     circ0 = qf.Circuit()
-    circ0 += qf.CANONICAL(1/4, 1/4, 1/4, 0, 1)
+    circ0 += qf.CAN(1/4, 1/4, 1/4, 0, 1)
     circ0 += qf.random_gate([0])
     circ0 += qf.random_gate([1])
-    circ0 += qf.CANONICAL(1/4, 1/4, 1/4, 0, 1)
+    circ0 += qf.CAN(1/4, 1/4, 1/4, 0, 1)
 
     gate0 = circ0.asgate()
     circ1 = qf.canonical_decomposition(gate0)
