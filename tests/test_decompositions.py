@@ -68,6 +68,15 @@ def test_zyz_decomposition():
     assert qf.gates_close(gate0, gate1)
 
 
+def test_euler_decomposition():
+    gate0 = qf.random_gate(1)
+
+    for order in ['XYX', 'XZX', 'YXY', 'YZY', 'ZXZ', 'ZYZ']:
+        circ1 = qf.euler_decomposition(gate0, euler=order)
+        gate1 = circ1.asgate()
+        assert qf.gates_close(gate0, gate1)
+
+
 def test_kronecker_decomposition():
     for _ in range(REPS):
         left = qf.random_gate(1).vec.asarray()
@@ -85,7 +94,10 @@ def test_kronecker_decomposition():
     gate0 = circ.asgate()
     circ1 = qf.kronecker_decomposition(gate0)
     gate1 = circ1.asgate()
+    assert qf.gates_close(gate0, gate1)
 
+    circ1 = qf.kronecker_decomposition(gate0, euler='XYX')
+    gate1 = circ1.asgate()
     assert qf.gates_close(gate0, gate1)
 
 
