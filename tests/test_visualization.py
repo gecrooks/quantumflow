@@ -91,6 +91,8 @@ def test_gates_to_latex():
 
     circ += qf.PSWAP(pi/2, 6, 7)
 
+    circ += qf.visualization.NoWire(0,1,2)
+
     qf.circuit_to_latex(circ)
 
     # latex = qf.circuit_to_latex(circ)
