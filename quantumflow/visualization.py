@@ -16,7 +16,7 @@ import tempfile
 import PIL
 import sympy
 
-from .qubits import Qubits
+from .qubits import Qubits, Qubit
 from .gates import P0, P1
 from .stdgates import (I,  # X, Y, Z, H, T, S,
                        T_H, S_H, RX, RY, RZ, TX, TY, TH,
@@ -42,6 +42,12 @@ LATEX_GATESET = ['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H', 'RX', 'RY',
 
 # TODO: Gates not yet supported by latex: PISWAP, PHASE ...
 # Possibly convert unsupported gates to displayable gates?
+
+
+
+class NoWire(I):
+    """Dummy gate used to draw a gap in a circuit"""
+    pass
 
 
 def circuit_to_latex(circ: Circuit,
@@ -97,8 +103,11 @@ def circuit_to_latex(circ: Circuit,
 
             name = gate.name
 
-            if isinstance(gate, I):
-                pass
+            if isinstance(gate, NoWire):
+                for i in idx:
+                    code[i] = r'\push{ }'
+            elif isinstance(gate, I):
+                pass  
             elif(len(idx) == 1) and name in ['X', 'Y', 'Z', 'H', 'T', 'S']:
                 code[idx[0]] = r'\gate{' + gate.name + '}'
             elif isinstance(gate, S_H):
