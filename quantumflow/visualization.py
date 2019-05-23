@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 
 
-import PIL
+from PIL import Image
 import sympy
 
 from .qubits import Qubits
@@ -269,7 +269,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     return Circuit(layers)
 
 
-def render_latex(latex: str) -> PIL.Image:      # pragma: no cover
+def render_latex(latex: str) -> Image:      # pragma: no cover
     """
     Convert a single page LaTeX document into an image.
 
@@ -308,13 +308,13 @@ def render_latex(latex: str) -> PIL.Image:      # pragma: no cover
                         '-q',
                         tmppath + '.pdf',
                         tmppath])
-        img = PIL.Image.open(tmppath + '.png')
+        img = Image.open(tmppath + '.png')
 
     return img
 
 
 def circuit_to_image(circ: Circuit,
-                     qubits: Qubits = None) -> PIL.Image:   # pragma: no cover
+                     qubits: Qubits = None) -> Image:   # pragma: no cover
     """Create an image of a quantum circuit.
 
     A convenience function that calls circuit_to_latex() and render_latex().
