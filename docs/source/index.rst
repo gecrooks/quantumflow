@@ -29,6 +29,7 @@ quantum simulation using commodity classical GPUs.
       circuits
       decomp
       measures
+      gradients
       programs
       forest   
       backends
