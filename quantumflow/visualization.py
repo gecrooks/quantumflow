@@ -16,7 +16,7 @@ import tempfile
 import PIL
 import sympy
 
-from .qubits import Qubits, Qubit
+from .qubits import Qubits
 from .gates import P0, P1
 from .stdgates import (I,  # X, Y, Z, H, T, S,
                        T_H, S_H, RX, RY, RZ, TX, TY, TH,
@@ -35,14 +35,13 @@ __all__ = ('LATEX_GATESET',
 
 
 # TODO: Should be set of types to match GATESET in stdgates?
-LATEX_GATESET = ['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H', 'RX', 'RY',
-                 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT', 'CZ', 'SWAP', 'ISWAP',
-                 'PSWAP', 'CCNOT', 'CSWAP', 'XX', 'YY', 'ZZ', 'CAN',
-                 'P0', 'P1', 'RESET']
+LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
+                           'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
+                           'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
+                           'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'RESET'])
 
 # TODO: Gates not yet supported by latex: PISWAP, PHASE ...
 # Possibly convert unsupported gates to displayable gates?
-
 
 
 class NoWire(I):
@@ -107,7 +106,7 @@ def circuit_to_latex(circ: Circuit,
                 for i in idx:
                     code[i] = r'\push{ }'
             elif isinstance(gate, I):
-                pass  
+                pass
             elif(len(idx) == 1) and name in ['X', 'Y', 'Z', 'H', 'T', 'S']:
                 code[idx[0]] = r'\gate{' + gate.name + '}'
             elif isinstance(gate, S_H):
