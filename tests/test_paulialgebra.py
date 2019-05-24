@@ -287,9 +287,3 @@ def test_run():
     ket0 = qf.zero_state(3)
     ket1 = s.run(ket0)
     qf.print_state(ket1)
-
-
-
-
-
-
