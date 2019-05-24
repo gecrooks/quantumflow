@@ -87,7 +87,9 @@ class Operation(ABC):
 
     @property
     def tensor(self) -> bk.BKTensor:
-        """Returns the tensor representation of this operastion (if possible)"""
+        """
+        Returns the tensor representation of this operastion (if possible)
+        """
         raise NotImplementedError()         # pragma: no cover
 
 # End class Operation
