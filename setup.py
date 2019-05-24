@@ -30,7 +30,7 @@ setup(
     long_description=long_description,
     license='Apache-2.0',
     maintainer="Gavin Crooks",
-    maintainer_email="gavin@rigetti.com",
+    maintainer_email="gec@threeplusone.com",
     url="https://github.com/gecrooks/quantumflow/",
     classifiers=[
         'Development Status :: 4 - Beta',
