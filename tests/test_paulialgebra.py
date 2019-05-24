@@ -277,3 +277,19 @@ def test_isclose():
     assert qf.paulis_close(x, x)
     assert not qf.paulis_close(x, y)
     assert qf.paulis_close(y, y2)
+
+
+def test_run():
+    x = sX(1)
+    y = sY(2, 1.2)
+    s = x + y
+
+    ket0 = qf.zero_state(3)
+    ket1 = s.run(ket0)
+    qf.print_state(ket1)
+
+
+
+
+
+

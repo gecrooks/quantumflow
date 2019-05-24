@@ -35,7 +35,7 @@ __all__ = ['Operation', 'Gate', 'Channel']
 class Operation(ABC):
     """ An operation on a qubit state. An element of a quantum circuit.
 
-    Abstract Base Class for Gate, Circuit, Channel, and Kraus.
+    Abstract Base Class for Gate, Circuit, Channel, Kraus, and Pauli.
     """
 
     _qubits: Qubits = ()
@@ -83,6 +83,11 @@ class Operation(ABC):
 
         For unitary Gates (and Circuits composed of the same) the
         Hermitian conjugate returns the inverse Gate (or Circuit)"""
+        raise NotImplementedError()         # pragma: no cover
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        """Returns the tensor representation of this operastion (if possible)"""
         raise NotImplementedError()         # pragma: no cover
 
 # End class Operation

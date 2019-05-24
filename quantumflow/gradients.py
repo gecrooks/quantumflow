@@ -10,13 +10,13 @@ from .measures import state_fidelity, state_angle
 from .qubits import asarray
 from .states import State, zero_state
 from .ops import Gate
+from .gates import join_gates
 
 import numpy as np
 from numpy import pi
 import networkx as nx
 
 from .stdgates import RX, RY, RZ, TX, TY, TZ, XX, YY, ZZ, X, Y, Z
-
 
 __all__ = ('GRADIENT_GATESET',
            'state_fidelity_gradients',
@@ -52,17 +52,16 @@ shift_constant = {
         ZZ: pi/2}
 
 
-# For XX, YY, ZZ, these are generators for each qubit.
 gate_generator = {
-        RX: X,
-        RY: Y,
-        RZ: Z,
-        TX: X,
-        TY: Y,
-        TZ: Z,
-        XX: X,
-        YY: Y,
-        ZZ: Z}
+        RX: X(),
+        RY: Y(),
+        RZ: Z(),
+        TX: X(),
+        TY: Y(),
+        TZ: Z(),
+        XX: join_gates(X(0), X(1)),
+        YY: join_gates(Y(0), Y(1)),
+        ZZ: join_gates(Z(0), Z(1))}
 
 
 def state_fidelity_gradients(ket0: State,
@@ -99,12 +98,9 @@ def state_fidelity_gradients(ket0: State,
         if gate_type not in shift_constant:
             raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
         r = shift_constant[gate_type]
-        gen = gate_generator[gate_type]
+        gen = gate_generator[gate_type].relabel(elem.qubits)
 
-        f0 = forward
-        for q in elem.qubits:
-            f0 = gen(q).run(f0)
-
+        f0 = gen.run(forward)
         g = - np.imag(bk.inner(f0.tensor, back.tensor) * r * bk.conj(ol) * 2)
 
         grads.append(g)
