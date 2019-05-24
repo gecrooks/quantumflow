@@ -20,7 +20,10 @@ from numbers import Complex
 
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits
-
+from .ops import Operation
+from .states import State
+from .stdgates import STDGATES
+from . import backend as bk
 
 __all__ = ['PauliTerm', 'Pauli', 'sX', 'sY', 'sZ', 'sI',
            'pauli_sum', 'pauli_product', 'pauli_pow', 'paulis_commute',
@@ -49,7 +52,7 @@ PAULI_PROD = {'ZZ': ('I', 1.0),
 
 
 @total_ordering
-class Pauli:
+class Pauli(Operation):
     """
     An element of the Pauli algebra.
 
@@ -217,6 +220,21 @@ class Pauli:
 
     def __hash__(self) -> int:
         return hash(self.terms)
+
+    # TESTME
+    def run(self, ket: State) -> State:
+        resultants = []
+        for term, coeff in self.terms:
+            # FIXME: Should be able to multiple state by constant
+            # and add States
+            # res = ket * coeff  
+            res = State(ket.tensor * coeff, ket.qubits)
+            for qubit, op in term:
+                res = STDGATES[op](qubit).run(res)
+            resultants.append(res.tensor)
+        
+        out = State(sum(resultants), ket.qubits)
+        return out
 
 # End class Pauli
 
