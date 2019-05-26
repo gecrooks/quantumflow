@@ -49,9 +49,12 @@ class NoWire(I):
     pass
 
 
-def circuit_to_latex(circ: Circuit,
-                     qubits: Qubits = None,
-                     document: bool = True) -> str:
+def circuit_to_latex(
+        circ: Circuit,
+        qubits: Qubits = None,
+        document: bool = True,
+        package: str = 'qcircuit',
+        options: str = None) -> str:
     """
     Create an image of a quantum circuit in LaTeX.
 
@@ -65,6 +68,8 @@ def circuit_to_latex(circ: Circuit,
         document:   If false, just the qcircuit latex is returned. Else the
                     circuit image is wrapped in a standalone LaTeX document
                     ready for typesetting.
+        package:    The LaTeX package used for rendering. Either 'qcircuit'
+                    (default), or 'quantikz'
     Returns:
         A LaTeX string representation of the circuit.
 
@@ -74,7 +79,12 @@ def circuit_to_latex(circ: Circuit,
     Refs:
         LaTeX Qcircuit package
             (https://arxiv.org/pdf/quant-ph/0406003).
+        LaTeX quantikz package
+            (https://arxiv.org/abs/1809.03842).
     """
+
+    assert package in ['qcircuit', 'quantikz']   # FIXME. Exception
+
     if qubits is None:
         qubits = circ.qubits
     N = len(qubits)
@@ -82,16 +92,22 @@ def circuit_to_latex(circ: Circuit,
     layers = _display_layers(circ, qubits)
 
     layer_code = []
-    code = [r'\lstick{' + str(q) + r'}' for q in qubits]
-    layer_code.append(code)
 
     def _two_qubit_gate(top: int, bot: int, label: str) -> Tuple[str, str]:
-        if bot-top == 1:
-            code_top = r'\multigate{1}{%s}' % label
-            code_bot = r'\ghost{%s}' % label
-        else:
-            code_top = r'\sgate{%s}{%s}' % (label, str(bot - top))
-            code_bot = r'\gate{%s}' % (label)
+        if package == 'qcircuit':
+            if bot-top == 1:
+                code_top = r'\multigate{1}{%s}' % label
+                code_bot = r'\ghost{%s}' % label
+            else:
+                code_top = r'\sgate{%s}{%s}' % (label, str(bot - top))
+                code_bot = r'\gate{%s}' % (label)
+        else:  # quantikz
+            if bot-top == 1:
+                code_top = r'\gate[2]{%s}' % label
+                code_bot = r''
+            else:
+                code_top = r'\gate{%s}\vqw{%s}' % (label, str(bot - top))
+                code_bot = r'\gate{%s}' % (label)
         return code_top, code_bot
 
     for layer in layers.elements:
@@ -103,8 +119,12 @@ def circuit_to_latex(circ: Circuit,
             name = gate.name
 
             if isinstance(gate, NoWire):
-                for i in idx:
-                    code[i] = r'\push{ }'
+                if package == 'qcircuit':
+                    for i in idx:
+                        code[i] = r'\push{ }'
+                else:  # quantikz
+                    for i in idx:
+                        code[i] = r''
             elif isinstance(gate, I):
                 pass
             elif(len(idx) == 1) and name in ['X', 'Y', 'Z', 'H', 'T', 'S']:
@@ -136,7 +156,7 @@ def circuit_to_latex(circ: Circuit,
                 code[idx[0]] = r'\gate{H^{%s}}' % t
             elif isinstance(gate, CNOT):
                 code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
-                code[idx[1]] = r'\targ'
+                code[idx[1]] = r'\targ{}'
             elif isinstance(gate, XX):
                 label = r'X\!X^{%s}' % _latex_format(gate.params['t'])
                 top = min(idx)
@@ -168,8 +188,12 @@ def circuit_to_latex(circ: Circuit,
                 code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
                 code[idx[1]] = r'\ctrl{' + str(idx[0] - idx[1]) + '}'
             elif isinstance(gate, SWAP):
-                code[idx[0]] = r'\qswap \qwx[' + str(idx[1] - idx[0]) + ']'
-                code[idx[1]] = r'\qswap'
+                if package == 'qcircuit':
+                    code[idx[0]] = r'\qswap \qwx[' + str(idx[1] - idx[0]) + ']'
+                    code[idx[1]] = r'\qswap'
+                else:  # quantikz
+                    code[idx[0]] = r'\swap{' + str(idx[1] - idx[0]) + '}'
+                    code[idx[1]] = r'\targX{}'
             elif isinstance(gate, CAN):
                 tx = _latex_format(gate.params['tx'])
                 ty = _latex_format(gate.params['ty'])
@@ -186,11 +210,17 @@ def circuit_to_latex(circ: Circuit,
             elif isinstance(gate, CCNOT):
                 code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
                 code[idx[1]] = r'\ctrl{' + str(idx[2]-idx[1]) + '}'
-                code[idx[2]] = r'\targ'
+                code[idx[2]] = r'\targ{}'
             elif isinstance(gate, CSWAP):
-                code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
-                code[idx[1]] = r'\qswap \qwx[' + str(idx[2] - idx[1]) + ']'
-                code[idx[2]] = r'\qswap'
+                if package == 'qcircuit':
+                    code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
+                    code[idx[1]] = r'\qswap \qwx[' + str(idx[2] - idx[1]) + ']'
+                    code[idx[2]] = r'\qswap'
+                else:  # quantikz
+                    # FIXME: Leaves a weird gap in circuit
+                    code[idx[0]] = r'\ctrl{}\vqw{' + str(idx[1]-idx[0]) + '}'
+                    code[idx[1]] = r'\swap{' + str(idx[2] - idx[1]) + '}'
+                    code[idx[2]] = r'\targX{}'
             elif isinstance(gate, P0):
                 code[idx[0]] = r'\push{\ket{0}\!\!\bra{0}} \qw'
             elif isinstance(gate, P1):
@@ -199,7 +229,7 @@ def circuit_to_latex(circ: Circuit,
                 for i in idx:
                     code[i] = r'\push{\rule{0.1em}{0.5em}\, \ket{0}\,} \qw'
             elif isinstance(gate, Measure):
-                code[idx[0]] = r'\meter'
+                code[idx[0]] = r'\meter{}'
             else:
                 raise NotImplementedError(str(gate))
 
@@ -216,15 +246,23 @@ def circuit_to_latex(circ: Circuit,
             latex += r' \\'
         latex_lines[line] = latex
 
-    latex_code = _QCIRCUIT % '\n'.join(latex_lines)
+    if package == 'qcircuit':
+        # TODO: qcircuit options
+        latex_code = _QCIRCUIT % '\n'.join(latex_lines)
+        if document:
+            latex_code = _QCIRCUIT_HEADER + latex_code + _QCIRCUIT_FOOTER
 
-    if document:
-        latex_code = _DOCUMENT_HEADER + latex_code + _DOCUMENT_FOOTER
+    else:  # quantikz
+        if options is None:
+            options = 'thin lines'
+        latex_code = _QUANTIKZ % (options, '\n'.join(latex_lines))
+        if document:
+            latex_code = _QUANTIKZ_HEADER + latex_code + QUANTIKZ_FOOTER_
 
     return latex_code
 
 
-_DOCUMENT_HEADER = r"""
+_QCIRCUIT_HEADER = r"""
 \documentclass[border={20pt 4pt 20pt 4pt}]{standalone}
 \usepackage[braket, qm]{qcircuit}
 \usepackage{amsmath}
@@ -235,7 +273,24 @@ _QCIRCUIT = r"""\Qcircuit @C=1.5em @R=1.5em {
 %s
 }"""
 
-_DOCUMENT_FOOTER = r"""
+_QCIRCUIT_FOOTER = r"""
+\end{document}
+"""
+
+_QUANTIKZ_HEADER = r"""
+\documentclass[border={20pt 4pt 20pt 4pt}]{standalone}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{quantikz}
+\begin{document}
+"""
+
+_QUANTIKZ = r"""\begin{quantikz}[%s]
+%s
+\end{quantikz}
+"""
+
+QUANTIKZ_FOOTER_ = r"""
 \end{document}
 """
 

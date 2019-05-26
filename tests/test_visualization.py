@@ -49,6 +49,7 @@ def test_gates_to_latex():
     circ += qf.TZ(0.4, 2)
     circ += qf.TH(0.5, 3)
     circ += qf.TZ(0.47276, 1)
+
     # Gate with cunning hack
     gate = qf.RZ(0.4, 1)
     gate.params['theta'] = qf.Parameter('\\theta')
@@ -76,12 +77,12 @@ def test_gates_to_latex():
     circ += qf.H(4)
     # circ += qf.Reset()    # FIXME. Should fail with clear error message
 
-    circ += qf.XX(0.25, 1, 3)
+    circ += qf.XX(0.25, 1, 4)
     circ += qf.XX(0.25, 1, 2)
     circ += qf.YY(0.75, 1, 3)
     circ += qf.ZZ(1/3, 3, 1)
 
-    circ += qf.CPHASE(0, 5, 6)
+    circ += qf.CPHASE(0, 0, 1)
     circ += qf.CPHASE(pi*1/2, 0, 4)
 
     circ += qf.CAN(1/3, 1/2, 1/2, 0, 1)
@@ -94,8 +95,15 @@ def test_gates_to_latex():
     circ += qf.visualization.NoWire(0, 1, 2)
 
     qf.circuit_to_latex(circ)
+    qf.circuit_to_latex(circ, package='qcircuit')
+    qf.circuit_to_latex(circ, package='quantikz')
 
-    # latex = qf.circuit_to_latex(circ)
+    # latex = qf.circuit_to_latex(circ, package='qcircuit')
+    # print(latex)
+    # qf.render_latex(latex).show()
+
+    # latex = qf.circuit_to_latex(circ, package='quantikz')
+    # print(latex)
     # qf.render_latex(latex).show()
 
 
@@ -112,4 +120,4 @@ def test_render_latex():
     latex = qf.circuit_to_latex(circ, order)
 
     qf.render_latex(latex)
-    # qf.render_latex(latex).show()
+    qf.render_latex(latex).show()
