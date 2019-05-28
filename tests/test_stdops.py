@@ -180,3 +180,13 @@ def test_comparisions():
     assert ket.memory[('ge', 0)] == 0
     assert ket.memory[('lt', 0)] == 1
     assert ket.memory[('le', 0)] == 1
+
+
+def test_project():
+    ket0 = qf.zero_state([0, 1, 2])
+    ket1 = qf.random_state([2, 3, 4])
+
+    proj = qf.Projection([ket0, ket1])
+    assert proj.qubits == (0, 1, 2, 3, 4)
+
+    assert proj.H is proj

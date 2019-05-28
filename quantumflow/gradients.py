@@ -2,14 +2,14 @@
 """
 QuantumFlow: Gradients of parameterized gates, and gradient descent optimizers
 """
-from typing import Tuple, Sequence
+from typing import Tuple, Sequence, Callable
 
 from .circuits import Circuit
 from . import backend as bk
 from .measures import state_fidelity, state_angle
 from .qubits import asarray
 from .states import State, zero_state
-from .ops import Gate
+from .ops import Operation, Gate
 from .gates import join_gates
 
 import numpy as np
@@ -26,7 +26,8 @@ __all__ = ('GRADIENT_GATESET',
            'Adam',
            'graph_circuit',
            'graph_circuit_params',
-           'fit_state'
+           'fit_state',
+           'expectation_gradients'
            )
 
 
@@ -64,12 +65,65 @@ gate_generator = {
         ZZ: join_gates(Z(0), Z(1))}
 
 
+def expectation_gradients(ket0: State,
+                          circ: Circuit,
+                          hermitian: Operation,
+                          dfunc: Callable[[float], float] = None) \
+        -> Sequence[float]:
+    """
+    Calculate the gradients of a function of expectation for a
+    parameterized quantum circuit, using the middle-out algorithm.
+
+        res = func(<ket0|circ^H [hermitian] circ |ket0>)
+
+    Args:
+        ket0: An initial state.
+        circ: A circuit that acts on the initial state.
+        hermitian: A Hermitian Operation for which the expectation is evaluated
+        dfunc: Derivative of func. Defaults to identity.
+
+    Returns:
+        The gradient with respect to the circuits parameters.
+    """
+    grads = []
+    forward = ket0
+    back = circ.run(ket0)
+    back = hermitian.run(back)
+    back = circ.H.run(back)
+
+    expectation = (bk.inner(forward.tensor, back.tensor))
+
+    for elem in circ.elements:
+        assert isinstance(elem, Gate)
+        back = elem.run(back)
+        forward = elem.run(forward)
+
+        if not elem.params:     # Skip gates with no parameters
+            continue
+
+        gate_type = type(elem)
+        if gate_type not in shift_constant:
+            raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
+        r = shift_constant[gate_type]
+        gen = gate_generator[gate_type].relabel(elem.qubits)
+
+        f0 = gen.run(forward)
+        g = - 2 * r * np.imag(bk.inner(f0.tensor, back.tensor))
+
+        if dfunc is not None:
+            g = g * dfunc(expectation)
+
+        grads.append(g)
+
+    return grads
+
+
 def state_fidelity_gradients(ket0: State,
                              ket1: State,
                              circ: Circuit) -> Sequence[float]:
     """
-    Calculate the gradients of state fideltiy for a parameterized quantum
-    circuit, using the middle-out algprithm.
+    Calculate the gradients of state fidelity for a parameterized quantum
+    circuit, using the middle-out algorithm.
 
     Args:
         ket0: An initial state.
@@ -101,7 +155,7 @@ def state_fidelity_gradients(ket0: State,
         gen = gate_generator[gate_type].relabel(elem.qubits)
 
         f0 = gen.run(forward)
-        g = - np.imag(bk.inner(f0.tensor, back.tensor) * r * bk.conj(ol) * 2)
+        g = - r * 2 * np.imag(bk.inner(f0.tensor, back.tensor) * bk.conj(ol))
 
         grads.append(g)
 
