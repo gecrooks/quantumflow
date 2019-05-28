@@ -74,8 +74,6 @@ def expectation_gradients(ket0: State,
     Calculate the gradients of a function of expectation for a
     parameterized quantum circuit, using the middle-out algorithm.
 
-        res = func(<ket0|circ^H [hermitian] circ |ket0>)
-
     Args:
         ket0: An initial state.
         circ: A circuit that acts on the initial state.
@@ -85,6 +83,7 @@ def expectation_gradients(ket0: State,
     Returns:
         The gradient with respect to the circuits parameters.
     """
+    #  res = func(<ket0|circ^H [hermitian] circ |ket0>)
     grads = []
     forward = ket0
     back = circ.run(ket0)
@@ -196,6 +195,7 @@ def parameter_shift_circuits(circ: Circuit,
     circuits.
 
     .. code-block:: python
+
         r, circ0, circ1 = qf.parameter_shift_circuits(circ, n)
         fid0 = qf.state_fidelity(circ0.run(ket0), ket1)
         fid1 = qf.state_fidelity(circ1.run(ket0), ket1)
@@ -313,13 +313,13 @@ class Adam(object):
 
 def graph_circuit_params(
         graph: nx.Graph,
-        layers: int,
+        steps: int,
         init_bias: float = 0.0,
         init_scale: float = 0.01) -> Sequence[float]:
     """Return a set of initial parameters for graph_circuit()"""
     N = len(graph.nodes())
     K = len(graph.edges())
-    total = N+N*2*(layers+1) + K*layers
+    total = N+N*2*(steps+1) + K*steps
     params = np.random.normal(loc=init_bias, scale=init_scale,
                               size=[total])
 
@@ -328,7 +328,7 @@ def graph_circuit_params(
 
 def graph_circuit(
         graph: nx.Graph,
-        layers: int,
+        steps: int,
         params: Sequence[float],
         ) -> Circuit:
     """
@@ -379,7 +379,7 @@ def graph_circuit(
     circ += tz_layer(graph, params[n:n+N])
     n += N
 
-    for _ in range(layers):
+    for _ in range(steps):
         circ += zz_layer(graph, params[n:n+K])
         n += K
         circ += tx_layer(graph, params[n:n+N])
@@ -391,7 +391,7 @@ def graph_circuit(
 
 
 def fit_state(graph: nx.graph,
-              layers: int,
+              steps: int,
               target_ket: State,
               train_steps: int = 200,
               learning_rate: float = 0.005) -> Circuit:
@@ -400,11 +400,11 @@ def fit_state(graph: nx.graph,
 
     ket0 = zero_state(target_ket.qubits)
     ket1 = target_ket
-    params = graph_circuit_params(graph, layers)
+    params = graph_circuit_params(graph, steps)
     opt = Adam(learning_rate)
 
     for step in range(train_steps):
-        circ = graph_circuit(graph, layers, params)
+        circ = graph_circuit(graph, steps, params)
 
         ang = state_angle(circ.run(ket0), ket1)
         print(step, ang)
