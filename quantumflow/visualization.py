@@ -230,6 +230,26 @@ def circuit_to_latex(
                     code[i] = r'\push{\rule{0.1em}{0.5em}\, \ket{0}\,} \qw'
             elif isinstance(gate, Measure):
                 code[idx[0]] = r'\meter{}'
+            # elif isinstance(gate, Gate) and gate.qubit_nb==1:
+            #     # Generic 1-qubit gate
+            #     name = gate.name
+            #     params = ','.join(_latex_format(val)
+            #                       for val in gate.params.values)
+            #     if params:
+            #         code[idx[0]] = r'\gate{%s(%s)}' % (name, params)
+            #     else:
+            #         code[idx[0]] = r'\gate{%s}' % (name, params)
+            # TODO: Rethink,
+            #   Only makes sence for gates symmetric between qubits?
+            # elif isinstance(gate, Gate) and gate.qubit_nb==2:
+            #     # Generic 2-qubit gate
+            #     label = r'\text{%s}' % gate.name
+            #     if gate.params:
+            #         label += '(' + ','.join(_latex_format(val)
+            #                             for val in gate.params.values()) +')'
+            #     top = min(idx)
+            #     bot = max(idx)
+            #     code[top], code[bot] = _two_qubit_gate(top, bot, label)
             else:
                 raise NotImplementedError(str(gate))
 
