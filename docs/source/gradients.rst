@@ -6,8 +6,7 @@ Gradients
 .. currentmodule:: quantumflow
 
 
-GRADIENT_GATESET
-
+.. autofunction::  	expectation_gradients
 .. autofunction::  	state_fidelity_gradients
 .. autofunction:: 	state_angle_gradients
 .. autofunction::	parameter_shift_circuits
