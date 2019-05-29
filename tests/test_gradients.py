@@ -9,19 +9,6 @@ import quantumflow as qf
 from . import ALMOST_ZERO, tensorflow2_only
 
 
-def test_graph_circuit():
-    graph = nx.grid_graph([2, 3])
-    layers = 8
-
-    params = qf.graph_circuit_params(graph, layers)
-
-    print(params)
-
-    circ = qf.graph_circuit(graph, layers, params)
-
-    print(circ)
-
-
 def test_gradients():
     # This test only checks that code runs, not that we get correct answers
     # graph = nx.grid_graph([2, 3])
@@ -77,18 +64,6 @@ def test_gradient_errors():
 
     with pytest.raises(ValueError):
         qf.expectation_gradients(ket0, circ, qf.I(0, 1))
-
-
-def test_fit_state():
-    graph = nx.grid_graph([2, 3], periodic=True)
-    layers = 4
-    qubits = graph.nodes()
-    target_ket = qf.w_state(qubits)
-
-    circ = qf.gradients.fit_state(graph, layers, target_ket, train_steps=2000)
-    ket1 = circ.run(qf.zero_state(qubits))
-
-    assert qf.state_angle(target_ket, ket1) < 0.05
 
 
 def test_parameter_shift_circuits():

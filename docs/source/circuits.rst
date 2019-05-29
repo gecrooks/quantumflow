@@ -26,6 +26,8 @@ Standard circuits
 .. autofunction:: phase_estimation_circuit
 .. autofunction:: addition_circuit
 .. autofunction:: ghz_circuit
+.. autofunction:: graph_circuit
+.. autofunction:: graph_circuit_params
 
 
 Visualizations
