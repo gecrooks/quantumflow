@@ -103,7 +103,7 @@ def expectation_gradients(ket0: State,
         gen = gate_generator[gate_type].relabel(elem.qubits)
 
         f0 = gen.run(forward)
-        g = - 2 * r * np.imag(bk.inner(f0.tensor, back.tensor))
+        g = - 2 * r * bk.imag(bk.inner(f0.tensor, back.tensor))
 
         if dfunc is not None:
             g = g * dfunc(expectation)
@@ -150,7 +150,7 @@ def state_fidelity_gradients(ket0: State,
         gen = gate_generator[gate_type].relabel(elem.qubits)
 
         f0 = gen.run(forward)
-        g = - r * 2 * np.imag(bk.inner(f0.tensor, back.tensor) * bk.conj(ol))
+        g = - r * 2 * bk.imag(bk.inner(f0.tensor, back.tensor) * bk.conj(ol))
 
         grads.append(g)
 
