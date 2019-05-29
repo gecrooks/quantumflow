@@ -21,7 +21,7 @@ def test_circuit_to_latex():
 
 
 def test_circuit_to_latex_error():
-    circ = qf.Circuit([qf.CPHASE01(0.4, 0, 1)])
+    circ = qf.Circuit([qf.random_gate([0, 1, 2])])
     with pytest.raises(NotImplementedError):
         qf.circuit_to_latex(circ)
 
