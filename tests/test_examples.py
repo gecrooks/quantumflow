@@ -96,3 +96,8 @@ def test_fit_zyz_eager():
 def test_fit_zyz_eager_main():
     rval = subprocess.call(['examples/eager_fit_gate.py'])
     assert rval == 0
+
+
+def test_fit_state():
+    from examples import fit_state
+    fit_state.example_fit_state()

@@ -6,28 +6,24 @@ from typing import Tuple, Sequence, Callable
 
 from .circuits import Circuit
 from . import backend as bk
-from .measures import state_fidelity, state_angle
+from .measures import state_fidelity
 from .qubits import asarray
-from .states import State, zero_state
+from .states import State
 from .ops import Operation, Gate
 from .gates import join_gates
 
 import numpy as np
 from numpy import pi
-import networkx as nx
 
 from .stdgates import RX, RY, RZ, TX, TY, TZ, XX, YY, ZZ, X, Y, Z
 
 __all__ = ('GRADIENT_GATESET',
+           'expectation_gradients',
            'state_fidelity_gradients',
            'state_angle_gradients',
            'parameter_shift_circuits',
            # 'SGD',
            'Adam',
-           'graph_circuit',
-           'graph_circuit_params',
-           'fit_state',
-           'expectation_gradients'
            )
 
 
@@ -310,108 +306,4 @@ class Adam(object):
 
         return new_params
 
-
-def graph_circuit_params(
-        graph: nx.Graph,
-        steps: int,
-        init_bias: float = 0.0,
-        init_scale: float = 0.01) -> Sequence[float]:
-    """Return a set of initial parameters for graph_circuit()"""
-    N = len(graph.nodes())
-    K = len(graph.edges())
-    total = N+N*2*(steps+1) + K*steps
-    params = np.random.normal(loc=init_bias, scale=init_scale,
-                              size=[total])
-
-    return params
-
-
-def graph_circuit(
-        graph: nx.Graph,
-        steps: int,
-        params: Sequence[float],
-        ) -> Circuit:
-    """
-    Create a multilayer parameterized circuit given a graph of connected
-    qubits.
-
-    We alternate beween applying a sublayer of arbitary 1-qubit gates to all
-    qubits, and a sublayer of ZZ gates between all connected qubits.
-
-    In practive the pattern is TZ, TX, TZ, (ZZ, TX, TZ )*, where TZ are
-    1-qubit Z rotations, and TX and 1-qubits X rotations. Since a Z rotation
-    commutes accross a ZZ, we only need one Z sublayer per layer.
-
-    Our fundametnal 2-qubit interaction is the Ising like ZZ gate. We could
-    apply a more general gate, such as the universal Canonical gate. But ZZ
-    gates commute with each other, whereas other choice of gate would not,
-    which would necessitate specifing the order of all 2-qubit gates within
-    the layer.
-    """
-    def tx_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
-        circ = Circuit()
-        for p, q0 in zip(layer_params, graph.nodes()):
-            circ += TX(p, q0)
-        return circ
-
-    def tz_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
-        circ = Circuit()
-        for p, q0 in zip(layer_params, graph.nodes()):
-            circ += TZ(p, q0)
-        return circ
-
-    def zz_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
-        circ = Circuit()
-        for p, (q0, q1) in zip(layer_params, graph.edges()):
-            circ += ZZ(p, q0, q1)
-        return circ
-
-    N = len(graph.nodes())
-    K = len(graph.edges())
-
-    circ = Circuit()
-
-    n = 0
-    circ += tz_layer(graph, params[n:n+N])
-    n += N
-    circ += tx_layer(graph, params[n:n+N])
-    n += N
-    circ += tz_layer(graph, params[n:n+N])
-    n += N
-
-    for _ in range(steps):
-        circ += zz_layer(graph, params[n:n+K])
-        n += K
-        circ += tx_layer(graph, params[n:n+N])
-        n += N
-        circ += tz_layer(graph, params[n:n+N])
-        n += N
-
-    return circ
-
-
-def fit_state(graph: nx.graph,
-              steps: int,
-              target_ket: State,
-              train_steps: int = 200,
-              learning_rate: float = 0.005) -> Circuit:
-    """Use Stocahstic Gradient Descent to train a circuit to
-    generate a particular target state"""
-
-    ket0 = zero_state(target_ket.qubits)
-    ket1 = target_ket
-    params = graph_circuit_params(graph, steps)
-    opt = Adam(learning_rate)
-
-    for step in range(train_steps):
-        circ = graph_circuit(graph, steps, params)
-
-        ang = state_angle(circ.run(ket0), ket1)
-        print(step, ang)
-        grads = state_angle_gradients(ket0, ket1, circ)
-        params = opt.get_update(params, grads)
-
-        if ang < 0.05:
-            break
-
-    return circ
+# Fin
