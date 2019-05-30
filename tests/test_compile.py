@@ -187,11 +187,13 @@ def test_translate_circuit():
 
 
 def test_compile():
-    circ = qf.addition_circuit([0], [1], [2, 3])
-    circ = qf.compile_circuit(circ)
-    assert circ.size() == 76
+    circ0 = qf.addition_circuit([0], [1], [2, 3])
+    circ1 = qf.compile_circuit(circ0)
+    assert qf.circuits_close(circ0, circ1)
 
-    dagc = qf.DAGCircuit(circ)
+    assert circ1.size() == 76
+
+    dagc = qf.DAGCircuit(circ1)
     assert dagc.depth(local=False) == 16
     counts = qf.count_operations(dagc)
     assert counts[qf.TZ] == 27
