@@ -17,14 +17,15 @@ from . import backend as bk
 from .config import TOLERANCE
 from .qubits import Qubits, asarray
 from .qubits import vectors_close, fubini_study_angle
-from .states import State, Density
+from .states import State, Density, random_state
 from .ops import Gate, Channel
+from .circuits import Circuit
 
 __all__ = ['state_fidelity', 'state_angle', 'states_close',
            'purity', 'fidelity', 'bures_distance', 'bures_angle',
            'density_angle', 'densities_close', 'entropy', 'mutual_info',
            'gate_angle', 'channel_angle', 'gates_close', 'channels_close',
-           'diamond_norm']
+           'circuits_close', 'diamond_norm',  'trace_distance']
 
 
 # -- Measures on pure states ---
@@ -54,7 +55,6 @@ def states_close(state0: State, state1: State,
 
 
 # -- Measures on density matrices ---
-
 
 def purity(rho: Density) -> bk.BKTensor:
     """
@@ -178,6 +178,19 @@ def mutual_info(rho: Density,
     return ent0 + ent1 - ent
 
 
+# DOCME TESTME
+def trace_distance(rho0: Density, rho1: Density) -> float:
+    """
+    Compute the trace distance between two mixed states
+    :math:`T(rho_0,rho_1) = (1/2)||rho_0-rho_1||_1`
+
+    Note: Trace distance cannot be calculated within the tensor backend.
+    """
+    op0 = asarray(rho0.asoperator())
+    op1 = asarray(rho1.asoperator())
+    return 0.5 * np.linalg.norm(op0 - op1, 1)
+
+
 # Measures on gates
 
 def gate_angle(gate0: Gate, gate1: Gate) -> bk.BKTensor:
@@ -192,6 +205,26 @@ def gates_close(gate0: Gate, gate1: Gate,
     Closeness is measured with the gate angle.
     """
     return vectors_close(gate0.vec, gate1.vec, tolerance)
+
+
+# Measures on circuits
+def circuits_close(circ0: Circuit, circ1: Circuit,
+                   tolerance: float = TOLERANCE,
+                   reps: int = 16) -> bool:
+    """Returns: True if circuits are (probably) almost identical.
+
+    We check closeness by running multiple ranomd initial states
+    through both circuits and checking hteat the resultant states are close.
+    """
+    qubits = circ0.qubits
+    if qubits != circ1.qubits:
+        return False
+
+    for _ in range(reps):
+        ket = random_state(qubits)
+        if not states_close(circ0.run(ket), circ1.run(ket), tolerance):
+            return False
+    return True
 
 
 # Measures on channels
