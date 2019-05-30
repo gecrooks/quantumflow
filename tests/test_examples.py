@@ -13,6 +13,7 @@ import subprocess
 import quantumflow as qf
 
 from . import ALMOST_ONE, tensorflow_only, tensorflow2_only, eager_only
+from . import skip_torch
 
 
 def test_prepare_w4():
@@ -98,6 +99,7 @@ def test_fit_zyz_eager_main():
     assert rval == 0
 
 
+@skip_torch
 def test_fit_state():
     from examples import fit_state
     fit_state.example_fit_state()
