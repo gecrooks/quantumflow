@@ -184,3 +184,16 @@ def test_translate_circuit():
     assert circ1.size() == 33
 
     circ1 = qf.translate_circuit(circ0, translators, recurse=False)
+
+
+def test_compile():
+    circ = qf.addition_circuit([0], [1], [2, 3])
+    circ = qf.compile_circuit(circ)
+    assert circ.size() == 76
+
+    dagc = qf.DAGCircuit(circ)
+    assert dagc.depth(local=False) == 16
+    counts = qf.count_operations(dagc)
+    assert counts[qf.TZ] == 27
+    assert counts[qf.TX] == 32
+    assert counts[qf.CZ] == 17
