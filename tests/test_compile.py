@@ -180,7 +180,7 @@ def test_translate_circuit():
                    qf.translate_cnot_to_cz]
     circ1 = qf.translate_circuit(circ0, translators)
     print(circ1)
-    qf.circuit_to_image(circ1).show()
+    # qf.circuit_to_image(circ1).show()
     assert circ1.size() == 33
 
     circ1 = qf.translate_circuit(circ0, translators, recurse=False)
