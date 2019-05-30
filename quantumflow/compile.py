@@ -1,24 +1,159 @@
 
 """
-QuantumFlow: Translate gates into equevelnt circuits of more 'elemental' gates.
-
-CSWAP -> CCNOT -> CNOT
-CAN -> (XX, YY, ZZ)
-(XX, YY, PHASE, PHASE00, PHASE01, PHASE11) -> ZZ
-ISWAP -> (SWAP, CNOT)
-SWAP -> CNOT
-CNOT -> CZ <-> ZZ
+QuantumFlow: Translate, transform, and compile circuits.
 """
 
+from typing import Iterable, Callable, Generator, Tuple, Set
 import numpy as np
 
-from quantumflow.circuits import Circuit
-from quantumflow.stdgates import (H, S, S_H, T, T_H, X, Y, Z, TX, TY, TZ,
-                                  RX, RY, RZ, CAN, XX, YY, ZZ, CNOT, CZ,
-                                  ISWAP, CPHASE, CPHASE01, CPHASE10, CPHASE00,
-                                  SWAP, PISWAP, CCNOT, EXCH, CSWAP)
-from quantumflow.circuits import ccnot_circuit
+from .ops import Operation, Gate
+from .circuits import Circuit, ccnot_circuit
+from .stdgates import (H, S, S_H, T, T_H, X, Y, Z, TX, TY, TZ,
+                       RX, RY, RZ, CAN, XX, YY, ZZ, CNOT, CZ,
+                       ISWAP, CPHASE, CPHASE01, CPHASE10, CPHASE00,
+                       SWAP, CCNOT, EXCH, CSWAP)
+from .dagcircuit import DAGCircuit
+from .gates import almost_identity
 
+
+def compile_circuit(circ: Circuit) -> Circuit:
+    """Compile a circuit to standard gate set (CZ, X^0.5, TZ),
+    simplifing circuit where possible.
+    """
+
+    # Convert multi-qubit gates to CZ gates
+    trans = [translate_cswap_to_ccnot,
+             translate_ccnot_to_cnot,
+             translate_cphase_to_zz,
+             translate_cnot_to_cz,
+             translate_t_to_tz,
+             translate_invt_to_tz,
+             translate_zz_to_cnot
+             ]
+    circ = translate_circuit(circ, trans)
+
+    dagc = DAGCircuit(circ)
+    remove_identites(dagc)
+    merge_hadamards(dagc)
+    convert_HZH(dagc)
+
+    # Standardize 1-qubit gates
+    circ = Circuit(dagc)
+    circ = translate_circuit(circ, {translate_hadamard_to_zxz})
+    circ = translate_circuit(circ, {translate_tx_to_zxzxz}, recurse=False)
+
+    # Gather and merge TZ gates
+    dagc = DAGCircuit(circ)
+    retrogress_tz(dagc)
+    merge_tz(dagc)
+    remove_identites(dagc)
+
+    circ = Circuit(dagc)
+
+    return circ
+
+
+def find_pattern(dagc: DAGCircuit,
+                 gateset1: Set[Gate],
+                 gateset2: Set[Gate]
+                 ) -> Generator[Tuple[Gate, Gate], None, None]:
+    """Find where a gate from gateset1 is followed by a gate from gateset2 in
+    a DAGCircuit"""
+    for elem2 in dagc:
+        if type(elem2) not in gateset2:
+            continue
+
+        for q2 in elem2.qubits:
+            elem1 = dagc.prev_element(elem2, q2)
+            if type(elem1) not in gateset1:
+                continue
+            yield (elem1, elem2)
+
+
+def remove_element(dagc: DAGCircuit, elem: Operation) -> None:
+    """Remove a node from a DAGCircuit"""
+
+    for qubit in elem.qubits:
+        prv = dagc.prev_element(elem, qubit)
+        nxt = dagc.next_element(elem, qubit)
+        dagc.graph.add_edge(prv, nxt, key=qubit)
+    dagc.graph.remove_node(elem)
+
+
+def remove_identites(dagc: DAGCircuit) -> None:
+    """Remove identites from a DAGCircuit"""
+    for elem in dagc:
+        if isinstance(elem, Gate) and almost_identity(elem):
+            remove_element(dagc, elem)
+
+
+def merge_hadamards(dagc: DAGCircuit) -> None:
+    """Merge and remove neighbouring Hadamard gates"""
+    for elem1, elem2 in find_pattern(dagc, {H}, {H}):
+        remove_element(dagc, elem1)
+        remove_element(dagc, elem2)
+
+
+def merge_tz(dagc: DAGCircuit) -> None:
+    """Merge neighbouring TZ gates"""
+    for gate0, gate1 in find_pattern(dagc, {TZ}, {TZ}):
+        t = gate0.params['t'] + gate1.params['t']
+        qubit, = gate0.qubits
+        gate = TZ(t, qubit)
+
+        prv = dagc.prev_element(gate0)
+        nxt = dagc.next_element(gate1)
+        dagc.graph.add_edge(prv, gate, key=qubit)
+        dagc.graph.add_edge(gate, nxt, key=qubit)
+
+        dagc.graph.remove_node(gate0)
+        dagc.graph.remove_node(gate1)
+
+
+def retrogress_tz(dagc: DAGCircuit) -> None:
+    """Commute TZ gates as far backward in the circuit as possible"""
+    G = dagc.graph
+    again = True
+    while again:
+        again = False
+        for elem1, elem2 in find_pattern(dagc, {ZZ, CZ}, {TZ}):
+            q, = elem2.qubits
+            elem0 = dagc.prev_element(elem1, q)
+            elem3 = dagc.next_element(elem2, q)
+
+            G.remove_edge(elem0, elem1, q)
+            G.remove_edge(elem1, elem2, q)
+            G.remove_edge(elem2, elem3, q)
+
+            G.add_edge(elem0, elem2, key=q)
+            G.add_edge(elem2, elem1, key=q)
+            G.add_edge(elem1, elem3, key=q)
+            again = True
+
+
+def convert_HZH(dagc: DAGCircuit) -> None:
+    """Convert a sequcen of H-TZ-H gates to a TZ gate"""
+    for elem2, elem3 in find_pattern(dagc, {TZ}, {H}):
+        elem1 = dagc.prev_element(elem2)
+        if not isinstance(elem1, H):
+            continue
+
+        prv = dagc.prev_element(elem1)
+        nxt = dagc.next_element(elem3)
+
+        t = elem2.params['t']
+        q0, = elem2.qubits
+        gate = TX(t, q0)
+
+        dagc.graph.remove_node(elem1)
+        dagc.graph.remove_node(elem2)
+        dagc.graph.remove_node(elem3)
+
+        dagc.graph.add_edge(prv, gate, key=q0)
+        dagc.graph.add_edge(gate, nxt, key=q0)
+
+
+# Translations
 
 def translate_x_to_tx(gate: X) -> Circuit:
     """Translate X gate to TX"""
@@ -61,42 +196,42 @@ def translate_invt_to_tz(gate: T_H) -> Circuit:
     return Circuit([TZ(-0.25, q0)])
 
 
-def translate_rx_to_tx(gate) -> Circuit:
+def translate_rx_to_tx(gate: RX) -> Circuit:
     """Translate RX gate to TX"""
     q0, = gate.qubits
     t = gate.params['theta'] / np.pi
     return Circuit([TX(t, q0)])
 
 
-def translate_ry_to_ty(gate) -> Circuit:
+def translate_ry_to_ty(gate: RY) -> Circuit:
     """Translate RY gate to TY"""
     q0, = gate.qubits
     t = gate.params['theta'] / np.pi
     return Circuit([TY(t, q0)])
 
 
-def translate_rz_to_tz(gate) -> Circuit:
+def translate_rz_to_tz(gate: RZ) -> Circuit:
     """Translate RZ gate to TZ"""
     q0, = gate.qubits
     t = gate.params['theta'] / np.pi
     return Circuit([TZ(t, q0)])
 
 
-def translate_tx_to_rx(gate) -> Circuit:
+def translate_tx_to_rx(gate: TX) -> Circuit:
     """Translate TX gate to RX"""
     q0, = gate.qubits
     theta = gate.params['t'] * np.pi
     return Circuit([RX(theta, q0)])
 
 
-def translate_ty_to_ry(gate) -> Circuit:
+def translate_ty_to_ry(gate: TY) -> Circuit:
     """Translate TY gate to RY"""
     q0, = gate.qubits
     theta = gate.params['t'] * np.pi
     return Circuit([RY(theta, q0)])
 
 
-def translate_tz_to_rz(gate) -> Circuit:
+def translate_tz_to_rz(gate: TZ) -> Circuit:
     """Translate TZ gate to RZ"""
     q0, = gate.qubits
     theta = gate.params['t'] * np.pi
@@ -262,7 +397,7 @@ def translate_zz_to_cnot(gate: ZZ) -> Circuit:
 #     return Circuit([CAN(t, t, 0, q0, q1)])
 
 
-def translate_exch_to_can(gate: EXCH):
+def translate_exch_to_can(gate: EXCH) -> Circuit:
     """Convert an excahnge gate to a canonical based circuit"""
     q0, q1 = gate.qubits
     t = gate.params['t']
@@ -301,7 +436,7 @@ TO_QUIL_GATESET = [
 
 
 def translate_circuit(circ: Circuit,
-                      translators,
+                      translators: Iterable[Callable],
                       recurse: bool = True) -> Circuit:
     """Apply a collection of translatriosn to each gate in circuit.
     If recurse, then apply translations to output of translations until
