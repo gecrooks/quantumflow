@@ -46,7 +46,7 @@ def test_gradients():
     # print(grads3)
 
     for g0, g1 in zip(grads1, grads3):
-        assert g0 - g1 == ALMOST_ZERO
+        assert qf.asarray(g0 - g1) == ALMOST_ZERO
         print(g0, g1)
 
 

@@ -3,7 +3,7 @@
 QuantumFlow: Translate, transform, and compile circuits.
 """
 
-from typing import Iterable, Callable, Generator, Tuple, Set
+from typing import Generator, Tuple, Set, Sequence
 import numpy as np
 
 from .ops import Operation, Gate
@@ -39,8 +39,8 @@ def compile_circuit(circ: Circuit) -> Circuit:
 
     # Standardize 1-qubit gates
     circ = Circuit(dagc)
-    circ = translate_circuit(circ, {translate_hadamard_to_zxz})
-    circ = translate_circuit(circ, {translate_tx_to_zxzxz}, recurse=False)
+    circ = translate_circuit(circ, [translate_hadamard_to_zxz])
+    circ = translate_circuit(circ, [translate_tx_to_zxzxz], recurse=False)
 
     # Gather and merge TZ gates
     dagc = DAGCircuit(circ)
@@ -54,9 +54,9 @@ def compile_circuit(circ: Circuit) -> Circuit:
 
 
 def find_pattern(dagc: DAGCircuit,
-                 gateset1: Set[Gate],
-                 gateset2: Set[Gate]
-                 ) -> Generator[Tuple[Gate, Gate], None, None]:
+                 gateset1: Set,
+                 gateset2: Set,
+                 ) -> Generator[Tuple[Operation, Operation], None, None]:
     """Find where a gate from gateset1 is followed by a gate from gateset2 in
     a DAGCircuit"""
     for elem2 in dagc:
@@ -436,7 +436,7 @@ TO_QUIL_GATESET = [
 
 
 def translate_circuit(circ: Circuit,
-                      translators: Iterable[Callable],
+                      translators: Sequence,
                       recurse: bool = True) -> Circuit:
     """Apply a collection of translatriosn to each gate in circuit.
     If recurse, then apply translations to output of translations until
