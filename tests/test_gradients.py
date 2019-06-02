@@ -36,7 +36,7 @@ def test_gradients():
     # Check that qf.expectation_gradients() gives same answers for
     # fidelity as f.state_fidelity_gradients()
     for g0, g1 in zip(grads0, grads2):
-        assert g0 - g1 == ALMOST_ZERO
+        assert qf.asarray(g0 - g1) == ALMOST_ZERO
         print(g0, g1)
 
     proj = qf.Projection([ket1])

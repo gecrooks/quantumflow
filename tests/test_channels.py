@@ -394,4 +394,16 @@ def test_channel_join():
     assert chan01.qubits == (0, 1)
 
 
+def test_create_channel():
+    gate = qf.RX(0.2, 0)
+    _ = qf.RX(0.2, 0).aschannel()
+
+    params = gate.params
+    qubits = gate.qubits
+    tensor = gate.aschannel().tensor
+    name = "ChanRX"
+
+    _ = qf.Channel(tensor, qubits, params, name)
+
+
 # fin
