@@ -34,6 +34,15 @@ __all__ = [  # noqa: F405
            'EINSUM_SUBSCRIPTS', 'einsum',
            '__version__', '__name__']
 
+# Warning: Using 'sum' as function is weirdly problamatic because of python's
+# built in sum(). We use 'sum' for the backend interface becuase it is part of
+# numpy's conventions. (Tensoflow uses reduce_sum() instead)
+# One problem that can show up randomly is that if you use python's sum()
+# anywhere else in quantuflow, then the line above will start causing
+# typecheck errors. Workaround is to always use np.sum(), and never
+# python's sum. A better solution might be to rename bk.sum().
+
+
 if SEED is not None:               # pragma: no cover
     np_set_random_seed(SEED)
     set_random_seed(SEED)          # noqa: F405
