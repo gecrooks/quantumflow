@@ -18,6 +18,8 @@ import heapq
 from cmath import isclose  # type: ignore
 from numbers import Complex
 
+import numpy as np
+
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits
 
@@ -248,7 +250,7 @@ def pauli_sum(*elements: Pauli) -> Pauli:
 
     key = itemgetter(0)
     for term, grp in groupby(heapq.merge(*elements, key=key), key=key):
-        coeff = sum(g[1] for g in grp)
+        coeff = np.sum(g[1] for g in grp)
         if not isclose(coeff, 0.0):
             terms.append((term, coeff))
 
@@ -312,7 +314,7 @@ def paulis_close(pauli0: Pauli, pauli1: Pauli, tolerance: float = TOLERANCE) \
         -> bool:
     """Returns: True if Pauli elements are almost identical."""
     pauli = pauli0 - pauli1
-    d = sum(abs(coeff)**2 for _, coeff in pauli.terms)
+    d = np.sum(abs(coeff)**2 for _, coeff in pauli.terms)
     return d <= tolerance
 
 
