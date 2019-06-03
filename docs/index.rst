@@ -3,6 +3,8 @@
 QuantumFlow: A Quantum Algorithms Development Toolkit
 -----------------------------------------------------
 
+
+* Release:  |release| (|today|)
 * Code: https://github.com/gecrooks/quantumflow
 * Docs: https://quantumflow.readthedocs.io/
 
@@ -30,9 +32,9 @@ quantum simulation using commodity classical GPUs.
       decomp
       measures
       gradients
-      programs
-      forest   
+      compile
       backends
+      forest      
       examples
 
 

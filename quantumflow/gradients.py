@@ -1,7 +1,23 @@
 
 """
+=========
+Gradients
+=========
+
 QuantumFlow: Gradients of parameterized gates, and gradient descent optimizers
+
+.. contents:: :local:
+.. currentmodule:: quantumflow
+
+
+.. autofunction::   expectation_gradients
+.. autofunction::   state_fidelity_gradients
+.. autofunction::   state_angle_gradients
+.. autofunction::   parameter_shift_circuits
+.. autofunction::   Adam
+
 """
+
 from typing import Tuple, Sequence, Callable
 
 from .circuits import Circuit
