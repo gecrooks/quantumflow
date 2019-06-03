@@ -28,6 +28,7 @@ setup(
 
     description="QuantumFlow: A Quantum Algorithms Development Toolkit",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     license='Apache-2.0',
     maintainer="Gavin Crooks",
     maintainer_email="gec@threeplusone.com",
