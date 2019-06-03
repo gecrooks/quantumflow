@@ -24,7 +24,7 @@ from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import diag_part as diag                        # noqa: F401
 
 from .tensorflowbk import (                                     # noqa: F401
-    rank, sum, ccast, CTYPE, FTYPE, TENSOR, BKTensor, TensorLike, inner,
+    rank, reduce_sum, ccast, CTYPE, FTYPE, TENSOR, BKTensor, TensorLike, inner,
     outer, gpu_available, set_random_seed, cis, arccos, getitem, size,
     productdiag, EINSUM_SUBSCRIPTS, einsum, tensormul)
 
