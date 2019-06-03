@@ -4,8 +4,32 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+
 """
-QuantumFlow States and actions on states.
+QuantumFlow representations of pure quantum states and actions on states.
+
+.. contents:: :local:
+
+State objects
+#############
+.. autoclass:: State
+    :members:
+
+
+Standard states
+###############
+.. autofunction:: zero_state
+.. autofunction:: w_state
+.. autofunction:: ghz_state
+.. autofunction:: random_state
+
+
+Actions on states
+#################
+.. autofunction:: join_states
+.. autofunction:: print_state
+.. autofunction:: print_probabilities
+
 """
 
 from math import sqrt

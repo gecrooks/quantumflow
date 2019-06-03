@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import atexit
+import glob
+import re
+
 import guzzle_sphinx_theme
+
+from quantumflow import __version__
 
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = 'guzzle_sphinx_theme'
@@ -15,8 +21,9 @@ html_sidebars = {
     '**': ['logo-text.html', 'searchbox.html', 'globaltoc.html', ]
 }
 
+
 def setup(app):
-    app.add_stylesheet("qf.css") # also can be a full URL
+    app.add_stylesheet("qf.css")  # also can be a full URL
 
 # -- General configuration ------------------------------------------------
 extensions = [
@@ -27,7 +34,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
-  #  'sphinx_autodoc_typehints',
+    #  'sphinx_autodoc_typehints',
     'sphinx.ext.inheritance_diagram',
     ]
 
@@ -53,7 +60,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'QuantumFlow'
 copyright = """2016-2018, Rigetti Computing<br>
-QuantumFlow: A Quantum Algorithms Development Toolikit, 
+QuantumFlow: A Quantum Algorithms Development Toolikit,
 Gavin E. Crooks (2018)<br>"""
 author = 'Gavin E. Crooks'
 
@@ -62,7 +69,7 @@ author = 'Gavin E. Crooks'
 # built documents.
 #
 # The short X.Y version.
-from quantumflow import __version__
+
 # version = '0.0.0'
 # The full version, including alpha/beta/rc tags.
 release = __version__  # '0.0.0'
@@ -96,12 +103,7 @@ html_theme_options = {
 html_static_path = ['_static']
 
 
-
 # Custom post sphinx substitutions
-import atexit
-import glob
-import os
-import re
 
 
 def do_edits():

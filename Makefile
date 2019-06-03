@@ -30,7 +30,7 @@ typecheck:	## Static typechecking
 
 docs:		## Build documentation
 	(cd docs; make html)
-	open docs/build/html/index.html
+	open docs/_build/html/index.html
 
 doctest:	## Run doctests in documentation
 	(cd docs; make doctest)
