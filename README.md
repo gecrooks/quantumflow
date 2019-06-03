@@ -3,6 +3,8 @@
 
 [![Build Status](https://travis-ci.org/gecrooks/quantumflow.svg?branch=master)](https://travis-ci.org/gecrooks/quantumflow)
 
+QuantumFlow active development fork.
+
 ## Installation for development
 
 It is easiest to install QuantumFlow's requirements using conda.
@@ -20,8 +22,3 @@ cd quantumflow
 pip install -r requirements.txt
 pip install -e .
 ```
-
-
-```
-
-
