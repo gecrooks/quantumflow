@@ -29,6 +29,6 @@ script:
   - QUANTUMFLOW_BACKEND=torch pytest --disable-pytest-warnings
   - flake8 quantumflow examples tests tools setup.py
   - mypy -p quantumflow --ignore-missing-imports
-  - sphinx-build -M html docs/source docs/build
-  - sphinx-build -M doctest docs/source docs/build
+  - sphinx-build -M html docs docs/_build
+  - sphinx-build -M doctest docs docs/_build
 
