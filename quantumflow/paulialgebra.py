@@ -18,8 +18,6 @@ import heapq
 from cmath import isclose  # type: ignore
 from numbers import Complex
 
-import numpy as np
-
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits
 from .ops import Operation
