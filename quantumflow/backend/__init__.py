@@ -40,7 +40,7 @@ __all__ = [  # noqa: F405
            'gpu_available', 'imag', 'inner', 'minimum',
            'outer', 'matmul',
            'rank', 'real', 'reshape', 'set_random_seed', 'sin',
-           'sqrt', 'sum', 'tensormul', 'trace', 'transpose',
+           'sqrt', 'reduce_sum', 'tensormul', 'trace', 'transpose',
            'getitem', 'astensorproduct', 'productdiag',
            'EINSUM_SUBSCRIPTS', 'einsum',
            '__version__', '__name__']

@@ -18,8 +18,9 @@ from numpy import (  # noqa: F401
     sqrt, pi, conj, transpose, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
-    einsum, outer, sum)
+    einsum, outer)
 
+from numpy import sum as reduce_sum                 # noqa: F401
 
 TL = np
 """'TensorLibrary'. The actual imported backend python package

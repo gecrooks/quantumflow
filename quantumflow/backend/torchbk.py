@@ -24,7 +24,7 @@ from numpy import exp, cos, sin, minimum, arccos                # noqa: F401
 
 import torch
 import torch.cuda
-from torch import sum                                           # noqa: F401
+from torch import sum as reduce_sum                             # noqa: F401
 
 
 try:
