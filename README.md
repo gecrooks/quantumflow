@@ -1,7 +1,7 @@
 
 # QuantumFlow: A Quantum Algorithms Development Toolkit
 
-[![Build Status](https://travis-ci.org/gecrooks/quantumflow.svg?branch=master)](https://travis-ci.org/gecrooks/quantumflow) [![Documentation Status](https://readthedocs.org/projects/quantumflow/badge/?version=latest)](https://quantumflow.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/gecrooks/quantumflow-dev.svg?branch=master)](https://travis-ci.org/gecrooks/quantumflow-dev) [![Documentation Status](https://readthedocs.org/projects/quantumflow/badge/?version=latest)](https://quantumflow.readthedocs.io/en/latest/?badge=latest)
 
 
 QuantumFlow active development fork.
