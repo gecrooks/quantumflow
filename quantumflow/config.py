@@ -1,4 +1,3 @@
-
 # Copyright 2016-2018, Rigetti Computing
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
@@ -10,13 +9,9 @@ QuantumFlow Configuration
 
 import os
 import random
-import logging
-
-# TODO:  Device environment variables. Document
-# DOCME: docstrings
 
 
-_PREFIX = 'QUANTUMFLOW_'  # Environment variable prefix
+ENV_PREFIX = 'QUANTUMFLOW_'  # Environment variable prefix
 
 
 # ==== Version number ====
@@ -27,36 +22,13 @@ except ImportError:                           # pragma: no cover
     version = "?.?.?"
 
 
-# ==== Logging Level ====
-# Set logging level (CRITICAL, ERROR, WARNING (default), INFO, DEBUG)
-# https://docs.python.org/3.6/library/logging.html
-
-logging.getLogger('quantumflow').addHandler(logging.StreamHandler())
-_LOGLEVEL = os.getenv(_PREFIX + 'LOG', None)
-if _LOGLEVEL is not None:
-    logging.getLogger('quantumflow').setLevel(_LOGLEVEL)
-
-
-# ==== Tensor Library Backend ====
-
-# FIXME: Should be in backend?
-DEFAULT_BACKEND = 'numpy'
-BACKENDS = ('tensorflow', 'tensorflow2', 'eager', 'torch', 'numpy')
-
-# Environment variable override
-BACKEND = os.getenv(_PREFIX + 'BACKEND', DEFAULT_BACKEND)
-if BACKEND not in BACKENDS:  # pragma: no cover
-    raise ValueError('Unknown backend: {}BACKEND={}'.format(_PREFIX, BACKEND))
-logging.getLogger(__name__).info("QuantumFlow Backend: %s", BACKEND)
-
-
 # ==== TOLERANCE ====
 TOLERANCE = 1e-6
 """Tolerance used in various floating point comparisons"""
 
 
 # ==== Random Seed ====
-_ENVSEED = os.getenv(_PREFIX + 'SEED', None)
+_ENVSEED = os.getenv(ENV_PREFIX + 'SEED', None)
 SEED = int(_ENVSEED) if _ENVSEED is not None else None
 if SEED is not None:
     random.seed(SEED)  # pragma: no cover

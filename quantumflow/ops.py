@@ -35,10 +35,12 @@ __all__ = ['Operation', 'Gate', 'Channel']
 class Operation(ABC):
     """ An operation on a qubit state. An element of a quantum circuit.
 
-    Abstract Base Class for Gate, Circuit, Channel, and Kraus.
+    Abstract Base Class for Gate, Circuit, DAGCircuit, Channel, Kraus,
+    and Pauli.
     """
 
     _qubits: Qubits = ()
+    _params: Dict[str, float] = {}
 
     @property
     def qubits(self) -> Qubits:
@@ -54,6 +56,11 @@ class Operation(ABC):
     def name(self) -> str:
         """Return the name of this operation"""
         return self.__class__.__name__.upper()
+
+    @property
+    def params(self) -> Dict[str, float]:
+        """Return the parameters of this Operation"""
+        return self._params
 
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
@@ -85,6 +92,13 @@ class Operation(ABC):
         Hermitian conjugate returns the inverse Gate (or Circuit)"""
         raise NotImplementedError()         # pragma: no cover
 
+    @property
+    def tensor(self) -> bk.BKTensor:
+        """
+        Returns the tensor representation of this operastion (if possible)
+        """
+        raise NotImplementedError()         # pragma: no cover
+
 # End class Operation
 
 
@@ -114,9 +128,8 @@ class Gate(Operation):
 
         self.vec = QubitVector(tensor, qubits)
 
-        if params is None:
-            params = {}
-        self.params = params
+        if params is not None:
+            self._params = params
 
         if name is None:
             name = self.__class__.__name__
@@ -266,13 +279,14 @@ class Channel(Operation):
     """A quantum channel"""
     def __init__(self, tensor: bk.TensorLike,
                  qubits: Union[int, Qubits],
-                 params: Dict[str, Any] = None,
+                 params: Dict[str, float] = None,
                  name: str = None) -> None:
         _, qubits = qubits_count_tuple(qubits)  # FIXME NEEDED?
 
         self.vec = QubitVector(tensor, qubits)
 
-        self.params = params
+        if params is not None:
+            self._params = params
 
         if name is None:
             name = self.__class__.__name__

@@ -18,11 +18,12 @@ from .qubits import asarray
 from .config import TOLERANCE
 from .gates import Gate
 from .measures import gates_close
-from .stdgates import RN, CANONICAL, TZ, TY
+from .stdgates import RN, CAN, TX, TY, TZ, Y, S_H, I
 from .circuits import Circuit
 
 __all__ = ['bloch_decomposition',
            'zyz_decomposition',
+           'euler_decomposition',
            'kronecker_decomposition',
            'canonical_decomposition',
            'canonical_coords']
@@ -100,6 +101,11 @@ def zyz_decomposition(gate: Gate) -> Circuit:
     t1 = theta1/np.pi
     t2 = theta2/np.pi
 
+    if np.isclose(t1, 0.0):
+        t2 = t0 + t2
+        t1 = 0.0
+        t0 = 0.0
+
     circ1 = Circuit()
     circ1 += TZ(t2, q)
     circ1 += TY(t1, q)
@@ -108,7 +114,48 @@ def zyz_decomposition(gate: Gate) -> Circuit:
     return circ1
 
 
-def kronecker_decomposition(gate: Gate) -> Circuit:
+def euler_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
+    """
+    Returns an Euler angle decomposition of a local 1-qubit gate .
+
+    The 'euler' argument can be used to specify any of the 6  Euler
+    decompositions: 'XYX', 'XZX', 'YXY', 'YZY', 'ZXZ', 'ZYZ' (Default)
+    """
+    if euler == 'ZYZ':
+        return zyz_decomposition(gate)
+
+    euler_circ = {
+        'XYX': (TX, TY, TX),
+        'XZX': (TX, TZ, TX),
+        'YXY': (TY, TX, TY),
+        'YZY': (TY, TZ, TY),
+        'ZXZ': (TZ, TX, TZ),
+        'ZYZ': (TZ, TY, TZ)
+    }
+
+    euler_trans = {
+        'XYX': Y() ** 0.5,
+        'XZX': RN(+2*np.pi/3, np.sqrt(1/3), np.sqrt(1/3), np.sqrt(1/3)),
+        'YXY': RN(-2*np.pi/3, np.sqrt(1/3), np.sqrt(1/3), np.sqrt(1/3)),
+        'YZY': RN(np.pi, 0, np.sqrt(1/2), np.sqrt(1/2)),
+        'ZXZ': S_H(),
+        'ZYZ': I()
+    }
+
+    q = gate.qubits[0]
+    trans = euler_trans[euler].relabel([q])
+    gate = Circuit([trans, gate, trans.H]).asgate()
+    zyz = zyz_decomposition(gate)
+    params = [elem.params['t'] for elem in zyz.elements]    # type: ignore
+    gates = euler_circ[euler]
+    circ = Circuit([gates[0](params[0], q),
+                    gates[1](params[1], q),
+                    gates[2](params[2], q)])
+
+    return circ
+
+
+def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     """
     Decompose a 2-qubit unitary composed of two 1-qubit local gates.
 
@@ -142,8 +189,8 @@ def kronecker_decomposition(gate: Gate) -> Circuit:
         raise ValueError("Gate cannot be decomposed into two 1-qubit gates")
 
     circ = Circuit()
-    circ += zyz_decomposition(g0)
-    circ += zyz_decomposition(g1)
+    circ += euler_decomposition(g0, euler)
+    circ += euler_decomposition(g1, euler)
 
     assert gates_close(gate, circ.asgate())  # Sanity check
 
@@ -158,11 +205,11 @@ def canonical_coords(gate: Gate) -> Sequence[float]:
     return params
 
 
-def canonical_decomposition(gate: Gate) -> Circuit:
+def canonical_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     """Decompose a 2-qubit gate by removing local 1-qubit gates to leave
     the non-local canonical two-qubit gate. [1]_ [2]_ [3]_ [4]_
 
-    Returns: A Circuit of 5 gates: two initial 1-qubit gates; a CANONICAL
+    Returns: A Circuit of 5 gates: two initial 1-qubit gates; a canonical
     gate, with coordinates in the Weyl chamber; two final 1-qubit gates
 
     The canonical coordinates can be found in circ.elements[2].params
@@ -236,18 +283,18 @@ def canonical_decomposition(gate: Gate) -> Circuit:
     K2 = Q @ O2 @ Q_H
 
     assert gates_close(Gate(U), Gate(K1 @ A @ K2))  # Sanity check
-    canon = CANONICAL(coords[0], coords[1], coords[2], 0, 1)
+    canon = CAN(coords[0], coords[1], coords[2], 0, 1)
 
     # Sanity check
     assert gates_close(Gate(A, qubits=gate.qubits), canon, tolerance=1e-4)
 
     # Decompose local gates into the two component 1-qubit gates
     gateK1 = Gate(K1, qubits=gate.qubits)
-    circK1 = kronecker_decomposition(gateK1)
+    circK1 = kronecker_decomposition(gateK1, euler)
     assert gates_close(gateK1, circK1.asgate())  # Sanity check
 
     gateK2 = Gate(K2, qubits=gate.qubits)
-    circK2 = kronecker_decomposition(gateK2)
+    circK2 = kronecker_decomposition(gateK2, euler)
     assert gates_close(gateK2, circK2.asgate())  # Sanity check
 
     # Build and return circuit

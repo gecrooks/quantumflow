@@ -7,6 +7,7 @@
 
 from math import pi
 import numpy as np
+import networkx as nx
 
 import pytest
 
@@ -382,3 +383,16 @@ def test_count():
     circ = qf.addition_circuit([0, 1, 2], [3, 4, 5], [6, 7])
     op_count = qf.count_operations(circ)
     assert op_count == {qf.CNOT: 13, qf.CCNOT: 6}
+
+
+def test_graph_circuit():
+    graph = nx.grid_graph([2, 3])
+    layers = 8
+
+    params = qf.graph_circuit_params(graph, layers)
+
+    print(params)
+
+    circ = qf.graph_circuit(graph, layers, params)
+
+    print(circ)

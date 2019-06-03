@@ -144,7 +144,7 @@ class State:
             probs = bk.real(bk.astensorproduct(self.sample(trials) / trials))
 
         diag_hermitian = bk.astensorproduct(diag_hermitian)
-        return bk.sum(bk.real(diag_hermitian) * probs)
+        return bk.reduce_sum(bk.real(diag_hermitian) * probs)
 
     def measure(self) -> np.ndarray:
         """Measure the state in the computational basis.

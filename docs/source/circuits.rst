@@ -26,16 +26,8 @@ Standard circuits
 .. autofunction:: phase_estimation_circuit
 .. autofunction:: addition_circuit
 .. autofunction:: ghz_circuit
-
-
-Gate decompositions
-###################
-
-.. autofunction:: bloch_decomposition
-.. autofunction:: zyz_decomposition
-.. autofunction:: kronecker_decomposition
-.. autofunction:: canonical_decomposition
-.. autofunction:: canonical_coords
+.. autofunction:: graph_circuit
+.. autofunction:: graph_circuit_params
 
 
 Visualizations

@@ -13,11 +13,14 @@ from math import pi
 from itertools import chain
 from collections import defaultdict
 
+import numpy as np
+import networkx as nx
+
 from .qubits import Qubit, Qubits
 from .states import State, Density, zero_state
 from .ops import Operation, Gate, Channel
 from .gates import control_gate, identity_gate
-from .stdgates import H, CPHASE, SWAP, CNOT, T, X, TY, TZ, CCNOT
+from .stdgates import H, CPHASE, SWAP, CNOT, T, X, TX, TY, TZ, CCNOT, ZZ
 
 __all__ = ['Circuit',
            'count_operations',
@@ -29,7 +32,9 @@ __all__ = ['Circuit',
            'zyz_circuit',
            'phase_estimation_circuit',
            'addition_circuit',
-           'ghz_circuit']
+           'ghz_circuit',
+           'graph_circuit',
+           'graph_circuit_params']
 
 
 class Circuit(Operation):
@@ -368,5 +373,83 @@ def ghz_circuit(qubits: Qubits) -> Circuit:
 
     return circ
 
+
+def graph_circuit_params(
+        graph: nx.Graph,
+        steps: int,
+        init_bias: float = 0.0,
+        init_scale: float = 0.01) -> Sequence[float]:
+    """Return a set of initial parameters for graph_circuit()"""
+    N = len(graph.nodes())
+    K = len(graph.edges())
+    total = N+N*2*(steps+1) + K*steps
+    params = np.random.normal(loc=init_bias, scale=init_scale,
+                              size=[total])
+
+    return params
+
+
+def graph_circuit(
+        graph: nx.Graph,
+        steps: int,
+        params: Sequence[float],
+        ) -> Circuit:
+    """
+    Create a multilayer parameterized circuit given a graph of connected
+    qubits.
+
+    We alternate beween applying a sublayer of arbitary 1-qubit gates to all
+    qubits, and a sublayer of ZZ gates between all connected qubits.
+
+    In practive the pattern is TZ, TX, TZ, (ZZ, TX, TZ )*, where TZ are
+    1-qubit Z rotations, and TX and 1-qubits X rotations. Since a Z rotation
+    commutes accross a ZZ, we only need one Z sublayer per layer.
+
+    Our fundametnal 2-qubit interaction is the Ising like ZZ gate. We could
+    apply a more general gate, such as the universal Canonical gate. But ZZ
+    gates commute with each other, whereas other choice of gate would not,
+    which would necessitate specifing the order of all 2-qubit gates within
+    the layer.
+    """
+    def tx_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
+        circ = Circuit()
+        for p, q0 in zip(layer_params, graph.nodes()):
+            circ += TX(p, q0)
+        return circ
+
+    def tz_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
+        circ = Circuit()
+        for p, q0 in zip(layer_params, graph.nodes()):
+            circ += TZ(p, q0)
+        return circ
+
+    def zz_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
+        circ = Circuit()
+        for p, (q0, q1) in zip(layer_params, graph.edges()):
+            circ += ZZ(p, q0, q1)
+        return circ
+
+    N = len(graph.nodes())
+    K = len(graph.edges())
+
+    circ = Circuit()
+
+    n = 0
+    circ += tz_layer(graph, params[n:n+N])
+    n += N
+    circ += tx_layer(graph, params[n:n+N])
+    n += N
+    circ += tz_layer(graph, params[n:n+N])
+    n += N
+
+    for _ in range(steps):
+        circ += zz_layer(graph, params[n:n+K])
+        n += K
+        circ += tx_layer(graph, params[n:n+N])
+        n += N
+        circ += tz_layer(graph, params[n:n+N])
+        n += N
+
+    return circ
 
 # Fin

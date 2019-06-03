@@ -21,6 +21,7 @@ from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import diag_part as diag                        # noqa: F401
 from tensorflow import einsum, reshape                          # noqa: F401
 from tensorflow.python.client import device_lib
+from tensorflow import reduce_sum                               # noqa: F401
 
 from .numpybk import rank
 from .numpybk import set_random_seed as np_set_random_seed
@@ -108,10 +109,10 @@ def arccos(theta: float) -> BKTensor:
     return tf.acos(theta)
 
 
-def sum(tensor: BKTensor,
-        axis: typing.Union[int, typing.Tuple[int]] = None,
-        keepdims: bool = None) -> BKTensor:
-    return tf.reduce_sum(tensor, axis, keepdims)
+# def sum(tensor: BKTensor,
+#         axis: typing.Union[int, typing.Tuple[int]] = None,
+#         keepdims: bool = None) -> BKTensor:
+#     return tf.reduce_sum(tensor, axis, keepdims)
 
 
 def set_random_seed(seed: int) -> None:

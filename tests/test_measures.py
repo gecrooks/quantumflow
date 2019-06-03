@@ -156,6 +156,16 @@ def test_mutual_info():
     assert np.isclose(info0, info2)
 
 
+def test_trace_distance():
+    rho = qf.random_density(4)
+    assert qf.trace_distance(rho, rho) == ALMOST_ZERO
+
+    rho1 = qf.random_density(4)
+    qf.trace_distance(rho, rho1)
+
+    # TODO: Check distance of known special case
+
+
 def test_diamond_norm():
     # Test cases borrowed from qutip,
     # https://github.com/qutip/qutip/blob/master/qutip/tests/test_metrics.py
@@ -212,4 +222,14 @@ def test_diamond_norm_err():
         chan1 = qf.I(1).aschannel()
         qf.diamond_norm(chan0, chan1)
 
-# fin
+
+def test_circuits_close():
+    circ0 = qf.Circuit([qf.H(0)])
+    circ1 = qf.Circuit([qf.H(2)])
+    assert not qf.circuits_close(circ0, circ1)
+
+    circ2 = qf.Circuit([qf.X(0)])
+    assert not qf.circuits_close(circ0, circ2)
+
+    circ3 = qf.Circuit([qf.H(0)])
+    assert qf.circuits_close(circ0, circ3)
