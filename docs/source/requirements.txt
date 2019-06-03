@@ -1,15 +1,12 @@
 # A slimmed down requirements file for readthedocs
-quantumflow
 numpy
 scipy               >= 1.0.0
 networkx            >= 2.1
 sphinx              >= 1.6.6
-guzzle_sphinx_theme
-pillow
 pillow
 pyquil	            >= 2.0.0b1
-antlr4-python3-runtime
 cvxpy
 sympy
+guzzle_sphinx_theme
 
 
