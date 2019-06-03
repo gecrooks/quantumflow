@@ -24,3 +24,5 @@ datasets/*.png
 datasets/*.npz
 
 devnotes.txt
+
+.ipynb_checkpoints

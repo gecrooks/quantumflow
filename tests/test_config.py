@@ -15,17 +15,3 @@ def test_random_seed():
     code = ('QUANTUMFLOW_SEED=42 python -c "import quantumflow as qf;'
             ' assert qf.config.SEED == 42"')
     assert os.system(code) == 0
-
-
-@skip_windows
-def test_logger():
-
-    cmd = ('QUANTUMFLOW_LOG=INFO python -c \''
-           'import quantumflow as qf;'
-           'import logging;'
-           'logger = logging.getLogger("quantumflow");'
-           'assert logger.level == 20\'')
-
-    print(cmd)
-
-    assert os.system(cmd) == 0

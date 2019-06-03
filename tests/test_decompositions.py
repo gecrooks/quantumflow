@@ -68,6 +68,15 @@ def test_zyz_decomposition():
     assert qf.gates_close(gate0, gate1)
 
 
+def test_euler_decomposition():
+    gate0 = qf.random_gate(1)
+
+    for order in ['XYX', 'XZX', 'YXY', 'YZY', 'ZXZ', 'ZYZ']:
+        circ1 = qf.euler_decomposition(gate0, euler=order)
+        gate1 = circ1.asgate()
+        assert qf.gates_close(gate0, gate1)
+
+
 def test_kronecker_decomposition():
     for _ in range(REPS):
         left = qf.random_gate(1).vec.asarray()
@@ -85,7 +94,10 @@ def test_kronecker_decomposition():
     gate0 = circ.asgate()
     circ1 = qf.kronecker_decomposition(gate0)
     gate1 = circ1.asgate()
+    assert qf.gates_close(gate0, gate1)
 
+    circ1 = qf.kronecker_decomposition(gate0, euler='XYX')
+    gate1 = circ1.asgate()
     assert qf.gates_close(gate0, gate1)
 
 
@@ -113,7 +125,7 @@ def test_canonical_decomposition():
                 circ0 = qf.Circuit()
                 circ0 += qf.ZYZ(0.2, 0.2, 0.2, q0=0)
                 circ0 += qf.ZYZ(0.3, 0.3, 0.3, q0=1)
-                circ0 += qf.CANONICAL(t1, t2, t3, 0, 1)
+                circ0 += qf.CAN(t1, t2, t3, 0, 1)
                 circ0 += qf.ZYZ(0.15, 0.2, 0.3, q0=0)
                 circ0 += qf.ZYZ(0.15, 0.22, 0.3, q0=1)
                 gate0 = circ0.asgate()
@@ -205,10 +217,10 @@ def test_decomp_stdgates():
 
 def test_decomp_sqrtswap_sandwich():
     circ0 = qf.Circuit()
-    circ0 += qf.CANONICAL(1/4, 1/4, 1/4, 0, 1)
+    circ0 += qf.CAN(1/4, 1/4, 1/4, 0, 1)
     circ0 += qf.random_gate([0])
     circ0 += qf.random_gate([1])
-    circ0 += qf.CANONICAL(1/4, 1/4, 1/4, 0, 1)
+    circ0 += qf.CAN(1/4, 1/4, 1/4, 0, 1)
 
     gate0 = circ0.asgate()
     circ1 = qf.canonical_decomposition(gate0)

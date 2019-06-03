@@ -51,7 +51,7 @@ def test_import():
     # Tensor
     assert bk.diag
     assert bk.reshape
-    assert bk.sum
+    assert bk.reduce_sum
     assert bk.matmul
     assert bk.transpose
     assert bk.inner

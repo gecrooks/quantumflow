@@ -82,7 +82,7 @@ One-qubit gates
 
 Two-qubit gates
 ***************
-.. autoclass:: CANONICAL
+.. autoclass:: CAN
 .. autoclass:: XX
 .. autoclass:: YY
 .. autoclass:: ZZ

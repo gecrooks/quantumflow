@@ -13,7 +13,7 @@ are not Gate's or Channel's.
 # Callable and State imported for typing pragmas
 
 from abc import ABCMeta  # Abstract Base Class
-from typing import Callable, Union
+from typing import Callable, Union, Sequence
 from numbers import Number
 import operator
 
@@ -32,7 +32,8 @@ __all__ = ['Measure', 'Reset', 'Barrier', 'If',
            'And', 'Ior', 'Or', 'Xor',
            'Add', 'Mul', 'Sub', 'Div',
            'Move', 'Exchange',
-           'EQ', 'LT', 'GT', 'LE', 'GE', 'NE']
+           'EQ', 'LT', 'GT', 'LE', 'GE', 'NE',
+           'Projection']
 
 
 class Measure(Operation):
@@ -339,3 +340,33 @@ class LE(Comparison):
 class NE(Comparison):
     """Set target to boolean (left!=right)"""
     _op = operator.ne
+
+
+class Projection(Operation):
+    """A projection operator, representated as a sequence of state vectors
+    """
+
+    # TODO: evolve(), asgate(), aschannel()
+
+    def __init__(self,
+                 states: Sequence[State]):
+        self.states = states
+
+    @property
+    def qubits(self) -> Qubits:
+        """Return the qubits that this operation acts upon"""
+        qbs = [q for state in self.states for q in state.qubits]    # gather
+        qbs = list(set(qbs))                                        # unique
+        qbs = sorted(qbs)                                           # sort
+        return tuple(qbs)
+
+    def run(self, ket: State) -> State:
+        """Apply the action of this operation upon a pure state"""
+
+        tensor = sum(state.tensor * bk.inner(state.tensor, ket.tensor)
+                     for state in self.states)
+        return State(tensor, qubits=ket.qubits)
+
+    @property
+    def H(self) -> 'Projection':
+        return self

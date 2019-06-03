@@ -24,6 +24,7 @@ from tensorflow.linalg import diag_part as diag                 # noqa: F401
 from tensorflow.linalg import trace                             # noqa: F401
 from tensorflow import einsum, reshape                          # noqa: F401
 from tensorflow.python.client import device_lib
+from tensorflow import reduce_sum                               # noqa: F401
 
 from .numpybk import rank
 from .numpybk import set_random_seed as np_set_random_seed
@@ -34,6 +35,7 @@ name = TL.__name__
 version = TL.__version__
 
 
+# FIXME: Remove?
 tf.compat.v1.InteractiveSession()             # TESTME: Is this safe to do?
 
 CTYPE = tf.complex128
@@ -45,6 +47,7 @@ TENSOR = tf.Tensor
 MAX_QUBITS = 32
 
 
+# FIXME
 def gpu_available() -> bool:
     local_device_protos = device_lib.list_local_devices()
     gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
@@ -73,6 +76,8 @@ def size(tensor: BKTensor) -> int:
 
 def astensor(array: TensorLike) -> BKTensor:
     """Covert numpy array to tensorflow tensor"""
+    if type(array) == TENSOR:
+        return array
     tensor = tf.convert_to_tensor(value=array, dtype=CTYPE)
     return tensor
 
@@ -111,10 +116,10 @@ def arccos(theta: float) -> BKTensor:
     return tf.acos(theta)
 
 
-def sum(tensor: BKTensor,
-        axis: typing.Union[int, typing.Tuple[int]] = None,
-        keepdims: bool = None) -> BKTensor:
-    return tf.reduce_sum(input_tensor=tensor, axis=axis, keepdims=keepdims)
+# def sum(tensor: BKTensor,
+#         axis: typing.Union[int, typing.Tuple[int]] = None,
+#         keepdims: bool = None) -> BKTensor:
+#     return tf.reduce_sum(input_tensor=tensor, axis=axis, keepdims=keepdims)
 
 
 def set_random_seed(seed: int) -> None:
@@ -134,22 +139,25 @@ def productdiag(tensor: BKTensor) -> BKTensor:
     return tensor
 
 
+# def matmul(tensor0: BKTensor, tensor1: BKTensor):
+#    return tensor0 @ tensor1
+
+
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
               indices: typing.List[int]) -> BKTensor:
     N = rank(tensor1)
     K = rank(tensor0) // 2
     assert K == len(indices)
 
-    gate = reshape(tensor0, [2**K, 2**K])
+    out = list(EINSUM_SUBSCRIPTS[0:N])
+    left_in = list(EINSUM_SUBSCRIPTS[N:N+K])
+    left_out = [out[idx] for idx in indices]
+    right = list(EINSUM_SUBSCRIPTS[0:N])
+    for idx, s in zip(indices, left_in):
+        right[idx] = s
 
-    perm = list(indices) + [n for n in range(N) if n not in indices]
-    inv_perm = np.argsort(perm)
+    subscripts = ''.join(left_out + left_in + [','] + right + ['->'] + out)
+    # print('>>>', K, N, subscripts)
 
-    tensor = tensor1
-    tensor = transpose(tensor, perm)
-    tensor = reshape(tensor, [2**K, 2**(N-K)])
-    tensor = matmul(gate, tensor)
-    tensor = reshape(tensor, [2]*N)
-    tensor = transpose(tensor, inv_perm)
-
+    tensor = einsum(subscripts, tensor0, tensor1)
     return tensor
