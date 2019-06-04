@@ -190,3 +190,5 @@ def test_project():
     assert proj.qubits == (0, 1, 2, 3, 4)
 
     assert proj.H is proj
+
+    assert proj.H is qf.dagger(proj)

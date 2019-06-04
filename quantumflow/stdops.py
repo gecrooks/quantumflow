@@ -3,9 +3,13 @@
 Miscellaneous Operations
 ========================
 
+
+.. currentmodule:: quantumflow
+
 Various standard operations on quantum states, which arn't gates
 or channels.
 
+.. autofunction :: dagger
 .. autoclass :: Measure
 .. autoclass :: Reset
 .. autoclass :: Barrier
@@ -26,7 +30,12 @@ from .gates import P0, P1
 from . import backend as bk
 
 
-__all__ = ['Measure', 'Reset', 'Barrier', 'If', 'Projection']
+__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'If', 'Projection']
+
+
+def dagger(elem: Operation) -> Operation:
+    """Return the complex conjugate of the Operation"""
+    return elem.H
 
 
 class Measure(Operation):
