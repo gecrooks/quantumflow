@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 import quantumflow as qf
-from quantumflow.programs import TARGETS, PC
+from quantumflow.forest.programs import TARGETS, PC
 
 
 def test_empty_program():

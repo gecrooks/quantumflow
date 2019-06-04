@@ -9,4 +9,4 @@ Forest
 Programs
 --------
 
-.. automodule :: quantumflow.programs
+.. automodule :: quantumflow.forest.programs
