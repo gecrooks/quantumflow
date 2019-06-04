@@ -1,0 +1,5 @@
+==============
+Decompositions
+==============
+
+.. automodule :: quantumflow.decompositions
