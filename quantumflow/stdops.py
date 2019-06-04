@@ -1,5 +1,16 @@
 """
-Standard operations on quantum states (which arn't gates or channels).
+========================
+Miscellaneous Operations
+========================
+
+Various standard operations on quantum states, which arn't gates
+or channels.
+
+.. autoclass :: Measure
+.. autoclass :: Reset
+.. autoclass :: Barrier
+.. autoclass :: If
+.. autoclass :: Projection
 """
 
 

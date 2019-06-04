@@ -29,6 +29,7 @@ quantum simulation using commodity classical GPUs.
       gates
       channels
       circuits
+      misc
       decomp
       measures
       gradients

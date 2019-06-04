@@ -5,8 +5,6 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Quantum operations. Transformations of quantum states.
-
 .. contents:: :local:
 .. currentmodule:: quantumflow
 

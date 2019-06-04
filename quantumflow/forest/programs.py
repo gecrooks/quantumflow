@@ -45,8 +45,6 @@ sequence, whereas Programs can contain non-linear control flow.
     assert prog.memory == {0: 0, 1: 1}
 
 
-Programs
-#########
 .. autoclass:: Instruction
     :members:
 
