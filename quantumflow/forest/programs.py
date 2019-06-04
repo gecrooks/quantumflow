@@ -55,7 +55,6 @@ sequence, whereas Programs can contain non-linear control flow.
 .. autoclass:: Wait
 .. autoclass:: Nop
 .. autoclass:: Halt
-.. autoclass:: Reset
 .. autoclass:: And
 .. autoclass:: Or
 .. autoclass:: Move
@@ -66,7 +65,6 @@ sequence, whereas Programs can contain non-linear control flow.
 .. autoclass:: JumpWhen
 .. autoclass:: JumpUnless
 .. autoclass:: Pragma
-.. autoclass:: Measure
 .. autoclass:: Include
 .. autoclass:: Call
 
