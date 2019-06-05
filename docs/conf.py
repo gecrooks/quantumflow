@@ -7,7 +7,14 @@ import re
 
 import guzzle_sphinx_theme
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(".."))
+
 from quantumflow import __version__
+print('__version', __version__)
+
 
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = 'guzzle_sphinx_theme'
