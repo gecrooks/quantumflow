@@ -10,10 +10,13 @@ import guzzle_sphinx_theme
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath(".."))   # noqa: F402
 
 from quantumflow import __version__
 print('__version', __version__)
+
+with open('./_templates/version.html', 'w') as f:
+    f.write('<div align="center">v%s</div>' % __version__)
 
 
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
@@ -25,12 +28,16 @@ html_short_title = "QuantumFlow"
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-    '**': ['logo-text.html', 'searchbox.html', 'globaltoc.html', ]
+    '**': ['logo-text.html',
+           'version.html',
+           'searchbox.html',
+           'globaltoc.html']
 }
 
 
 def setup(app):
     app.add_stylesheet("qf.css")  # also can be a full URL
+
 
 # -- General configuration ------------------------------------------------
 extensions = [
@@ -66,9 +73,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'QuantumFlow'
-copyright = """2016-2018, Rigetti Computing<br>
-QuantumFlow: A Quantum Algorithms Development Toolikit,
-Gavin E. Crooks (2018)<br>"""
+copyright = """2016-2018<br>QuantumFlow: A Quantum Algorithms Development Toolikit,
+<br>v%s<br>"""% __version__
 author = 'Gavin E. Crooks'
 
 # The version info for the project you're documenting, acts as replacement for

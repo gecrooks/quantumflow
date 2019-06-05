@@ -19,9 +19,7 @@ dist
 docs/build
 
 quantumflow/version.py
-
-datasets/*.png
-datasets/*.npz
+docs/_templates/version.html
 
 devnotes.txt
 
