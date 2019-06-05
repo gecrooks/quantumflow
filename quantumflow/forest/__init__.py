@@ -40,11 +40,12 @@ from ..stdgates import STDGATES
 from ..ops import Gate
 from ..stdops import Measure
 from ..circuits import Circuit
-from ..programs import (Program, Wait, Call, Jump, Label, JumpWhen, JumpUnless,
-                        Pragma, Nop, Declare, Halt, Load, Store)
-from ..stdops import (Reset, EQ, LT, LE, GT, GE, Add, Mul, Div, Sub, And,
-                      Exchange, Ior, Move, Neg, Not, Xor)
+from ..stdops import Reset
 from ..visualization import circuit_to_latex, render_latex
+from .programs import (Program, Wait, Call, Jump, Label, JumpWhen, JumpUnless,
+                       Pragma, Nop, Declare, Halt, Load, Store)
+from .programs import (EQ, LT, LE, GT, GE, Add, Mul, Div, Sub, And,
+                       Exchange, Ior, Move, Neg, Not, Xor)
 
 # from pyquil.api._quantum_computer import _get_qvm_compiler_based_on_endpoint
 

@@ -45,8 +45,6 @@ sequence, whereas Programs can contain non-linear control flow.
     assert prog.memory == {0: 0, 1: 1}
 
 
-Programs
-#########
 .. autoclass:: Instruction
     :members:
 
@@ -57,7 +55,6 @@ Programs
 .. autoclass:: Wait
 .. autoclass:: Nop
 .. autoclass:: Halt
-.. autoclass:: Reset
 .. autoclass:: And
 .. autoclass:: Or
 .. autoclass:: Move
@@ -68,7 +65,6 @@ Programs
 .. autoclass:: JumpWhen
 .. autoclass:: JumpUnless
 .. autoclass:: Pragma
-.. autoclass:: Measure
 .. autoclass:: Include
 .. autoclass:: Call
 
@@ -77,21 +73,18 @@ Programs
 
 # Callable and State imported for typing pragmas
 
-from typing import List, Generator, Dict, Union, Tuple
-from abc import ABC  # Abstract Base Class
+from typing import List, Generator, Dict, Union, Tuple, Callable
+from abc import ABCMeta, ABC  # Abstract Base Class
+from numbers import Number
+import operator
 
-# import numpy as np
-
-# import sympy
 from sympy import Symbol as Parameter
 
-from .cbits import Addr, Register
-from .qubits import Qubits
-from .states import zero_state, State, Density
-# from .ops import Gate
-from .stdgates import STDGATES
-# from .utils import symbolize
-# from .backend import TensorLike
+from ..ops import Operation
+from ..cbits import Addr, Register
+from ..qubits import Qubits
+from ..states import zero_state, State, Density
+from ..stdgates import STDGATES
 
 
 __all__ = ['Instruction', 'Program', 'DefCircuit', 'Wait',
@@ -103,8 +96,12 @@ __all__ = ['Instruction', 'Program', 'DefCircuit', 'Wait',
            'Load', 'Store',
            'Parameter',
            # 'DefGate', 'quil_parameter', 'eval_parameter'
+           'Neg', 'Not',
+           'And', 'Ior', 'Or', 'Xor',
+           'Add', 'Mul', 'Sub', 'Div',
+           'Move', 'Exchange',
+           'EQ', 'LT', 'GT', 'LE', 'GE', 'NE',
            ]
-
 
 # Private register used to store program state
 _prog_state_ = Register('_prog_state_')
@@ -590,6 +587,177 @@ class Declare(Instruction):
         reg = Register(self.memory_name, self.memory_type)
         mem = {reg[idx]: 0 for idx in range(self.memory_size)}
         return ket.update(mem)
+
+
+class Neg(Operation):
+    """Negate value stored in classical memory."""
+    def __init__(self, target: Addr) -> None:
+        self.target = target
+        self.addresses = [target]
+
+    def run(self, ket: State) -> State:
+        return ket.update({self.target: - ket.memory[self.target]})
+
+    def quil(self) -> str:
+        return '{} {}'.format(self.name.upper(), self.target)
+
+
+class Not(Operation):
+    """Take logical Not of a classical bit."""
+    def __init__(self, target: Addr) -> None:
+        self.target = target
+
+    def run(self, ket: State) -> State:
+        res = int(not ket.memory[self.target])
+        return ket.update({self.target: res})
+
+    def quil(self) -> str:
+        return '{} {}'.format(self.name.upper(), self.target)
+
+
+# Binary classical operations
+
+class BinaryOP(Operation, metaclass=ABCMeta):
+    _op: Callable
+
+    """Abstract Base Class for operations between two classical addresses"""
+    def __init__(self, target: Addr, source: Union[Addr, Number]) -> None:
+        self.target = target
+        self.source = source
+
+    def _source(self, state: State) -> Union[Addr, Number]:
+        if isinstance(self.source, Addr):
+            return state.memory[self.source]
+        return self.source
+
+    def quil(self) -> str:
+        return '{} {} {}'.format(self.name.upper(), self.target, self.source)
+
+    def run(self, ket: State) -> State:
+        target = ket.memory[self.target]
+        if isinstance(self.source, Addr):
+            source = ket.memory[self.source]
+        else:
+            source = self.source
+
+        print(target, source)
+        res = self._op(target, source)
+        ket = ket.update({self.target: res})
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        res = self.run(rho)
+        assert isinstance(res, Density)  # Make type checker happy
+        return res
+
+
+class And(BinaryOP):
+    """Classical logical And of two addresses. Result placed in target"""
+    _op = operator.and_
+
+
+class Ior(BinaryOP):
+    """Take logical inclusive-or of two classical bits, and place result
+    in first bit."""
+    _op = operator.or_
+
+
+class Or(BinaryOP):
+    """Take logical inclusive-or of two classical bits, and place result
+    in first bit. (Deprecated in quil. Use Ior instead."""
+    _op = operator.or_
+
+
+class Xor(BinaryOP):
+    """Take logical exclusive-or of two classical bits, and place result
+    in first bit.
+    """
+    _op = operator.xor
+
+
+class Add(BinaryOP):
+    """Add two classical values, and place result in target."""
+    _op = operator.add
+
+
+class Sub(BinaryOP):
+    """Add two classical values, and place result in target."""
+    _op = operator.sub
+
+
+class Mul(BinaryOP):
+    """Add two classical values, and place result in target."""
+    _op = operator.mul
+
+
+class Div(BinaryOP):
+    """Add two classical values, and place result in target."""
+    _op = operator.truediv
+
+
+class Move(BinaryOP):
+    """Copy left classical bit to right classical bit"""
+    def run(self, ket: State) -> State:
+        return ket.update({self.target: self._source(ket)})
+
+
+class Exchange(BinaryOP):
+    """Exchange two classical bits"""
+    def run(self, ket: State) -> State:
+        assert isinstance(self.source, Addr)
+        return ket.update({self.target: ket.memory[self.source],
+                           self.source: ket.memory[self.target]})
+
+
+# Comparisons
+
+class Comparison(Operation, metaclass=ABCMeta):
+    """Abstract Base Class for classical comparisons"""
+    _op: Callable
+
+    def __init__(self, target: Addr, left: Addr, right: Addr) -> None:
+        self.target = target
+        self.left = left
+        self.right = right
+
+    def quil(self) -> str:
+        return '{} {} {} {}'.format(self.name, self.target,
+                                    self.left, self.right)
+
+    def run(self, ket: State) -> State:
+        res = self._op(ket.memory[self.left], ket.memory[self.right])
+        ket = ket.update({self.target: res})
+        return ket
+
+
+class EQ(Comparison):
+    """Set target to boolean (left==right)"""
+    _op = operator.eq
+
+
+class GT(Comparison):
+    """Set target to boolean (left>right)"""
+    _op = operator.gt
+
+
+class GE(Comparison):
+    """Set target to boolean (left>=right)"""
+    _op = operator.ge
+
+
+class LT(Comparison):
+    """Set target to boolean (left<right)"""
+    _op = operator.lt
+
+
+class LE(Comparison):
+    """Set target to boolean (left<=right)"""
+    _op = operator.le
+
+
+class NE(Comparison):
+    """Set target to boolean (left!=right)"""
+    _op = operator.ne
 
 
 # ==== UTILITIES ====

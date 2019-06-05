@@ -112,8 +112,9 @@ def do_edits():
             # Hacks to shorten type descriptors
             (r'quantumflow\.qubits', r'qf'),
             (r'quantumflow\.ops', r'qf'),
+            (r'quantumflow\.stdops', r'qf'),
             (r'quantumflow\.gates', r'qf'),
-
+            (r'quantumflow\.cbits', r'qf'),
             (r'quantumflow\.stdgates', r'qf'),
             (r'quantumflow\.states', r'qf'),
             (r'quantumflow\.circuits', r'qf'),

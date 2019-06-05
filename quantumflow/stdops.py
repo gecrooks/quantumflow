@@ -1,21 +1,24 @@
-
-
-# Copyright 2016-2018, Rigetti Computing
-#
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
-
 """
-QuantumFlow: Classical and hybrid quantum-classical operations. (That
-are not Gate's or Channel's.
+========================
+Miscellaneous Operations
+========================
+
+
+.. currentmodule:: quantumflow
+
+Various standard operations on quantum states, which arn't gates
+or channels.
+
+.. autofunction :: dagger
+.. autoclass :: Measure
+.. autoclass :: Reset
+.. autoclass :: Barrier
+.. autoclass :: If
+.. autoclass :: Projection
 """
 
-# Callable and State imported for typing pragmas
 
-from abc import ABCMeta  # Abstract Base Class
-from typing import Callable, Union, Sequence
-from numbers import Number
-import operator
+from typing import Sequence
 
 import numpy as np
 
@@ -27,13 +30,12 @@ from .gates import P0, P1
 from . import backend as bk
 
 
-__all__ = ['Measure', 'Reset', 'Barrier', 'If',
-           'Neg', 'Not',
-           'And', 'Ior', 'Or', 'Xor',
-           'Add', 'Mul', 'Sub', 'Div',
-           'Move', 'Exchange',
-           'EQ', 'LT', 'GT', 'LE', 'GE', 'NE',
-           'Projection']
+__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'If', 'Projection']
+
+
+def dagger(elem: Operation) -> Operation:
+    """Return the complex conjugate of the Operation"""
+    return elem.H
 
 
 class Measure(Operation):
@@ -167,179 +169,6 @@ class If(Operation):
         if rho.memory[self.condition] == self.value:
             rho = self.element.evolve(rho)
         return rho
-
-
-# Classical operations
-
-class Neg(Operation):
-    """Negate value stored in classical memory."""
-    def __init__(self, target: Addr) -> None:
-        self.target = target
-        self.addresses = [target]
-
-    def run(self, ket: State) -> State:
-        return ket.update({self.target: - ket.memory[self.target]})
-
-    def quil(self) -> str:
-        return '{} {}'.format(self.name.upper(), self.target)
-
-
-class Not(Operation):
-    """Take logical Not of a classical bit."""
-    def __init__(self, target: Addr) -> None:
-        self.target = target
-
-    def run(self, ket: State) -> State:
-        res = int(not ket.memory[self.target])
-        return ket.update({self.target: res})
-
-    def quil(self) -> str:
-        return '{} {}'.format(self.name.upper(), self.target)
-
-
-# Binary classical operations
-
-class BinaryOP(Operation, metaclass=ABCMeta):
-    _op: Callable
-
-    """Abstract Base Class for operations between two classical addresses"""
-    def __init__(self, target: Addr, source: Union[Addr, Number]) -> None:
-        self.target = target
-        self.source = source
-
-    def _source(self, state: State) -> Union[Addr, Number]:
-        if isinstance(self.source, Addr):
-            return state.memory[self.source]
-        return self.source
-
-    def quil(self) -> str:
-        return '{} {} {}'.format(self.name.upper(), self.target, self.source)
-
-    def run(self, ket: State) -> State:
-        target = ket.memory[self.target]
-        if isinstance(self.source, Addr):
-            source = ket.memory[self.source]
-        else:
-            source = self.source
-
-        print(target, source)
-        res = self._op(target, source)
-        ket = ket.update({self.target: res})
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        res = self.run(rho)
-        assert isinstance(res, Density)  # Make type checker happy
-        return res
-
-
-class And(BinaryOP):
-    """Classical logical And of two addresses. Result placed in target"""
-    _op = operator.and_
-
-
-class Ior(BinaryOP):
-    """Take logical inclusive-or of two classical bits, and place result
-    in first bit."""
-    _op = operator.or_
-
-
-class Or(BinaryOP):
-    """Take logical inclusive-or of two classical bits, and place result
-    in first bit. (Deprecated in quil. Use Ior instead."""
-    _op = operator.or_
-
-
-class Xor(BinaryOP):
-    """Take logical exclusive-or of two classical bits, and place result
-    in first bit.
-    """
-    _op = operator.xor
-
-
-class Add(BinaryOP):
-    """Add two classical values, and place result in target."""
-    _op = operator.add
-
-
-class Sub(BinaryOP):
-    """Add two classical values, and place result in target."""
-    _op = operator.sub
-
-
-class Mul(BinaryOP):
-    """Add two classical values, and place result in target."""
-    _op = operator.mul
-
-
-class Div(BinaryOP):
-    """Add two classical values, and place result in target."""
-    _op = operator.truediv
-
-
-class Move(BinaryOP):
-    """Copy left classical bit to right classical bit"""
-    def run(self, ket: State) -> State:
-        return ket.update({self.target: self._source(ket)})
-
-
-class Exchange(BinaryOP):
-    """Exchange two classical bits"""
-    def run(self, ket: State) -> State:
-        assert isinstance(self.source, Addr)
-        return ket.update({self.target: ket.memory[self.source],
-                           self.source: ket.memory[self.target]})
-
-
-# Comparisons
-
-class Comparison(Operation, metaclass=ABCMeta):
-    """Abstract Base Class for classical comparisons"""
-    _op: Callable
-
-    def __init__(self, target: Addr, left: Addr, right: Addr) -> None:
-        self.target = target
-        self.left = left
-        self.right = right
-
-    def quil(self) -> str:
-        return '{} {} {} {}'.format(self.name, self.target,
-                                    self.left, self.right)
-
-    def run(self, ket: State) -> State:
-        res = self._op(ket.memory[self.left], ket.memory[self.right])
-        ket = ket.update({self.target: res})
-        return ket
-
-
-class EQ(Comparison):
-    """Set target to boolean (left==right)"""
-    _op = operator.eq
-
-
-class GT(Comparison):
-    """Set target to boolean (left>right)"""
-    _op = operator.gt
-
-
-class GE(Comparison):
-    """Set target to boolean (left>=right)"""
-    _op = operator.ge
-
-
-class LT(Comparison):
-    """Set target to boolean (left<right)"""
-    _op = operator.lt
-
-
-class LE(Comparison):
-    """Set target to boolean (left<=right)"""
-    _op = operator.le
-
-
-class NE(Comparison):
-    """Set target to boolean (left!=right)"""
-    _op = operator.ne
 
 
 class Projection(Operation):

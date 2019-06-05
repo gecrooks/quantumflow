@@ -5,8 +5,6 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Quantum operations. Transformations of quantum states.
-
 .. contents:: :local:
 .. currentmodule:: quantumflow
 
@@ -65,7 +63,7 @@ class Operation(ABC):
     """
 
     _qubits: Qubits = ()
-    _params: Dict[str, float] = {}
+    _params: Dict[str, float] = {}  # FIXME: Broken, class variable
 
     @property
     def qubits(self) -> Qubits:

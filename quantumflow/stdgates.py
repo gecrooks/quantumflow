@@ -79,6 +79,8 @@ One-qubit gates
 .. autoclass:: ZYZ
 .. autoclass:: P0
 .. autoclass:: P1
+.. autoclass:: SX
+.. autoclass:: SX_H
 
 
 
@@ -90,13 +92,26 @@ Two-qubit gates
 .. autoclass:: ZZ
 .. autoclass:: PISWAP
 .. autoclass:: EXCH
-
+.. autoclass:: BARENCO
+.. autoclass:: CY
+.. autoclass:: CH
 
 
 Multi-qubit gates
 *****************
 .. autofunction:: identity_gate
 .. autofunction:: random_gate
+
+
+QASM GATES
+**********
+.. autoclass::  U3
+.. autoclass::  U2
+.. autoclass::  U1
+.. autoclass::  U0
+.. autoclass::  CU3
+.. autoclass::  CRZ
+.. autoclass::  RZZ
 
 
 """
