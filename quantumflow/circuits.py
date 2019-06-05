@@ -253,6 +253,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
         if isinstance(gate, X):
             circ += CNOT(q0, gate.qubits[0])
         else:
+            # FIXME: would be better to return circuit
             cgate = control_gate(q0, gate)
             circ += cgate
     else:

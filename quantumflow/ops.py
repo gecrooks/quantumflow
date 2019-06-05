@@ -63,7 +63,7 @@ class Operation(ABC):
     """
 
     _qubits: Qubits = ()
-    _params: Dict[str, float] = {}
+    _params: Dict[str, float] = {}  # FIXME: Broken, class variable
 
     @property
     def qubits(self) -> Qubits:
