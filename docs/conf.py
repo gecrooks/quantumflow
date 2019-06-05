@@ -7,12 +7,9 @@ import re
 
 import guzzle_sphinx_theme
 
-import os
-import sys
 
-sys.path.insert(0, os.path.abspath(".."))   # noqa: F402
-
-from quantumflow import __version__
+from setuptools_scm import get_version
+__version__ = get_version(root='..', relative_to=__file__)
 print('__version', __version__)
 
 with open('./_templates/version.html', 'w') as f:
