@@ -17,6 +17,7 @@ pillow
 pyquil	            >= 2.0.0b1
 cvxpy
 sympy
+setuptools_scm
 
 # Needed for document generation, but not installable via conda
 #	guzzle_sphinx_theme			
