@@ -7,10 +7,18 @@ import re
 
 import guzzle_sphinx_theme
 
-
 from setuptools_scm import get_version
+
+import os
+import sys
+
+
+sys.path.insert(0, os.path.abspath(".."))
+import quantumflow
+
+
 __version__ = get_version(root='..', relative_to=__file__)
-print('__version', __version__)
+print('__version__', __version__)
 
 with open('./_templates/version.html', 'w') as f:
     f.write('<div align="center">v%s</div>' % __version__)
