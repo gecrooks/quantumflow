@@ -21,6 +21,6 @@ docs/build
 quantumflow/version.py
 docs/_templates/version.html
 
-devnotes.txt
+devnotes*.txt
 
 .ipynb_checkpoints
