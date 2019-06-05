@@ -97,10 +97,10 @@ class CY(Gate):
     """
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         qubits = [q0, q1]
-        unitary = [[1, 0, 0, 0],
-                   [0, 1, 0, 0],
-                   [0, 0, 0, -1j],
-                   [0, 0, 1j, 0]]
+        unitary = np.asarray([[1, 0, 0, 0],
+                              [0, 1, 0, 0],
+                              [0, 0, 0, -1j],
+                              [0, 0, 1j, 0]])
         super().__init__(unitary, qubits)
 
     @property
