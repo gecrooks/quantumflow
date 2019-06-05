@@ -19,10 +19,8 @@ dist
 docs/build
 
 quantumflow/version.py
+docs/_templates/version.html
 
-datasets/*.png
-datasets/*.npz
-
-devnotes.txt
+devnotes*.txt
 
 .ipynb_checkpoints

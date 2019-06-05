@@ -6,6 +6,8 @@
 
 QuantumFlow active development fork.
 
+[Documentation](https://quantumflow.readthedocs.io/en/latest/)
+
 ## Installation for development
 
 It is easiest to install QuantumFlow's requirements using conda.
