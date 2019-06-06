@@ -6,9 +6,6 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-=============
-Pauli Algebra
-=============
 .. contents:: :local:
 .. currentmodule:: quantumflow
 
