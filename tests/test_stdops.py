@@ -114,4 +114,4 @@ def test_permutation():
     rho0 = qf.random_state([0, 1, 3]).asdensity()  # FIXME: qf.random_density()
     rho1 = perm0.evolve(rho0)
     rho2 = gate0.aschannel().evolve(rho0)
-    assert qf.densities_close(rho1, rho2)s
+    assert qf.densities_close(rho1, rho2)
