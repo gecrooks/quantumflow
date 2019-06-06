@@ -361,7 +361,15 @@ def random_density(qubits: Union[int, Qubits],
         qubits: A list or number of qubits.
         rank: Rank of density matrix. (Defaults to full rank)
         ensemble: Either 'Hilbert–Schmidt' (default) or 'Burr'
-                  (see random_density_hs() and random_density_bures)
+
+    Ref:
+        - "Induced measures in the space of mixed quantum states" Karol
+          Zyczkowski, Hans-Juergen Sommers, J. Phys. A34, 7111-7125 (2001)
+          arXiv:quant-ph/0012101
+        - "Random Bures mixed states and the distribution of their purity",
+          Osipov, Sommers, and Zyczkowski, J. Phys. A: Math. Theor. 43,
+          055302 (2010). arXiv:0909.5094
+
 
     """
     if ensemble == 'Hilbert–Schmidt':

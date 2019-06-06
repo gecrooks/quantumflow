@@ -27,8 +27,6 @@ Actions on Densities
 ####################
 .. autofunction:: mixed_density
 .. autofunction:: random_density
-.. autofunction:: random_density_hs
-.. autofunction:: random_density_bures
 .. autofunction:: join_densities
 
 
