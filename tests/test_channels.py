@@ -118,6 +118,13 @@ def test_channel_chi():
     assert chi.shape == (64, 64)
 
 
+def test_channle_choi():
+    chan0 = qf.Damping(0.1, 0).aschannel()
+    choi = chan0.choi()
+    chan1 = qf.Channel.from_choi(choi, [0])
+    assert qf.channels_close(chan0, chan1)
+
+
 def test_channel_add():
     chan1 = qf.identity_gate(1).aschannel()
     chan1 *= 0.5
@@ -405,5 +412,17 @@ def test_create_channel():
 
     _ = qf.Channel(tensor, qubits, params, name)
 
+
+def test_random_channel():
+    chan = qf.random_channel([0, 1, 2], rank=4)
+    rho0 = qf.random_density([0, 1, 2], rank=2)
+    purity0 = qf.purity(rho0)
+    rho1 = chan.evolve(rho0)
+    purity1 = qf.purity(rho1)
+
+    assert purity1 < purity0
+
+    chan = qf.random_channel([0, 1, 2], rank=4, unital=True)
+    assert qf.almost_unital(chan)
 
 # fin

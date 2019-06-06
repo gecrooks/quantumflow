@@ -10,7 +10,7 @@ QuantumFlow: utilities
 Useful routines not necessarily intended to be part of the public API.
 """
 
-from typing import Any, Sequence, Callable, Set
+from typing import Any, Sequence, Callable, Set, Tuple
 import warnings
 import functools
 from fractions import Fraction
@@ -19,6 +19,7 @@ import numpy as np
 import networkx as nx
 
 import sympy
+import scipy
 
 # from scipy.linalg import fractional_matrix_power as matpow # Matrix power
 # from scipy.linalg import sqrtm as matsqrt   # Matrix square root
@@ -206,5 +207,29 @@ def symbolize(flt: float) -> sympy.Symbol:
         ratio = rationalize(flt/np.pi)
         res = sympy.simplify(ratio) * sympy.pi
     return res
+
+
+def complex_ginibre_ensemble(size: Tuple[int, ...]) -> np.ndarray:
+    """Returns a random complex matrix with values draw from a standard normal
+    distribution.
+
+    Ref:
+        Ginibre, Jean (1965). "Statistical ensembles of complex, quaternion,
+        and real matrices". J. Math. Phys. 6: 440–449.
+        doi:10.1063/1.1704292.
+    """
+    return np.random.normal(size=size) + 1j * np.random.normal(size=size)
+
+
+def unitary_ensemble(dim: int) -> np.ndarray:
+    """Return a random unitary of size (dim, dim) drawn from Harr measure
+
+     Ref:
+        "How to generate random matrices from the classical compact groups",
+         Francesco Mezzadri, Notices Am. Math. Soc. 54, 592 (2007).
+         arXiv:math-ph/0609050
+    """
+    return scipy.stats.unitary_group.rvs(dim)
+
 
 # fin

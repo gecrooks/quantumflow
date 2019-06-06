@@ -23,12 +23,21 @@ Mixed States and Quantum Channels
 .. autoclass:: UnitaryMixture
     :members:
 
+Actions on Densities
+####################
+.. autofunction:: mixed_density
+.. autofunction:: random_density
+.. autofunction:: random_density_hs
+.. autofunction:: random_density_bures
+.. autofunction:: join_densities
+
 
 Actions on Channels
 ###################
 .. autofunction:: join_channels
 .. autofunction:: channel_to_kraus
 .. autofunction:: kraus_iscomplete
+.. autofunction:: almost_unital
 
 
 Standard channels
@@ -42,21 +51,24 @@ Standard channels
 .. autoclass:: Depolarizing
     :members:
 
+.. autofunction:: random_channel
 """
 
 # Kudos: Kraus maps originally adapted from Nick Rubin's reference-qvm
 
 from functools import reduce
 from operator import add
-from typing import Sequence
+from typing import Sequence, Union
 
 import numpy as np
+from scipy import linalg
 
-from .qubits import Qubit, Qubits, outer_product, asarray
+from .qubits import Qubit, Qubits, outer_product, asarray, qubits_count_tuple
 from .ops import Operation, Gate, Channel
 from .states import State, Density
 from .gates import almost_identity
 from .stdgates import I, X, Y, Z
+from .utils import complex_ginibre_ensemble
 
 __all__ = ['Kraus',
            'UnitaryMixture',
@@ -65,7 +77,9 @@ __all__ = ['Kraus',
            'Dephasing',
            'join_channels',
            'channel_to_kraus',
-           'kraus_iscomplete'
+           'kraus_iscomplete',
+           'random_channel',
+           'almost_unital'
            ]
 
 
@@ -256,5 +270,56 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
     res = Gate(tensor, qubits)
 
     return almost_identity(res)
+
+
+# TESTME
+# Author: GEC (2019)
+def random_channel(qubits: Union[Qubits, int],
+                   rank: int = None,
+                   unital: bool = False) -> Channel:
+    """
+    Returns: A randomly sampled Channel drawn from the BCSZ ensemble with
+    the specified Kraus rank.
+
+    Args:
+        qubits: A list, or number, of qubits.
+        rank: Kraus rank of channel. (Defaults to full rank)
+
+    Ref:
+        "Random quantum operations", Bruzda, Cappellini, Sommers, and
+        Zyczkowski, Physics Letters A 373, 320 (2009). arXiv:0804.2361
+    """
+    N, qubits = qubits_count_tuple(qubits)
+    dim = 2 ** N  # Hilbert space dimension
+    size = (dim ** 2, dim ** 2) if rank is None else (dim ** 2, rank)
+
+    # arXiv:0804.2361 page 4, steps 1 to 4
+    # arXiv:0709.0824 page 6
+    X = complex_ginibre_ensemble(size)
+    XX = X @ X.conj().T
+
+    if unital:
+        Y = np.einsum('ikjk -> ij', XX.reshape([dim, dim, dim, dim]))
+        Q = np.kron(linalg.sqrtm(linalg.inv(Y)), np.eye(dim))
+    else:
+        Y = np.einsum('kikj -> ij', XX.reshape([dim, dim, dim, dim]))
+        Q = np.kron(np.eye(dim), linalg.sqrtm(linalg.inv(Y)))
+
+    choi = Q @ XX @ Q
+
+    return Channel.from_choi(choi, qubits)
+
+
+# Author: GEC (2019)
+def almost_unital(chan: Channel) -> bool:
+    """Return true if the channel is (almost) unital."""
+    # Untial channels leave the identity unchanged.
+    dim = 2 ** chan.qubit_nb
+    eye0 = np.eye(dim, dim)
+    rho0 = Density(eye0, chan.qubits)
+    rho1 = chan.evolve(rho0)
+    eye1 = asarray(rho1.asoperator())
+    return np.allclose(eye0, eye1)
+
 
 # Fin
