@@ -43,6 +43,7 @@ from . import backend as bk
 from .cbits import Addr
 from .qubits import Qubits, QubitVector, qubits_count_tuple
 from .qubits import outer_product
+from .utils import complex_ginibre_ensemble, unitary_ensemble
 
 __all__ = ['State', 'ghz_state',
            'join_states', 'print_probabilities', 'print_state',
@@ -350,23 +351,78 @@ def mixed_density(qubits: Union[int, Qubits]) -> Density:
     return Density(matrix, qubits)
 
 
-def random_density(qubits: Union[int, Qubits]) -> Density:
+def random_density(qubits: Union[int, Qubits],
+                   rank: int = None,
+                   ensemble: str = 'Hilbert–Schmidt') -> Density:
+    """
+    Returns: A randomly sampled Density
+
+    Args:
+        qubits: A list or number of qubits.
+        rank: Rank of density matrix. (Defaults to full rank)
+        ensemble: Either 'Hilbert–Schmidt' (default) or 'Burr'
+                  (see random_density_hs() and random_density_bures)
+
+    """
+    if ensemble == 'Hilbert–Schmidt':
+        return random_density_hs(qubits, rank)
+    elif ensemble == 'Bures':
+        return random_density_bures(qubits, rank)
+    raise ValueError("Unknown ensemble. "
+                     "Valid Options are 'Hilbert–Schmidt' or 'Bures")
+
+
+# TODO: Check math
+def random_density_hs(qubits: Union[int, Qubits],
+                      rank: int = None) -> Density:
     """
     Returns: A randomly sampled Density from the Hilbert–Schmidt
-                ensemble of quantum states
+                ensemble of quantum states.
 
-    Ref: "Induced measures in the space of mixed quantum states" Karol
+    Args:
+        qubits: A list or number of qubits.
+        rank: Rank of density matrix. (Defaults to full rank)
+
+    Ref:
+        "Induced measures in the space of mixed quantum states" Karol
         Zyczkowski, Hans-Juergen Sommers, J. Phys. A34, 7111-7125 (2001)
-        https://arxiv.org/abs/quant-ph/0012101
+        arXiv:quant-ph/0012101
     """
     N, qubits = qubits_count_tuple(qubits)
-    size = (2**N, 2**N)
-    ginibre_ensemble = (np.random.normal(size=size) +
-                        1j * np.random.normal(size=size)) / np.sqrt(2.0)
-    matrix = ginibre_ensemble @ np.transpose(np.conjugate(ginibre_ensemble))
+    size = (2**N, 2**N) if rank is None else (2**N, rank)
+
+    X = complex_ginibre_ensemble(size)
+    matrix = X @ X.conj().T
     matrix /= np.trace(matrix)
 
     return Density(matrix, qubits=qubits)
+
+
+# TODO: Check math
+def random_density_bures(qubits: Union[int, Qubits],
+                         rank: int = None) -> Density:
+    """
+    Returns: A random Density drawn from the Bures measure.
+
+    Args:
+        qubits: A list or number of qubits.
+        rank: Rank of density matrix. (Defaults to full rank)
+
+    Ref:
+        "Random Bures mixed states and the distribution of their purity",
+         Osipov, Sommers, and Zyczkowski, J. Phys. A: Math. Theor. 43,
+         055302 (2010). arXiv:0909.5094
+
+    """
+    N, qubits = qubits_count_tuple(qubits)
+    dim = 2 ** N
+    size = (dim, dim) if rank is None else (dim, rank)
+    P = np.eye(dim) + unitary_ensemble(dim)
+    G = complex_ginibre_ensemble(size=size)
+    B = P @ G @ G.conj().T @ P.conj().T
+    B /= np.trace(B)
+
+    return Density(B, qubits=qubits)
 
 
 # TESTME

@@ -356,6 +356,13 @@ class Channel(Operation):
         N = self.qubit_nb
         return bk.reshape(self.sharp.tensor, [2**(N*2)] * 2)
 
+    @classmethod
+    def from_choi(cls,
+                  tensor: bk.TensorLike,
+                  qubits: Union[int, Qubits]) -> 'Channel':
+        """Return a Channel from a Choi matrix"""
+        return cls(tensor, qubits).sharp
+
     # TESTME
     def chi(self) -> bk.BKTensor:
         """Return the chi (or process) matrix representation of this

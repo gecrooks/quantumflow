@@ -144,6 +144,15 @@ def test_random_density():
     rho = qf.random_density(4)
     assert list(rho.vec.asarray().shape) == [2]*8
 
+    rho1 = qf.random_density(4, rank=2, ensemble='Hilbert–Schmidt')
+    assert list(rho1.vec.asarray().shape) == [2]*8
+
+    rho2 = qf.random_density(4, rank=2, ensemble='Bures')
+    assert list(rho2.vec.asarray().shape) == [2]*8
+
+    with pytest.raises(ValueError):
+        qf.random_density(4, rank=2, ensemble='not_an_ensemble')
+
 
 def test_density():
     ket = qf.random_state(3)
