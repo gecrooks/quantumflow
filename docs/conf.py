@@ -12,10 +12,7 @@ from setuptools_scm import get_version
 import os
 import sys
 
-
 sys.path.insert(0, os.path.abspath(".."))
-import quantumflow
-
 
 __version__ = get_version(root='..', relative_to=__file__)
 print('__version__', __version__)
@@ -79,7 +76,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'QuantumFlow'
 copyright = """2016-2018<br>QuantumFlow: A Quantum Algorithms Development Toolikit,
-<br>v%s<br>"""% __version__
+<br>v%s<br>""" % __version__
 author = 'Gavin E. Crooks'
 
 # The version info for the project you're documenting, acts as replacement for
