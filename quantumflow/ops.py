@@ -50,7 +50,7 @@ import quantumflow.backend as bk
 from .qubits import Qubits, QubitVector, qubits_count_tuple, asarray
 from .states import State, Density
 
-from .utils import symbolize
+from .utils import symbolize, deprecated
 
 __all__ = ['Operation', 'Gate', 'Channel']
 
@@ -92,12 +92,6 @@ class Operation(ABC):
     def evolve(self, rho: Density) -> Density:
         """Apply the action of this operation upon a mixed state"""
         raise NotImplementedError()          # pragma: no cover
-
-    def quil(self) -> str:
-        raise NotImplementedError()          # pragma: no cover
-
-    def __str__(self) -> str:
-        return self.quil()
 
     def asgate(self) -> 'Gate':
         """Convert this quantum operation to a gate (if possible)"""
@@ -233,8 +227,7 @@ class Gate(Operation):
         tensor = bk.tensormul(gate0.tensor, gate1.tensor, indices)
         return Gate(tensor=tensor, qubits=gate1.qubits)
 
-    # FIXME
-    def quil(self) -> str:
+    def __str__(self) -> str:
         # Note: We don't want to eval tensor here.
 
         def _param_format(obj: Any) -> str:
@@ -257,21 +250,6 @@ class Gate(Operation):
             fparams = ""
 
         return "{}{}{}".format(self.name, fparams, fqubits)
-
-    # def __str__(self) -> str:
-    #     if self.name == 'Gate':
-    #         return super().__repr__()
-
-    #     rep = self.name + '('
-    #     items = []
-    #     if self.params:
-    #         items.extend([str(value) for value in self.params.values()])
-
-    #     items.extend([str(value) for value in self.qubits])
-
-    #     rep += ', '.join(items)
-    #     rep += ')'
-    #     return rep
 
     def asgate(self) -> 'Gate':
         return self

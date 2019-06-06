@@ -598,7 +598,7 @@ class Neg(Operation):
     def run(self, ket: State) -> State:
         return ket.update({self.target: - ket.memory[self.target]})
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         return '{} {}'.format(self.name.upper(), self.target)
 
 
@@ -611,7 +611,7 @@ class Not(Operation):
         res = int(not ket.memory[self.target])
         return ket.update({self.target: res})
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         return '{} {}'.format(self.name.upper(), self.target)
 
 
@@ -630,7 +630,7 @@ class BinaryOP(Operation, metaclass=ABCMeta):
             return state.memory[self.source]
         return self.source
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         return '{} {} {}'.format(self.name.upper(), self.target, self.source)
 
     def run(self, ket: State) -> State:
@@ -640,7 +640,6 @@ class BinaryOP(Operation, metaclass=ABCMeta):
         else:
             source = self.source
 
-        print(target, source)
         res = self._op(target, source)
         ket = ket.update({self.target: res})
         return ket
@@ -720,7 +719,7 @@ class Comparison(Operation, metaclass=ABCMeta):
         self.left = left
         self.right = right
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         return '{} {} {} {}'.format(self.name, self.target,
                                     self.left, self.right)
 

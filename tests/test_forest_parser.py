@@ -36,7 +36,7 @@ def test_simple():
     for quil in simple:
         prog = qf.forest.quil_to_program(quil)
         assert len(prog) == 1
-        assert prog[0].quil() == quil
+        assert str(prog[0]) == quil
 
 
 def test_reset_qubit():
@@ -108,50 +108,50 @@ def test_math():
 
 
 def test_classical():
-    ro = qf.Register()
-    quil = "TRUE ro[1]"
-    cmd = qf.forest.quil_to_program(quil)[0]
-    assert isinstance(cmd, qf.Move)
-    assert cmd.target == ro[1]
-    assert cmd.quil() == 'MOVE ro[1] 1'
+    # ro = qf.Register()
+    # quil = "TRUE ro[1]"
+    # cmd = qf.forest.quil_to_program(quil)[0]
+    # assert isinstance(cmd, qf.Move)
+    # assert cmd.target == ro[1]
+    # assert str(cmd) == 'MOVE ro[1] 1'
 
     b = qf.Register('b')
-    quil = "FALSE b[2]"
-    cmd = qf.forest.quil_to_program(quil)[0]
-    assert isinstance(cmd, qf.Move)
-    assert cmd.target == b[2]
-    assert cmd.quil() == 'MOVE b[2] 0'
+    # quil = "FALSE b[2]"
+    # cmd = qf.forest.quil_to_program(quil)[0]
+    # assert isinstance(cmd, qf.Move)
+    # assert cmd.target == b[2]
+    # assert str(cmd) == 'MOVE b[2] 0'
 
     quil = "NOT b[3]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Not)
     assert cmd.target == b[3]
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "NEG b[3]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Neg)
     assert cmd.target == b[3]
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "AND b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.And)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "IOR b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Ior)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "XOR b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Xor)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     a = qf.Register('a')
-    _test("TRUE b[0]", qf.Move(b[0], 1))
-    _test("FALSE b[0]", qf.Move(b[0], 0))
+    # _test("TRUE b[0]", qf.Move(b[0], 1))
+    # _test("FALSE b[0]", qf.Move(b[0], 0))
     _test("NOT b[0]", qf.Not(b[0]))
     _test("AND b[0] a[1]", qf.And(b[0], a[1]))
     _test("XOR b[0] b[1]", qf.Xor(b[0], b[1]))
@@ -161,34 +161,34 @@ def test_classical_moves():
     quil = "MOVE b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Move)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "EXCHANGE b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Exchange)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     # quil = "CONVERT b[0] b[1]"                # FIXME
     # cmd = qf.forest.quil_to_program(quil)[0]
     # assert isinstance(cmd, qf.Convert)
-    # assert cmd.quil() == quil
+    # assert str(cmd) == quil
 
     quil = "LOAD b[0] this b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Load)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
     # assert len(cmd.cbits) == 2
 
     quil = "STORE that b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Store)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
     # assert len(cmd.cbits) == 2
 
     # quil = "STORE that b[0] 200"               # FIXME
     # cmd = qf.forest.quil_to_program(quil)[0]
     # assert isinstance(cmd, qf.Store)
-    # assert cmd.quil() == quil
+    # assert str(cmd) == quil
     # # assert len(cmd.cbits) == 1
 
     b = qf.Register('b')
@@ -200,98 +200,98 @@ def test_classical_math():
     quil = "ADD b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Add)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "MUL b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Mul)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "SUB b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Sub)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "DIV b[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Div)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "ADD b[0] 4"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Add)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "MUL b[0] 2"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Mul)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "SUB b[0] 3"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Sub)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "DIV b[0] 2"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Div)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
 
 def test_comparisons():
     quil = "EQ a[1] c[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.EQ)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "GT a[1] c[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.GT)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "GE a[1] c[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.GE)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "LT a[1] c[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.LT)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "LE a[1] c[0] b[1]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.LE)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
 
 def test_delare():
     quil = "DECLARE ro BITS"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Declare)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "DECLARE ro BITS [10]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Declare)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "DECLARE ro BITS [10] SHARING rs"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Declare)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     # FIXME
     # quil = "DECLARE ro BITS [10] SHARING rs OFFSET 2 this"
     # cmd = qf.forest.quil_to_program(quil)[0]
     # assert isinstance(cmd, qf.Declare)
-    # assert cmd.quil() == quil
+    # assert str(cmd) == quil
 
     # FIXME
     # quil = "DECLARE ro BITS [10] SHARING rs OFFSET 16 REAL OFFSET 32 OCTET"
     # cmd = qf.forest.quil_to_program(quil)[0]
     # assert isinstance(cmd, qf.Declare)
-    # assert cmd.quil() == quil
+    # assert str(cmd) == quil
 
 
 def test_label():
@@ -299,7 +299,7 @@ def test_label():
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Label)
     assert cmd.target == "some_target"
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
 
 def test_jump():
@@ -307,19 +307,19 @@ def test_jump():
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Jump)
     assert cmd.target == "some_target"
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "JUMP-UNLESS @some_target ro[2]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.JumpUnless)
     # assert cmd.cbits == [('ro', 2)]
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "JUMP-WHEN @some_target b[3]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.JumpWhen)
     # assert cmd.cbits == [('b', 3)]
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
 
 def test_jumps2():
@@ -334,12 +334,12 @@ def test_measure():
     quil = "MEASURE 1"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Measure)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "MEASURE 3 reg0[2]"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Measure)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     prog = qf.forest.quil_to_program(quil)
     print(len(prog))
@@ -358,32 +358,32 @@ def test_pragma():
     quil = "PRAGMA somename"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Pragma)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "PRAGMA somename arg0"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Pragma)
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = "PRAGMA somename arg0 arg1"
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Pragma)
     assert len(cmd.args) == 2
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = 'PRAGMA somename "some string"'
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Pragma)
     assert not cmd.args
     assert cmd.freeform == "some string"
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     quil = 'PRAGMA somename arg2 arg3 arg7 "some string"'
     cmd = qf.forest.quil_to_program(quil)[0]
     assert isinstance(cmd, qf.Pragma)
     assert len(cmd.args) == 3
     assert cmd.freeform == "some string"
-    assert cmd.quil() == quil
+    assert str(cmd) == quil
 
     _test('PRAGMA gate_time H "10 ns"', qf.Pragma('gate_time', ['H'], '10 ns'))
     _test('PRAGMA qubit 0', qf.Pragma('qubit', [0]))
