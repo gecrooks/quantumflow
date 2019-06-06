@@ -39,7 +39,7 @@ def print_versions(file: typing.TextIO = None) -> None:
     try:                    # pragma: no cover
         import pyquil
         print('pyquil      \t', pyquil.__version__, file=file)
-    except ImportError:
+    except ImportError:     # pragma: no cover
         pass
 
     print(bk.name, '   \t', bk.version, '(BACKEND)', file=file)
