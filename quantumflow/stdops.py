@@ -235,11 +235,11 @@ class QubitPermutation(Operation):
         return cls(qubits_in, qubits_out)
 
     @property
-    def qubits(self):
+    def qubits(self) -> Qubits:
         return self.qubits_in
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> Operation:
         return QubitPermutation(self.qubits_out, self.qubits_in)
 
     def run(self, ket: State) -> State:
