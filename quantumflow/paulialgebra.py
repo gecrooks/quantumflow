@@ -1,10 +1,35 @@
+
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
 # Copyright 2016-2018, Rigetti Computing
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Module for working with the Pauli algebra.
+=============
+Pauli Algebra
+=============
+.. contents:: :local:
+.. currentmodule:: quantumflow
+
+QuantumFlow module for working with the Pauli algebra.
+
+.. autoclass:: Pauli
+    :members:
+
+.. autoclass:: sX
+.. autoclass:: sY
+.. autoclass:: sZ
+.. autoclass:: sI
+
+.. autofunction:: pauli_sum
+.. autofunction:: pauli_product
+.. autofunction:: pauli_pow
+.. autofunction:: pauli_exp_circuit
+.. autofunction:: paulis_commute
+.. autofunction:: pauli_commuting_sets
+.. autofunction:: paulis_close
+
 """
 
 # Kudos: Adapted from PyQuil's paulis.py, original written by Nick Rubin
@@ -18,15 +43,19 @@ import heapq
 from cmath import isclose  # type: ignore
 from numbers import Complex
 
+import networkx as nx
+from networkx.algorithms.approximation.steinertree import steiner_tree
+
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits
 from .ops import Operation
 from .states import State
-from .stdgates import STDGATES
+from .stdgates import STDGATES, Y, X, RZ, SWAP, CNOT
+from .circuits import Circuit
 
 __all__ = ['PauliTerm', 'Pauli', 'sX', 'sY', 'sZ', 'sI',
            'pauli_sum', 'pauli_product', 'pauli_pow', 'paulis_commute',
-           'pauli_commuting_sets', 'paulis_close']
+           'pauli_commuting_sets', 'paulis_close', 'pauli_exp_circuit']
 
 PauliTerm = Tuple[Tuple[Tuple[Qubit, str], ...], complex]
 
@@ -384,3 +413,69 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
             groups.append(pterm)
 
     return tuple(groups)
+
+
+# Adpated from pyquil. THe topoplogical CNOT network is new.
+# GEC (2019)
+def pauli_exp_circuit(
+        element: Pauli,
+        alpha: float,
+        topology: nx.Graph = None
+        ) -> Circuit:
+    """
+    Returns a Circuit corresponding to the exponential of
+    the Pauli algebra element object, i.e. exp[-1.0j * param * element]
+
+    If a qubit topology is provided then the returned circuit will
+    respect the qubit connectivity, adding swaps as necessary.
+    """
+    circ = Circuit()
+
+    if element.is_identity() or element.is_zero():
+        return circ
+
+    for term, coeff in element:
+        if not isclose(complex(coeff).imag, 0.0):
+            raise ValueError("Pauli term coefficients must be real")
+        theta = complex(coeff).real * alpha
+
+        active_qubits = set()
+
+        change_to_z_basis = Circuit()
+        for qubit, op in term:
+            active_qubits.add(qubit)
+            if op == 'X':
+                change_to_z_basis += Y(qubit)**0.5
+            elif op == 'Y':
+                change_to_z_basis += X(qubit)**0.5
+
+        if topology is None:
+            topology = nx.DiGraph()
+            nx.add_path(topology, list(active_qubits))
+        elif not nx.is_directed(topology) or not nx.is_arborescence(topology):
+            # An 'arborescence' is a directed tree
+            topology = steiner_tree(topology, active_qubits)
+            center = nx.center(topology)[0]
+            topology = nx.dfs_tree(topology, center)
+
+        order = list(reversed(list(nx.topological_sort(topology))))
+
+        cnot_seq = Circuit()
+        for q0 in order[:-1]:
+            q1 = list(topology.pred[q0])[0]
+
+            if q1 not in active_qubits:
+                cnot_seq += SWAP(q0, q1)
+                active_qubits.add(q1)
+            else:
+                cnot_seq += CNOT(q0, q1)
+
+        circ += change_to_z_basis
+        circ += cnot_seq
+        circ += RZ(2*theta, order[-1])
+        circ += cnot_seq.H
+        circ += change_to_z_basis.H
+        # end term loop
+    return circ
+
+# fin

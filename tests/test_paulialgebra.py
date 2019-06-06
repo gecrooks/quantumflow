@@ -4,12 +4,15 @@ Unit tests for quantumflow.paulialgebra
 
 from itertools import product
 
+from numpy import pi
+import networkx as nx
+
 import pytest
 
 import quantumflow as qf
 from quantumflow.paulialgebra import PAULI_OPS, sI, sX, sY, sZ
 
-from . import skip_torch
+from . import skip_torch, ALMOST_ZERO
 
 
 def test_term():
@@ -290,3 +293,44 @@ def test_run():
     ket0 = qf.zero_state(3)
     ket1 = s.run(ket0)
     qf.print_state(ket1)
+
+
+def test_pauli_exp_circuit():
+    pauli0 = 0.5 * pi * qf.sX(0) * sX(1)
+
+    alpha = 0.4
+    circ = qf.pauli_exp_circuit(pauli0, alpha)
+    print(circ)
+    coords = qf.canonical_coords(circ.asgate())
+    assert coords[0] - 0.4 == ALMOST_ZERO
+
+    pauli1 = pi * sX(0) * sX(1) * sY(2) * sZ(3)
+    circ1 = qf.pauli_exp_circuit(pauli1, alpha)
+
+    print(pauli1)
+    print(circ1)
+
+    print()
+    top2 = nx.star_graph(4)
+    pauli2 = 0.5 * pi * sX(1) * sY(2) * sZ(3)
+    circ2 = qf.pauli_exp_circuit(pauli2, alpha, top2)
+    print(circ2)
+
+    alpha = 0.2
+    top3 = nx.star_graph(4)
+    pauli3 = 0.5 * pi * sX(1) * sX(2)
+    circ3 = qf.pauli_exp_circuit(pauli3, alpha, top3)
+
+    print(pauli3)
+    print(circ3)
+
+    assert qf.circuits_close(circ3, qf.Circuit([qf.I(0), qf.XX(alpha, 1, 2)]))
+
+    qf.pauli_exp_circuit(sI(0), alpha, top2)
+
+    with pytest.raises(ValueError):
+        pauli4 = 0.5j * pi * sX(1) * sX(2)
+        _ = qf.pauli_exp_circuit(pauli4, alpha, top3)
+
+
+# fin

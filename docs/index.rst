@@ -30,6 +30,7 @@ quantum simulation using commodity classical GPUs.
       channels
       circuits
       misc
+      pauli
       decomp
       measures
       gradients
