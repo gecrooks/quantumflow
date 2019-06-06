@@ -50,7 +50,7 @@ import quantumflow.backend as bk
 from .qubits import Qubits, QubitVector, qubits_count_tuple, asarray
 from .states import State, Density
 
-from .utils import symbolize, deprecated
+from .utils import symbolize
 
 __all__ = ['Operation', 'Gate', 'Channel']
 
