@@ -420,7 +420,7 @@ def test_random_channel():
     rho1 = chan.evolve(rho0)
     purity1 = qf.purity(rho1)
 
-    assert purity1 < purity0
+    assert qf.asarray(purity1) < qf.asarray(purity0)
 
     chan = qf.random_channel([0, 1, 2], rank=4, unital=True)
     assert qf.almost_unital(chan)
