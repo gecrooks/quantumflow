@@ -15,6 +15,7 @@ or channels.
 .. autoclass :: Barrier
 .. autoclass :: If
 .. autoclass :: Projection
+.. autoclass :: Permutation
 """
 
 
@@ -22,15 +23,20 @@ from typing import Sequence
 
 import numpy as np
 
+from sympy.combinatorics import Permutation
+
 from .cbits import Addr
 from .qubits import Qubit, Qubits, asarray, QubitVector
 from .states import State, Density
 from .ops import Operation, Gate, Channel
 from .gates import P0, P1
+from .stdgates import SWAP, I
+from .circuits import Circuit
 from . import backend as bk
 
 
-__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'If', 'Projection']
+__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'If', 'Projection',
+           'QubitPermutation']
 
 
 def dagger(elem: Operation) -> Operation:
@@ -44,7 +50,7 @@ class Measure(Operation):
         self.qubit = qubit
         self.cbit = cbit
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         if self.cbit is not None:
             return '{} {} {}'.format(self.name.upper(), self.qubit, self.cbit)
         return '{} {}'.format(self.name.upper(), self.qubit)
@@ -123,13 +129,12 @@ class Reset(Operation):
     def aschannel(self) -> Channel:
         raise TypeError('Reset not convertible to Channel')
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         if self.qubits:
             return 'RESET ' + ' '.join([str(q) for q in self.qubits])
         return 'RESET'
 
 
-# DOCME
 class Barrier(Operation):
     """An operation that prevents reordering of operations across the barrier.
     Has no effect on the quantum state."""
@@ -146,7 +151,7 @@ class Barrier(Operation):
     def evolve(self, rho: Density) -> Density:
         return rho  # NOP
 
-    def quil(self) -> str:
+    def __str__(self) -> str:
         return self.name.upper() + ' ' + ' '.join(str(q) for q in self.qubits)
 
 
@@ -199,3 +204,96 @@ class Projection(Operation):
     @property
     def H(self) -> 'Projection':
         return self
+
+
+class QubitPermutation(Operation):
+    """A permutation of qubits. A generalized mult-qubit SWAP."""
+    def __init__(self, qubits_in: Qubits, qubits_out: Qubits) -> None:
+        if set(qubits_in) != set(qubits_out):
+            raise ValueError("Incompatible sets of qubits")
+
+        self.qubits_out = tuple(qubits_out)
+        self.qubits_in = tuple(qubits_in)
+
+    @classmethod
+    def from_circuit(cls, circ: Circuit) -> 'QubitPermutation':
+        """Create a qubit pertumtation from a circuit of swap gates"""
+        qubits_in = circ.qubits
+        N = circ.qubit_nb
+        perm = list(range(N))
+        for elem in circ:
+            if isinstance(elem, I):
+                continue
+            assert isinstance(elem, SWAP)
+            q0, q1 = elem.qubits
+            i0 = qubits_in.index(q0)
+            i1 = qubits_in.index(q1)
+            perm[i1], perm[i0] = perm[i0], perm[i1]
+            # TODO: Should also accept QubitPermutations
+
+        qubits_out = [qubits_in[p] for p in perm]
+        return cls(qubits_in, qubits_out)
+
+    @property
+    def qubits(self):
+        return self.qubits_in
+
+    @property
+    def H(self) -> Gate:
+        return QubitPermutation(self.qubits_out, self.qubits_in)
+
+    def run(self, ket: State) -> State:
+        qubits = ket.qubits
+        N = ket.qubit_nb
+
+        perm = list(range(N))
+        for q0, q1 in zip(self.qubits_in, self.qubits_out):
+            perm[qubits.index(q0)] = qubits.index(q1)
+
+        tensor = bk.transpose(ket.tensor, perm)
+
+        return State(tensor, qubits, ket.memory)
+
+    def evolve(self, rho: Density) -> Density:
+        qubits = rho.qubits
+        N = rho.qubit_nb
+
+        perm = list(range(N))
+        for q0, q1 in zip(self.qubits_in, self.qubits_out):
+            perm[qubits.index(q0)] = qubits.index(q1)
+        perm.extend([idx+N for idx in perm])
+
+        tensor = bk.transpose(rho.tensor, perm)
+
+        return Density(tensor, qubits, rho.memory)
+
+    def asgate(self) -> Gate:
+        N = self.qubit_nb
+        qubits = self.qubits
+
+        perm = list(range(2*N))
+        for q0, q1 in zip(qubits, self.qubits_out):
+            perm[qubits.index(q0)] = qubits.index(q1)
+
+        U = np.eye(2**N)
+        U = np.reshape(U, [2]*2*N)
+        U = np.transpose(U, perm)
+
+        return Gate(U, qubits=qubits)
+
+    def aschannel(self) -> 'Channel':
+        return self.asgate().aschannel()
+
+    def ascircuit(self) -> Circuit:
+        """
+        Returns a SWAP network for this permutation, assuming all-to-all
+        connectivity.
+        """
+        circ = Circuit()
+        qubits = self.qubits
+
+        perm = [self.qubits.index(q) for q in self.qubits_out]
+        for idx0, idx1 in (Permutation(perm).transpositions()):
+            circ += SWAP(qubits[idx0], qubits[idx1])
+
+        return circ
