@@ -5,6 +5,8 @@ import pytest
 
 import quantumflow as qf
 
+from . import skip_torch
+
 
 def test_measure():
     prog = qf.Program()
@@ -73,6 +75,7 @@ def test_project():
     assert proj.H is qf.dagger(proj)
 
 
+@skip_torch     # FIXME
 def test_permutation():
     # Should be same as a swap.
     perm0 = qf.QubitPermutation([0, 1], [1, 0])
@@ -111,4 +114,4 @@ def test_permutation():
     rho0 = qf.random_state([0, 1, 3]).asdensity()  # FIXME: qf.random_density()
     rho1 = perm0.evolve(rho0)
     rho2 = gate0.aschannel().evolve(rho0)
-    assert qf.densities_close(rho1, rho2)
+    assert qf.densities_close(rho1, rho2)s

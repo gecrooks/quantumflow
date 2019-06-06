@@ -15,7 +15,7 @@ or channels.
 .. autoclass :: Barrier
 .. autoclass :: If
 .. autoclass :: Projection
-.. autoclass :: Permutation
+.. autoclass :: QubitPermutation
 """
 
 
