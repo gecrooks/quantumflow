@@ -5,9 +5,9 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 import pytest
+pytest.importorskip("pyquil")      # noqa: 402
 
 import quantumflow as qf
-
 
 QUIL_FILES = [
     'hello_world.quil',

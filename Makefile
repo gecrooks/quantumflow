@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 
 PROJECT = quantumflow
-FILES = quantumflow examples tests tools setup.py
+FILES = quantumflow examples tests tools docs/conf.py setup.py
 
 # Kudos: Adapted from Auto-documenting default target
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

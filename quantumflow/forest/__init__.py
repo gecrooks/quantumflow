@@ -5,15 +5,12 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-
 .. module:: quantumflow.forest
 
 Interface to pyQuil and the Rigetti Forest.
 
-
 .. autoclass:: QuantumFlowQVM
     :members:
-
 
 .. autofunction:: circuit_to_pyquil
 .. autofunction:: pyquil_to_circuit
@@ -42,24 +39,24 @@ from ..stdops import Measure
 from ..circuits import Circuit
 from ..stdops import Reset
 from ..visualization import circuit_to_latex, render_latex
+# from .programs import *    # noqa: 403 
 from .programs import (Program, Wait, Call, Jump, Label, JumpWhen, JumpUnless,
                        Pragma, Nop, Declare, Halt, Load, Store)
 from .programs import (EQ, LT, LE, GT, GE, Add, Mul, Div, Sub, And,
-                       Exchange, Ior, Move, Neg, Not, Xor)
-
+                       Exchange, Ior, Move, Neg, Not, Xor, Include, DefCircuit)
 # from pyquil.api._quantum_computer import _get_qvm_compiler_based_on_endpoint
 
 from . import pyquil
 
-
-__all__ = ['get_virtual_qc',
-           'get_compiler',
+__all__ = [
+           # 'get_virtual_qc',
+           # 'get_compiler',
            'NullCompiler',
            'circuit_to_pyquil',
            'quil_to_program',
            'pyquil_to_program',
            'pyquil_to_circuit',
-           'qvm_run_and_measure',
+           # 'qvm_run_and_measure',
            'wavefunction_to_state',
            'state_to_wavefunction',
            'QUIL_GATES',

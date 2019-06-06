@@ -13,7 +13,7 @@ import typing
 import numpy as np
 import networkx as nx
 import cvxpy as cvx
-import pyquil
+
 import quantumflow as qf
 import quantumflow.backend as bk
 
@@ -23,7 +23,6 @@ def print_versions(file: typing.TextIO = None) -> None:
     Print version strings of currently installed dependencies
 
      ``> python -m quantumflow.meta``
-
 
     Args:
         file: Output stream. Defaults to stdout.
@@ -35,7 +34,13 @@ def print_versions(file: typing.TextIO = None) -> None:
     print('numpy       \t', np.__version__, file=file)
     print('networkx    \t', nx.__version__, file=file)
     print('cvxpy      \t', cvx.__version__, file=file)
-    print('pyquil      \t', pyquil.__version__, file=file)
+
+    # Optional packages
+    try:                    # pragma: no cover
+        import pyquil
+        print('pyquil      \t', pyquil.__version__, file=file)
+    except ImportError:
+        pass
 
     print(bk.name, '   \t', bk.version, '(BACKEND)', file=file)
 

@@ -3,7 +3,7 @@
 numpy
 scipy               >= 1.0.0
 tensorflow          >= 1.6.0
-# pytorch						# Optional extra
+# pytorch							# Optional extra
 networkx            >= 2.1
 sphinx              >= 1.6.6
 pytest              >= 2.6.0
@@ -13,8 +13,7 @@ tox
 mypy
 pillow
 matplotlib
-pillow
-pyquil	            >= 2.0.0b1
+# pyquil	            >= 2.0.0b1 	# Optional package
 cvxpy
 sympy
 setuptools_scm

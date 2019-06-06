@@ -7,41 +7,44 @@
 import numpy as np
 
 import pytest
+pytest.importorskip("pyquil")      # noqa: 402
 
 import quantumflow as qf
+from quantumflow import forest
+
 from quantumflow.forest.programs import TARGETS, PC
 
 
 def test_empty_program():
-    prog = qf.Program()
+    prog = forest.Program()
     ket = prog.run()
     assert ket.qubits == ()
     assert ket.qubit_nb == 0
 
 
 def test_nop():
-    prog = qf.Program()
-    prog += qf.Nop()
+    prog = forest.Program()
+    prog += forest.Nop()
     prog.run()
 
     for inst in prog:
         assert inst is not None
 
-    assert qf.Nop().qubits == ()
-    assert qf.Nop().qubit_nb == 0
+    assert forest.Nop().qubits == ()
+    assert forest.Nop().qubit_nb == 0
 
 
 def test_nop_evolve():
-    prog = qf.Program()
-    prog += qf.Nop()
+    prog = forest.Program()
+    prog += forest.Nop()
     prog.evolve()
 
 
 def test_compile_label():
-    prog = qf.Program()
-    prog += qf.Label('Here')
-    prog += qf.Nop()
-    prog += qf.Label('There')
+    prog = forest.Program()
+    prog += forest.Label('Here')
+    prog += forest.Nop()
+    prog += forest.Label('There')
 
     ket = prog.run()
 
@@ -49,54 +52,54 @@ def test_compile_label():
 
 
 def test_jump():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 0)
-    prog += qf.Jump('There')
-    prog += qf.Not(ro[0])
-    prog += qf.Label('There')
-    prog += qf.Not(ro[0])
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 0)
+    prog += forest.Jump('There')
+    prog += forest.Not(ro[0])
+    prog += forest.Label('There')
+    prog += forest.Not(ro[0])
     ket = prog.run()
     assert ket.memory[ro[0]] == 1
 
-    prog += qf.JumpWhen('There', ro[0])
+    prog += forest.JumpWhen('There', ro[0])
     ket = prog.run()
     assert ket.memory[ro[0]] == 0
 
-    prog += qf.Not(ro[0])
-    prog += qf.JumpUnless('There', ro[0])
+    prog += forest.Not(ro[0])
+    prog += forest.JumpUnless('There', ro[0])
     ket = prog.run()
     assert ket.memory[ro[0]] == 1
 
 
 def test_wait():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 0)
-    prog += qf.Wait()
-    prog += qf.Not(ro[0])
-    prog += qf.Wait()
-    prog += qf.Not(ro[0])
-    prog += qf.Wait()
-    prog += qf.Not(ro[0])
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 0)
+    prog += forest.Wait()
+    prog += forest.Not(ro[0])
+    prog += forest.Wait()
+    prog += forest.Not(ro[0])
+    prog += forest.Wait()
+    prog += forest.Not(ro[0])
 
     ket = prog.run()
     assert ket.memory[ro[0]] == 1
 
 
 def test_include():
-    prog = qf.Program()
-    prog += qf.Move(('a', 0), 0)
-    instr = qf.Include('somefile.quil', qf.Program())
+    prog = forest.Program()
+    prog += forest.Move(('a', 0), 0)
+    instr = forest.Include('somefile.quil', forest.Program())
     assert instr.quil() == 'INCLUDE "somefile.quil"'
 
 
 def test_halt():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 0)
-    prog += qf.Halt()
-    prog += qf.Not(ro[0])
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 0)
+    prog += forest.Halt()
+    prog += forest.Not(ro[0])
 
     ket = prog.run()
     assert ket.memory[PC] == -1
@@ -104,12 +107,12 @@ def test_halt():
 
 
 def test_reset():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 1)
-    prog += qf.Call('X', params=[], qubits=[0])
-    prog += qf.Reset()
-    prog += qf.Measure(0, ro[1])
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 1)
+    prog += forest.Call('X', params=[], qubits=[0])
+    prog += forest.Reset()
+    prog += forest.Measure(0, ro[1])
     ket = prog.run()
 
     assert ket.qubits == (0,)
@@ -118,12 +121,12 @@ def test_reset():
 
 
 def test_reset_one():
-    prog = qf.Program()
-    prog += qf.Call('X', params=[], qubits=[0])
-    prog += qf.Call('X', params=[], qubits=[1])
-    prog += qf.Reset(0)
-    prog += qf.Measure(0, ('b', 0))
-    prog += qf.Measure(1, ('b', 1))
+    prog = forest.Program()
+    prog += forest.Call('X', params=[], qubits=[0])
+    prog += forest.Call('X', params=[], qubits=[1])
+    prog += forest.Reset(0)
+    prog += forest.Measure(0, ('b', 0))
+    prog += forest.Measure(1, ('b', 1))
     ket = prog.run()
 
     assert ket.memory[('b', 0)] == 0
@@ -131,8 +134,8 @@ def test_reset_one():
 
 
 def test_xgate():
-    prog = qf.Program()
-    prog += qf.Call('X', params=[], qubits=[0])
+    prog = forest.Program()
+    prog += forest.Call('X', params=[], qubits=[0])
     ket = prog.run()
 
     assert ket.qubits == (0,)
@@ -142,8 +145,8 @@ def test_xgate():
 
 
 def test_call():
-    prog = qf.Program()
-    prog += qf.Call('BELL', params=[], qubits=[])
+    prog = forest.Program()
+    prog += forest.Call('BELL', params=[], qubits=[])
 
     assert str(prog) == 'BELL\n'
 
@@ -151,22 +154,22 @@ def test_call():
 # FIXME: ref-qvm has do_until option? From pyquil?
 def test_measure_until():
 
-    prog = qf.Program()
-    prog += qf.Move(('c', 2), 1)
-    prog += qf.Label('redo')
-    prog += qf.Call('X', [], [0])
-    prog += qf.Call('H', [], [0])
-    prog += qf.Measure(0, ('c', 2))
-    prog += qf.JumpUnless('redo', ('c', 2))
+    prog = forest.Program()
+    prog += forest.Move(('c', 2), 1)
+    prog += forest.Label('redo')
+    prog += forest.Call('X', [], [0])
+    prog += forest.Call('H', [], [0])
+    prog += forest.Measure(0, ('c', 2))
+    prog += forest.JumpUnless('redo', ('c', 2))
 
     ket = prog.run()
     assert ket.memory[('c', 2)] == 1
 
 
 def test_belltest():
-    prog = qf.Program()
-    prog += qf.Call('H', [], [0])
-    prog += qf.Call('CNOT', [], [0, 1])
+    prog = forest.Program()
+    prog += forest.Call('H', [], [0])
+    prog += forest.Call('CNOT', [], [0, 1])
     ket = prog.run()
 
     assert qf.states_close(ket, qf.ghz_state(2))
@@ -174,11 +177,11 @@ def test_belltest():
 
 
 def test_occupation_basis():
-    prog = qf.Program()
-    prog += qf.Call('X', [], [0])
-    prog += qf.Call('X', [], [1])
-    prog += qf.Call('I', [], [2])
-    prog += qf.Call('I', [], [3])
+    prog = forest.Program()
+    prog += forest.Call('X', [], [0])
+    prog += forest.Call('X', [], [1])
+    prog += forest.Call('I', [], [2])
+    prog += forest.Call('I', [], [3])
 
     ket = prog.run()
 
@@ -193,18 +196,18 @@ def test_occupation_basis():
 def test_qaoa_circuit():
     wf_true = [0.00167784 + 1.00210180e-05*1j, 0.50000000 - 4.99997185e-01*1j,
                0.50000000 - 4.99997185e-01*1j, 0.00167784 + 1.00210180e-05*1j]
-    prog = qf.Program()
-    prog += qf.Call('RY', [np.pi/2], [0])
-    prog += qf.Call('RX', [np.pi], [0])
-    prog += qf.Call('RY', [np.pi/2], [1])
-    prog += qf.Call('RX', [np.pi], [1])
-    prog += qf.Call('CNOT', [], [0, 1])
-    prog += qf.Call('RX', [-np.pi/2], [1])
-    prog += qf.Call('RY', [4.71572463191], [1])
-    prog += qf.Call('RX', [np.pi/2], [1])
-    prog += qf.Call('CNOT', [], [0, 1])
-    prog += qf.Call('RX', [-2*2.74973750579], [0])
-    prog += qf.Call('RX', [-2*2.74973750579], [1])
+    prog = forest.Program()
+    prog += forest.Call('RY', [np.pi/2], [0])
+    prog += forest.Call('RX', [np.pi], [0])
+    prog += forest.Call('RY', [np.pi/2], [1])
+    prog += forest.Call('RX', [np.pi], [1])
+    prog += forest.Call('CNOT', [], [0, 1])
+    prog += forest.Call('RX', [-np.pi/2], [1])
+    prog += forest.Call('RY', [4.71572463191], [1])
+    prog += forest.Call('RX', [np.pi/2], [1])
+    prog += forest.Call('CNOT', [], [0, 1])
+    prog += forest.Call('RX', [-2*2.74973750579], [0])
+    prog += forest.Call('RX', [-2*2.74973750579], [1])
 
     test_state = prog.run()
     true_state = qf.State(wf_true)
@@ -277,13 +280,13 @@ CIRCX 0
 
 
 def test_defcircuit():
-    prog = qf.Program()
+    prog = forest.Program()
 
-    circ = qf.DefCircuit('CIRCX', {})
-    circ += qf.Call('X', params=[], qubits=[0])
+    circ = forest.DefCircuit('CIRCX', {})
+    circ += forest.Call('X', params=[], qubits=[0])
 
     prog += circ
-    prog += qf.Call('CIRCX', params=[], qubits=[0])
+    prog += forest.Call('CIRCX', params=[], qubits=[0])
 
     assert str(prog) == CIRC0
 
@@ -302,131 +305,131 @@ CIRC1 = """DEFCIRCUIT CIRCX(this):
 
 
 def test_defcircuit_param():
-    prog = qf.Program()
-    circ = qf.DefCircuit('CIRCX', {'this': None})
-    circ += qf.Nop()
+    prog = forest.Program()
+    circ = forest.DefCircuit('CIRCX', {'this': None})
+    circ += forest.Nop()
     prog += circ
     assert str(prog) == CIRC1
 
 
 def test_exceptions():
-    prog = qf.Program()
-    prog += qf.Call('NOT_A_GATE', [], [0])
+    prog = forest.Program()
+    prog += forest.Call('NOT_A_GATE', [], [0])
     with pytest.raises(RuntimeError):
         prog.run()
 
 
 def test_neg():
-    c = qf.Register('c')
-    assert str(qf.Neg(c[10])) == 'NEG c[10]'
+    c = forest.Register('c')
+    assert str(forest.Neg(c[10])) == 'NEG c[10]'
 
 
 def test_logics():
-    c = qf.Register('c')
+    c = forest.Register('c')
 
-    circ = qf.Circuit([qf.Move(c[0], 0),
-                       qf.Move(c[1], 1),
-                       qf.And(c[0], c[1])])
+    circ = qf.Circuit([forest.Move(c[0], 0),
+                       forest.Move(c[1], 1),
+                       forest.And(c[0], c[1])])
     # assert len(circ) == 3     # FIXME
     # assert circ.cbits == [c[0], c[1]] # FIXME
 
     ket = circ.run()
     assert ket.memory == {c[0]: 0, c[1]: 1}
 
-    circ += qf.Not(c[1])
-    circ += qf.And(c[0], c[1])
+    circ += forest.Not(c[1])
+    circ += forest.And(c[0], c[1])
     ket = circ.run(ket)
     assert ket.memory == {c[0]: 0, c[1]: 0}
 
-    circ = qf.Circuit()
-    circ += qf.Move(c[0], 0)
-    circ += qf.Move(c[1], 1)
-    circ += qf.Ior(c[0], c[1])
+    circ = forest.Circuit()
+    circ += forest.Move(c[0], 0)
+    circ += forest.Move(c[1], 1)
+    circ += forest.Ior(c[0], c[1])
     ket = circ.run()
     assert ket.memory == {c[0]: 1, c[1]: 1}
 
-    circ = qf.Circuit()
-    circ += qf.Move(c[0], 1)
-    circ += qf.Move(c[1], 1)
-    circ += qf.Xor(c[0], c[1])
+    circ = forest.Circuit()
+    circ += forest.Move(c[0], 1)
+    circ += forest.Move(c[1], 1)
+    circ += forest.Xor(c[0], c[1])
     ket = circ.run()
     assert ket.memory == {c[0]: 0, c[1]: 1}
 
-    circ += qf.Exchange(c[0], c[1])
+    circ += forest.Exchange(c[0], c[1])
     ket = circ.run(ket)
     assert ket.memory == {c[0]: 1, c[1]: 0}
 
-    circ += qf.Move(c[0], c[1])
+    circ += forest.Move(c[0], c[1])
     ket = circ.run(ket)
     assert ket.memory == {c[0]: 0, c[1]: 0}
 
 
 def test_add():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 1)
-    prog += qf.Move(ro[1], 2)
-    prog += qf.Add(ro[0], ro[1])
-    prog += qf.Add(ro[0], 4)
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 1)
+    prog += forest.Move(ro[1], 2)
+    prog += forest.Add(ro[0], ro[1])
+    prog += forest.Add(ro[0], 4)
     ket = prog.run()
     assert ket.memory[ro[0]] == 7
 
 
 def test_density_add():
-    ro = qf.Register()
-    circ = qf.Circuit()
-    circ += qf.Move(ro[0], 1)
-    circ += qf.Move(ro[1], 2)
-    circ += qf.Add(ro[0], ro[1])
-    circ += qf.Add(ro[0], 4)
+    ro = forest.Register()
+    circ = forest.Circuit()
+    circ += forest.Move(ro[0], 1)
+    circ += forest.Move(ro[1], 2)
+    circ += forest.Add(ro[0], ro[1])
+    circ += forest.Add(ro[0], 4)
     rho = circ.evolve()
     assert rho.memory[ro[0]] == 7
 
 
 def test_mul():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 1)
-    prog += qf.Move(ro[1], 2)
-    prog += qf.Mul(ro[0], ro[1])
-    prog += qf.Mul(ro[0], 4)
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 1)
+    prog += forest.Move(ro[1], 2)
+    prog += forest.Mul(ro[0], ro[1])
+    prog += forest.Mul(ro[0], 4)
     ket = prog.run()
     assert ket.memory[ro[0]] == 8
 
 
 def test_div():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 4)
-    prog += qf.Move(ro[1], 1)
-    prog += qf.Div(ro[0], ro[1])
-    prog += qf.Div(ro[0], 2)
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 4)
+    prog += forest.Move(ro[1], 1)
+    prog += forest.Div(ro[0], ro[1])
+    prog += forest.Div(ro[0], 2)
     ket = prog.run()
     assert ket.memory[ro[0]] == 2
 
 
 def test_sub():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 1)
-    prog += qf.Move(ro[1], 2)
-    prog += qf.Sub(ro[0], ro[1])
-    prog += qf.Sub(ro[0], 4)
-    prog += qf.Neg(ro[0])
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 1)
+    prog += forest.Move(ro[1], 2)
+    prog += forest.Sub(ro[0], ro[1])
+    prog += forest.Sub(ro[0], 4)
+    prog += forest.Neg(ro[0])
     ket = prog.run()
     assert ket.memory[ro[0]] == 5
 
 
 def test_comparisions():
-    ro = qf.Register()
-    prog = qf.Program()
-    prog += qf.Move(ro[0], 1)
-    prog += qf.Move(ro[1], 2)
-    prog += qf.EQ(('eq', 0), ro[0], ro[1])
-    prog += qf.GT(('gt', 0), ro[0], ro[1])
-    prog += qf.GE(('ge', 0), ro[0], ro[1])
-    prog += qf.LT(('lt', 0), ro[0], ro[1])
-    prog += qf.LE(('le', 0), ro[0], ro[1])
+    ro = forest.Register()
+    prog = forest.Program()
+    prog += forest.Move(ro[0], 1)
+    prog += forest.Move(ro[1], 2)
+    prog += forest.EQ(('eq', 0), ro[0], ro[1])
+    prog += forest.GT(('gt', 0), ro[0], ro[1])
+    prog += forest.GE(('ge', 0), ro[0], ro[1])
+    prog += forest.LT(('lt', 0), ro[0], ro[1])
+    prog += forest.LE(('le', 0), ro[0], ro[1])
     ket = prog.run()
     assert ket.memory[('eq', 0)] == 0
     assert ket.memory[('gt', 0)] == 0

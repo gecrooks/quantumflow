@@ -31,4 +31,6 @@ script:
   - mypy -p quantumflow --ignore-missing-imports
   - sphinx-build -M html docs docs/_build
   - sphinx-build -M doctest docs docs/_build
+  - pip install -q pyquil
+  - QUANTUMFLOW_BACKEND=numpy pytest --disable-pytest-warnings
 
