@@ -85,7 +85,7 @@ def state_fidelity(state0: State, state1: State) -> bk.BKTensor:
     """Return the quantum fidelity between pure states."""
     assert state0.qubits == state1.qubits   # FIXME
 
-    if bk.BACKEND == 'ctf':
+    if bk.BACKEND == 'ctf':     # pragma: nocover
         # Work around for bug in CTF
         # https://github.com/cyclops-community/ctf/issues/62
         tensor = asarray(bk.absolute(bk.inner(state0.tensor,
