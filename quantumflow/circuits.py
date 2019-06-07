@@ -5,8 +5,6 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-
-
 .. contents:: :local:
 .. currentmodule:: quantumflow
 
@@ -55,7 +53,7 @@ from .qubits import Qubit, Qubits
 from .states import State, Density, zero_state
 from .ops import Operation, Gate, Channel
 from .gates import control_gate, identity_gate
-from .stdgates import H, CPHASE, SWAP, CNOT, T, X, TX, TY, TZ, CCNOT, ZZ
+from .stdgates import H, CPHASE, SWAP, CNOT, T, X, TX, TY, TZ, CCNOT, ZZ, CZ
 
 __all__ = ['Circuit',
            'count_operations',
@@ -69,7 +67,8 @@ __all__ = ['Circuit',
            'addition_circuit',
            'ghz_circuit',
            'graph_circuit',
-           'graph_circuit_params']
+           'graph_circuit_params',
+           'graph_state_circuit']
 
 
 class Circuit(Operation):
@@ -411,13 +410,13 @@ def ghz_circuit(qubits: Qubits) -> Circuit:
 
 
 def graph_circuit_params(
-        graph: nx.Graph,
+        topology: nx.Graph,
         steps: int,
         init_bias: float = 0.0,
         init_scale: float = 0.01) -> Sequence[float]:
     """Return a set of initial parameters for graph_circuit()"""
-    N = len(graph.nodes())
-    K = len(graph.edges())
+    N = len(topology.nodes())
+    K = len(topology.edges())
     total = N+N*2*(steps+1) + K*steps
     params = np.random.normal(loc=init_bias, scale=init_scale,
                               size=[total])
@@ -426,7 +425,7 @@ def graph_circuit_params(
 
 
 def graph_circuit(
-        graph: nx.Graph,
+        topology: nx.Graph,
         steps: int,
         params: Sequence[float],
         ) -> Circuit:
@@ -447,45 +446,65 @@ def graph_circuit(
     which would necessitate specifing the order of all 2-qubit gates within
     the layer.
     """
-    def tx_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
+    def tx_layer(topology: nx.Graph, layer_params: Sequence[float]) -> Circuit:
         circ = Circuit()
-        for p, q0 in zip(layer_params, graph.nodes()):
+        for p, q0 in zip(layer_params, topology.nodes()):
             circ += TX(p, q0)
         return circ
 
-    def tz_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
+    def tz_layer(topology: nx.Graph, layer_params: Sequence[float]) -> Circuit:
         circ = Circuit()
-        for p, q0 in zip(layer_params, graph.nodes()):
+        for p, q0 in zip(layer_params, topology.nodes()):
             circ += TZ(p, q0)
         return circ
 
-    def zz_layer(graph: nx.Graph, layer_params: Sequence[float]) -> Circuit:
+    def zz_layer(topology: nx.Graph, layer_params: Sequence[float]) -> Circuit:
         circ = Circuit()
-        for p, (q0, q1) in zip(layer_params, graph.edges()):
+        for p, (q0, q1) in zip(layer_params, topology.edges()):
             circ += ZZ(p, q0, q1)
         return circ
 
-    N = len(graph.nodes())
-    K = len(graph.edges())
+    N = len(topology.nodes())
+    K = len(topology.edges())
 
     circ = Circuit()
 
     n = 0
-    circ += tz_layer(graph, params[n:n+N])
+    circ += tz_layer(topology, params[n:n+N])
     n += N
-    circ += tx_layer(graph, params[n:n+N])
+    circ += tx_layer(topology, params[n:n+N])
     n += N
-    circ += tz_layer(graph, params[n:n+N])
+    circ += tz_layer(topology, params[n:n+N])
     n += N
 
     for _ in range(steps):
-        circ += zz_layer(graph, params[n:n+K])
+        circ += zz_layer(topology, params[n:n+K])
         n += K
-        circ += tx_layer(graph, params[n:n+N])
+        circ += tx_layer(topology, params[n:n+N])
         n += N
-        circ += tz_layer(graph, params[n:n+N])
+        circ += tz_layer(topology, params[n:n+N])
         n += N
 
     return circ
+
+
+def graph_state_circuit(topology: nx.Graph) -> Circuit:
+    """
+    Return a circuit to create a graph state, given a
+    particular graph topology.
+
+    Refs:
+        - [Wikipedia: Graph State](https://en.wikipedia.org/wiki/Graph_state)
+    """
+    circ = Circuit()
+
+    for q in topology.nodes:
+        circ += H(q)
+
+    for q0, q1 in topology.edges:
+        circ += CZ(q0, q1)
+
+    return circ
+
 
 # Fin

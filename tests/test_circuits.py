@@ -396,3 +396,9 @@ def test_graph_circuit():
     circ = qf.graph_circuit(graph, layers, params)
 
     print(circ)
+
+
+def test_graph_state_circuit():
+    graph = nx.grid_graph([3, 3])
+    circ = qf.graph_state_circuit(graph)
+    print(circ)
