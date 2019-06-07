@@ -2,9 +2,10 @@
 import pytest
 
 import networkx as nx
-import numpy as np
 
 import quantumflow as qf
+
+from quantumflow import backend as bk
 
 from . import ALMOST_ZERO, tensorflow2_only, skip_torch
 
@@ -42,7 +43,7 @@ def test_gradients():
     proj = qf.Projection([ket1])
     grads3 = qf.expectation_gradients(ket0, circ, hermitian=proj,
                                       dfunc=lambda fid:
-                                      - 1 / (2 * np.sqrt((1-fid) * fid)))
+                                      - 1 / (2 * bk.sqrt((1-fid) * fid)))
     # print(grads3)
 
     for g0, g1 in zip(grads1, grads3):
@@ -88,7 +89,7 @@ def test_parameter_shift_circuits():
         fid0 = qf.state_fidelity(circ0.run(ket0), ket1)
         fid1 = qf.state_fidelity(circ1.run(ket0), ket1)
         grad = r*(fid1-fid0)
-    assert ALMOST_ZERO == grad-grads[n]
+    assert ALMOST_ZERO == qf.asarray(grad-grads[n])
 
 
 @tensorflow2_only

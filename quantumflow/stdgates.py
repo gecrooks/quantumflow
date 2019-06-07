@@ -792,7 +792,8 @@ class TX(Gate):
         t: Number of half turns (quarter cycles) on Block sphere
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
-        t = t % 2
+        if bk.BACKEND != 'ctf':  # Workaround for ctf backend bug
+            t = t % 2
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2),
@@ -824,7 +825,8 @@ class TY(Gate):
 
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
-        t = t % 2
+        if bk.BACKEND != 'ctf':  # Workaround for ctf backend bug
+            t = t % 2
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2.0),
@@ -855,7 +857,8 @@ class TZ(Gate):
         t: Number of half turns (quarter cycles) on Block sphere
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
-        t = t % 2
+        if bk.BACKEND != 'ctf':  # Workaround for ctf backend bug
+            t = t % 2
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.exp(-ctheta * 0.5j), 0],

@@ -314,7 +314,7 @@ class Adam(object):
 
             m_t = (beta_1 * m) + (1. - beta_1) * g
             v_t = (beta_2 * v) + (1. - beta_2) * g**2
-            p_t = p - lr_t * m_t / (np.sqrt(v_t) + epsilon)
+            p_t = p - lr_t * m_t / (bk.sqrt(v_t) + epsilon)
 
             self.ms[i] = m_t
             self.vs[i] = v_t

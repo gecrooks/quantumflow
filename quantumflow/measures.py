@@ -84,7 +84,15 @@ __all__ = ['state_fidelity', 'state_angle', 'states_close',
 def state_fidelity(state0: State, state1: State) -> bk.BKTensor:
     """Return the quantum fidelity between pure states."""
     assert state0.qubits == state1.qubits   # FIXME
-    tensor = bk.absolute(bk.inner(state0.tensor, state1.tensor))**bk.fcast(2)
+
+    if bk.BACKEND == 'ctf':
+        # Work around for bug in CTF
+        # https://github.com/cyclops-community/ctf/issues/62
+        tensor = asarray(bk.absolute(bk.inner(state0.tensor,
+                                              state1.tensor))) ** 2
+    else:
+        tensor = bk.absolute(bk.inner(state0.tensor,
+                                      state1.tensor)) ** bk.fcast(2)
     return tensor
 
 
