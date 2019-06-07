@@ -44,7 +44,7 @@ from .programs import (Program, Wait, Call, Jump, Label, JumpWhen, JumpUnless,
                        Pragma, Nop, Declare, Halt, Load, Store)
 from .programs import (EQ, LT, LE, GT, GE, Add, Mul, Div, Sub, And,
                        Exchange, Ior, Move, Neg, Not, Xor)
-from .programs import Include, DefCircuit       # noqa: F401
+from .programs import Include, DefCircuit, Instruction       # noqa: F401
 # from pyquil.api._quantum_computer import _get_qvm_compiler_based_on_endpoint
 
 from . import pyquil

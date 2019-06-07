@@ -5,7 +5,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-.. currentmodule:: quantumflow
+.. currentmodule:: quantumflow.forest
 
 A QuantumFlow Program is an implementation of the Quantum Abstract Machine from
 *A Practical Quantum Instruction Set Architecture*. [1]_ A Program can be built
@@ -56,7 +56,6 @@ sequence, whereas Programs can contain non-linear control flow.
 .. autoclass:: Nop
 .. autoclass:: Halt
 .. autoclass:: And
-.. autoclass:: Or
 .. autoclass:: Move
 .. autoclass:: Exchange
 .. autoclass:: Not
@@ -97,7 +96,7 @@ __all__ = ['Instruction', 'Program', 'DefCircuit', 'Wait',
            'Parameter',
            # 'DefGate', 'quil_parameter', 'eval_parameter'
            'Neg', 'Not',
-           'And', 'Ior', 'Or', 'Xor',
+           'And', 'Ior', 'Xor',
            'Add', 'Mul', 'Sub', 'Div',
            'Move', 'Exchange',
            'EQ', 'LT', 'GT', 'LE', 'GE', 'NE',
@@ -661,10 +660,10 @@ class Ior(BinaryOP):
     _op = operator.or_
 
 
-class Or(BinaryOP):
-    """Take logical inclusive-or of two classical bits, and place result
-    in first bit. (Deprecated in quil. Use Ior instead."""
-    _op = operator.or_
+# class Or(BinaryOP):
+#     """Take logical inclusive-or of two classical bits, and place result
+#     in first bit. (Deprecated in quil. Use Ior instead."""
+#     _op = operator.or_
 
 
 class Xor(BinaryOP):

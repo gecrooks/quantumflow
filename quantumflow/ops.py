@@ -124,8 +124,8 @@ class Gate(Operation):
     A quantum logic gate. An operator that acts upon a collection of qubits.
 
     Attributes:
-        params (dict): Optional keyword parameters used to create this gate
-        name (str): The name of this gate
+        Gate.params: Optional keyword parameters used to create this gate
+        Gate.name : The name of this gate
 
     """
     # TODO: Fix parameter order tensor, qubits, params, name

@@ -14,10 +14,10 @@ QuantumFlow module for working with the Pauli algebra.
 .. autoclass:: Pauli
     :members:
 
-.. autoclass:: sX
-.. autoclass:: sY
-.. autoclass:: sZ
-.. autoclass:: sI
+.. autofunction:: sX
+.. autofunction:: sY
+.. autofunction:: sZ
+.. autofunction:: sI
 
 .. autofunction:: pauli_sum
 .. autofunction:: pauli_product

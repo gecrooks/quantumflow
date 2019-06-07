@@ -102,9 +102,10 @@ class QubitVector:
         array: An tensor or tensor like object
 
     Attributes:
-        qubits:     Qubit labels
-        qubit_nb:   The number of qubits
-        rank:       Order of the tensor, which has (qubit_nb*rank) dimensions
+        QubitVector.qubits:     Qubit labels
+        QubitVector.qubit_nb:   The number of qubits
+        QubitVector.rank:       Order of the tensor, which has (qubit_nb*rank)
+                                dimensions
 
     """
 

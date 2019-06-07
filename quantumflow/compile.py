@@ -415,9 +415,9 @@ def translate_cswap_to_ccnot(gate: CSWAP) -> Circuit:
 
 def translate_ccnot_to_cnot(gate: CCNOT) -> Circuit:
     """Standard decomposition of CCNOT (Toffoli) gate into
-    six CNOT gates (Plus Hadamard and T gates.) [Nielsen2000]_
+    six CNOT gates (Plus Hadamard and T gates.)
 
-    .. [Nielsen2000]
+    Refs:
         M. A. Nielsen and I. L. Chuang, Quantum Computation and Quantum
         Information, Cambridge University Press (2000).
     """
