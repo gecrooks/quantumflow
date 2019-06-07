@@ -30,7 +30,6 @@ Some tests will be skipped depending on the current backend.
 
 The full tox testing suite should verifie against two consecutive versions of 
 python, in order to ameliorate dependency hell.
-(But at present [Nov 2018] we're stuck on python 3.6 only until tensorflow supports 3.7)
 
 Test Coverage
 #############
