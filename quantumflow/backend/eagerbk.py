@@ -46,6 +46,8 @@ MAX_QUBITS = 32
 
 def evaluate(tensor: BKTensor) -> TensorLike:
     """Return the value of a tensor"""
+    if type(tensor) == TENSOR:
+        return tensor.numpy()
     return tensor.numpy()
 
 
