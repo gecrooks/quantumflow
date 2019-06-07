@@ -1,12 +1,12 @@
 
 import pytest
 
-import networkx as nx
 import numpy as np
+import networkx as nx
 
 import quantumflow as qf
 
-from . import ALMOST_ZERO, tensorflow2_only, skip_torch
+from . import ALMOST_ZERO, tensorflow2_only, skip_torch, skip_ctf
 
 
 @skip_torch  # FIXME
@@ -26,7 +26,7 @@ def test_gradients():
     grads0 = qf.state_fidelity_gradients(ket0, ket1, circ)
     # print(grads0)
 
-    grads1 = qf.state_angle_gradients(ket0, ket1, circ)
+    _ = qf.state_angle_gradients(ket0, ket1, circ)
     # print(grads1)
 
     proj = qf.Projection([ket1])
@@ -38,6 +38,21 @@ def test_gradients():
     for g0, g1 in zip(grads0, grads2):
         assert qf.asarray(g0 - g1) == ALMOST_ZERO
         print(g0, g1)
+
+
+@skip_torch  # FIXME
+@skip_ctf    # FIXME
+def test_gradients_func():
+    graph = nx.grid_graph([2, 1])
+    layers = 2
+    params = qf.graph_circuit_params(graph, layers)
+    circ = qf.graph_circuit(graph, layers, params)
+    circ += qf.H((1, 1))  # add a non-parameteried gate. Should be ignored
+    qubits = circ.qubits
+    ket0 = qf.zero_state(qubits)
+    ket1 = qf.random_state(qubits)
+
+    grads1 = qf.state_angle_gradients(ket0, ket1, circ)
 
     proj = qf.Projection([ket1])
     grads3 = qf.expectation_gradients(ket0, circ, hermitian=proj,
@@ -88,7 +103,7 @@ def test_parameter_shift_circuits():
         fid0 = qf.state_fidelity(circ0.run(ket0), ket1)
         fid1 = qf.state_fidelity(circ1.run(ket0), ket1)
         grad = r*(fid1-fid0)
-    assert ALMOST_ZERO == grad-grads[n]
+    assert ALMOST_ZERO == qf.asarray(grad-grads[n])
 
 
 @tensorflow2_only

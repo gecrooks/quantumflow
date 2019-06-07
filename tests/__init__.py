@@ -43,6 +43,10 @@ skip_torch = pytest.mark.skipif(
     bk.BACKEND == 'torch',
     reason="Unsupported backend")
 
+skip_ctf = pytest.mark.skipif(
+    bk.BACKEND == 'ctf',
+    reason="Unsupported backend")
+
 skip_unless_pdflatex = pytest.mark.skipif(
     shutil.which('pdflatex') is None or shutil.which('pdftocairo') is None,
     reason='Necessary external dependencies not installed')

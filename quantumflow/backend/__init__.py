@@ -39,6 +39,9 @@ The current options are tensorflow, eager, pytorch, and numpy (default).
     complex math. Pytorch is not installed by default. See the pytorch website
     for installation instructions.
 
+- ctf (Cyclops Tensor Framework)
+    Experimental prototype. Potentially fast for large qubit states.
+
 
 Configuration
 #############
@@ -115,7 +118,7 @@ from ..config import ENV_PREFIX, SEED
 from .numpybk import set_random_seed as np_set_random_seed
 
 DEFAULT_BACKEND = 'numpy'
-BACKENDS = ('tensorflow', 'tensorflow2', 'eager', 'torch', 'numpy')
+BACKENDS = ('tensorflow', 'tensorflow2', 'eager', 'torch', 'ctf', 'numpy')
 
 # Environment variable override
 _BACKEND_EV = ENV_PREFIX + 'BACKEND'
@@ -131,6 +134,8 @@ elif BACKEND == 'tensorflow2':                       # pragma: no cover
     from quantumflow.backend.tensorflow2bk import *  # noqa: F403
 elif BACKEND == 'torch':                             # pragma: no cover
     from quantumflow.backend.torchbk import *        # noqa: F403
+elif BACKEND == 'ctf':                             # pragma: no cover
+    from quantumflow.backend.ctfbk import *        # noqa: F403
 else:                                                # pragma: no cover
     from quantumflow.backend.numpybk import *        # noqa: F403
 

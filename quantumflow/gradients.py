@@ -124,7 +124,7 @@ def expectation_gradients(ket0: State,
         if dfunc is not None:
             g = g * dfunc(expectation)
 
-        grads.append(g)
+        grads.append(asarray(g))
 
     return grads
 
@@ -168,7 +168,7 @@ def state_fidelity_gradients(ket0: State,
         f0 = gen.run(forward)
         g = - r * 2 * bk.imag(bk.inner(f0.tensor, back.tensor) * bk.conj(ol))
 
-        grads.append(g)
+        grads.append(asarray(g))
 
     return grads
 
@@ -191,7 +191,7 @@ def state_angle_gradients(ket0: State,
     """
     grads = state_fidelity_gradients(ket0, ket1, circ)
     fid = state_fidelity(circ.run(ket0), ket1)
-    fid = asarray(fid)
+    fid = asarray(np.real(fid))
     grads = - np.asarray(grads) / (2*np.sqrt((1-fid)*fid))
     return grads
 
@@ -318,6 +318,7 @@ class Adam(object):
 
             self.ms[i] = m_t
             self.vs[i] = v_t
+
             new_params.append(p_t)
 
         return new_params

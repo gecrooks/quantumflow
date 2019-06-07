@@ -13,6 +13,8 @@ Tensorflow eager mode backend for QuantumFlow
 import math
 import os
 
+import numpy as np
+
 import tensorflow as tf
 from tensorflow.contrib.eager.python import tfe
 tfe.enable_eager_execution()
@@ -46,7 +48,7 @@ MAX_QUBITS = 32
 
 def evaluate(tensor: BKTensor) -> TensorLike:
     """Return the value of a tensor"""
-    return tensor.numpy()
+    return np.array(tensor)
 
 
 def fcast(value: float) -> TensorLike:
