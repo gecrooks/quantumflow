@@ -123,7 +123,9 @@ class DAGCircuit(Operation):
 
     def components(self) -> List['DAGCircuit']:
         """Split DAGCircuit into independent components"""
-        comps = nx.weakly_connected_component_subgraphs(self.graph)
+        G = self.graph
+        comps = (G.subgraph(c).copy()
+                 for c in nx.weakly_connected_components(G))
         return [DAGCircuit(comp) for comp in comps]
 
     def layers(self) -> Circuit:
