@@ -8,6 +8,7 @@ Unit tests for quantumflow.visualization
 """
 
 from math import pi
+from sympy import Symbol
 
 import pytest
 
@@ -52,7 +53,7 @@ def test_gates_to_latex():
 
     # Gate with cunning hack
     gate = qf.RZ(0.4, 1)
-    gate.params['theta'] = qf.Parameter('\\theta')
+    gate.params['theta'] = Symbol('\\theta')
     circ += gate
 
     circ += qf.CNOT(1, 2)

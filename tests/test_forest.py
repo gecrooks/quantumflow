@@ -12,6 +12,7 @@ from math import pi
 import numpy as np
 
 import pytest
+pytest.importorskip("pyquil")      # noqa: 402
 
 import quantumflow as qf
 from quantumflow.forest import pyquil
@@ -206,12 +207,12 @@ def test_null_complier():
     assert prog2 == prog0
 
 
-@pytest.mark.skipif(not dependancies_installed(),
-                    reason='Necessary external dependencies not installed')
-def test_qvm():
-    circ = qf.ghz_circuit([0, 1, 2, 3])
-    with qf.pyquil.local_qvm():
-        qf.forest.qvm_run_and_measure(circ, 1)
+# @pytest.mark.skipif(not dependancies_installed(),
+#                     reason='Necessary external dependencies not installed')
+# def test_qvm():
+#     circ = qf.ghz_circuit([0, 1, 2, 3])
+#     with qf.pyquil.local_qvm():
+#         qf.forest.qvm_run_and_measure(circ, 1)
 
 
 # def test_get_virtual_qc():

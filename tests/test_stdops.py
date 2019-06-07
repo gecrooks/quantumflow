@@ -9,9 +9,9 @@ from . import skip_torch
 
 
 def test_measure():
-    prog = qf.Program()
+    prog = qf.Circuit()
     prog += qf.Measure(0, ('c', 0))
-    prog += qf.Call('X', params=[], qubits=[0])
+    prog += qf.X(0)
     prog += qf.Measure(0, ('c', 1))
     ket = prog.run()
 
@@ -34,9 +34,9 @@ def test_barrier():
 def test_if():
     circ = qf.Circuit()
     c = qf.Register('c')
-    circ += qf.Move(c[0], 0)
-    circ += qf.Move(c[1], 1)
-    circ += qf.If(qf.X(0), c[1])
+    # circ += qf.Move(c[0], 0)
+    # circ += qf.Move(c[1], 1)
+    circ += qf.If(qf.X(0), c[1], value=False)
     circ += qf.Measure(0, c[0])
     ket = circ.run()
     assert ket.memory[c[0]] == 1
@@ -44,8 +44,8 @@ def test_if():
 
     circ = qf.Circuit()
     c = qf.Register('c')
-    circ += qf.Move(c[0], 0)
-    circ += qf.Move(c[1], 0)
+    # circ += qf.Move(c[0], 0)
+    # circ += qf.Move(c[1], 0)
     circ += qf.If(qf.X(0), c[1])
     circ += qf.Measure(0, c[0])
     ket = circ.run()
@@ -54,8 +54,8 @@ def test_if():
 
     circ = qf.Circuit()
     c = qf.Register('c')
-    circ += qf.Move(c[0], 0)
-    circ += qf.Move(c[1], 0)
+    # circ += qf.Move(c[0], 0)
+    # circ += qf.Move(c[1], 0)
     circ += qf.If(qf.X(0), c[1], value=False)
     circ += qf.Measure(0, c[0])
     ket = circ.run()
