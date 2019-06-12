@@ -24,7 +24,6 @@ Standard circuits
 .. autofunction:: qft_circuit
 .. autofunction:: reversal_circuit
 .. autofunction:: control_circuit
-.. autofunction:: ccnot_circuit
 .. autofunction:: zyz_circuit
 .. autofunction:: phase_estimation_circuit
 .. autofunction:: addition_circuit
@@ -53,7 +52,7 @@ from .qubits import Qubit, Qubits
 from .states import State, Density, zero_state
 from .ops import Operation, Gate, Channel
 from .gates import control_gate, identity_gate
-from .stdgates import H, CPHASE, SWAP, CNOT, T, X, TX, TY, TZ, CCNOT, ZZ, CZ
+from .stdgates import H, CPHASE, SWAP, CNOT, X, TX, TY, TZ, CCNOT, ZZ, CZ
 
 __all__ = ['Circuit',
            'count_operations',
@@ -61,7 +60,6 @@ __all__ = ['Circuit',
            'qft_circuit',
            'reversal_circuit',
            'control_circuit',
-           'ccnot_circuit',
            'zyz_circuit',
            'phase_estimation_circuit',
            'addition_circuit',
@@ -261,39 +259,6 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
         circ += control_circuit(controls[-1:], gate ** -0.5)
         circ += control_circuit(controls[0:-1], X(controls[-1]))
         circ += control_circuit(controls[0:-1], gate ** 0.5)
-    return circ
-
-
-def ccnot_circuit(qubits: Qubits) -> Circuit:
-    """Standard decomposition of CCNOT (Toffoli) gate into
-    six CNOT gates (Plus Hadamard and T gates.) [Nielsen2000]_
-
-    .. [Nielsen2000]
-        M. A. Nielsen and I. L. Chuang, Quantum Computation and Quantum
-        Information, Cambridge University Press (2000).
-    """
-    if len(qubits) != 3:
-        raise ValueError('Expected 3 qubits')
-
-    q0, q1, q2 = qubits
-
-    circ = Circuit()
-    circ += H(q2)
-    circ += CNOT(q1, q2)
-    circ += T(q2).H
-    circ += CNOT(q0, q2)
-    circ += T(q2)
-    circ += CNOT(q1, q2)
-    circ += T(q2).H
-    circ += CNOT(q0, q2)
-    circ += T(q1)
-    circ += T(q2)
-    circ += H(q2)
-    circ += CNOT(q0, q1)
-    circ += T(q0)
-    circ += T(q1).H
-    circ += CNOT(q0, q1)
-
     return circ
 
 

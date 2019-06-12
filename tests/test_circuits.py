@@ -232,30 +232,21 @@ def test_add():
     assert len(list(circ.elements)) == 12
 
 
-def test_ccnot_circuit():
-    ket0 = qf.random_state(3)
-    ket1 = qf.CCNOT(0, 1, 2).run(ket0)
-    ket2 = qf.ccnot_circuit([0, 1, 2]).run(ket0)
-    assert qf.states_close(ket1, ket2)
-
-    with pytest.raises(ValueError):
-        qf.ccnot_circuit([0, 1, 2, 3])
-
-
 def test_ccnot_circuit_evolve():
     rho0 = qf.random_state(3).asdensity()
-    rho1 = qf.CCNOT(0, 1, 2).evolve(rho0)
-    rho2 = qf.ccnot_circuit([0, 1, 2]).evolve(rho0)
+    gate = qf.CCNOT(0, 1, 2)
+    circ = qf.translate_ccnot_to_cnot(gate)
+    rho1 = gate.evolve(rho0)
+    rho2 = circ.evolve(rho0)
     assert qf.densities_close(rho1, rho2)
-
-    qf.ccnot_circuit([0, 1, 2]).evolve()
 
 
 def test_circuit_aschannel():
     rho0 = qf.random_state(3).asdensity()
     rho1 = qf.CCNOT(0, 1, 2).evolve(rho0)
-
-    chan = qf.ccnot_circuit([0, 1, 2]).aschannel()
+    gate = qf.CCNOT(0, 1, 2)
+    circ = qf.translate_ccnot_to_cnot(gate)
+    chan = circ.aschannel()
     rho2 = chan.evolve(rho0)
 
     assert qf.densities_close(rho1, rho2)

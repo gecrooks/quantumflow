@@ -13,8 +13,8 @@ import numpy as np
 
 from quantumflow import (
     I, H, X, Y, Z, CNOT, CZ, SWAP, ISWAP, XX, YY, ZZ, S, CAN,
-    CCNOT, RZ, Circuit, ccnot_circuit, gates_close, RX, CPHASE, TZ, TY,
-    CPHASE00, CPHASE10, CPHASE01, PSWAP)
+    CCNOT, RZ, Circuit, gates_close, RX, CPHASE, TZ, TY,
+    CPHASE00, CPHASE10, CPHASE01, PSWAP, translate_ccnot_to_cnot)
 
 
 def identities():
@@ -216,7 +216,7 @@ def identities():
 
     name = "Toffoli gate CNOT decomposition"
     circ0 = Circuit([CCNOT(0, 1, 2)])
-    circ1 = ccnot_circuit([0, 1, 2])
+    circ1 = translate_ccnot_to_cnot(CCNOT(0, 1, 2))
     circuit_identities.append([name, circ0, circ1])
 
     # Parametric circuits

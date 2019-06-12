@@ -7,7 +7,7 @@ from typing import Generator, Tuple, Set, Sequence
 import numpy as np
 
 from .ops import Operation, Gate
-from .circuits import Circuit, ccnot_circuit
+from .circuits import Circuit
 from .stdgates import (H, S, S_H, T, T_H, X, Y, Z, TX, TY, TZ,
                        RX, RY, RZ, CAN, XX, YY, ZZ, CNOT, CZ,
                        ISWAP, CPHASE, CPHASE01, CPHASE10, CPHASE00,
@@ -270,44 +270,44 @@ def translate_tx_to_zxzxz(gate: TX) -> Circuit:
 
 
 def translate_hadamard_to_zxz(gate: H) -> Circuit:
-    """Convert a Hadamard gate to a circuit with TZ and TX gates"""
+    """Convert a Hadamard gate to a circuit with TZ and TX gates."""
     q0, = gate.qubits
     return Circuit([TZ(0.5, q0), TX(0.5, q0), TZ(0.5, q0)])
 
 
 def translate_cnot_to_cz(gate: CNOT) -> Circuit:
-    """Convert CNOT gate to a CZ based circuit"""
+    """Convert CNOT gate to a CZ based circuit."""
     q0, q1 = gate.qubits
     return Circuit([H(q1), CZ(q0, q1), H(q1)])
 
 
 def translate_cz_to_zz(gate: CZ) -> Circuit:
-    """Convert CZ gate to a ZZ based circuit"""
+    """Convert CZ gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
     return Circuit([ZZ(0.5, q0, q1), S_H(q0), S_H(q1)])
 
 
 def translate_iswap_to_swap_cz(gate: ISWAP) -> Circuit:
-    """Convert ISWAP gate to a SWAP, CZ based circuit"""
+    """Convert ISWAP gate to a SWAP, CZ based circuit."""
     q0, q1 = gate.qubits
     return Circuit([SWAP(q0, q1), CZ(q0, q1), S(q0), S(q1)])
 
 
 def translate_swap_to_cnot(gate: ISWAP) -> Circuit:
-    """Convert a SWAP gate to a circuit with 3 CNOTs"""
+    """Convert a SWAP gate to a circuit with 3 CNOTs."""
     q0, q1 = gate.qubits
     return Circuit([CNOT(q0, q1), CNOT(q1, q0), CNOT(q0, q1)])
 
 
 def translate_cphase_to_zz(gate: CPHASE) -> Circuit:
-    """Convert a CPHASE gate to a ZZ based circuit"""
+    """Convert a CPHASE gate to a ZZ based circuit."""
     t = - gate.params['theta'] / (2 * np.pi)
     q0, q1 = gate.qubits
     return Circuit([ZZ(t, q0, q1), TZ(-t, q0), TZ(-t, q1)])
 
 
 def translate_cphase00_to_zz(gate: CPHASE00) -> Circuit:
-    """Convert a CPHASE gate to a ZZ based circuit"""
+    """Convert a CPHASE gate to a ZZ based circuit."""
     t = - gate.params['theta'] / (2 * np.pi)
     q0, q1 = gate.qubits
     circ = Circuit([X(q0),
@@ -321,7 +321,7 @@ def translate_cphase00_to_zz(gate: CPHASE00) -> Circuit:
 
 
 def translate_cphase01_to_zz(gate: CPHASE01) -> Circuit:
-    """Convert a CPHASE01 gate to a ZZ based circuit"""
+    """Convert a CPHASE01 gate to a ZZ based circuit."""
     t = - gate.params['theta'] / (2 * np.pi)
     q0, q1 = gate.qubits
     circ = Circuit([X(q0),
@@ -333,7 +333,7 @@ def translate_cphase01_to_zz(gate: CPHASE01) -> Circuit:
 
 
 def translate_cphase10_to_zz(gate: CPHASE10) -> Circuit:
-    """Convert a CPHASE10 gate to a ZZ based circuit"""
+    """Convert a CPHASE10 gate to a ZZ based circuit."""
     t = - gate.params['theta'] / (2 * np.pi)
     q0, q1 = gate.qubits
     circ = Circuit([X(q1),
@@ -345,7 +345,7 @@ def translate_cphase10_to_zz(gate: CPHASE10) -> Circuit:
 
 
 def translate_can_to_xx_yy_zz(gate: CAN) -> Circuit:
-    """Convert a canonical gate to a circuit with XX, YY, and ZZ gates"""
+    """Convert a canonical gate to a circuit with XX, YY, and ZZ gates."""
     tx, ty, tz = gate.params.values()
     q0, q1 = gate.qubits
     circ = Circuit()
@@ -359,7 +359,7 @@ def translate_can_to_xx_yy_zz(gate: CAN) -> Circuit:
 
 
 def translate_xx_to_zz(gate: XX) -> Circuit:
-    """Covnert an XX gate to a ZZ based circuit"""
+    """Covnert an XX gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
     t = gate.params['t']
     circ = Circuit([H(q0),
@@ -371,7 +371,7 @@ def translate_xx_to_zz(gate: XX) -> Circuit:
 
 
 def translate_yy_to_zz(gate: YY) -> Circuit:
-    """Covnert a YY gate to a ZZ based circuit"""
+    """Covnert a YY gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
     t = gate.params['t']
     circ = Circuit([X(q0)**0.5,
@@ -415,13 +415,33 @@ def translate_cswap_to_ccnot(gate: CSWAP) -> Circuit:
 
 def translate_ccnot_to_cnot(gate: CCNOT) -> Circuit:
     """Standard decomposition of CCNOT (Toffoli) gate into
-    six CNOT gates (Plus Hadamard and T gates.)
+    six CNOT gates (Plus Hadamard and T gates).
 
     Refs:
         M. A. Nielsen and I. L. Chuang, Quantum Computation and Quantum
         Information, Cambridge University Press (2000).
     """
-    return ccnot_circuit(gate.qubits)
+
+    q0, q1, q2 = gate.qubits
+
+    circ = Circuit()
+    circ += H(q2)
+    circ += CNOT(q1, q2)
+    circ += T(q2).H
+    circ += CNOT(q0, q2)
+    circ += T(q2)
+    circ += CNOT(q1, q2)
+    circ += T(q2).H
+    circ += CNOT(q0, q2)
+    circ += T(q1)
+    circ += T(q2)
+    circ += H(q2)
+    circ += CNOT(q0, q1)
+    circ += T(q0)
+    circ += T(q1).H
+    circ += CNOT(q0, q1)
+
+    return circ
 
 
 # DOCME
