@@ -11,12 +11,13 @@ QuantumFlow Gates and actions on gates.
 from typing import TextIO, Union
 from functools import reduce
 import numpy as np
-import scipy.stats
 
+from . import backend as bk
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits, qubits_count_tuple, asarray
 from .qubits import outer_product
 from .ops import Gate
+from . import utils
 
 __all__ = ['identity_gate',
            'random_gate',
@@ -42,9 +43,11 @@ class I(Gate):                                              # noqa: E742
     def __init__(self, *qubits: Qubit) -> None:
         if not qubits:
             qubits = (0,)
-        N = len(qubits)
-        tensor = np.eye(2**N)
-        super().__init__(qubits=qubits, tensor=tensor)
+        super().__init__(qubits=qubits)
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct(np.eye(2**self.qubit_nb))
 
     @property
     def H(self) -> Gate:
@@ -141,8 +144,11 @@ class P0(Gate):
     of the resultant state is multiplied by the probability of observing 0.
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        operator = [[1, 0], [0, 0]]
-        super().__init__(operator, qubits=[q0])
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct([[1, 0], [0, 0]])
 
 
 class P1(Gate):
@@ -152,8 +158,11 @@ class P1(Gate):
     of the resultant state is multiplied by the probability of observing 1.
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        operator = [[0, 0], [0, 1]]
-        super().__init__(operator, qubits=[q0])
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct([[0, 0], [0, 1]])
 
 
 def random_gate(qubits: Union[int, Qubits]) -> Gate:
@@ -164,5 +173,5 @@ def random_gate(qubits: Union[int, Qubits]) -> Gate:
         Francesco Mezzadri, math-ph/0609050
     """
     N, qubits = qubits_count_tuple(qubits)
-    unitary = scipy.stats.unitary_group.rvs(2**N)
+    unitary = utils.unitary_ensemble(2**N)
     return Gate(unitary, qubits=qubits, name='RAND{}'.format(N))

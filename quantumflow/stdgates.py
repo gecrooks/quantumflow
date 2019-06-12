@@ -147,8 +147,12 @@ class X(Gate):
         X() &\equiv \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}
      """
     def __init__(self, q0: Qubit = 0) -> None:
-        qubits = [q0]
-        super().__init__([[0, 1], [1, 0]], qubits)
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        unitary = [[0, 1], [1, 0]]
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -168,12 +172,16 @@ class Y(Gate):
     mnemonic: "Minus eye high".
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        qubits = [q0]
-        super().__init__(np.asarray([[0, -1.0j], [1.0j, 0]]), qubits)
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        unitary = np.asarray([[0, -1.0j], [1.0j, 0]])
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
-        return copy.copy(self)  # Hermitian
+        return self  # Hermitian
 
     def __pow__(self, t: float) -> Gate:
         return TY(t, *self.qubits)
@@ -187,12 +195,16 @@ class Z(Gate):
         Z() &\equiv \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        qubits = [q0]
-        super().__init__([[1, 0], [0, -1.0]], qubits)
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        unitary = np.asarray([[1, 0], [0, -1.0]])
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
-        return copy.copy(self)  # Hermitian
+        return self  # Hermitian
 
     def __pow__(self, t: float) -> Gate:
         return TZ(t, *self.qubits)
@@ -207,9 +219,12 @@ class H(Gate):
         \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 1], [1, -1]]) / sqrt(2)
-        qubits = [q0]
-        super().__init__(unitary, qubits)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -229,8 +244,12 @@ class S(Gate):
 
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        qubits = [q0]
-        super().__init__(np.asarray([[1.0, 0.0], [0.0, 1.0j]]), qubits)
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        unitary = np.asarray([[1.0, 0.0], [0.0, 1.0j]])
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -249,9 +268,12 @@ class T(Gate):
         \begin{pmatrix} 1 & 0 \\ 0 & e^{i \pi / 4} \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.cis(pi / 4.0))]]
-        qubits = [q0]
-        super().__init__(unitary, qubits)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -270,10 +292,14 @@ class PHASE(Gate):
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0.0], [0.0, bk.cis(ctheta)]]
-        qubits = [q0]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -299,11 +325,15 @@ class RX(Gate):
         theta: Angle of rotation in Bloch sphere
     """
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[bk.cos(ctheta / 2), -1.0j * bk.sin(ctheta / 2)],
                    [-1.0j * bk.sin(ctheta / 2), bk.cos(ctheta / 2)]]
-        qubits = [q0]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -327,11 +357,15 @@ class RY(Gate):
         theta: Angle of rotation in Bloch sphere
     """
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[bk.cos(ctheta / 2.0), -bk.sin(ctheta / 2.0)],
                    [bk.sin(ctheta / 2.0), bk.cos(ctheta / 2.0)]]
-        qubits = [q0]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -356,11 +390,15 @@ class RZ(Gate):
         theta: Angle of rotation in Bloch sphere
     """
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[bk.exp(-ctheta * 0.5j), 0],
                    [0, bk.exp(ctheta * 0.5j)]]
-        qubits = [q0]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -385,13 +423,15 @@ class CZ(Gate):
                                     0&0&1&0 \\ 0&0&0&-1 \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0],
                    [0, 1, 0, 0],
                    [0, 0, 1, 0],
                    [0, 0, 0, -1]]
-        params = None
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -408,14 +448,17 @@ class CNOT(Gate):
         \text{CNOT}() \equiv \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                             0&0&0&1 \\ 0&0&1&0 \end{pmatrix}
     """
+
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0],
                    [0, 1, 0, 0],
                    [0, 0, 0, 1],
                    [0, 0, 1, 0]]
-        params = None
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -435,13 +478,15 @@ class SWAP(Gate):
 
     """
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0],
                    [0, 0, 1, 0],
                    [0, 1, 0, 0],
                    [0, 0, 0, 1]]
-        params = None
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -462,14 +507,16 @@ class ISWAP(Gate):
         # Note: array wrapper is to work around an eager mode
         # (not not regular tensorflow) issue.
         # "Can't convert Python sequence with mixed types to Tensor."
+        super().__init__(qubits=[q0, q1])
 
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = np.array([[1, 0, 0, 0],
                             [0, 0, 1j, 0],
                             [0, 1j, 0, 0],
                             [0, 0, 0, 1]])
-        params = None
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, params)
+
+        return bk.astensorproduct(unitary)
 
 
 class CPHASE00(Gate):
@@ -480,13 +527,17 @@ class CPHASE00(Gate):
     """
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[bk.exp(1j * ctheta), 0, 0, 0],
                    [0, 1.0, 0, 0],
                    [0, 0, 1.0, 0],
                    [0, 0, 0, 1.0]]
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -502,13 +553,17 @@ class CPHASE01(Gate):
     """
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0, 0, 0],
                    [0, bk.exp(1j * ctheta), 0, 0],
                    [0, 0, 1.0, 0],
                    [0, 0, 0, 1.0]]
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -524,13 +579,17 @@ class CPHASE10(Gate):
     """
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0, 0, 0],
                    [0, 1.0, 0, 0],
                    [0, 0, bk.exp(1j * ctheta), 0],
                    [0, 0, 0, 1.0]]
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -546,13 +605,17 @@ class CPHASE(Gate):
     """
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0, 0, 0],
                    [0, 1.0, 0, 0],
                    [0, 0, 1.0, 0],
                    [0, 0, 0, bk.exp(1j * ctheta)]]
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -576,12 +639,15 @@ class PSWAP(Gate):
     """
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
-        ctheta = bk.ccast(theta)
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
+        ctheta = bk.ccast(theta)
         unitary = [[[[1, 0], [0, 0]], [[0, 0], [bk.exp(ctheta * 1.0j), 0]]],
                    [[[0, bk.exp(ctheta * 1.0j)], [0, 0]], [[0, 0], [0, 1]]]]
-        qubits = [q0, q1]
-        super().__init__(unitary, qubits, dict(theta=theta))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -606,13 +672,17 @@ class PISWAP(Gate):
 
     """
     def __init__(self, theta: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[[[1, 0], [0, 0]],
                     [[0, bk.cos(2*ctheta)], [bk.sin(2*ctheta) * 1j, 0]]],
                    [[[0, bk.sin(2*ctheta) * 1j], [bk.cos(2*ctheta), 0]],
                     [[0, 0], [0, 1]]]]
-        params = dict(theta=theta)
-        super().__init__(unitary, [q0, q1], params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -649,6 +719,10 @@ class CCNOT(Gate):
                  q0: Qubit = 0,
                  q1: Qubit = 1,
                  q2: Qubit = 2) -> None:
+        super().__init__(qubits=[q0, q1, q2])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
                    [0, 0, 1, 0, 0, 0, 0, 0],
@@ -657,9 +731,7 @@ class CCNOT(Gate):
                    [0, 0, 0, 0, 0, 1, 0, 0],
                    [0, 0, 0, 0, 0, 0, 0, 1],
                    [0, 0, 0, 0, 0, 0, 1, 0]]
-        params = None
-        qubits = [q0, q1, q2]
-        super().__init__(unitary, qubits, params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -684,8 +756,14 @@ class CSWAP(Gate):
                 0& 0& 0& 0& 0& 0& 0& 1
             \end{pmatrix}
     """
-    def __init__(self, q0: Qubit = 0,
-                 q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self,
+                 q0: Qubit = 0,
+                 q1: Qubit = 1,
+                 q2: Qubit = 2) -> None:
+        super().__init__(qubits=[q0, q1, q2])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
                    [0, 0, 1, 0, 0, 0, 0, 0],
@@ -694,13 +772,11 @@ class CSWAP(Gate):
                    [0, 0, 0, 0, 0, 0, 1, 0],
                    [0, 0, 0, 0, 0, 1, 0, 0],
                    [0, 0, 0, 0, 0, 0, 0, 1]]
-        params = None
-        qubits = [q0, q1, q2]
-        super().__init__(unitary, qubits, params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
-        return copy.copy(self)  # Hermitian
+        return self  # Hermitian
 
 
 # Other 1-qubit gates
@@ -714,7 +790,12 @@ class S_H(Gate):
 
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        super().__init__(np.asarray([[1.0, 0.0], [0.0, -1.0j]]), [q0])
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        unitary = np.asarray([[1.0, 0.0], [0.0, -1.0j]])
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -733,8 +814,12 @@ class T_H(Gate):
         \begin{pmatrix} 1 & 0 \\ 0 & e^{-i \pi / 4} \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.cis(-pi / 4.0))]]
-        super().__init__(unitary, [q0])
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -762,15 +847,19 @@ class RN(Gate):
                  ny: float,
                  nz: float,
                  q0: Qubit = 0) -> None:
-        ctheta = bk.ccast(theta)
+        params = dict(theta=theta, nx=nx, ny=ny, nz=nz)
+        super().__init__(params=params, qubits=[q0])
 
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta, nx, ny, nz = self.params.values()
+        ctheta = bk.ccast(theta)
         cost = bk.cos(ctheta / 2)
         sint = bk.sin(ctheta / 2)
         unitary = [[cost - 1j * sint * nz, -1j * sint * nx - sint * ny],
                    [-1j * sint * nx + sint * ny, cost + 1j * sint * nz]]
 
-        params = dict(theta=theta, nx=nx, ny=ny, nz=nz)
-        super().__init__(unitary, [q0], params)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -793,13 +882,18 @@ class TX(Gate):
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
         t = t % 2
+        super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t = self.params['t']
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2),
                     phase * -1.0j * bk.sin(ctheta / 2)],
                    [phase * -1.0j * bk.sin(ctheta / 2),
                     phase * bk.cos(ctheta / 2)]]
-        super().__init__(unitary, [q0], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -825,15 +919,18 @@ class TY(Gate):
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
         t = t % 2
+        super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t = self.params['t']
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2.0),
                     phase * -bk.sin(ctheta / 2.0)],
                    [phase * bk.sin(ctheta / 2.0),
                     phase * bk.cos(ctheta / 2.0)]]
-        # unitary = RY(pi*t).tensor * bk.exp(- 0.5j * t)
-        qubits = [q0]
-        super().__init__(unitary, qubits, dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -856,11 +953,16 @@ class TZ(Gate):
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
         t = t % 2
+        super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t = self.params['t']
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.exp(-ctheta * 0.5j), 0],
                    [0, phase * bk.exp(ctheta * 0.5j)]]
-        super().__init__(unitary, [q0], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -886,16 +988,20 @@ class TH(Gate):
         \end{pmatrix}
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t = self.params['t']
         theta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * theta)
-
         unitary = [[phase * bk.cos(theta / 2)
                     - (phase * 1.0j * bk.sin(theta / 2)) / sqrt(2),
                     -(phase * 1.0j * bk.sin(theta / 2)) / sqrt(2)],
                    [-(phase * 1.0j * bk.sin(theta / 2)) / sqrt(2),
                     phase * bk.cos(theta / 2)
                     + (phase * 1.0j * bk.sin(theta / 2)) / sqrt(2)]]
-        super().__init__(unitary, [q0], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -929,6 +1035,11 @@ class ZYZ(Gate):
     """
     def __init__(self, t0: float, t1: float,
                  t2: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(t0=t0, t1=t1, t2=t2), qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t0, t1, t2 = self.params.values()
         ct0 = bk.ccast(pi * t0)
         ct1 = bk.ccast(pi * t1)
         ct2 = bk.ccast(pi * t2)
@@ -939,7 +1050,7 @@ class ZYZ(Gate):
                    [bk.cis(ct3 + 0.5 * ct2 - 0.5 * ct0) * bk.sin(0.5 * ct1),
                     bk.cis(ct3 + 0.5 * ct2 + 0.5 * ct0) * bk.cos(0.5 * ct1)]]
 
-        super().__init__(unitary, [q0], dict(t0=t0, t1=t1, t2=t2))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -967,14 +1078,18 @@ class CAN(Gate):
     def __init__(self,
                  tx: float, ty: float, tz: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(tx=tx, ty=ty, tz=tz), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        tx, ty, tz = self.params.values()
         xx = XX(tx)
         yy = YY(ty)
         zz = ZZ(tz)
 
         gate = yy @ xx
         gate = zz @ gate
-        unitary = gate.tensor
-        super().__init__(unitary, [q0, q1], dict(tx=tx, ty=ty, tz=tz))
+        return gate.tensor
 
     @property
     def H(self) -> Gate:
@@ -1007,12 +1122,17 @@ class XX(Gate):
         t:
     """
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(t=t), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t, = self.params.values()
         theta = bk.ccast(pi * t)
         unitary = [[bk.cos(theta / 2), 0, 0, -1.0j * bk.sin(theta / 2)],
                    [0, bk.cos(theta / 2), -1.0j * bk.sin(theta / 2), 0],
                    [0, -1.0j * bk.sin(theta / 2), bk.cos(theta / 2), 0],
                    [-1.0j * bk.sin(theta / 2), 0, 0, bk.cos(theta / 2)]]
-        super().__init__(unitary, [q0, q1], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -1034,12 +1154,17 @@ class YY(Gate):
         t:
     """
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(t=t), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t, = self.params.values()
         theta = bk.ccast(pi * t)
         unitary = [[bk.cos(theta / 2), 0, 0, 1.0j * bk.sin(theta / 2)],
                    [0, bk.cos(theta / 2), -1.0j * bk.sin(theta / 2), 0],
                    [0, -1.0j * bk.sin(theta / 2), bk.cos(theta / 2), 0],
                    [1.0j * bk.sin(theta / 2), 0, 0, bk.cos(theta / 2)]]
-        super().__init__(unitary, [q0, q1], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -1061,12 +1186,17 @@ class ZZ(Gate):
         t:
     """
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(t=t), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t, = self.params.values()
         theta = bk.ccast(pi * t)
         unitary = [[[[bk.cis(-theta / 2), 0], [0, 0]],
                     [[0, bk.cis(theta / 2)], [0, 0]]],
                    [[[0, 0], [bk.cis(theta / 2), 0]],
                     [[0, 0], [0, bk.cis(-theta / 2)]]]]
-        super().__init__(unitary, [q0, q1], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -1085,8 +1215,13 @@ class EXCH(Gate):
 
     """
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
+        super().__init__(params=dict(t=t), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        t, = self.params.values()
         unitary = CAN(t, t, t).tensor
-        super().__init__(unitary, [q0, q1], dict(t=t))
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
