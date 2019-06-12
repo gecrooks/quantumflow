@@ -51,9 +51,8 @@ def test_gates_to_latex():
     circ += qf.TH(0.5, 3)
     circ += qf.TZ(0.47276, 1)
 
-    # Gate with cunning hack
-    gate = qf.RZ(0.4, 1)
-    gate.params['theta'] = Symbol('\\theta')
+    # Gate with symbolic parameter
+    gate = qf.RZ(Symbol('\\theta'), 1)
     circ += gate
 
     circ += qf.CNOT(1, 2)

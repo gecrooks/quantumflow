@@ -19,11 +19,12 @@ class SX(Gate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
     """
-
     def __init__(self, q0: Qubit = 0) -> None:
-        qubits = [q0]
-        unitary = TX(0.5).tensor
-        super().__init__(unitary, qubits)
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return TX(0.5).tensor
 
     @property
     def H(self) -> Gate:
@@ -38,9 +39,11 @@ class SX_H(Gate):
     Complex conjugate of the SX gate, X-MINUS-90 gate.
     """
     def __init__(self, q0: Qubit = 0) -> None:
-        qubits = [q0]
-        tensor = TX(-0.5).tensor
-        super().__init__(tensor, qubits)
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return TX(-0.5).tensor
 
     @property
     def H(self) -> Gate:
@@ -62,10 +65,15 @@ class BARENCO(Gate):
                  alpha: float,
                  phi: float,
                  theta: float,
-                 q0: Qubit,
-                 q1: Qubit) -> None:
+                 q0: Qubit = 0,
+                 q1: Qubit = 1) -> None:
         params = dict(alpha=alpha, phi=phi, theta=theta)
         qubits = [q0, q1]
+        super().__init__(params=params, qubits=qubits)
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        alpha, phi, theta = self.params.values()
 
         calpha = bk.ccast(alpha)
         cphi = bk.ccast(phi)
@@ -77,7 +85,7 @@ class BARENCO(Gate):
                     -1j * bk.cis(calpha - cphi) * bk.sin(ctheta)],
                    [0, 0, -1j * bk.cis(calpha + cphi) * bk.sin(ctheta),
                     bk.cis(calpha) * bk.cos(ctheta)]]
-        super().__init__(unitary, qubits, params)
+        return bk.astensorproduct(unitary)
 
 
 class CY(Gate):
@@ -96,12 +104,15 @@ class CY(Gate):
             \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
-        qubits = [q0, q1]
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 0, 0, 0],
                               [0, 1, 0, 0],
                               [0, 0, 0, -1j],
                               [0, 0, 1j, 0]])
-        super().__init__(unitary, qubits)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -124,12 +135,15 @@ class CH(Gate):
             \end{pmatrix}
     """
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
-        qubits = [q0, q1]
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 0, 0, 0],
                               [0, 1, 0, 0],
                               [0, 0, 1 / np.sqrt(2), 1 / np.sqrt(2)],
                               [0, 0, 1 / np.sqrt(2), -1 / np.sqrt(2)]])
-        super().__init__(unitary, qubits)
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> Gate:
@@ -153,16 +167,18 @@ class U3(Gate):
                  phi: float,
                  lam: float,
                  q0: Qubit = 0) -> None:
-        params = dict(theta=theta, phi=phi, lam=lam)
-        qubits = [q0]
+        super().__init__(params=dict(theta=theta, phi=phi, lam=lam),
+                         qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta, phi, lam = self.params.values()
+        q0 = self.qubits[0]
         circ = Circuit()
         circ += RZ(lam, q0)
         circ += RY(theta, q0)
         circ += RZ(phi, q0)
-        self.circuit = circ
-
-        unitary = circ.asgate().tensor
-        super().__init__(unitary, qubits, params)
+        return circ.asgate().tensor
 
     @property
     def H(self) -> Gate:
@@ -202,11 +218,15 @@ class CU3(Gate):
                  lam: float,
                  q0: Qubit = 0,
                  q1: Qubit = 1) -> None:
-        params = dict(theta=theta, phi=phi, lam=lam)
-        qubits = [q0, q1]
+        super().__init__(params=dict(theta=theta, phi=phi, lam=lam),
+                         qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        q0, q1 = self.qubits
+        theta, phi, lam = self.params.values()
         gate = U3(theta, phi, lam, q1)
-        unitary = control_gate(q0, gate).tensor
-        super().__init__(unitary, qubits, params)
+        return control_gate(q0, gate).tensor
 
     @property
     def H(self) -> Gate:
@@ -223,11 +243,14 @@ class CRZ(Gate):
                  theta: float,
                  q0: Qubit = 0,
                  q1: Qubit = 1) -> None:
-        params = dict(theta=theta)
-        qubits = [q0, q1]
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta, = self.params.values()
+        q0, q1 = self.qubits
         gate = RZ(theta, q1)
-        unitary = control_gate(q0, gate).tensor
-        super().__init__(unitary, qubits, params)
+        return control_gate(q0, gate).tensor
 
     @property
     def H(self) -> Gate:
@@ -242,11 +265,14 @@ class RZZ(Gate):
                  theta: float,
                  q0: Qubit = 0,
                  q1: Qubit = 1) -> None:
-        params = dict(theta=theta)
-        qubits = [q0, q1]
+        super().__init__(params=dict(theta=theta), qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        theta, = self.params.values()
+        q0, q1 = self.qubits
         circ = Circuit([CNOT(q0, q1), RZ(theta, q1), CNOT(q0, q1)])
-        unitary = circ.asgate().tensor
-        super().__init__(unitary, qubits, params)
+        return circ.asgate().tensor
 
     @property
     def H(self) -> Gate:
