@@ -13,17 +13,28 @@ def test_BARENCO():
     print(gate.qubits)
 
 
-def test_SX():
-    gate = qf.SX(0)
+def test_V():
+    gate = qf.V(0)
     print(gate.tensor, gate.qubits)
     qf.print_gate(gate)
 
-    assert qf.gates_close(qf.SX(0), qf.TX(0.5, 0))
-    assert qf.gates_close(qf.SX_H(0), qf.TX(-0.5, 0))
-    assert qf.gates_close(qf.SX(1).H, qf.SX_H(1))
-    assert qf.gates_close(qf.SX(1).H.H, qf.SX(1))
-    assert qf.gates_close(qf.SX() ** 0.5, qf.TX(0.25))
-    assert qf.gates_close(qf.SX_H() ** 0.5, qf.TX(-0.25))
+    assert qf.gates_close(qf.V(0), qf.TX(0.5, 0))
+    assert qf.gates_close(qf.V_H(0), qf.TX(-0.5, 0))
+    assert qf.gates_close(qf.V(1).H, qf.V_H(1))
+    assert qf.gates_close(qf.V(1).H.H, qf.V(1))
+    assert qf.gates_close(qf.V() ** 0.5, qf.TX(0.25))
+    assert qf.gates_close(qf.V_H() ** 0.5, qf.TX(-0.25))
+
+
+def test_CV():
+    gate0 = qf.CNOT(0, 1) ** 0.5
+    gate1 = qf.CV(0, 1)
+    assert qf.gates_close(gate0, gate1)
+
+    gate2 = qf.CV_H(0, 1)
+    assert qf.gates_close(gate0.H, gate2)
+
+    assert qf.gates_close(gate1.H.H, gate1)
 
 
 def test_CY():
