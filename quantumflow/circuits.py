@@ -104,6 +104,9 @@ class Circuit(Operation):
     def __iter__(self) -> Iterator[Operation]:
         return self.elements.__iter__()
 
+    def __len__(self) -> int:
+        return self.elements.__len__()
+
     # TESTME
     def size(self) -> int:
         """Return the number of operations in this circuit"""
