@@ -12,6 +12,7 @@ from .stdgates import (H, S, S_H, T, T_H, X, Y, Z, TX, TY, TZ,
                        RX, RY, RZ, CAN, XX, YY, ZZ, CNOT, CZ,
                        ISWAP, CPHASE, CPHASE01, CPHASE10, CPHASE00,
                        SWAP, CCNOT, EXCH, CSWAP)
+from .moregates import CV, CV_H
 from .dagcircuit import DAGCircuit
 from .gates import almost_identity
 
@@ -96,10 +97,24 @@ def merge_hadamards(dagc: DAGCircuit) -> None:
 
 def merge_tz(dagc: DAGCircuit) -> None:
     """Merge neighbouring TZ gates"""
-    for gate0, gate1 in find_pattern(dagc, {TZ}, {TZ}):
+    _merge_turns(dagc, TZ)
+
+
+# def merge_tx(dagc: DAGCircuit) -> None:
+#     """Merge neighbouring TZ gates"""
+#     _merge_turns(dagc, TX)
+
+
+# def merge_ty(dagc: DAGCircuit) -> None:
+#     """Merge neighbouring TZ gates"""
+#     _merge_turns(dagc, TY)
+
+
+def _merge_turns(dagc: DAGCircuit, gate_class) -> None:
+    for gate0, gate1 in find_pattern(dagc, {gate_class}, {gate_class}):
         t = gate0.params['t'] + gate1.params['t']
         qubit, = gate0.qubits
-        gate = TZ(t, qubit)
+        gate = gate_class(t, qubit)
 
         prv = dagc.prev_element(gate0)
         nxt = dagc.next_element(gate1)
@@ -132,7 +147,7 @@ def retrogress_tz(dagc: DAGCircuit) -> None:
 
 
 def convert_HZH(dagc: DAGCircuit) -> None:
-    """Convert a sequcen of H-TZ-H gates to a TZ gate"""
+    """Convert a sequence of H-TZ-H gates to a TX gate"""
     for elem2, elem3 in find_pattern(dagc, {TZ}, {H}):
         elem1 = dagc.prev_element(elem2)
         if not isinstance(elem1, H):
@@ -273,6 +288,26 @@ def translate_hadamard_to_zxz(gate: H) -> Circuit:
     """Convert a Hadamard gate to a circuit with TZ and TX gates."""
     q0, = gate.qubits
     return Circuit([TZ(0.5, q0), TX(0.5, q0), TZ(0.5, q0)])
+
+
+# # TESTME
+# def translate_tx_to_hzh(gate: TX) -> Circuit:
+#     """Convert a TX gate to a circuit with Hadamard and TZ gates"""
+#     q0, = gate.qubits
+#     t, = gate.params.values()
+#     return Circuit([H(q0), TZ(t, q0), H(q0)])
+
+
+# # TESTME
+# def translate_tz_to_t(gate: TZ) -> Circuit:
+#     """Convert a TZ gate to a sequence of T gates"""
+
+#     q0, = gate.qubits
+#     t, = gate.params.values()
+#     ts = int(round(4*(t % 2)))
+#     # ASSERT
+#     circ = Circuit([T(q0) for a in range(ts)])
+#     return circ
 
 
 def translate_cnot_to_cz(gate: CNOT) -> Circuit:
@@ -440,6 +475,32 @@ def translate_ccnot_to_cnot(gate: CCNOT) -> Circuit:
     circ += T(q0)
     circ += T(q1).H
     circ += CNOT(q0, q1)
+
+    return circ
+
+
+def translate_ccnot_to_cv(gate: CCNOT) -> Circuit:
+    """
+    Decomposition of CCNOT (Toffoli) gate into 3 CV (square root of CNOT) gates
+    and 2 CNOTs.
+
+    Refs:
+         Barenco, Adriano; Bennett, Charles H.; Cleve, Richard;
+         DiVincenzo, David P.; Margolus, Norman; Shor, Peter; Sleator, Tycho;
+         Smolin, John A.; Weinfurter, Harald (Nov 1995). "Elementary gates for
+         quantum computation". Physical Review A. American Physical Society. 52
+         (5): 3457–3467. arXiv:quant-ph/9503016
+    """
+
+    q0, q1, q2 = gate.qubits
+
+    circ = Circuit([
+        CV(q1, q2),
+        CNOT(q0, q1),
+        CV_H(q1, q2),
+        CNOT(q0, q1),
+        CV(q0, q2)
+        ])
 
     return circ
 
