@@ -84,8 +84,8 @@ def identities():
 
     name = "SWAP to 3 CZs"
     circ0 = Circuit([SWAP(0, 1)])
-    circ1 = Circuit([H(1), CZ(0, 1), H(0), H(1), CZ(1, 0), H(0), H(1),
-                     CZ(0, 1), H(1)])
+    circ1 = Circuit([CZ(0, 1), H(0), H(1), CZ(1, 0), H(0), H(1),
+                     CZ(0, 1), H(0), H(1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "ISWAP decomposition to SWAP and CNOT"
