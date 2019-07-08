@@ -207,7 +207,7 @@ class Projection(Operation):
 
 
 class QubitPermutation(Operation):
-    """A permutation of qubits. A generalized mult-qubit SWAP."""
+    """A permutation of qubits. A generalized multi-qubit SWAP."""
     def __init__(self, qubits_in: Qubits, qubits_out: Qubits) -> None:
         if set(qubits_in) != set(qubits_out):
             raise ValueError("Incompatible sets of qubits")
