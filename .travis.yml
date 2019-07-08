@@ -16,7 +16,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install -c conda-forge lapack
-  - conda install -c cvxgrp cvxpy
+  - conda install -c cvxgrp cvxpy=1.0.24
   - conda install -c pytorch pytorch
   - conda list
   - pip install -q -r requirements.txt
