@@ -112,7 +112,7 @@ class Operation(ABC):
     @property
     def tensor(self) -> bk.BKTensor:
         """
-        Returns the tensor representation of this operastion (if possible)
+        Returns the tensor representation of this operation (if possible)
         """
         raise NotImplementedError()         # pragma: no cover
 
@@ -287,73 +287,6 @@ class Gate(Operation):
 
 
 # End class Gate
-
-
-# # DOCME
-# class StdGate(Gate):
-#     """
-#     Standard gate. Defined by name and parameters (rather than direclty
-#     via the unitary operator)
-
-#     Override the tensor property to create and return the gate operator.
-#     """
-#     # Bit of a hack aroudn original Gate implemetnation to allow gate tensors
-#     # to be created as needed, rather than immediatly upon instance creation.
-#     # Useful for large gate compilations, for instance.
-#     def __init__(self,
-#                  params: Dict[str, float],
-#                  qubits: Qubits = None,
-#                  tensor: bk.TensorLike = None,
-#                  name: str = None) -> None:
-
-#         if name is None:
-#             name = self.__class__.__name__
-#         self._name = name
-
-#         if params is None:
-#             params = dict()
-#         self._params = params
-
-#         if tensor is not None:
-#             tensor = bk.astensorproduct(tensor)
-#             N = bk.rank(tensor) // 2
-#             if qubits is None:
-#                 qubits = range(N)
-#             else:
-#                 assert len(qubits) == N  # FIXME: exception
-#             self._tensor = tensor
-
-#         self._qubits = tuple(qubits)
-
-#     @property
-#     def name(self) -> str:
-#         return self._name
-
-#     @property
-#     def qubits(self) -> Qubits:
-#         return self._qubits
-
-#     @property
-#     def qubit_nb(self) -> int:
-#         return len(self.qubits)
-
-#     @property
-#     def tensor(self) -> bk.BKTensor:
-#         """Returns the tensor representation of gate operator"""
-#         return self._tensor
-
-#     def relabel(self, qubits: Qubits) -> 'Gate':
-#         """Return a copy of this Gate with new qubits"""
-#         qubits = tuple(qubits)
-#         assert len(qubits) == self.qubit_nb     # FIXME: raise exception
-#         gate = copy(self)
-#         gate._qubits = qubits
-#         return gate
-
-#     # Deprecate?
-#     @property
-#     def vec(self) -> QubitVector:
-#         return QubitVector(self.tensor, self.qubits)
 
 
 class Channel(Operation):
