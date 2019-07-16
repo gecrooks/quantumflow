@@ -172,6 +172,10 @@ def test_translate_ccnot():
     _assert_translation_close(qf.CCNOT(3, 4, 1), qf.translate_ccnot_to_cnot)
 
 
+def test_translate_ccnot_to_cv():
+    _assert_translation_close(qf.CCNOT(3, 4, 1), qf.translate_ccnot_to_cv)
+
+
 def test_translate_circuit():
     circ0 = qf.Circuit([qf.CSWAP(0, 1, 2)])
 

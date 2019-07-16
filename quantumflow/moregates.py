@@ -11,11 +11,11 @@ from .qubits import Qubit
 from .stdgates import I, TX, RZ, RY, CNOT
 from .circuits import Circuit
 
-__all__ = ['BARENCO', 'SX', 'SX_H', 'CY', 'CH',
+__all__ = ['BARENCO', 'V', 'V_H', 'CV', 'CV_H', 'CY', 'CH',
            'U3', 'U2', 'U1', 'U0', 'CU3', 'CRZ', 'RZZ']
 
 
-class SX(Gate):
+class V(Gate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
     """
@@ -28,13 +28,13 @@ class SX(Gate):
 
     @property
     def H(self) -> Gate:
-        return SX_H(*self.qubits)
+        return V_H(*self.qubits)
 
     def __pow__(self, t: float) -> Gate:
         return TX(0.5*t)
 
 
-class SX_H(Gate):
+class V_H(Gate):
     r"""
     Complex conjugate of the SX gate, X-MINUS-90 gate.
     """
@@ -47,10 +47,44 @@ class SX_H(Gate):
 
     @property
     def H(self) -> Gate:
-        return SX(*self.qubits)
+        return V(*self.qubits)
 
     def __pow__(self, t: float) -> Gate:
         return TX(-0.5*t)
+
+
+class CV(Gate):
+    r"""A controlled V (sqrt of CNOT) gate."""
+    def __init__(self,
+                 q0: Qubit = 0,
+                 q1: Qubit = 1) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        q0, q1 = self.qubits
+        return control_gate(q0, V(q1)).tensor
+
+    @property
+    def H(self) -> Gate:
+        return CV_H(*self.qubits)
+
+
+class CV_H(Gate):
+    r"""A controlled V (sqrt of CNOT) gate."""
+    def __init__(self,
+                 q0: Qubit = 0,
+                 q1: Qubit = 1) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        q0, q1 = self.qubits
+        return control_gate(q0, V_H(q1)).tensor
+
+    @property
+    def H(self) -> Gate:
+        return CV(*self.qubits)
 
 
 class BARENCO(Gate):
@@ -152,7 +186,7 @@ class CH(Gate):
 
 class U3(Gate):
     r"""The U3 single qubit gate from QASM.
-    The U2 gaet is the U3 gate with theta=pi/2. The U1 gate has theta=phi=0,
+    The U2 gate is the U3 gate with theta=pi/2. The U1 gate has theta=phi=0,
     which is the same as an RZ gate.
 
     ..math::

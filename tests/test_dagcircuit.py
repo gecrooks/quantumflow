@@ -77,7 +77,7 @@ def test_evolve():
     rho0 = qf.random_state(3).asdensity()
     rho1 = qf.CCNOT(0, 1, 2).evolve(rho0)
 
-    dag = qf.DAGCircuit(qf.ccnot_circuit([0, 1, 2]))
+    dag = qf.DAGCircuit(qf.translate_ccnot_to_cnot(qf.CCNOT(0, 1, 2)))
     rho2 = dag.evolve(rho0)
 
     assert qf.densities_close(rho1, rho2)
@@ -87,7 +87,7 @@ def test_aschannel():
     rho0 = qf.random_state(3).asdensity()
     rho1 = qf.CCNOT(0, 1, 2).evolve(rho0)
 
-    dag = qf.DAGCircuit(qf.ccnot_circuit([0, 1, 2]))
+    dag = qf.DAGCircuit(qf.translate_ccnot_to_cnot(qf.CCNOT(0, 1, 2)))
     chan = dag.aschannel()
     rho2 = chan.evolve(rho0)
 
