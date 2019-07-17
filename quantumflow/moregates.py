@@ -36,7 +36,7 @@ class V(Gate):
 
 class V_H(Gate):
     r"""
-    Complex conjugate of the SX gate, X-MINUS-90 gate.
+    Complex conjugate of the V gate, X-MINUS-90 gate.
     """
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
