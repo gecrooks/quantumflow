@@ -73,7 +73,7 @@ sequence, whereas Programs can contain non-linear control flow.
 # Callable and State imported for typing pragmas
 
 from typing import List, Generator, Dict, Union, Tuple, Callable
-from abc import ABCMeta, ABC  # Abstract Base Class
+from abc import ABCMeta  # Abstract Base Class
 from numbers import Number
 import operator
 
