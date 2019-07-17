@@ -19,6 +19,7 @@ import sympy
 from .qubits import Qubits
 from .gates import P0, P1
 from .stdgates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP)
+from .moregates import (CY, CV)
 
 from .ops import Gate
 from .stdops import Reset, Measure
@@ -36,7 +37,8 @@ __all__ = ('LATEX_GATESET',
 # TODO: Should be set of types to match GATESET in stdgates?
 LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
-                           'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
+                           'CZ', 'CY', 'CV', 'SWAP', 'ISWAP', 'PSWAP',
+                           'CCNOT', 'CSWAP',
                            'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'RESET'])
 
 
@@ -149,6 +151,13 @@ def circuit_to_latex(
             elif isinstance(gate, CZ):
                 code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
                 code[idx[1]] = r'\ctrl{' + str(idx[0] - idx[1]) + '}'
+            elif isinstance(gate, CY):
+                code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
+                code[idx[1]] = r'\gate{Y}'
+            elif isinstance(gate, CV):
+                code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
+                code[idx[1]] = r'\gate{V}'
+
             elif isinstance(gate, SWAP):
                 if package == 'qcircuit':
                     code[idx[0]] = r'\qswap \qwx[' + str(idx[1] - idx[0]) + ']'

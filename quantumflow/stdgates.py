@@ -79,9 +79,8 @@ One-qubit gates
 .. autoclass:: ZYZ
 .. autoclass:: P0
 .. autoclass:: P1
-.. autoclass:: SX
-.. autoclass:: SX_H
-
+.. autoclass:: V
+.. autoclass:: V_H
 
 
 Two-qubit gates

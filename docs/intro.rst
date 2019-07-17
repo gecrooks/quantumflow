@@ -144,11 +144,11 @@ We can also apply the action of a gate upon another gate.
 	>>> gate1 = qf.CNOT(0, 1)	
 	>>> gate = gate1 @ gate0 				# A cnot followed by a cnot is the identity
 	>>> op = gate.asoperator()
-	>>> np.reshape(op, (4,4))
-	array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-	       [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-	       [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-	       [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])
+	>>> op
+    array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+           [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+           [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+           [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])
 
 There are various other methods for manipulating, inspecting, and comparing gates and states.
 For instance, we can calculate the gate angle (a measure of distance between two gates)
