@@ -3,7 +3,7 @@
 QuantumFlow: Translate, transform, and compile circuits.
 """
 
-from typing import Generator, Tuple, Set, Sequence
+from typing import Generator, Tuple, Set, Sequence, Callable
 import numpy as np
 
 from .ops import Operation, Gate
@@ -110,7 +110,7 @@ def merge_tz(dagc: DAGCircuit) -> None:
 #     _merge_turns(dagc, TY)
 
 
-def _merge_turns(dagc: DAGCircuit, gate_class) -> None:
+def _merge_turns(dagc: DAGCircuit, gate_class: Callable) -> None:
     for gate0, gate1 in find_pattern(dagc, {gate_class}, {gate_class}):
         t = gate0.params['t'] + gate1.params['t']
         qubit, = gate0.qubits

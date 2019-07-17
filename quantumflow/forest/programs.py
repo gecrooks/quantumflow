@@ -112,7 +112,7 @@ WAIT = _prog_state_['wait']
 HALTED = -1             # Program counter of finished programs
 
 
-class Instruction(ABC):
+class Instruction(Operation):
     """
     An program instruction a hybrid quantum-classical program. Represents
     such operations as control flow and declarations.
@@ -159,7 +159,7 @@ class Program(Instruction):
     """
 
     def __init__(self,
-                 instructions: List[Instruction] = None,
+                 instructions: List[Operation] = None,
                  name: str = None,
                  params: dict = None) -> None:
         if instructions is None:
@@ -180,7 +180,7 @@ class Program(Instruction):
         qubits.sort()                                               # Sort
         return qubits
 
-    def __iadd__(self, other: Instruction) -> 'Program':
+    def __iadd__(self, other: Operation) -> 'Program':
         """Append an instruction to the end of the program"""
         self.instructions.append(other)
         return self
@@ -188,10 +188,10 @@ class Program(Instruction):
     def __len__(self) -> int:
         return len(self.instructions)
 
-    def __getitem__(self, key: int) -> Instruction:
+    def __getitem__(self, key: int) -> Operation:
         return self.instructions[key]
 
-    def __iter__(self) -> Generator[Instruction, None, None]:
+    def __iter__(self) -> Generator[Operation, None, None]:
         for inst in self.instructions:
             yield inst
 
@@ -262,14 +262,14 @@ class DefCircuit(Program):
                  name: str,
                  params: Dict[str, float],
                  qubits: Qubits = None,
-                 instructions: List[Instruction] = None) \
+                 instructions: List[Operation] = None) \
             -> None:
         # DOCME: Not clear how params is meant to work
         super().__init__(instructions)
         if qubits is None:
             qubits = []
         self.progname = name
-        self.params = params
+        self._params = params
         self._qubits = qubits
 
     @property
@@ -471,7 +471,7 @@ class Call(Instruction):
                  params: List[Parameter],
                  qubits: Qubits) -> None:
         self.gatename = name
-        self.params = params
+        self.call_params = params
         self._qubits = qubits
 
     def quil(self) -> str:
@@ -479,8 +479,8 @@ class Call(Instruction):
             fqubits = " "+" ".join([str(qubit) for qubit in self.qubits])
         else:
             fqubits = ""
-        if self.params:
-            fparams = "(" + ", ".join(str(p) for p in self.params) \
+        if self.call_params:
+            fparams = "(" + ", ".join(str(p) for p in self.call_params) \
                 + ")"
         else:
             fparams = ""
@@ -492,7 +492,7 @@ class Call(Instruction):
             raise RuntimeError('Unknown named gate')
 
         gateclass = namedgates[self.gatename]
-        gate = gateclass(*self.params)
+        gate = gateclass(*self.call_params)
         gate = gate.relabel(self.qubits)
 
         ket = gate.run(ket)
