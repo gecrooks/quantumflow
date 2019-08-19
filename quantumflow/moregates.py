@@ -2,17 +2,17 @@
 # QuantumFlow: Additional gates
 
 import numpy as np
-from numpy import pi
+from numpy import pi, sqrt
 
 from . import backend as bk
 from .ops import Gate
 from .gates import control_gate
 from .qubits import Qubit
-from .stdgates import I, TX, RZ, RY, CNOT
+from .stdgates import I, TX, RZ, RY, CNOT, RN
 from .circuits import Circuit
 
 __all__ = ['BARENCO', 'V', 'V_H', 'CV', 'CV_H', 'CY', 'CH',
-           'U3', 'U2', 'U1', 'U0', 'CU3', 'CRZ', 'RZZ']
+           'U3', 'U2', 'U1', 'U0', 'CU3', 'CRZ', 'RZZ', 'cliffords']
 
 
 class V(Gate):
@@ -316,3 +316,38 @@ class RZZ(Gate):
     def __pow__(self, t: float) -> Gate:
         theta = self.params['theta'] * t
         return RZZ(theta, *self.qubits)
+
+
+cliffords = (
+    I(),
+
+    RN(0.5 * pi, 1, 0, 0),
+    RN(0.5 * pi, 0, 1, 0),
+    RN(0.5 * pi, 0, 0, 1),
+    RN(pi, 1, 0, 0),
+    RN(pi, 0, 1, 0),
+    RN(pi, 0, 0, 1),
+    RN(-0.5 * pi, 1, 0, 0),
+    RN(-0.5 * pi, 0, 1, 0),
+    RN(-0.5 * pi, 0, 0, 1),
+
+    RN(pi, 1/sqrt(2), 1/sqrt(2), 0),
+    RN(pi, 1/sqrt(2), 0, 1/sqrt(2)),
+    RN(pi, 0, 1/sqrt(2), 1/sqrt(2)),
+    RN(pi, -1/sqrt(2), 1/sqrt(2), 0),
+    RN(pi, 1/sqrt(2), 0, -1/sqrt(2)),
+    RN(pi, 0, -1/sqrt(2), 1/sqrt(2)),
+
+    RN(+2*pi/3, 1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
+    RN(-2*pi/3, 1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
+    RN(+2*pi/3, -1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
+    RN(-2*pi/3, -1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
+    RN(+2*pi/3, 1/sqrt(3), -1/sqrt(3), 1/sqrt(3)),
+    RN(-2*pi/3, 1/sqrt(3), -1/sqrt(3), 1/sqrt(3)),
+    RN(+2*pi/3, 1/sqrt(3), 1/sqrt(3), -1/sqrt(3)),
+    RN(-2*pi/3, 1/sqrt(3), 1/sqrt(3), -1/sqrt(3)),
+    )
+"""
+List of all 24 1-qubit Clifford gates. The first gate is the identity.
+The rest are given as instances of the generic rotation gate RN
+"""
