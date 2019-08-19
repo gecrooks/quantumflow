@@ -12,8 +12,8 @@
 QuantumFlow supports several different quantum operations that act upon either
 pure or mixed states (or both). The four main types are Gate, which represents
 the action of an operator (typically unitary) on a state; Channel, which
-represents the action of a superoperator on a state (used for mixed
-quantum-classical dynamics); Kruas, which represents a Channel as a collection
+represents the action of a superoperator on a mixed state (used for mixed
+quantum-classical dynamics); Kraus, which represents a Channel as a collection
 of operators; and Circuit, which is a list of other operations that act in
 sequence. Circuits can contain any instance of the abstract quantum operation
 superclass, Operation, including other circuits.
@@ -112,7 +112,7 @@ class Operation(ABC):
     @property
     def tensor(self) -> bk.BKTensor:
         """
-        Returns the tensor representation of this operastion (if possible)
+        Returns the tensor representation of this operation (if possible)
         """
         raise NotImplementedError()         # pragma: no cover
 
@@ -289,73 +289,6 @@ class Gate(Operation):
 # End class Gate
 
 
-# # DOCME
-# class StdGate(Gate):
-#     """
-#     Standard gate. Defined by name and parameters (rather than direclty
-#     via the unitary operator)
-
-#     Override the tensor property to create and return the gate operator.
-#     """
-#     # Bit of a hack aroudn original Gate implemetnation to allow gate tensors
-#     # to be created as needed, rather than immediatly upon instance creation.
-#     # Useful for large gate compilations, for instance.
-#     def __init__(self,
-#                  params: Dict[str, float],
-#                  qubits: Qubits = None,
-#                  tensor: bk.TensorLike = None,
-#                  name: str = None) -> None:
-
-#         if name is None:
-#             name = self.__class__.__name__
-#         self._name = name
-
-#         if params is None:
-#             params = dict()
-#         self._params = params
-
-#         if tensor is not None:
-#             tensor = bk.astensorproduct(tensor)
-#             N = bk.rank(tensor) // 2
-#             if qubits is None:
-#                 qubits = range(N)
-#             else:
-#                 assert len(qubits) == N  # FIXME: exception
-#             self._tensor = tensor
-
-#         self._qubits = tuple(qubits)
-
-#     @property
-#     def name(self) -> str:
-#         return self._name
-
-#     @property
-#     def qubits(self) -> Qubits:
-#         return self._qubits
-
-#     @property
-#     def qubit_nb(self) -> int:
-#         return len(self.qubits)
-
-#     @property
-#     def tensor(self) -> bk.BKTensor:
-#         """Returns the tensor representation of gate operator"""
-#         return self._tensor
-
-#     def relabel(self, qubits: Qubits) -> 'Gate':
-#         """Return a copy of this Gate with new qubits"""
-#         qubits = tuple(qubits)
-#         assert len(qubits) == self.qubit_nb     # FIXME: raise exception
-#         gate = copy(self)
-#         gate._qubits = qubits
-#         return gate
-
-#     # Deprecate?
-#     @property
-#     def vec(self) -> QubitVector:
-#         return QubitVector(self.tensor, self.qubits)
-
-
 class Channel(Operation):
     """A quantum channel"""
     def __init__(self, tensor: bk.TensorLike,
@@ -415,7 +348,7 @@ class Channel(Operation):
         are the 2nd and 3rd super-indices)
 
         If :math:`S^\#` is Hermitian, then :math:`S` is a Hermitian-map
-        (i.e. transforms Hermitian operators to hJrmitian operators)
+        (i.e. transforms Hermitian operators to Hermitian operators)
 
         Flattening the :math:`S^\#` superoperator to a matrix gives
         the Choi matrix representation. (See channel.choi())
@@ -432,7 +365,8 @@ class Channel(Operation):
     def choi(self) -> bk.BKTensor:
         """Return the Choi matrix representation of this super
         operator"""
-        # Put superop axes in [ok, ib, ob, ik] and reshape to matrix
+        # Put superop axes in the order [out_ket, in_bra, out_bra, in_ket]
+        # and reshape to matrix
         N = self.qubit_nb
         return bk.reshape(self.sharp.tensor, [2**(N*2)] * 2)
 
