@@ -7,11 +7,10 @@
 QuantumFlow: Visualizations of quantum circuits,
 """
 
-from typing import Any
+from typing import Any, List
 import os
 import subprocess
 import tempfile
-
 
 from PIL import Image
 import sympy
@@ -22,7 +21,7 @@ from .stdgates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP)
 
 from .ops import Gate
 from .stdops import Reset, Measure
-from .utils import symbolize
+from .utils import symbolize, bitlist_to_int, int_to_bitlist
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
 
@@ -30,7 +29,8 @@ from .dagcircuit import DAGCircuit
 __all__ = ('LATEX_GATESET',
            'circuit_to_latex',
            'render_latex',
-           'circuit_to_image')
+           'circuit_to_image',
+           'circuit_to_text')
 
 
 # TODO: Should be set of types to match GATESET in stdgates?
@@ -114,7 +114,7 @@ def circuit_to_latex(
             name = gate.name
             params = ''
             if isinstance(gate, Gate) and gate.params:
-                params = ','.join(_latex_format(p)
+                params = ','.join(_pretty(p, format='latex')
                                   for p in gate.params.values())
 
             if name in labels:
@@ -271,35 +271,6 @@ QUANTIKZ_FOOTER_ = r"""
 """
 
 
-def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
-    """Separate a circuit into groups of gates that do not visually overlap"""
-    N = len(qubits)
-    qubit_idx = dict(zip(qubits, range(N)))
-    gate_layers = DAGCircuit(circ).layers()
-
-    layers = []
-    lcirc = Circuit()
-    layers.append(lcirc)
-    unused = [True] * N
-
-    for gl in gate_layers:
-        assert isinstance(gl, Circuit)
-        for gate in gl:
-            indices = [qubit_idx[q] for q in gate.qubits]
-
-            if not all(unused[min(indices):max(indices)+1]):
-                # New layer
-                lcirc = Circuit()
-                layers.append(lcirc)
-                unused = [True] * N
-
-            unused[min(indices):max(indices)+1] = \
-                [False] * (max(indices) - min(indices) + 1)
-            lcirc += gate
-
-    return Circuit(layers)
-
-
 # TODO: Rename to latex_to_image()?
 def render_latex(latex: str) -> Image:      # pragma: no cover
     """
@@ -367,16 +338,238 @@ def circuit_to_image(circ: Circuit,
     return img
 
 
+def circuit_to_text(
+        circ: Circuit,
+        qubits: Qubits = None,
+        use_unicode: bool = True,
+        transpose: bool = False,
+        qubit_labels: bool = True) -> str:
+    """
+    Draw a text representation of a quantum circuit.
+
+    Can currently draw X, Y, Z, H, T, S, T_H, S_H, RX, RY, RZ, TX, TY, TZ,
+    TH, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, CAN, P0 and P1 gates,
+    and the RESET operation.
+
+    Args:
+        circ:           A quantum Circuit
+        qubits:         Optional qubit list to specify qubit order
+        use_unicode:    If false, use only ASCII characters
+        qubit_labels:   If false, do not display qubit names
+
+    Returns:
+        A string representation of the circuit.
+
+    Raises:
+        NotImplementedError: For unsupported gates.
+    """
+    # Kudos: Inspired by the circuit diagram drawer from cirq
+    # https://github.com/quantumlib/Cirq/blob/master/cirq/circuits/circuit.py#L1435
+
+    if use_unicode:
+        TARGET = 'X'
+        CTRL = '●'  # ○
+        CONJ = '⁺'
+        BOX_CHARS = STD_BOX_CHARS
+        SWAP_TARG = 'x'
+    else:
+        TARGET = 'X'
+        CTRL = '@'
+        CONJ = '^-1'
+        BOX_CHARS = ASCII_BOX_CHARS
+        SWAP_TARG = 'x'
+
+    labels = {
+        'NoWire': '  ',
+        'P0': '|0><0|',
+        'P1': '|1><1|',
+        'S_H': 'S' + CONJ,
+        'T_H': 'T' + CONJ,
+        'RX': 'Rx(%s)',
+        'RY': 'Ry(%s)',
+        'RZ': 'Rz(%s)',
+        'TX': 'X^%s',
+        'TY': 'Y^%s',
+        'TZ': 'Z^%s',
+        'TH': 'H^%s',
+        'XX': 'XX^%s',
+        'YY': 'YY^%s',
+        'ZZ': 'ZZ^%s',
+        'ISWAP': 'iSWAP',
+        'RESET': BOX_CHARS[LEFT+BOT+TOP] + ' <0|',
+        }
+
+    multi_labels = {
+        'CNOT': [CTRL, TARGET],
+        'CZ':   [CTRL, CTRL],
+        'SWAP': [SWAP_TARG, SWAP_TARG],
+        'CCNOT': [CTRL, CTRL, TARGET],
+        'CSWAP': [CTRL, SWAP_TARG, SWAP_TARG]
+        }
+
+    def qpad(lines: List[str]) -> List[str]:
+        max_length = max(len(l) for l in lines)
+        tot_length = max_length+3
+
+        for l, line in enumerate(lines):
+            pad_char = [BOX_CHARS[RIGHT+LEFT], ' '][l % 2]
+            lines[l] = lines[l].ljust(tot_length, pad_char)
+        return lines
+
+    def draw_line(code: List[str], i0: int, i1: int,
+                  left_pad: int = 0) -> None:
+        i0, i1 = sorted([i0, i1])
+        for i in range(i0+1, i1, 2):
+            code[i] = (' '*left_pad)+BOX_CHARS[BOT+TOP]
+        for i in range(i0+2, i1, 2):
+            code[i] = (BOX_CHARS[LEFT+RIGHT]*left_pad)+BOX_CHARS[CROSS]
+
+    if qubits is None:
+        qubits = circ.qubits
+    N = len(qubits)
+
+    qubit_idx = dict(zip(qubits, range(0, 2*N-1, 2)))
+    layers = _display_layers(circ, qubits)
+    layer_text = []
+
+    qubit_layer = ['']*(2*N-1)
+    if qubit_labels:
+        for n in range(N):
+            qubit_layer[n*2] = str(qubits[n]) + ': '
+        max_length = max(len(l) for l in qubit_layer)
+        qubit_layer = [line.ljust(max_length) for line in qubit_layer]
+    layer_text.append(qpad(qubit_layer))
+
+    # Gate layers
+    for layer in layers.elements:
+        code = [''] * (2*N-1)
+
+        assert isinstance(layer, Circuit)
+        for gate in layer:
+            idx = [qubit_idx[q] for q in gate.qubits]
+
+            name = gate.name
+            params = ''
+            if isinstance(gate, Gate) and gate.params:
+                params = ','.join(_pretty(p, format='text')
+                                  for p in gate.params.values())
+
+            if name in labels:
+                label = labels[name]
+            else:
+                label = name
+                if params:
+                    label += '(%s)'
+
+            if params:
+                label = label % params
+
+            if name == 'I':
+                pass
+
+            # Special 1-qubit gates
+            #   elif isinstance(gate, Measure):
+            #       code[idx[0]] = r'\meter{}'
+
+            elif name == 'RESET' or name == 'NoWire':
+                for i in idx:
+                    code[i] = label
+
+            # Special multi-qubit gates
+            elif name in multi_labels:
+                draw_line(code, min(idx), max(idx))
+                for n, mlabel in enumerate(multi_labels[name]):
+                    code[idx[n]] = mlabel
+
+            # Generic 1-qubit gate
+            elif(gate.qubit_nb == 1):
+                code[idx[0]] = label
+
+            # Generic 2-qubit gate
+            elif(gate.qubit_nb == 2):
+                draw_line(code, min(idx), max(idx), left_pad=len(name)//2)
+                code[idx[0]] = label
+                code[idx[1]] = label
+
+            else:
+                raise NotImplementedError(str(gate)) 
+
+        layer_text.append(qpad(code))
+
+    circ_text = '\n'.join(''.join(line) for line in zip(*layer_text))
+
+    if transpose:
+        boxtrans = dict(zip(BOX_CHARS, _box_char_transpose(BOX_CHARS)))
+        circ_text = ''.join(boxtrans.get(c, c) for c in circ_text)
+        lines = [list(line) for line in circ_text.splitlines()]
+        circ_text = '\n'.join(''.join(c) for c in zip(*lines))
+
+    return circ_text
+
+
 # ==== UTILITIES ====
 
-def _latex_format(obj: Any) -> str:
-    """Format an object as a latex string."""
+def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
+    """Separate a circuit into groups of gates that do not visually overlap"""
+    N = len(qubits)
+    qubit_idx = dict(zip(qubits, range(N)))
+    gate_layers = DAGCircuit(circ).layers()
+
+    layers = []
+    lcirc = Circuit()
+    layers.append(lcirc)
+    unused = [True] * N
+
+    for gl in gate_layers:
+        assert isinstance(gl, Circuit)
+        for gate in gl:
+            indices = [qubit_idx[q] for q in gate.qubits]
+
+            if not all(unused[min(indices):max(indices)+1]):
+                # New layer
+                lcirc = Circuit()
+                layers.append(lcirc)
+                unused = [True] * N
+
+            unused[min(indices):max(indices)+1] = \
+                [False] * (max(indices) - min(indices) + 1)
+            lcirc += gate
+
+    return Circuit(layers)
+
+
+def _pretty(obj: Any, format: str = 'text') -> str:
+    """Pretty format an object as a text or latex string."""
+    assert format in ['latex', 'text']
     if isinstance(obj, float):
         try:
-            return sympy.latex(symbolize(obj))
+            if format == 'latex':
+                return sympy.latex(symbolize(obj))
+            else:
+                return str(symbolize(obj))
         except ValueError:
             return "{0:.4g}".format(obj)
 
     return str(obj)
+
+
+# Unicode and ASCII characters for drawing boxes.
+#                  t 0000000011111111
+#                  r 0000111100001111
+#                  b 0011001100110011
+#                  l 0101010101010101
+STD_BOX_CHARS     = " ╴╷┐╶─┌┬╵┘│┤└┴├┼"   # noqa: E221
+BOLD_BOX_CHARS    = " ╸╻┓╺━┏┳╹┛┃┫┗┻┣╋"   # noqa: E221
+DOUBLE_BOX_CHARS  = " ═║╗══╔╦║╝║╣╚╩╠╬"   # noqa: E221
+ASCII_BOX_CHARS  = r"     -/+ /|+\+\+"   # noqa: E221
+
+TOP, RIGHT, BOT, LEFT = 8, 4, 2, 1
+CROSS = TOP+RIGHT+BOT+LEFT
+
+
+def _box_char_transpose(chars: str) -> str:
+    return ''.join(chars[bitlist_to_int(list(reversed(int_to_bitlist(n, 4))))]
+                   for n in range(16))
+
 
 # fin
