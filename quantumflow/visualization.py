@@ -492,7 +492,7 @@ def circuit_to_text(
                 code[idx[1]] = label
 
             else:
-                raise NotImplementedError(str(gate)) 
+                raise NotImplementedError(str(gate))
 
         layer_text.append(qpad(code))
 
