@@ -14,7 +14,30 @@ import numpy as np
 from quantumflow import (
     I, H, X, Y, Z, CNOT, CZ, SWAP, ISWAP, XX, YY, ZZ, S, CAN,
     CCNOT, RZ, Circuit, gates_close, RX, CPHASE, TZ, TY,
-    CPHASE00, CPHASE10, CPHASE01, PSWAP, translate_ccnot_to_cnot)
+    CPHASE00, CPHASE10, CPHASE01, PSWAP, translate_ccnot_to_cnot,
+    circuit_to_diagram)
+
+import quantumflow as qf
+
+from sympy import Symbol
+
+syms = {
+    'alpha':    Symbol('α'),
+    'lam':      Symbol('λ'),
+    'nx':       Symbol('n_x'),
+    'ny':       Symbol('n_y'),
+    'nz':       Symbol('n_z'),
+    'p':        Symbol('p'),
+    'phi':      Symbol('φ'),
+    't':        Symbol('t'),
+    't0':       Symbol('t_0'),
+    't1':       Symbol('t_1'),
+    't2':       Symbol('t_2'),
+    'theta':    Symbol('θ'),
+    'tx':       Symbol('t_x'),
+    'ty':       Symbol('t_y'),
+    'tz':       Symbol('t_z'),
+    }
 
 
 def identities():
@@ -214,11 +237,6 @@ def identities():
     circ1 = Circuit([CZ(1, 2), CZ(0, 1)])
     circuit_identities.append([name, circ0, circ1])
 
-    name = "Toffoli gate CNOT decomposition"
-    circ0 = Circuit([CCNOT(0, 1, 2)])
-    circ1 = translate_ccnot_to_cnot(CCNOT(0, 1, 2))
-    circuit_identities.append([name, circ0, circ1])
-
     # Parametric circuits
 
     name = "ZZ to CNOTs"  # 1108.4318
@@ -308,22 +326,102 @@ def identities():
     circ1 += TY(1, 1)
     circuit_identities.append([name, circ0, circ1])
 
+    # Three qubit gates
+
+    name = "Toffoli gate CNOT decomposition"
+    circ0 = Circuit([CCNOT(0, 1, 2)])
+    circ1 = translate_ccnot_to_cnot(CCNOT(0, 1, 2))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CCZ to CNOTs, respecting adjacency"
+    gate = qf.CCZ(0, 1, 2)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_ccz_to_adjacent_cnot(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CCNOT to CCZ"
+    gate = qf.CCNOT(0, 1, 2)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_ccnot_to_ccz(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CSWAP to CCNOT"
+    gate = qf.CSWAP(0, 1, 2)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_cswap_to_ccnot(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CSWAP to CNOT"
+    gate = qf.CSWAP(0, 1, 2)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_cswap_to_cnot(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CSWAP to CNOT (control between targets)"
+    gate = qf.CSWAP(1, 0, 2)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_cswap_inside_to_cnot(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CH to Clifford+T"
+    gate = qf.CH(0, 1)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_ch_to_cpt(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CV to Clifford+T"
+    gate = qf.CV(0, 1)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_cv_to_cpt(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "CV_H to Clifford+T"
+    gate = qf.CV_H(0, 1)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_cvh_to_cpt(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    # from sympy import Symbol, pi
+    name = "CTX to ZZ"
+    gate = qf.CTX(0.2, 0, 1)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_ctx_to_zz(gate))
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "PISWAP to Canonical"
+    # theta = Symbol('θ')
+    theta = 0.2
+    gate = qf.PISWAP(theta, 0, 1)
+    circ0 = Circuit([gate])
+    circ1 = Circuit(qf.translate_piswap_to_can(gate))
+    circuit_identities.append([name, circ0, circ1])
+
     return circuit_identities
 
 
-def _print_circuit_identity(name, circ0, circ1, width=40):
+def _print_circuit_identity(name, circ0, circ1,
+                            min_col_width=0,
+                            col_sep=5,
+                            left_margin=8):
     print("# ", name)
 
-    assert gates_close(circ0.asgate(), circ1.asgate())
+    circ0 = Circuit(circ0)
+    circ1 = Circuit(circ1)
 
-    gates0 = str(circ0).splitlines()
-    gates1 = str(circ1).splitlines()
+    gates0 = circuit_to_diagram(circ0, qubit_labels=False).splitlines()
+    gates1 = circuit_to_diagram(circ1, qubit_labels=False).splitlines()
 
     for gate0, gate1 in zip_longest(gates0, gates1, fillvalue=""):
-        print("  ".join([gate0.ljust(width), gate1.ljust(width)]))
+        line = (' '*col_sep).join([gate0.ljust(min_col_width),
+                                   gate1.ljust(min_col_width)])
+        line = (' '*left_margin) + line
+        line = line.rstrip()
+        print(line)
 
     print()
     print()
+
+    assert gates_close(circ0.asgate(), circ1.asgate())
 
 
 def _check_circuit_identities(circuit_identities):

@@ -235,7 +235,7 @@ def test_add():
 def test_ccnot_circuit_evolve():
     rho0 = qf.random_state(3).asdensity()
     gate = qf.CCNOT(0, 1, 2)
-    circ = qf.translate_ccnot_to_cnot(gate)
+    circ = qf.Circuit(qf.translate_ccnot_to_cnot(gate))
     rho1 = gate.evolve(rho0)
     rho2 = circ.evolve(rho0)
     assert qf.densities_close(rho1, rho2)
@@ -245,7 +245,7 @@ def test_circuit_aschannel():
     rho0 = qf.random_state(3).asdensity()
     rho1 = qf.CCNOT(0, 1, 2).evolve(rho0)
     gate = qf.CCNOT(0, 1, 2)
-    circ = qf.translate_ccnot_to_cnot(gate)
+    circ = qf.Circuit(qf.translate_ccnot_to_cnot(gate))
     chan = circ.aschannel()
     rho2 = chan.evolve(rho0)
 
@@ -393,3 +393,18 @@ def test_graph_state_circuit():
     graph = nx.grid_graph([3, 3])
     circ = qf.graph_state_circuit(graph)
     print(circ)
+
+
+def test_circuit_mutable_sequence_interface():
+
+    circ = qf.Circuit()
+    circ += qf.H(0)
+    circ.append(qf.H(1))
+    circ.extend([qf.H(2), qf.H(3)])
+    assert len(circ) == 4
+
+    del circ[1]
+    assert len(circ) == 3
+
+    circ[0] = qf.X(4)
+    assert len(circ) == 3

@@ -10,9 +10,9 @@ import pytest
 pytest.importorskip("pyquil")      # noqa: 402
 
 import quantumflow as qf
-from quantumflow import forest
+from quantumflow import xforest as forest
 
-from quantumflow.forest.programs import TARGETS, PC
+from quantumflow.xforest.programs import TARGETS, PC
 
 
 def test_empty_program():

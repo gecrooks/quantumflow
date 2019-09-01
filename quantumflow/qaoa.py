@@ -14,7 +14,7 @@ import numpy as np
 import networkx as nx
 
 from .circuits import Circuit
-from .stdgates import H, RX, RZ, ZZ
+from .gates import H, RX, RZ, ZZ
 
 
 # DOCME

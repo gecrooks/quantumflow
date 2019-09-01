@@ -65,7 +65,7 @@ from .qubits import Qubit, Qubits, outer_product, asarray, qubits_count_tuple
 from .ops import Operation, Gate, Channel
 from .states import State, Density
 from .gates import almost_identity
-from .stdgates import I, X, Y, Z
+from .gates import I, X, Y, Z
 from .utils import complex_ginibre_ensemble
 
 __all__ = ['Kraus',

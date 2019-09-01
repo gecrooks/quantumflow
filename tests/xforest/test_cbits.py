@@ -6,47 +6,48 @@
 
 import pytest
 
-import quantumflow as qf
+from quantumflow import xforest as pq
 
 
 def test_register():
-    ro = qf.Register()
+    ro = pq.Register()
     assert ro.name == 'ro'
     assert str(ro) == "Register('ro', 'BIT')"
 
 
 def test_register_ordered():
-    assert qf.Register() == qf.Register('ro')
-    assert qf.Register('a') < qf.Register('b')
-    assert qf.Register('a') != qf.Register('b')
-    assert qf.Register('c') != 'foobar'
+    assert pq.Register() == pq.Register('ro')
+    assert pq.Register('a') < pq.Register('b')
+    assert pq.Register('a') != pq.Register('b')
+    assert pq.Register('c') != 'foobar'
 
     with pytest.raises(TypeError):
-        qf.Register('c') < 'foobar'
+        pq.Register('c') < 'foobar'
 
 
 def test_addr():
-    c = qf.Register('c')
+    c = pq.Register('c')
     c0 = c[0]
     assert c0.register.name == 'c'
     assert c0.key == 0
     assert c0.register.dtype == 'BIT'
+    assert c0.dtype == 'BIT'
 
     assert str(c0) == 'c[0]'
     assert repr(c0) == "Register('c', 'BIT')[0]"
 
 
 def test_addr_ordered():
-    key = qf.Register('c')[0]
+    key = pq.Register('c')[0]
     d = dict({key: '1234'})
     assert d[key] == '1234'
 
-    assert qf.Register('c')[0] == qf.Register('c')[0]
-    assert qf.Register('c')[0] != qf.Register('c')[1]
-    assert qf.Register('d')[0] != qf.Register('c')[0]
+    assert pq.Register('c')[0] == pq.Register('c')[0]
+    assert pq.Register('c')[0] != pq.Register('c')[1]
+    assert pq.Register('d')[0] != pq.Register('c')[0]
 
-    assert qf.Register('c')[0] != 'foobar'
-    assert qf.Register('c')[0] < qf.Register('c')[1]
+    assert pq.Register('c')[0] != 'foobar'
+    assert pq.Register('c')[0] < pq.Register('c')[1]
 
     with pytest.raises(TypeError):
-        qf.Register('c')[0] < 'foobar'
+        pq.Register('c')[0] < 'foobar'

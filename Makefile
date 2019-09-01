@@ -41,8 +41,8 @@ doccover:   ## Report documentation coverage
 docclean: 	## Clean documentation build
 	(cd docs; make clean)
 
-lines:	## Count lines of code (Includes blank lines)
-	@wc -l quantumflow/*.py quantumflow/*/*.py examples/*.py tests/*.py setup.py
+lines:	## Count lines of code (Includes blank lines and comments)
+	@wc -l quantumflow/*.py quantumflow/*/*.py quantumflow/*/*/*.py examples/*.py tests/*.py tests/*/*.py tests/*/*/*.py setup.py
 
 pragmas:	## Report all pragmas in code
 	@echo

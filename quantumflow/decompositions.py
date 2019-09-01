@@ -35,9 +35,9 @@ from numpy import pi
 
 from .qubits import asarray
 from .config import TOLERANCE
-from .gates import Gate
+from .ops import Gate
 from .measures import gates_close
-from .stdgates import RN, CAN, TX, TY, TZ, Y, S_H, I
+from .gates import RN, CAN, TX, TY, TZ, Y, S_H, I
 from .circuits import Circuit
 
 __all__ = ['bloch_decomposition',
@@ -137,7 +137,7 @@ def euler_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     """
     Returns an Euler angle decomposition of a local 1-qubit gate .
 
-    The 'euler' argument can be used to specify any of the 6  Euler
+    The 'euler' argument can be used to specify any of the 6 Euler
     decompositions: 'XYX', 'XZX', 'YXY', 'YZY', 'ZXZ', 'ZYZ' (Default)
     """
     if euler == 'ZYZ':

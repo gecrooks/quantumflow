@@ -233,3 +233,11 @@ def test_circuits_close():
 
     circ3 = qf.Circuit([qf.H(0)])
     assert qf.circuits_close(circ0, circ3)
+
+
+def test_average_gate_fidelity():
+    kraus = qf.Damping(0.9, q0=0)
+    qf.average_gate_fidelity(kraus)
+
+    qf.average_gate_fidelity(kraus, qf.X())
+    # TODO: Test actually get correct answer!

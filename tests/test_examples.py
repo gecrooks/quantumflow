@@ -63,6 +63,11 @@ def test_circuit_identities_main():
     assert rval == 0
 
 
+def test_gate_translate_identitie_main():
+    rval = subprocess.call(['examples/gate_translations.py'])
+    assert rval == 0
+
+
 @tensorflow_only
 def test_fit_zyz():
     import examples.tensorflow_fit_gate as ex

@@ -16,6 +16,7 @@ import numpy as np
 import pytest
 import quantumflow as qf
 from quantumflow import backend as bk
+from quantumflow.utils import FrozenDict
 
 from . import ALMOST_ZERO, ALMOST_ONE, REPS, skip_torch
 
@@ -215,33 +216,33 @@ def test_memory():
     ket0 = qf.zero_state(1)
     assert ket0.memory == {}
 
-    ro = qf.Register('ro')
-    ket1 = ket0.update({ro[1]: 1})
+    ro = ['ro[0]', 'ro[1]']
+    ket1 = ket0.store({ro[1]: 1})
     assert ket0.memory == {}
     assert ket1.memory == {ro[1]: 1}
-
-    assert ket1.cbit_nb == 1
-    assert ket1.cbits == (ro[1],)
 
     ket2 = qf.H(0).run(ket1)
     assert ket2.memory == ket1.memory
 
-    ket3 = ket2.update({ro[1]: 0, ro[0]: 0})
+    ket3 = ket2.store({ro[1]: 0, ro[0]: 0})
     assert ket3.memory == {ro[0]: 0, ro[1]: 0}
-    assert ket3.cbits == (ro[0], ro[1])
+
+    N = 4
+    wf = np.zeros(shape=[2] * N)
+    wf[(0,) * N] = 1
+    ket = qf.State(wf, list(range(N)), {'a': 2})
+    assert ket.memory == {'a': 2}
+    assert isinstance(ket.memory, FrozenDict)
 
 
 def test_density_memory():
     rho0 = qf.zero_state(1).asdensity()
     assert rho0.memory == {}
 
-    ro = qf.Register('ro')
-    rho1 = rho0.update({ro[1]: 1})
+    ro = ['ro[0]', 'ro[1]']
+    rho1 = rho0.store({ro[1]: 1})
     assert rho0.memory == {}
     assert rho1.memory == {ro[1]: 1}
-
-    assert rho1.cbit_nb == 1
-    assert rho1.cbits == (ro[1],)
 
     rho2 = qf.H(0).aschannel().evolve(rho1)
     assert rho2.memory == rho2.memory

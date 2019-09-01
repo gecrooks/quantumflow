@@ -13,6 +13,11 @@ import argparse
 from matplotlib import pyplot, rcParams
 from mpl_toolkits.mplot3d import Axes3D
 
+from sys import platform as sys_pf
+if sys_pf == 'darwin':
+    import matplotlib
+    matplotlib.use("TkAgg")
+
 
 os.environ['QUANTUMFLOW_BACKEND'] = 'numpy'
 import quantumflow as qf                                    # noqa: E402

@@ -38,12 +38,14 @@ and Pauli.
 # separately, in test_gates.py, and test_channels.py.
 
 
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Optional, Tuple
 from copy import copy
 from abc import ABC  # Abstract Base Class
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power as matpow
+import sympy
+from sympy import Symbol
 
 import quantumflow.backend as bk
 
@@ -52,7 +54,12 @@ from .states import State, Density
 
 from .utils import symbolize
 
-__all__ = ['Operation', 'Gate', 'Channel']
+__all__ = ['Operation', 'Gate', 'Channel', 'Parameter']
+
+
+# DOCME. Document using symbolic paramters, and resolution
+Parameter = Union[Symbol, float]
+"""Type for gate parameters. Either a float, or a sympy Symbol"""
 
 
 class Operation(ABC):
@@ -62,8 +69,17 @@ class Operation(ABC):
     and Pauli.
     """
 
-    _qubits: Qubits = ()
-    _params: Dict[str, float] = {}  # FIXME: Broken, class variable
+    interchangeable = False     # Class attribute
+    """ Is this a multi-qubit operation that is known to be invariant under
+    permutations of qubits?"""
+
+    def __init__(self,
+                 qubits: Qubits = (),
+                 params: Dict[str, Parameter] = None,
+                 name: str = None) -> None:
+        self._qubits: Qubits = tuple(qubits)
+        self._params = params if params is not None else dict()
+        self._name = self.__class__.__name__ if name is None else name
 
     @property
     def qubits(self) -> Qubits:
@@ -81,25 +97,33 @@ class Operation(ABC):
         return self.__class__.__name__.upper()
 
     @property
-    def params(self) -> Dict[str, float]:
+    def params(self) -> Dict[str, Parameter]:
         """Return the parameters of this Operation"""
         return self._params
 
+    def resolve(self, resolution: Dict[str, float]) -> 'Operation':
+        """Resolve symbolic parameters"""
+        op = copy(self)
+        params = {k: float(sympy.N(v, subs=resolution))
+                  for k, v in self._params.items()}
+        op._params = params
+        return op
+
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
-        raise NotImplementedError()          # pragma: no cover
+        raise NotImplementedError()
 
     def evolve(self, rho: Density) -> Density:
         """Apply the action of this operation upon a mixed state"""
-        raise NotImplementedError()          # pragma: no cover
+        raise NotImplementedError()
 
     def asgate(self) -> 'Gate':
         """Convert this quantum operation to a gate (if possible)"""
-        raise NotImplementedError()          # pragma: no cover
+        raise NotImplementedError()
 
     def aschannel(self) -> 'Channel':
         """Convert this quantum operation to a channel (if possible)"""
-        raise NotImplementedError()          # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def H(self) -> 'Operation':
@@ -107,18 +131,24 @@ class Operation(ABC):
 
         For unitary Gates (and Circuits composed of the same) the
         Hermitian conjugate returns the inverse Gate (or Circuit)"""
-        raise NotImplementedError()         # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def tensor(self) -> bk.BKTensor:
         """
         Returns the tensor representation of this operation (if possible)
         """
-        raise NotImplementedError()         # pragma: no cover
+        raise NotImplementedError()
+
+    # So that we can ``extend`` Circuits with Operations
+    def __iter__(self) -> Any:
+        yield self
 
 # End class Operation
 
 
+# TODO: Split out seperate TensorGate subclass for gates specified
+# by a tensor directly.
 class Gate(Operation):
     """
     A quantum logic gate. An operator that acts upon a collection of qubits.
@@ -128,35 +158,38 @@ class Gate(Operation):
         Gate.name : The name of this gate
 
     """
+    # DOCME
+    @classmethod
+    def args(cls) -> Tuple[str, ...]:
+        return tuple(s for s in getattr(cls, '__init__').__annotations__.keys()
+                     if s[0] != 'q' and s != 'return' and s != 'tensor')
+
     # TODO: Fix parameter order tensor, qubits, params, name
+    # Should be params, qubits, name?
+
     def __init__(self,
                  tensor: bk.TensorLike = None,
                  qubits: Qubits = None,
-                 params: Dict[str, float] = None,
+                 params: Dict[str, Parameter] = None,
                  name: str = None) -> None:
         """Create a new gate from a gate tensor or operator.
 
             params: Parameters used to define this gate
         """
-        if name is None:
-            name = self.__class__.__name__
-        self._name = name
-
-        if params is None:
-            params = dict()
-        self._params = params
 
         if tensor is not None:
             tensor = bk.astensorproduct(tensor)
             N = bk.rank(tensor) // 2
             if qubits is None:
                 qubits = range(N)
-            else:
-                assert len(qubits) == N     # FIXME: exception
-            self._tensor = tensor
+            elif len(qubits) != N:
+                raise ValueError('Wrong number of qubits for tensor')
 
-        assert qubits is not None           # FIXME: exception
-        self._qubits = tuple(qubits)
+        if qubits is None:
+            raise ValueError('Missing qubits')
+
+        super().__init__(qubits, params, name)
+        self._tensor = tensor
 
     @property
     def name(self) -> str:
@@ -193,10 +226,6 @@ class Gate(Operation):
         vec = self.vec.permute(qubits)
         return Gate(vec.tensor, qubits=vec.qubits)
 
-    @property
-    def H(self) -> 'Gate':
-        return Gate(tensor=self.vec.H.tensor, qubits=self.qubits)
-
     def asoperator(self) -> bk.BKTensor:
         """Return the gate tensor as a square array"""
         return self.vec.flatten()
@@ -225,6 +254,10 @@ class Gate(Operation):
         matrix = matpow(matrix, t)
         matrix = np.reshape(matrix, ([2]*(2*N)))
         return Gate(matrix, self.qubits)
+
+    @property
+    def H(self) -> 'Gate':
+        return Gate(tensor=self.vec.H.tensor, qubits=self.qubits)
 
     # TODO: Refactor functionality into QubitVector
     def __matmul__(self, other: 'Gate') -> 'Gate':
@@ -285,7 +318,6 @@ class Gate(Operation):
         U /= np.linalg.det(U) ** (1/rank)
         return Gate(tensor=U, qubits=self.qubits)
 
-
 # End class Gate
 
 
@@ -293,7 +325,7 @@ class Channel(Operation):
     """A quantum channel"""
     def __init__(self, tensor: bk.TensorLike,
                  qubits: Union[int, Qubits],
-                 params: Dict[str, float] = None,
+                 params: Dict[str, Parameter] = None,
                  name: str = None) -> None:
         _, qubits = qubits_count_tuple(qubits)  # FIXME NEEDED?
 

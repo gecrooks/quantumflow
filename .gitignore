@@ -16,6 +16,7 @@ dist
 .tox/
 .eggs/
 .coverage
+.coverage.*
 docs/build
 
 quantumflow/version.py

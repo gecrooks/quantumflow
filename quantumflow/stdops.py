@@ -13,30 +13,32 @@ or channels.
 .. autoclass :: Measure
 .. autoclass :: Reset
 .. autoclass :: Barrier
-.. autoclass :: If
 .. autoclass :: Projection
 .. autoclass :: QubitPermutation
+.. autoclass :: Store
+.. autoclass :: If
+.. autoclass :: Display
+.. autoclass :: StoreState
 """
 
 
-from typing import Sequence
+from typing import Sequence, Hashable, Callable, Any
 
 import numpy as np
 
 from sympy.combinatorics import Permutation
 
-from .cbits import Addr
 from .qubits import Qubit, Qubits, asarray, QubitVector
 from .states import State, Density
 from .ops import Operation, Gate, Channel
 from .gates import P0, P1
-from .stdgates import SWAP, I
+from .gates import SWAP, I
 from .circuits import Circuit
 from . import backend as bk
 
 
-__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'If', 'Projection',
-           'QubitPermutation']
+__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'Store',
+           'If', 'Projection', 'QubitPermutation', 'Display', 'StoreState']
 
 
 def dagger(elem: Operation) -> Operation:
@@ -46,7 +48,7 @@ def dagger(elem: Operation) -> Operation:
 
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
-    def __init__(self, qubit: Qubit, cbit: Addr = None) -> None:
+    def __init__(self, qubit: Qubit, cbit: Hashable = None) -> None:
         self.qubit = qubit
         self.cbit = cbit
 
@@ -66,11 +68,11 @@ class Measure(Operation):
         if np.random.random() < prob_zero:
             ket = P0(self.qubit).run(ket).normalize()
             if self.cbit is not None:
-                ket = ket.update({self.cbit: 0})
+                ket = ket.store({self.cbit: 0})
         else:  # measure one
             ket = P1(self.qubit).run(ket).normalize()
             if self.cbit is not None:
-                ket = ket.update({self.cbit: 1})
+                ket = ket.store({self.cbit: 1})
         return ket
 
     def evolve(self, rho: Density) -> Density:
@@ -83,11 +85,11 @@ class Measure(Operation):
         if np.random.random() < prob_zero:
             rho = p0.evolve(rho).normalize()
             if self.cbit is not None:
-                rho = rho.update({self.cbit: 0})
+                rho = rho.store({self.cbit: 0})
         else:  # measure one
             rho = p1.evolve(rho).normalize()
             if self.cbit is not None:
-                rho = rho.update({self.cbit: 1})
+                rho = rho.store({self.cbit: 1})
         return rho
 
 
@@ -153,27 +155,6 @@ class Barrier(Operation):
 
     def __str__(self) -> str:
         return self.name.upper() + ' ' + ' '.join(str(q) for q in self.qubits)
-
-
-# DOCME
-class If(Operation):
-    def __init__(self, elem: Operation, condition: Addr, value: bool = True) \
-            -> None:
-        self.element = elem
-        self.value = value
-        self.condition = condition
-
-    def run(self, ket: State) -> State:
-        print(ket.memory[self.condition], self.value)
-
-        if ket.memory[self.condition] == self.value:
-            ket = self.element.run(ket)
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        if rho.memory[self.condition] == self.value:
-            rho = self.element.evolve(rho)
-        return rho
 
 
 class Projection(Operation):
@@ -297,3 +278,83 @@ class QubitPermutation(Operation):
             circ += SWAP(qubits[idx0], qubits[idx1])
 
         return circ
+
+
+# TESTME
+class Store(Operation):
+    """Store a value in the classical memory of the state"""
+    def __init__(self,
+                 key: Hashable,
+                 value: bool = True) -> None:
+        super().__init__()
+        self.key = key
+        self.value = value
+
+    def run(self, ket: State) -> State:
+        return ket.store({self.key: self.value})
+
+    def evolve(self, rho: Density) -> Density:
+        return rho.store({self.key: self.value})
+
+
+class If(Operation):
+    """
+    Look up key in classical memory, and apply the given
+    quantum operation only if the truth value is the same as value.
+    """
+    def __init__(self, elem: Operation,
+                 key: Hashable,
+                 value: bool = True) -> None:
+        super().__init__()
+        self.element = elem
+        self.key = key
+        self.value = value
+
+    @property
+    def qubits(self) -> Qubits:
+        return self.element.qubits
+
+    def run(self, ket: State) -> State:
+        if ket.memory[self.key] == self.value:
+            ket = self.element.run(ket)
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        if rho.memory[self.key] == self.value:
+            rho = self.element.evolve(rho)
+        return rho
+
+
+# TESTME
+class Display(Operation):
+    """A Display is an operation that extracts information from the
+    quantum state and stores it in classical memory, without performing
+    any effect on the qubits.
+    """
+    # Terminology comes from cirq: cirq/ops/display.py
+    def __init__(self,
+                 key: Hashable,
+                 action: Callable[[State], Any]) -> None:
+        super().__init__()
+        self.key = key
+        self.action = action
+
+    def run(self, ket: State) -> State:
+        return ket.store({self.key: self.action(ket)})
+
+    def evolve(self, rho: Density) -> Density:
+        return rho.store({self.key: self.action(rho)})
+
+
+# TESTME
+class StoreState(Display):
+    """
+    Store a copy of the state in the classical memory. (This operation
+    can be memoty intensive, since it stores the entire quantum state.)
+    """
+
+    def __init__(self,
+                 key: Hashable) -> None:
+        super().__init__(key, lambda x: x)
+
+# fin

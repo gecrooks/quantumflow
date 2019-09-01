@@ -5,7 +5,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-.. module:: quantumflow.forest
+.. module:: quantumflow.xforest
 
 Interface to pyQuil and the Rigetti Forest.
 
@@ -30,16 +30,15 @@ from typing import Sequence, Any
 import PIL
 # import numpy as np
 
-from ..cbits import Register
 # from ..qubits import Qubit
 from ..states import State
-from ..stdgates import STDGATES
+from ..gates import NAMED_GATES, QUIL_GATES
 from ..ops import Gate
 from ..stdops import Measure
 from ..circuits import Circuit
 from ..stdops import Reset
-from ..visualization import circuit_to_latex, render_latex
-# from .programs import *    # noqa: 403 
+from ..visualization import circuit_to_image
+from .cbits import Register
 from .programs import (Program, Wait, Call, Jump, Label, JumpWhen, JumpUnless,
                        Pragma, Nop, Declare, Halt, Load, Store)
 from .programs import (EQ, LT, LE, GT, GE, Add, Mul, Div, Sub, And,
@@ -48,6 +47,9 @@ from .programs import Include, DefCircuit, Instruction       # noqa: F401
 # from pyquil.api._quantum_computer import _get_qvm_compiler_based_on_endpoint
 
 from . import pyquil
+
+# TODO: Include more here so external users can just import xforest,
+# not subpackages
 
 __all__ = [
            # 'get_virtual_qc',
@@ -64,11 +66,6 @@ __all__ = [
            'QUIL_RESERVED_WORDS',
            'QuantumFlowQVM',
            'pyquil_to_image']
-
-QUIL_GATES = {'I', 'X', 'Y', 'Z', 'H', 'S', 'T', 'PHASE',
-              'RX', 'RY', 'RZ', 'CZ', 'CNOT', 'SWAP',
-              'ISWAP', 'CPHASE00', 'CPHASE01', 'CPHASE10',
-              'CPHASE', 'PSWAP', 'CCNOT', 'CSWAP', 'PISWAP'}
 
 """Names of Quil compatible gates"""
 
@@ -181,8 +178,7 @@ def pyquil_to_image(program: pyquil.Program) -> PIL.Image:  # pragma: no cover
     See circuit_to_latex() for more details.
     """
     circ = pyquil_to_circuit(program)
-    latex = circuit_to_latex(circ)
-    img = render_latex(latex)
+    img = circuit_to_image(circ)
     return img
 
 
@@ -220,7 +216,7 @@ def pyquil_to_circuit(program: pyquil.Program) -> Circuit:
         # elif isinstance(inst, pyquil.ResetQubit):     # TODO
         #     continue
         elif isinstance(inst, pyquil.Gate):
-            defgate = STDGATES[inst.name]
+            defgate = NAMED_GATES[inst.name]
             gate = defgate(*inst.params)
             qubits = [q.index for q in inst.qubits]
             gate = gate.relabel(qubits)
@@ -248,8 +244,8 @@ def pyquil_to_program(program: pyquil.Program) -> Program:
     for inst in program:
         if isinstance(inst, pyquil.Gate):
             qubits = [q.index for q in inst.qubits]
-            if inst.name in STDGATES:
-                defgate = STDGATES[inst.name]
+            if inst.name in NAMED_GATES:
+                defgate = NAMED_GATES[inst.name]
                 gate = defgate(*inst.params)
                 gate = gate.relabel(qubits)
                 prog += gate

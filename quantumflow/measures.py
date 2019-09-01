@@ -56,6 +56,7 @@ Channel distances
 .. autofunction:: channel_angle
 .. autofunction:: channels_close
 .. autofunction:: diamond_norm
+.. autofunction:: average_gate_fidelity
 
 """
 import numpy as np
@@ -70,13 +71,16 @@ from .qubits import Qubits, asarray
 from .qubits import vectors_close, fubini_study_angle
 from .states import State, Density, random_state
 from .ops import Gate, Channel
+from .channels import Kraus
 from .circuits import Circuit
+from .gates import I
 
 __all__ = ['state_fidelity', 'state_angle', 'states_close',
            'purity', 'fidelity', 'bures_distance', 'bures_angle',
            'density_angle', 'densities_close', 'entropy', 'mutual_info',
            'gate_angle', 'channel_angle', 'gates_close', 'channels_close',
-           'circuits_close', 'diamond_norm',  'trace_distance']
+           'circuits_close', 'diamond_norm',  'trace_distance',
+           'average_gate_fidelity']
 
 
 # -- Measures on pure states ---
@@ -356,5 +360,31 @@ def diamond_norm(chan0: Channel, chan1: Channel) -> float:
     dnorm = max(0, dnorm)
 
     return dnorm
+
+
+# TESTME
+def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> bk.BKTensor:
+    """Return the average gate fielity between a noisy gate (specified by a
+    Kraus representation of a superoperator), and a purely unitary target gate.
+
+    If the target gate is not specified, default to identiy gate.
+    """
+
+    if target is None:
+        target = I(*kraus.qubits)
+    else:
+        assert kraus.qubits == target.qubits  # FIXME: Exception
+
+    N = kraus.qubit_nb
+    d = 2**N
+
+    U = target.H.asoperator()
+
+    summand = 0
+    for w, K in zip(kraus.weights, kraus.operators):
+        summand += bk.absolute(bk.trace(w * U @ K.asoperator()))**2
+
+    return (d + summand)/(d + d**2)
+
 
 # fin

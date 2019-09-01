@@ -1,23 +1,14 @@
 
-# Copyright 2016-2018, Rigetti Computing
-#
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
-
-"""
-QuantumFlow Gates and actions on gates.
-"""
-
 from typing import TextIO, Union
 from functools import reduce
 import numpy as np
 
-from . import backend as bk
-from .config import TOLERANCE
-from .qubits import Qubit, Qubits, qubits_count_tuple, asarray
-from .qubits import outer_product
-from .ops import Gate
-from . import utils
+from .. import backend as bk
+from ..config import TOLERANCE
+from ..qubits import Qubit, Qubits, qubits_count_tuple, asarray
+from ..qubits import outer_product
+from ..ops import Gate
+from .. import utils
 
 __all__ = ['identity_gate',
            'random_gate',
@@ -136,6 +127,8 @@ def print_gate(gate: Gate, ndigits: int = 2,
     lines.sort(key=lambda x: int(x[0:N]))
     print('\n'.join(lines), file=file)
 
+
+# FIXME: P0 and P1 should be channels
 
 class P0(Gate):
     r"""Project qubit to zero.

@@ -35,24 +35,27 @@ Standard circuits
 Visualizations
 ##############
 
+.. autofunction:: circuit_to_diagram
+.. autofunction:: circuit_to_image
 .. autofunction:: circuit_to_latex
-.. autofunction:: render_latex
-
+.. autofunction:: latex_to_image
 """
 
-from typing import Sequence, Iterator, Iterable, Dict, Type
+from typing import Sequence, Iterator, Iterable, Dict, Type, Any, Union
 from math import pi
 from itertools import chain
 from collections import defaultdict
+from collections.abc import MutableSequence
 
 import numpy as np
 import networkx as nx
+from sympy import Symbol
 
 from .qubits import Qubit, Qubits
 from .states import State, Density, zero_state
 from .ops import Operation, Gate, Channel
 from .gates import control_gate, identity_gate
-from .stdgates import H, CPHASE, SWAP, CNOT, X, TX, TY, TZ, CCNOT, ZZ, CZ
+from .gates import H, CPHASE, SWAP, CNOT, X, TX, TY, TZ, CCNOT, ZZ, CZ
 
 __all__ = ['Circuit',
            'count_operations',
@@ -69,7 +72,7 @@ __all__ = ['Circuit',
            'graph_state_circuit']
 
 
-class Circuit(Operation):
+class Circuit(MutableSequence, Operation):
     """A quantum Circuit contains a sequences of circuit elements.
     These can be any quantum Operation, including other circuits.
 
@@ -81,31 +84,48 @@ class Circuit(Operation):
     def __init__(self, elements: Iterable[Operation] = None) -> None:
         if elements is None:
             elements = []
+        # TODO: Make elements private
         self.elements = list(elements)
+
+    # Methods for MutableSequence
+    def __getitem__(self, key: Union[int, slice]) -> Any:
+        return self.elements[key]
+
+    def __delitem__(self, key: Union[int, slice]) -> None:
+        del self.elements[key]
+
+    def __setitem__(self, key: Union[int, slice], value: Any) -> None:
+        print("SETITEM", key, value)
+        print("BN", len(self.elements))
+        self.elements[key] = value
+        print("AFTE", len(self.elements))
+
+    def __len__(self) -> int:
+        return self.elements.__len__()
+
+    def insert(self, idx: int, value: Any) -> None:
+        self.elements.insert(idx, value)
+
+    def extend(self, other: Iterable[Any]) -> None:
+        """Append gates from circuit to the end of this circuit"""
+        if other is self:
+            # We can go into infinite regress otherwise.
+            other = list(self.elements)
+        self.elements.extend(other)
 
     def add(self, other: 'Circuit') -> 'Circuit':
         """Concatenate gates and return new circuit"""
         return Circuit(self.elements + other.elements)
 
-    def extend(self, other: Operation) -> None:
-        """Append gates from circuit to the end of this circuit"""
-        if isinstance(other, Circuit):
-            self.elements.extend(other.elements)
-        else:
-            self.elements.extend([other])
-
     def __add__(self, other: 'Circuit') -> 'Circuit':
         return self.add(other)
 
-    def __iadd__(self, other: Operation) -> 'Circuit':
+    def __iadd__(self, other: Iterable[Any]) -> 'Circuit':
         self.extend(other)
         return self
 
     def __iter__(self) -> Iterator[Operation]:
         return self.elements.__iter__()
-
-    def __len__(self) -> int:
-        return self.elements.__len__()
 
     # TESTME
     def size(self) -> int:
@@ -175,12 +195,19 @@ class Circuit(Operation):
     def __str__(self) -> str:
         return '\n'.join([str(elem) for elem in self.elements])
 
+    # TESTME DOCME
+    def resolve(self, resolver: Dict[Symbol, float]) -> 'Circuit':
+        """Resolve symbolic parameters"""
+        return Circuit(op.resolve(resolver) for op in self)
+
+    # TODO: overide params, so that fails, or returns all paramerters?
+
 # End class Circuit
 
 
 def count_operations(elements: Iterable[Operation]) \
         -> Dict[Type[Operation], int]:
-    """Return a count of different operation types given a colelction of
+    """Return a count of different operation types given a collection of
     operations, such as a Circuit or DAGCircuit
     """
     op_count: Dict[Type[Operation], int] = defaultdict(int)
@@ -207,6 +234,8 @@ def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
     return circ
 
 
+# FIXME: Use ZZ gates, not CPHASE
+# TODO: Add circuit diagram
 def qft_circuit(qubits: Qubits) -> Circuit:
     """Returns the Quantum Fourier Transform circuit"""
     # Kudos: Adapted from Rigetti Grove, grove/qft/fourier.py

@@ -13,8 +13,8 @@ tox
 mypy
 pillow
 matplotlib
-# pyquil	            >= 2.0.0b1 	# Optional package
-cvxpy
+# pyquil	        >= 2.0.0b1 	# Optional package
+cvxpy				>= 1.0.24
 sympy
 setuptools_scm
 
