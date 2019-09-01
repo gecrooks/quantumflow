@@ -107,7 +107,7 @@ Multi-qubit gates
 .. autofunction:: random_gate
 
 
-QASM GATES
+QASM gates
 **********
 .. autoclass::  U3
 .. autoclass::  U2
@@ -116,6 +116,75 @@ QASM GATES
 .. autoclass::  CRZ
 .. autoclass::  RZZ
 
+
+Mapping between APIs
+####################
+Each of the main quantum-computing python APIs (QuantumFlow, Cirq, qsikit
+(QASM), and pyQuil) have different gates avalibale and different naming
+conventions. The following table maps gate names between these APIs.
+
+==========================  =========== =============== =========== ===========
+Description                 QF          Cirq            QASM/qsikit PyQuil
+==========================  =========== =============== =========== ===========
+Identity                    I           I               id or iden  I
+Pauli-X                     X           X               x           X
+Pauli-Y                     Y           Y               y           Y
+Pauli-Z                     Z           Z               z           Z
+Hadamard                    H           H               h           H
+"ess"-gate                  S           S               s           S
+'tee'-gate                  T           T               t           T
+Phase-gate                  PHASE       .               .           PHASE
+X-rotations                 RX          Rx              rx          RX
+Y-rotations                 RY          Ry              ry          RY
+Z-rotations                 RZ          Rz              rz          RZ
+Bloch rotations             RN          .               .           .
+Powers of X                 TX          XPowGate        .           .
+Powers of Y                 TY          YPowGate        .           .
+Powers of Z                 TZ          ZPowGate        .           .
+Powers of Hadamard          TH          HPowGate        .           .
+Inv. of S                   S_H         .               sdg         .
+Inv. of T                   T_H         .               tdg         .
+Sqrt of X                   V           .               .           .
+Inv. sqrt of X              V_H         .               .           .
+Phased-X gate               W           .               .           .
+Powers of W gate            TW          PhasedXPowGate  .           .
+Controlled-Z                CZ          CZ              cz          CZ
+Controlled-Not              CNOT        CNOT            cx          CNOT
+Swap                        SWAP        SWAP            swap        .
+iSwap                       ISWAP       ISWAP           .           ISWAP
+Controlled-phase on 00      CPHASE00    .               .           CPHASE00
+Controlled-phase on 01      CPHASE01    .               .           CPHASE01
+Controlled-phase on 10      CPHASE10    .               .           CPHASE10
+Controlled-phase            CPHASE      CCZPowGate (*)  .           CPHASE
+Parametric Swap             PSWAP       .               .           PSWAP
+Canonical                   CAN         .               .           .
+ZZ^t                        XX          XXPowGate       .           .
+YY^t                        YY          YYPowGate       .           .
+ZZ^t                        ZZ          ZZPowGate       .           .
+Controlled-X-powers         CTX         CNotPowGate     .           .
+parametric-iSwap            PISWAP      ISwapPowGate(*) .           PISWAP
+Exchange                    EXCH        SwapPowGate (*) .           .
+Barenco                     BARENCO     .               .           .
+Controlled-V                CV          .               .           .
+Controlled-inv-V            CV_H        .               .           .
+Controlled-Y                CY          .               cy          .
+Cintrolled-Hadamard         CH          .               ch          .
+Fermionic-Simulation        FSIM        FSimGate        .           .
+Toffoli                     CCNOT       CCX             ccx         CCNOT
+Fredkin                     CSWAP       CSWAP           cswap       CSWAP
+Controlled-Controlled-Z     CCZ         CCZ             .           .
+Powers of CCNOT             .           CCXPowGate      .           .
+Powers of CCZ               .           CCZPowGate      .           .
+QASM-U3 gate                U3          .               u3          .
+QASM-U2 gate                U2          .               u1          .
+QASM-U1 gate                U1          .               u1          .
+Controlled-U1               .           .               cu1         .
+Controlled-U3               CU3         .               cu3         .
+Controlled-RZ               CRZ         .               crz         .
+ZZ-rotations                RZZ         .               rzz         .
+==========================  =========== =============== =========== ===========
+
+(*) Modulo differences in parametization
 
 """
 # TODO: Check that all gates documentated
@@ -150,7 +219,7 @@ from .gates_qasm import (U3, U2, U1, CU3, CRZ, RZZ)
 GATESET = frozenset([
     # one qubit
     I, X, Y, Z, H, S, T, PHASE, RX, RY, RZ,
-    RN, TX, TY, TZ, TH, ZYZ, S_H, T_H, V, V_H, W, TW,
+    RN, TX, TY, TZ, TH, S_H, T_H, V, V_H, W, TW, ZYZ,
     # two qubit
     CZ, CNOT, SWAP, ISWAP, CPHASE00, CPHASE01, CPHASE10,
     CPHASE, PSWAP, CAN, XX, YY, ZZ, PISWAP, EXCH, CTX,

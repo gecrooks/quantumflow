@@ -11,10 +11,6 @@ from ..qubits import Qubit
 from ..ops import Gate
 from .gates_utils import I
 
-# __all__ = ['I', 'X', 'Y', 'Z', 'H', 'S', 'T', 'PHASE', 'RX', 'RY', 'RZ',
-#           'RN', 'TX', 'TY', 'TZ', 'TH', 'ZYZ', 'S_H', 'T_H', 'V', 'V_H',
-#           'W', 'TW', 'cliffords']
-
 
 # Standard 1 qubit gates
 
