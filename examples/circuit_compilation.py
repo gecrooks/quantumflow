@@ -12,13 +12,16 @@ example_circuits = [
     ]
 
 for title, example in example_circuits:
-    qf.circuit_to_image(example).show()
-
-    circ = qf.compile_circuit(example)
-
     print()
     print(title)
-    print('Gate count:', circ.size())
+    print(qf.circuit_to_diagram(example))
+    print('Gate count:', example.size())
+
+    print()
+    print("Simplified circuit")
+    circ = qf.compile_circuit(example)
+    print(qf.circuit_to_diagram(circ, transpose=True))
+
     qf.circuit_to_image(circ).show()
     dagc = qf.DAGCircuit(circ)
     print('Gate depth', dagc.depth(local=False))

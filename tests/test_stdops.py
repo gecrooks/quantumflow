@@ -16,7 +16,7 @@ def test_measure():
     ket = prog.run()
 
     assert ket.qubits == (0,)
-    # assert ket.cbits == [('c', 0), ('c', 1)]  # FIXME
+    print(ket.memory)
     assert ket.memory[('c', 0)] == 0
     assert ket.memory[('c', 1)] == 1
 
@@ -33,9 +33,9 @@ def test_barrier():
 
 def test_if():
     circ = qf.Circuit()
-    c = qf.Register('c')
-    # circ += qf.Move(c[0], 0)
-    # circ += qf.Move(c[1], 1)
+    c = ['c0', 'c1']
+    circ += qf.Store(c[0], 0)
+    circ += qf.Store(c[1], 0)
     circ += qf.If(qf.X(0), c[1], value=False)
     circ += qf.Measure(0, c[0])
     ket = circ.run()
@@ -43,9 +43,8 @@ def test_if():
     assert circ.evolve().memory[c[0]] == 1
 
     circ = qf.Circuit()
-    c = qf.Register('c')
-    # circ += qf.Move(c[0], 0)
-    # circ += qf.Move(c[1], 0)
+    circ += qf.Store(c[0], 0)
+    circ += qf.Store(c[1], 0)
     circ += qf.If(qf.X(0), c[1])
     circ += qf.Measure(0, c[0])
     ket = circ.run()
@@ -53,14 +52,25 @@ def test_if():
     assert circ.evolve().memory[c[0]] == 0
 
     circ = qf.Circuit()
-    c = qf.Register('c')
-    # circ += qf.Move(c[0], 0)
-    # circ += qf.Move(c[1], 0)
+    circ += qf.Store(c[0], 0)
+    circ += qf.Store(c[1], 0)
     circ += qf.If(qf.X(0), c[1], value=False)
     circ += qf.Measure(0, c[0])
     ket = circ.run()
     assert ket.memory[c[0]] == 1
     assert circ.evolve().memory[c[0]] == 1
+
+
+def test_store_state():
+    circ = qf.Circuit()
+    circ += qf.X(1)
+    circ += qf.StoreState(key='state0')
+
+    ket = circ.run()
+    assert 'state0' in ket.memory
+
+    rho = circ.evolve()
+    assert 'state0' in rho.memory
 
 
 def test_project():

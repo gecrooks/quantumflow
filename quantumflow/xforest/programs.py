@@ -5,7 +5,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-.. currentmodule:: quantumflow.forest
+.. currentmodule:: quantumflow.xforest
 
 A QuantumFlow Program is an implementation of the Quantum Abstract Machine from
 *A Practical Quantum Instruction Set Architecture*. [1]_ A Program can be built
@@ -80,11 +80,10 @@ import operator
 from sympy import Symbol as Parameter
 
 from ..ops import Operation
-from ..cbits import Addr, Register
 from ..qubits import Qubits
 from ..states import zero_state, State, Density
-from ..stdgates import STDGATES
-
+from ..gates import NAMED_GATES
+from .cbits import Addr, Register
 
 __all__ = ['Instruction', 'Program', 'DefCircuit', 'Wait',
            'Nop', 'Halt',
@@ -118,7 +117,8 @@ class Instruction(Operation):
     such operations as control flow and declarations.
     """
 
-    _qubits: Qubits = ()
+    def __init__(self) -> None:
+        super().__init__()
 
     @property
     def qubits(self) -> Qubits:
@@ -143,7 +143,7 @@ class Instruction(Operation):
 
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
-        raise NotImplementedError()          # pragma: no cover
+        raise NotImplementedError()
 
     def evolve(self, rho: Density) -> Density:
         # For purely classical Instructions the action of run() and evolve()
@@ -162,6 +162,7 @@ class Program(Instruction):
                  instructions: List[Operation] = None,
                  name: str = None,
                  params: dict = None) -> None:
+        super().__init__()
         if instructions is None:
             instructions = []
         self.instructions = instructions
@@ -203,9 +204,9 @@ class Program(Instruction):
             if isinstance(instr, Label):
                 targets[instr.target] = pc
 
-        state = state.update({PC: 0,
-                              TARGETS: targets,
-                              NAMEDGATES: STDGATES.copy()})
+        state = state.store({PC: 0,
+                            TARGETS: targets,
+                            NAMEDGATES: NAMED_GATES.copy()})
         return state
 
     # FIXME: can't nest programs?
@@ -223,7 +224,7 @@ class Program(Instruction):
         pc = 0
         while pc >= 0 and pc < len(self):
             instr = self.instructions[pc]
-            ket = ket.update({PC: pc + 1})
+            ket = ket.store({PC: pc + 1})
             ket = instr.run(ket)
             pc = ket.memory[PC]
 
@@ -242,7 +243,7 @@ class Program(Instruction):
         pc = 0
         while pc >= 0 and pc < len(self):
             instr = self.instructions[pc]
-            rho = rho.update({PC: pc + 1})
+            rho = rho.store({PC: pc + 1})
             rho = instr.evolve(rho)
             pc = rho.memory[PC]
 
@@ -317,7 +318,7 @@ class Nop(Instruction):
 class Halt(Instruction):
     """Halt program and exit"""
     def run(self, ket: State) -> State:
-        ket = ket.update({PC: HALTED})
+        ket = ket.store({PC: HALTED})
         return ket
 
 
@@ -325,6 +326,7 @@ class Load(Instruction):
     """ The LOAD instruction."""
 
     def __init__(self, target: Addr, left: str, right: Addr) -> None:
+        super().__init__()
         self.target = target
         self.left = left
         self.right = right
@@ -334,7 +336,7 @@ class Load(Instruction):
                                     self.left, self.right)
 
     def run(self, ket: State) -> State:
-        raise NotImplementedError()         # pragma: no cover
+        raise NotImplementedError()
 
 
 class Store(Instruction):
@@ -342,6 +344,8 @@ class Store(Instruction):
 
     def __init__(self, target: str, left: Addr,
                  right: Union[int, Addr]) -> None:
+        super().__init__()
+
         self.target = target
         self.left = left
         self.right = right
@@ -351,12 +355,13 @@ class Store(Instruction):
                                     self.left, self.right)
 
     def run(self, ket: State) -> State:
-        raise NotImplementedError()         # pragma: no cover
+        raise NotImplementedError()
 
 
 class Label(Instruction):
     """Set a jump target."""
     def __init__(self, target: str) -> None:
+        super().__init__()
         self.target = target
 
     def quil(self) -> str:
@@ -369,6 +374,7 @@ class Label(Instruction):
 class Jump(Instruction):
     """Unconditional jump to target label"""
     def __init__(self, target: str) -> None:
+        super().__init__()
         self.target = target
 
     def quil(self) -> str:
@@ -376,12 +382,13 @@ class Jump(Instruction):
 
     def run(self, ket: State) -> State:
         dest = ket.memory[TARGETS][self.target]
-        return ket.update({PC: dest})
+        return ket.store({PC: dest})
 
 
 class JumpWhen(Instruction):
     """Jump to target label if a classical bit is one."""
     def __init__(self, target: str, condition: Addr) -> None:
+        super().__init__()
         self.target = target
         self.condition = condition
 
@@ -391,7 +398,7 @@ class JumpWhen(Instruction):
     def run(self, ket: State) -> State:
         if ket.memory[self.condition]:
             dest = ket.memory[TARGETS][self.target]
-            return ket.update({PC: dest})
+            return ket.store({PC: dest})
         return ket
 
     @property
@@ -402,7 +409,7 @@ class JumpWhen(Instruction):
 class JumpUnless(Instruction):
     """Jump to target label if a classical bit is zero."""
     def __init__(self, target: str, condition: Addr) -> None:
-        # super().__init__()
+        super().__init__()
         self.target = target
         self.condition = condition
 
@@ -410,9 +417,9 @@ class JumpUnless(Instruction):
         return '{} @{} {}'.format(self.name, self.target, self.condition)
 
     def run(self, ket: State) -> State:
-        if not ket.memory[self.condition]:
+        if not ket.memory[self.condition]:  # pragma: no cover  # FIXME
             dest = ket.memory[TARGETS][self.target]
-            return ket.update({PC: dest})
+            return ket.store({PC: dest})
         return ket
 
     @property
@@ -431,6 +438,7 @@ class Pragma(Instruction):
                  command: str,
                  args: List[float] = None,
                  freeform: str = None) -> None:
+        super().__init__()
         self.command = command
         self.args = args
         self.freeform = freeform
@@ -454,6 +462,7 @@ class Include(Instruction):
     """
     def __init__(self, filename: str, program: Program = None) -> None:
         # DOCME: What is program argument for? How is this meant to work?
+        super().__init__()
         self.filename = filename
         self.program = program
 
@@ -461,7 +470,7 @@ class Include(Instruction):
         return '{} "{}"'.format(self.name, self.filename)
 
     def run(self, ket: State) -> State:
-        raise NotImplementedError()         # pragma: no cover
+        raise NotImplementedError()
 
 
 class Call(Instruction):
@@ -470,6 +479,7 @@ class Call(Instruction):
                  name: str,
                  params: List[Parameter],
                  qubits: Qubits) -> None:
+        super().__init__()
         self.gatename = name
         self.call_params = params
         self._qubits = qubits
@@ -547,7 +557,7 @@ class Call(Instruction):
 #     def run(self, ket: State) -> State:
 #         namedgates = ket.memory[NAMEDGATES].copy()
 #         namedgates[self.gatename] = self._create_gate
-#         ket = ket.update({NAMEDGATES: namedgates})
+#         ket = ket.store({NAMEDGATES: namedgates})
 #         return ket
 
 
@@ -558,7 +568,7 @@ class Declare(Instruction):
                  memory_size: int,
                  shared_region: str = None,
                  offsets: List[Tuple[int, str]] = None) -> None:
-
+        super().__init__()
         self.memory_name = memory_name
         self.memory_type = memory_type
         self.memory_size = memory_size
@@ -585,17 +595,18 @@ class Declare(Instruction):
     def run(self, ket: State) -> State:
         reg = Register(self.memory_name, self.memory_type)
         mem = {reg[idx]: 0 for idx in range(self.memory_size)}
-        return ket.update(mem)
+        return ket.store(mem)
 
 
 class Neg(Operation):
     """Negate value stored in classical memory."""
     def __init__(self, target: Addr) -> None:
+        super().__init__()
         self.target = target
         self.addresses = [target]
 
     def run(self, ket: State) -> State:
-        return ket.update({self.target: - ket.memory[self.target]})
+        return ket.store({self.target: - ket.memory[self.target]})
 
     def __str__(self) -> str:
         return '{} {}'.format(self.name.upper(), self.target)
@@ -604,11 +615,12 @@ class Neg(Operation):
 class Not(Operation):
     """Take logical Not of a classical bit."""
     def __init__(self, target: Addr) -> None:
+        super().__init__()
         self.target = target
 
     def run(self, ket: State) -> State:
         res = int(not ket.memory[self.target])
-        return ket.update({self.target: res})
+        return ket.store({self.target: res})
 
     def __str__(self) -> str:
         return '{} {}'.format(self.name.upper(), self.target)
@@ -621,6 +633,7 @@ class BinaryOP(Operation, metaclass=ABCMeta):
 
     """Abstract Base Class for operations between two classical addresses"""
     def __init__(self, target: Addr, source: Union[Addr, Number]) -> None:
+        super().__init__()
         self.target = target
         self.source = source
 
@@ -640,7 +653,7 @@ class BinaryOP(Operation, metaclass=ABCMeta):
             source = self.source
 
         res = self._op(target, source)
-        ket = ket.update({self.target: res})
+        ket = ket.store({self.target: res})
         return ket
 
     def evolve(self, rho: Density) -> Density:
@@ -696,15 +709,15 @@ class Div(BinaryOP):
 class Move(BinaryOP):
     """Copy left classical bit to right classical bit"""
     def run(self, ket: State) -> State:
-        return ket.update({self.target: self._source(ket)})
+        return ket.store({self.target: self._source(ket)})
 
 
 class Exchange(BinaryOP):
     """Exchange two classical bits"""
     def run(self, ket: State) -> State:
         assert isinstance(self.source, Addr)
-        return ket.update({self.target: ket.memory[self.source],
-                           self.source: ket.memory[self.target]})
+        return ket.store({self.target: ket.memory[self.source],
+                          self.source: ket.memory[self.target]})
 
 
 # Comparisons
@@ -714,6 +727,7 @@ class Comparison(Operation, metaclass=ABCMeta):
     _op: Callable
 
     def __init__(self, target: Addr, left: Addr, right: Addr) -> None:
+        super().__init__()
         self.target = target
         self.left = left
         self.right = right
@@ -724,7 +738,7 @@ class Comparison(Operation, metaclass=ABCMeta):
 
     def run(self, ket: State) -> State:
         res = self._op(ket.memory[self.left], ket.memory[self.right])
-        ket = ket.update({self.target: res})
+        ket = ket.store({self.target: res})
         return ket
 
 

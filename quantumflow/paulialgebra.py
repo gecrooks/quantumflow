@@ -47,7 +47,7 @@ from .config import TOLERANCE
 from .qubits import Qubit, Qubits
 from .ops import Operation
 from .states import State
-from .stdgates import STDGATES, Y, X, RZ, SWAP, CNOT
+from .gates import NAMED_GATES, Y, X, RZ, SWAP, CNOT
 from .circuits import Circuit
 
 __all__ = ['PauliTerm', 'Pauli', 'sX', 'sY', 'sZ', 'sI',
@@ -252,7 +252,7 @@ class Pauli(Operation):
         for term, coeff in self.terms:
             res = State(ket.tensor * coeff, ket.qubits)
             for qubit, op in term:
-                res = STDGATES[op](qubit).run(res)
+                res = NAMED_GATES[op](qubit).run(res)
             resultants.append(res.tensor)
 
         out = State(sum(resultants), ket.qubits)

@@ -31,7 +31,7 @@ from .gates import join_gates
 import numpy as np
 from numpy import pi
 
-from .stdgates import RX, RY, RZ, TX, TY, TZ, XX, YY, ZZ, X, Y, Z
+from .gates import RX, RY, RZ, TX, TY, TZ, XX, YY, ZZ, X, Y, Z
 
 __all__ = ('GRADIENT_GATESET',
            'expectation_gradients',

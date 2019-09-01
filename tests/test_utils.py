@@ -14,7 +14,8 @@ import networkx as nx
 import pytest
 
 from quantumflow.utils import (
-    invert_map, bitlist_to_int, int_to_bitlist, to_graph6, from_graph6,
+    invert_map, FrozenDict, bitlist_to_int, int_to_bitlist,
+    to_graph6, from_graph6,
     spanning_tree_count, octagonal_tiling_graph, deprecated,
     rationalize, symbolize)
 
@@ -27,6 +28,36 @@ def test_invert_dict():
     foo = {1: 7, 2: 8, 3: 7}
     bar = invert_map(foo, one_to_one=False)
     assert bar == {7: set([1, 3]), 8: set([2])}
+
+
+def test_frozen_dict():
+    f0 = FrozenDict({'a': 1, 'b': 2})
+    assert str(f0) == "FrozenDict({'a': 1, 'b': 2})"
+
+    hash(f0)
+
+    f1 = f0.copy()
+    assert f0 == f1
+
+    f2 = f0.copy(a=0, c=3)
+    assert f2['a'] == 0
+
+    assert 'c' in f2
+    assert len(f2) == 3
+
+    assert list(f2.keys()) == ['a', 'b', 'c']
+
+
+def test_frozen_dict_generic():
+    # Test code should pass mypy as well as pytest
+
+    f0: FrozenDict[str, int] = FrozenDict({'a': 1, 'b': 2})
+
+    k1 = 3
+    k1 = f0['b']
+
+    f1: FrozenDict[str, str] = FrozenDict({'a': 1, 'b': 2})  # noqa
+    k1: int = f0['b']                                        # noqa
 
 
 def test_deprecated():

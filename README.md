@@ -15,6 +15,7 @@ It is easiest to install QuantumFlow's requirements using conda.
 git clone https://github.com/gecrooks/quantumflow.git
 cd quantumflow
 conda install -c conda-forge --file requirements.txt
+pip install -r extra-requirements.txt
 pip install -e .
 ```
 
@@ -23,5 +24,6 @@ You can also install with pip. However some of the requirements are tricky to in
 git clone https://github.com/gecrooks/quantumflow.git
 cd quantumflow
 pip install -r requirements.txt
+pip install -r extra-requirements.txt
 pip install -e .
 ```

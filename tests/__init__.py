@@ -39,6 +39,10 @@ skip_windows = pytest.mark.skipif(
     sys.platform == 'win32',
     reason="Does not run on windows")
 
+skip_eager = pytest.mark.skipif(
+    bk.BACKEND == 'eager',
+    reason="Unsupported backend")
+
 skip_torch = pytest.mark.skipif(
     bk.BACKEND == 'torch',
     reason="Unsupported backend")

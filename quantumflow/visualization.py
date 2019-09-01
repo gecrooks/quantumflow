@@ -17,7 +17,7 @@ import sympy
 
 from .qubits import Qubits
 from .gates import P0, P1
-from .stdgates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP)
+from .gates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP)
 
 from .ops import Gate
 from .stdops import Reset, Measure
@@ -28,9 +28,10 @@ from .dagcircuit import DAGCircuit
 
 __all__ = ('LATEX_GATESET',
            'circuit_to_latex',
-           'render_latex',
+           'latex_to_image',
            'circuit_to_image',
-           'circuit_to_text')
+           'circuit_diagram',
+           'circuit_to_diagram')
 
 
 # TODO: Should be set of types to match GATESET in stdgates?
@@ -38,6 +39,8 @@ LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
                            'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
                            'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'RESET'])
+
+# TODO: DIAGRAM_GATESET gateset
 
 
 class NoWire(I):
@@ -185,7 +188,7 @@ def circuit_to_latex(
                 code[idx[0]] = r'\gate{' + label + '}'
 
             # Generic 2-qubit gate
-            elif(gate.qubit_nb == 2):
+            elif(gate.qubit_nb == 2 and gate.interchangeable):
                 top = min(idx)
                 bot = max(idx)
 
@@ -271,8 +274,9 @@ QUANTIKZ_FOOTER_ = r"""
 """
 
 
-# TODO: Rename to latex_to_image()?
-def render_latex(latex: str) -> Image:      # pragma: no cover
+# TODO: Handle unicode via xelatex?
+
+def latex_to_image(latex: str) -> Image:      # pragma: no cover
     """
     Convert a single page LaTeX document into an image.
 
@@ -320,7 +324,7 @@ def circuit_to_image(circ: Circuit,
                      qubits: Qubits = None) -> Image:   # pragma: no cover
     """Create an image of a quantum circuit.
 
-    A convenience function that calls circuit_to_latex() and render_latex().
+    A convenience function that calls circuit_to_latex() and latex_to_image().
 
     Args:
         circ:       A quantum Circuit
@@ -334,18 +338,18 @@ def circuit_to_image(circ: Circuit,
         OSError: If an external dependency is not installed.
     """
     latex = circuit_to_latex(circ, qubits)
-    img = render_latex(latex)
+    img = latex_to_image(latex)
     return img
 
 
-def circuit_to_text(
+def circuit_diagram(
         circ: Circuit,
         qubits: Qubits = None,
         use_unicode: bool = True,
         transpose: bool = False,
         qubit_labels: bool = True) -> str:
     """
-    Draw a text representation of a quantum circuit.
+    Draw a text diagram of a quantum circuit.
 
     Can currently draw X, Y, Z, H, T, S, T_H, S_H, RX, RY, RZ, TX, TY, TZ,
     TH, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, CAN, P0 and P1 gates,
@@ -368,13 +372,15 @@ def circuit_to_text(
 
     if use_unicode:
         TARGET = 'X'
-        CTRL = '●'  # ○
+        CTRL = '●'  # ○ ■
+        NCTRL = '○'
         CONJ = '⁺'
         BOX_CHARS = STD_BOX_CHARS
         SWAP_TARG = 'x'
     else:
         TARGET = 'X'
         CTRL = '@'
+        NCTRL = 'O'
         CONJ = '^-1'
         BOX_CHARS = ASCII_BOX_CHARS
         SWAP_TARG = 'x'
@@ -385,6 +391,7 @@ def circuit_to_text(
         'P1': '|1><1|',
         'S_H': 'S' + CONJ,
         'T_H': 'T' + CONJ,
+        'V_H': 'V' + CONJ,
         'RX': 'Rx(%s)',
         'RY': 'Ry(%s)',
         'RZ': 'Rz(%s)',
@@ -400,11 +407,23 @@ def circuit_to_text(
         }
 
     multi_labels = {
-        'CNOT': [CTRL, TARGET],
-        'CZ':   [CTRL, CTRL],
-        'SWAP': [SWAP_TARG, SWAP_TARG],
+        'CNOT':  [CTRL, TARGET],
+        'CZ':    [CTRL, CTRL],
+        'CY':    [CTRL, 'Y'],
+        'CV':    [CTRL, 'V'],
+        'CV_H':  [CTRL, 'V' + CONJ],
+        'CH':    [CTRL, 'H'],
+        'SWAP':  [SWAP_TARG, SWAP_TARG],
         'CCNOT': [CTRL, CTRL, TARGET],
-        'CSWAP': [CTRL, SWAP_TARG, SWAP_TARG]
+        'CSWAP': [CTRL, SWAP_TARG, SWAP_TARG],
+        'CCZ':   [CTRL, CTRL, CTRL],
+        'CPHASE00': [NCTRL+'(%s)', NCTRL+'(%s)'],
+        'CPHASE10': [CTRL+'(%s)', NCTRL+'(%s)'],
+        'CPHASE01': [NCTRL+'(%s)', CTRL+'(%s)'],
+        'CPHASE': [CTRL+'(%s)', CTRL+'(%s)'],
+        'CTX': [CTRL, 'X^%s'],
+        'CU3': [CTRL, 'U3(%s)'],
+        'CRZ': [CTRL, 'Rz(%s)'],
         }
 
     def qpad(lines: List[str]) -> List[str]:
@@ -464,12 +483,9 @@ def circuit_to_text(
             if params:
                 label = label % params
 
+            # TODO: Are we sure about not showing identity gates?
             if name == 'I':
                 pass
-
-            # Special 1-qubit gates
-            #   elif isinstance(gate, Measure):
-            #       code[idx[0]] = r'\meter{}'
 
             elif name == 'RESET' or name == 'NoWire':
                 for i in idx:
@@ -479,6 +495,8 @@ def circuit_to_text(
             elif name in multi_labels:
                 draw_line(code, min(idx), max(idx))
                 for n, mlabel in enumerate(multi_labels[name]):
+                    if params and '%' in mlabel:
+                        mlabel = mlabel % params
                     code[idx[n]] = mlabel
 
             # Generic 1-qubit gate
@@ -486,7 +504,7 @@ def circuit_to_text(
                 code[idx[0]] = label
 
             # Generic 2-qubit gate
-            elif(gate.qubit_nb == 2):
+            elif(gate.qubit_nb == 2 and gate.interchangeable):
                 draw_line(code, min(idx), max(idx), left_pad=len(name)//2)
                 code[idx[0]] = label
                 code[idx[1]] = label
@@ -505,6 +523,9 @@ def circuit_to_text(
         circ_text = '\n'.join(''.join(c) for c in zip(*lines))
 
     return circ_text
+
+
+circuit_to_diagram = circuit_diagram
 
 
 # ==== UTILITIES ====
@@ -546,11 +567,14 @@ def _pretty(obj: Any, format: str = 'text') -> str:
             if format == 'latex':
                 return sympy.latex(symbolize(obj))
             else:
-                return str(symbolize(obj))
+                return str(symbolize(obj)).replace('pi', 'π')
         except ValueError:
             return "{0:.4g}".format(obj)
 
-    return str(obj)
+    out = str(obj)
+    if format == 'text':
+        out = out.replace('pi', 'π')
+    return out
 
 
 # Unicode and ASCII characters for drawing boxes.
@@ -560,8 +584,8 @@ def _pretty(obj: Any, format: str = 'text') -> str:
 #                  l 0101010101010101
 STD_BOX_CHARS     = " ╴╷┐╶─┌┬╵┘│┤└┴├┼"   # noqa: E221
 BOLD_BOX_CHARS    = " ╸╻┓╺━┏┳╹┛┃┫┗┻┣╋"   # noqa: E221
-DOUBLE_BOX_CHARS  = " ═║╗══╔╦║╝║╣╚╩╠╬"   # noqa: E221
-ASCII_BOX_CHARS  = r"     -/+ /|+\+\+"   # noqa: E221
+DOUBLE_BOX_CHARS  = " ═║╗══╔╦║╝║╣╚╩╠╬"   # noqa: E221  # No half widths
+ASCII_BOX_CHARS  = r"   \ -/+ /|+\+++"   # noqa: E221
 
 TOP, RIGHT, BOT, LEFT = 8, 4, 2, 1
 CROSS = TOP+RIGHT+BOT+LEFT

@@ -33,17 +33,17 @@ Actions on states
 """
 
 from math import sqrt
-from typing import Union, TextIO, Sequence, Dict, Any
+from typing import Union, TextIO, Any, Mapping
 from functools import reduce
-from collections import ChainMap, defaultdict
+from collections import ChainMap
 
 import numpy as np
 
 from . import backend as bk
-from .cbits import Addr
 from .qubits import Qubits, QubitVector, qubits_count_tuple
 from .qubits import outer_product
 from .utils import complex_ginibre_ensemble, unitary_ensemble
+from .utils import FrozenDict
 
 __all__ = ['State', 'ghz_state',
            'join_states', 'print_probabilities', 'print_state',
@@ -62,14 +62,14 @@ class State:
     def __init__(self,
                  tensor: bk.TensorLike,
                  qubits: Qubits = None,
-                 memory: Dict[Addr, Any] = None) -> None:  # DOCME TESTME
+                 memory: Mapping = None) -> None:
         """Create a new State from a tensor of qubit amplitudes
 
         Args:
             tensor: A vector or tensor of state amplitudes
             qubits: A sequence of qubit names.
                 (Defaults to integer indices, e.g. [0, 1, 2] for 3 qubits)
-            memory: Classical memory.
+            memory: Classical data storage. Stored as an immutable dictionary.
         """
         if qubits is None:
             tensor = bk.astensorproduct(tensor)
@@ -77,7 +77,13 @@ class State:
             qubits = range(bits)
 
         self.vec = QubitVector(tensor, qubits)
-        self._memory = memory if memory is not None else {}
+
+        if memory is None:
+            self.memory: FrozenDict = FrozenDict()
+        elif isinstance(memory, FrozenDict):
+            self.memory = memory
+        else:
+            self.memory = FrozenDict(memory)
 
     @property
     def tensor(self) -> bk.BKTensor:
@@ -99,41 +105,23 @@ class State:
         return self.vec.norm()
 
     # DOCME TESTME
-    @property
-    def memory(self) -> dict:
-        return defaultdict(int, self._memory)
-
-    # DOCME TESTME
-    def update(self, memory: Dict[Addr, Any]) -> 'State':
-        mem = self.memory
-        mem.update(memory)
+    def store(self, *args: Any, **kwargs: Any) -> 'State':
+        mem = self.memory.copy(*args, **kwargs)
         return State(self.tensor, self.qubits, mem)
-
-    # DOCME TESTME
-    @property
-    def cbits(self) -> Sequence[Addr]:
-        cbs = [addr for addr in self._memory if addr.dtype == 'BIT']
-        cbs.sort()
-        return tuple(cbs)
-
-    # DOCME TESTME
-    @property
-    def cbit_nb(self) -> int:
-        return len(self.cbits)
 
     def relabel(self, qubits: Qubits) -> 'State':
         """Return a copy of this state with new qubits"""
-        return State(self.vec.tensor, qubits, self._memory)
+        return State(self.vec.tensor, qubits, self.memory)
 
     def permute(self, qubits: Qubits) -> 'State':
         """Return a copy of this state with qubit labels permuted"""
         vec = self.vec.permute(qubits)
-        return State(vec.tensor, vec.qubits, self._memory)
+        return State(vec.tensor, vec.qubits, self.memory)
 
     def normalize(self) -> 'State':
         """Normalize the state"""
         tensor = self.tensor / bk.ccast(bk.sqrt(self.norm()))
-        return State(tensor, self.qubits, self._memory)
+        return State(tensor, self.qubits, self.memory)
 
     def probabilities(self) -> bk.BKTensor:
         """
@@ -187,7 +175,7 @@ class State:
     def asdensity(self) -> 'Density':
         """Convert a pure state to a density matrix"""
         matrix = bk.outer(self.tensor, bk.conj(self.tensor))
-        return Density(matrix, self.qubits, self._memory)
+        return Density(matrix, self.qubits, self.memory)
 
     def __str__(self) -> str:
         state = self.vec.asarray()
@@ -291,7 +279,7 @@ class Density(State):
     def __init__(self,
                  tensor: bk.TensorLike,
                  qubits: Qubits = None,
-                 memory: Dict[Addr, Any] = None) -> None:
+                 memory: Mapping = None) -> None:
         if qubits is None:
             tensor = bk.astensorproduct(tensor)
             bits = bk.rank(tensor) // 2
@@ -307,21 +295,21 @@ class Density(State):
     def partial_trace(self, qubits: Qubits) -> 'Density':
         """Return the partial trace over the specified qubits"""
         vec = self.vec.partial_trace(qubits)
-        return Density(vec.tensor, vec.qubits, self._memory)
+        return Density(vec.tensor, vec.qubits, self.memory)
 
     def relabel(self, qubits: Qubits) -> 'Density':
         """Return a copy of this state with new qubits"""
-        return Density(self.vec.tensor, qubits, self._memory)
+        return Density(self.vec.tensor, qubits, self.memory)
 
     def permute(self, qubits: Qubits) -> 'Density':
         """Return a copy of this state with qubit labels permuted"""
         vec = self.vec.permute(qubits)
-        return Density(vec.tensor, vec.qubits, self._memory)
+        return Density(vec.tensor, vec.qubits, self.memory)
 
     def normalize(self) -> 'Density':
         """Normalize state"""
         tensor = self.tensor / self.trace()
-        return Density(tensor, self.qubits, self._memory)
+        return Density(tensor, self.qubits, self.memory)
 
     # TESTME
     def probabilities(self) -> bk.BKTensor:
@@ -338,9 +326,8 @@ class Density(State):
         return self
 
     # DOCME TESTME
-    def update(self, memory: Dict[Addr, Any]) -> 'Density':
-        mem = self.memory
-        mem.update(memory)
+    def store(self, *args: Any, **kwargs: Any) -> 'Density':
+        mem = self.memory.copy(*args, **kwargs)
         return Density(self.tensor, self.qubits, mem)
 
 
@@ -439,7 +426,8 @@ def join_densities(*densities: Density) -> Density:
     vectors = [rho.vec for rho in densities]
     vec = reduce(outer_product, vectors)
 
-    memory = dict(ChainMap(*[rho.memory for rho in densities]))  # TESTME
+    memory:  FrozenDict[str, Any] = \
+        FrozenDict(ChainMap(*[rho.memory for rho in densities]))  # TESTME
     return Density(vec.tensor, vec.qubits, memory)
 
 # fin

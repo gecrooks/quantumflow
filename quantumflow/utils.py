@@ -10,7 +10,8 @@ QuantumFlow: utilities
 Useful routines not necessarily intended to be part of the public API.
 """
 
-from typing import Any, Sequence, Callable, Set, Tuple
+from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
+from typing import Optional, Mapping, TypeVar
 import warnings
 import functools
 from fractions import Fraction
@@ -25,6 +26,7 @@ import scipy
 # from scipy.linalg import sqrtm as matsqrt   # Matrix square root
 
 __all__ = ['invert_map',
+           'FrozenDict',
            'bitlist_to_int',
            'int_to_bitlist',
            'deprecated',
@@ -48,6 +50,54 @@ def invert_map(mapping: dict, one_to_one: bool = True) -> dict:
             inv_map.setdefault(value, set()).add(key)
 
     return inv_map
+
+
+# For no apparently good reason, the python standard library contains
+# immutable lists and sets (tuple and frozenset), but does not have an
+# immutable dictionary.
+
+KT = TypeVar('KT')
+VT = TypeVar('VT')
+
+
+class FrozenDict(Mapping[KT, VT]):
+    """
+    An immutable frozen dictionary.
+
+    The FrozenDict is hashable if all the keys and values are hashable.
+
+    The copy() method takes additional arguments with which to update the
+    dictionary before returning a new FrozenDict.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._dict = dict(*args, **kwargs)
+        self._hash = None  # type: Optional[int]
+
+    def __getitem__(self, key: Hashable) -> VT:
+        return self._dict[key]
+
+    def __contains__(self, key: Hashable) -> bool:
+        return key in self._dict
+
+    def copy(self, *args: Any, **kwargs: Any) -> 'FrozenDict':
+        d = self._dict.copy()
+        d.update(*args, **kwargs)
+        return self.__class__(d)
+
+    def __iter__(self) -> Iterator[KT]:
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def __repr__(self) -> str:
+        return '%s(%r)' % (self.__class__.__name__, self._dict)
+
+    def __hash__(self) -> int:
+        if not self._hash:
+            self._hash = hash(frozenset(self._dict.items()))
+        return self._hash
 
 
 def bitlist_to_int(bitlist: Sequence[int]) -> int:
@@ -230,6 +280,5 @@ def unitary_ensemble(dim: int) -> np.ndarray:
          arXiv:math-ph/0609050
     """
     return scipy.stats.unitary_group.rvs(dim)
-
 
 # fin

@@ -162,13 +162,13 @@ class DAGCircuit(Operation):
         for _, node, key in self.graph.edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False        # pragma: no cover  # Insanity check
+        assert False        # Insanity check
 
     # DOCME TESTME
     def prev_element(self, elem: Operation, qubit: Qubit = None) -> Operation:
         for node, _, key in self.graph.in_edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False        # pragma: no cover  # Insanity check
+        assert False         # Insanity check
 
 # End class DAGCircuit

@@ -15,9 +15,10 @@ import pytest
 pytest.importorskip("pyquil")      # noqa: 402
 
 import quantumflow as qf
-from quantumflow.forest import pyquil
+from quantumflow import xforest as forest
+from quantumflow.xforest import pyquil
 
-from . import skip_unless_pdflatex
+from .. import skip_unless_pdflatex
 
 
 def dependancies_installed():
@@ -46,7 +47,7 @@ def test_circuit_to_pyquil():
     circ = qf.Circuit()
     circ += qf.X(0)
 
-    prog = qf.forest.circuit_to_pyquil(circ)
+    prog = forest.circuit_to_pyquil(circ)
     assert str(prog) == "X 0\n"
 
     circ = qf.Circuit()
@@ -66,7 +67,7 @@ def test_circuit_to_pyquil():
     circ.extend(circ1)
     circ.extend(circ2)
 
-    prog = qf.forest.circuit_to_pyquil(circ)
+    prog = forest.circuit_to_pyquil(circ)
 
     print(prog)
 
@@ -76,8 +77,8 @@ def test_circuit_to_pyquil():
 def test_pyquil_to_circuit():
 
     prog = pyquil.Program(QUILPROG)
-    circ = qf.forest.pyquil_to_circuit(prog)
-    prog_new = qf.forest.circuit_to_pyquil(circ)
+    circ = forest.pyquil_to_circuit(prog)
+    prog_new = forest.circuit_to_pyquil(circ)
     print(prog_new)
     assert str(prog_new) == QUILPROG
 
@@ -99,8 +100,8 @@ HALT
 def test_pyquil_to_circuit_more():
     # Check will ignore or convert DECLARE, MEASURE
     prog = pyquil.Program(BELL_STATE_MEASURE)
-    circ = qf.forest.pyquil_to_circuit(prog)
-    prog_new = qf.forest.circuit_to_pyquil(circ)
+    circ = forest.pyquil_to_circuit(prog)
+    prog_new = forest.circuit_to_pyquil(circ)
 
     print(circ.qubits)
     print(prog_new)
@@ -110,15 +111,15 @@ def test_pyquil_to_circuit_more():
 @skip_unless_pdflatex
 def test_pyquil_to_latex():
     prog = pyquil.Program(BELL_STATE_MEASURE)
-    circ = qf.forest.pyquil_to_circuit(prog)
+    circ = forest.pyquil_to_circuit(prog)
     latex = qf.circuit_to_latex(circ)
-    img = qf.render_latex(latex)
+    img = qf.latex_to_image(latex)
     assert img is not None
     # img.show()
 
 
 def test_qvm_run():
-    qvm = qf.forest.QuantumFlowQVM()
+    qvm = forest.QuantumFlowQVM()
     for _ in range(TRIALS):
         qvm.load(BELL_STATE_MEASURE).run().wait()
         res = qvm.read_from_memory_region(region_name='ro')
@@ -137,7 +138,7 @@ def test_wavefunction():
     wf_expected0 = np.array([0.70710678 + 0.j, 0.70710678 + 0.j,
                              0. + 0.j, 0. + 0.j, ])
 
-    qvm = qf.forest.QuantumFlowQVM()
+    qvm = forest.QuantumFlowQVM()
     qvm.load(wf_program).run().wait()
     wf = qvm.wavefunction()
     res = qvm.read_from_memory_region(region_name='ro')[0]
@@ -166,12 +167,12 @@ def test_qaoa_circuit():
     ket = qf.zero_state(2)
     ket = circ.run(ket)
 
-    prog = qf.forest.circuit_to_pyquil(circ)
+    prog = forest.circuit_to_pyquil(circ)
 
-    qvm = qf.forest.QuantumFlowQVM()
+    qvm = forest.QuantumFlowQVM()
     wf = qvm.load(prog).run().wait().wavefunction()
 
-    state = qf.forest.wavefunction_to_state(wf)
+    state = forest.wavefunction_to_state(wf)
     assert qf.states_close(ket, state)
 
 
@@ -179,14 +180,14 @@ def test_exceptions():
     circ = qf.Circuit()
     circ += qf.T_H(0)
     with pytest.raises(ValueError):
-        qf.forest.circuit_to_pyquil(circ)
+        forest.circuit_to_pyquil(circ)
 
     quil = "XOR c[0] c[1]"
     prog = pyquil.Program(quil)
     with pytest.raises(ValueError):  # Not protoquil
-        circ = qf.forest.pyquil_to_circuit(prog)
+        circ = forest.pyquil_to_circuit(prog)
 
-    qvm = qf.forest.QuantumFlowQVM()
+    qvm = forest.QuantumFlowQVM()
     qvm.load(BELL_STATE_MEASURE)
     with pytest.raises(NotImplementedError):
         qvm.write_memory(region_name='ro')
@@ -199,7 +200,7 @@ def test_exceptions():
 def test_null_complier():
     quil = "XOR c[0] c[1]"
     prog0 = pyquil.Program(quil)
-    nc = qf.forest.NullCompiler()
+    nc = forest.NullCompiler()
     nc.get_version_info()
     prog1 = nc.quil_to_native_quil(prog0)
     assert prog1 == prog0
@@ -212,13 +213,13 @@ def test_null_complier():
 # def test_qvm():
 #     circ = qf.ghz_circuit([0, 1, 2, 3])
 #     with qf.pyquil.local_qvm():
-#         qf.forest.qvm_run_and_measure(circ, 1)
+#         forest.qvm_run_and_measure(circ, 1)
 
 
 # def test_get_virtual_qc():
-#     qf.forest.get_virtual_qc(4)
-#     qf.forest.get_virtual_qc(4, noisy=True)
+#     forest.get_virtual_qc(4)
+#     forest.get_virtual_qc(4, noisy=True)
 
 
 # def test_get_compiler():
-#     qf.forest.get_compiler(4)
+#     forest.get_compiler(4)

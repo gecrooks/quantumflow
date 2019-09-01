@@ -1,9 +1,11 @@
 
-from numpy import pi
+from numpy import pi, random
 
 import quantumflow as qf
 
-from . import ALMOST_ZERO
+from . import REPS, ALMOST_ZERO, skip_torch, skip_eager
+
+# TODO: Refactor to match split of gates in gates subpackage.
 
 
 def test_BARENCO():
@@ -102,9 +104,9 @@ def test_U3():
         ]).asgate()
     assert qf.almost_identity(gate1)
 
-    _ = qf.U0(10)
 
-
+@skip_eager  # FIXME
+@skip_torch  # FIXME
 def test_CU3():
     theta = 0.2
     phi = 2.3
@@ -139,3 +141,42 @@ def test_RZZ():
     assert qf.gates_close(gate0, gate1)
     assert qf.gates_close(gate0.H, gate1.H)
     assert qf.gates_close(gate0 ** 0.12, gate1 ** 0.12)
+
+
+def test_FSIM():
+    for _ in range(REPS):
+        theta = random.uniform(-pi, +pi)
+        phi = random.uniform(-pi, +pi)
+        gate0 = qf.FSIM(theta, phi)
+
+        # Test with decomposition from Cirq.
+        # TODO: Add decomposition somewhere in QF
+        circ = qf.Circuit()
+        circ += qf.XX(theta / pi, 0, 1)
+        circ += qf.YY(theta / pi, 0, 1)
+        circ += qf.CZ(0, 1) ** (- phi / pi)
+        gate1 = circ.asgate()
+        assert qf.gates_close(gate0, gate1)
+
+        assert qf.gates_close(gate1.H, gate0.H)
+
+
+def test_W_TW():
+    q0 = '4'
+    for _ in range(REPS):
+        t = random.uniform(0, 1)
+        p = random.uniform(-2, +2)
+
+        gate0 = qf.W(p, q0)
+        gate1 = qf.TW(p, t, q0)
+        assert qf.gates_close(gate0 ** t, gate1)
+        assert (gate0 ** t).qubits == (q0,)
+
+        gate0.H
+        gate1.H
+        gate2 = gate1 ** t
+        p2, t2 = gate2.params.values()
+        assert p2 == p
+        assert t2 == t ** 2
+
+# fin

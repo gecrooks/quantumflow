@@ -12,7 +12,7 @@
 # Exclude backends (which can't all get 100% coverage)???
 
 [run]
-omit = quantumflow/backend/*
+# momit = quantumflow/backend/*
 
 [report]
 exclude_lines =

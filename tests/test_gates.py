@@ -8,10 +8,13 @@
 Unit tests for quantumflow.gates
 """
 
+# TODO: Refactor to match split of gates in gates subpackage.
+
 import io
 import numpy as np
 
 import pytest
+from sympy import Symbol
 
 import quantumflow as qf
 import quantumflow.backend as bk
@@ -19,7 +22,7 @@ import quantumflow.backend as bk
 from . import ALMOST_ONE
 
 
-REPS = 4
+from . import REPS
 
 
 def test_repr():
@@ -239,7 +242,7 @@ def test_hermitian():
     gate_names = ['I', 'X', 'Y', 'Z', 'H']
     for name in gate_names:
         print(name)
-        gate = qf.STDGATES[name]()
+        gate = qf.NAMED_GATES[name]()
         conj = gate.H
 
         assert qf.gates_close(gate, conj)
@@ -314,5 +317,41 @@ def test_reset():
         reset.aschannel()
 
     assert reset.H is reset
+
+
+def test_interchangeable():
+    assert qf.SWAP().interchangeable
+    assert not qf.CNOT().interchangeable
+
+
+def test_symbolic_parameters():
+    theta = Symbol('θ')
+
+    gate0 = qf.RZ(theta, 1)
+    assert str(gate0) == 'RZ(θ) 1'
+
+    gate1 = gate0 ** 4
+    assert str(gate1) == 'RZ(4*θ) 1'
+
+    circ = qf.Circuit([gate0, gate1])
+    diag = qf.circuit_to_diagram(circ)
+    assert diag == '1: ───Rz(θ)───Rz(4*θ)───'
+
+    gate2 = gate0.resolve({'θ': 2})
+    assert gate2.params['theta'] == 2.0
+
+
+def test_exceptions():
+
+    tensor = qf.CNOT(1, 0).tensor
+
+    with pytest.raises(ValueError):
+        qf.Gate(tensor, qubits=[0])
+
+    with pytest.raises(ValueError):
+        qf.Gate(tensor, qubits=[0, 1, 2])
+
+    with pytest.raises(ValueError):
+        qf.Gate()
 
 # fin

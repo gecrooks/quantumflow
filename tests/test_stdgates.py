@@ -8,14 +8,15 @@
 Unit tests for quantumflow.stdgates
 """
 
+# TODO: Refactor to match split of gates in gates subpackage.
+
 import random
 from math import pi
 import numpy as np
 
 import quantumflow as qf
-from . import ALMOST_ONE
 
-from . import REPS
+from . import REPS, ALMOST_ONE
 
 
 def test_I():
@@ -37,12 +38,6 @@ def test_unitary_2qubit():
     assert qf.almost_unitary(qf.CNOT())
     assert qf.almost_unitary(qf.SWAP())
     assert qf.almost_unitary(qf.ISWAP())
-
-
-def test_unitary_3qubit():
-    assert qf.almost_unitary(qf.CCNOT())
-    assert qf.almost_unitary(qf.CNOT())
-    assert qf.almost_unitary(qf.CSWAP())
 
 
 def test_parametric_gates1():
@@ -92,6 +87,12 @@ def test_CZ():
     ket = qf.CZ(0, 1).run(ket)
     assert -ket.vec.asarray()[1, 1] == ALMOST_ONE
 
+    gate0 = qf.CZ() ** 0.4
+    gate1 = qf.CPHASE(0.4*pi)
+    assert qf.gates_close(gate0, gate1)
+
+    assert qf.CZ().interchangeable
+
 
 def test_cnot_reverse():
     # Hadamards reverse control on CNOT
@@ -103,31 +104,6 @@ def test_cnot_reverse():
     gate0 = qf.H(1) @ gate0
 
     assert qf.gates_close(qf.CNOT(), gate0)
-
-
-def test_ccnot():
-    ket = qf.zero_state(3)
-    ket = qf.CCNOT(0, 1, 2).run(ket)
-    assert ket.vec.asarray()[0, 0, 0] == ALMOST_ONE
-
-    ket = qf.X(1).run(ket)
-    ket = qf.CCNOT(0, 1, 2).run(ket)
-    assert ket.vec.asarray()[0, 1, 0] == ALMOST_ONE
-
-    ket = qf.X(0).run(ket)
-    ket = qf.CCNOT(0, 1, 2).run(ket)
-    assert ket.vec.asarray()[1, 1, 1] == ALMOST_ONE
-
-
-def test_cswap():
-    ket = qf.zero_state(3)
-    ket = qf.X(1).run(ket)
-    ket = qf.CSWAP(0, 1, 2).run(ket)
-    assert ket.vec.asarray()[0, 1, 0] == ALMOST_ONE
-
-    ket = qf.X(0).run(ket)
-    ket = qf.CSWAP(0, 1, 2).run(ket)
-    assert ket.vec.asarray()[1, 0, 1] == ALMOST_ONE
 
 
 def test_phase():
@@ -209,6 +185,10 @@ def test_cphase_gates():
         gate10 = qf.X(1) @ gate10
         assert qf.gates_close(gate10, qf.CPHASE10(theta))
 
+        gate0 = qf.CPHASE(theta) ** 2
+        gate1 = qf.CPHASE(theta*2)
+        assert qf.gates_close(gate0, gate1)
+
 
 def test_parametric_TX_TY_TZ():
     gate = qf.I()
@@ -238,7 +218,7 @@ def test_inverse_self():
                   'CSWAP', 'CZ']
 
     for name in gate_names:
-        gate = qf.STDGATES[name]()
+        gate = qf.NAMED_GATES[name]()
         inv = gate.H
         assert type(gate) == type(inv)
 
@@ -251,8 +231,8 @@ def test_inverse_1qubit():
     gate_names = [('S', 'S_H'), ('T', 'T_H')]
 
     for name0, name1 in gate_names:
-        gate0 = qf.STDGATES[name0]()
-        gate1 = qf.STDGATES[name1]()
+        gate0 = qf.NAMED_GATES[name0]()
+        gate1 = qf.NAMED_GATES[name1]()
         assert qf.gates_close(gate0, gate1.H)
         assert qf.gates_close(gate0.H, gate1)
 
@@ -327,7 +307,7 @@ def test_EXCH():
     assert type(gate) == type(inv)
     assert qf.gates_close(qf.identity_gate(2), inv @ gate)
 
-    gate1 = qf.CANONICAL(t, t, t)
+    gate1 = qf.CAN(t, t, t)
     assert qf.gates_close(gate, gate1)
 
 
@@ -453,7 +433,7 @@ def test_gatepow():
              qf.CNOT(), qf.SWAP(), qf.ISWAP(), qf.CPHASE00(0.5),
              qf.CPHASE01(0.6), qf.CPHASE10(0.6), qf.CPHASE(0.7),
              qf.PSWAP(0.15), qf.CCNOT(), qf.CSWAP(), qf.TX(2.7), qf.TY(1.2),
-             qf.TZ(0.3), qf.ZYZ(3.5, 0.9, 2.1), qf.CANONICAL(0.1, 0.2, 7.4),
+             qf.TZ(0.3), qf.ZYZ(3.5, 0.9, 2.1), qf.CAN(0.1, 0.2, 7.4),
              qf.XX(1.8), qf.YY(0.9), qf.ZZ(0.45), qf.PISWAP(0.2),
              qf.EXCH(0.1), qf.TH(0.3)
              ]
@@ -506,5 +486,17 @@ def test_qubit_qaoa_circuit():
 
     assert qf.states_close(ket, ket_true)
 
+
+def test_CTX():
+    for _ in range(REPS):
+        t = random.uniform(-4, +4)
+        gate0 = qf.CTX(t, 2, 3)
+        gate1 = qf.control_gate(2, qf.TX(t, 3))
+        gate2 = qf.CNOT(2, 3) ** t
+        gate3 = qf.CTX(1, 2, 3) ** t
+
+        assert qf.gates_close(gate0, gate1)
+        assert qf.gates_close(gate0, gate2)
+        assert qf.gates_close(gate0, gate3)
 
 # fin

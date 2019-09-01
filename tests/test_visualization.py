@@ -30,7 +30,7 @@ def test_circuit_to_latex_error():
 def test_circuit_to_text_error():
     circ = qf.Circuit([qf.random_gate([0, 1, 2])])
     with pytest.raises(NotImplementedError):
-        qf.circuit_to_text(circ)
+        qf.circuit_to_diagram(circ)
 
 
 def test_visualize_circuit():
@@ -104,22 +104,22 @@ def test_visualize_circuit():
     qf.circuit_to_latex(circ, package='qcircuit')
     qf.circuit_to_latex(circ, package='quantikz')
 
-    qf.circuit_to_text(circ)
-    qf.circuit_to_text(circ, use_unicode=False)
+    qf.circuit_to_diagram(circ)
+    qf.circuit_to_diagram(circ, use_unicode=False)
 
     # print(qf.circuit_to_text(circ))
 
     # latex = qf.circuit_to_latex(circ, package='qcircuit')
     # print(latex)
-    # qf.render_latex(latex).show()
+    # qf.latex_to_image(latex).show()
 
     # latex = qf.circuit_to_latex(circ, package='quantikz')
     # print(latex)
-    # qf.render_latex(latex).show()
+    # qf.latex_to_image(latex).show()
 
 
 @skip_unless_pdflatex
-def test_render_latex():
+def test_latex_to_image():
     # TODO: Double check this circuit is correct
     circ = qf.addition_circuit(['a[0]', 'a[1]', 'a[2]', 'a[3]'],
                                ['b[0]', 'b[1]', 'b[2]', 'b[3]'],
@@ -130,11 +130,11 @@ def test_render_latex():
 
     latex = qf.circuit_to_latex(circ, order)
 
-    qf.render_latex(latex)
-    qf.render_latex(latex).show()
+    qf.latex_to_image(latex)
+    qf.latex_to_image(latex).show()
 
 
-def test_circuit_to_text():
+def test_circuit_to_diagram():
     circ = qf.addition_circuit(['a[0]', 'a[1]', 'a[2]', 'a[3]'],
                                ['b[0]', 'b[1]', 'b[2]', 'b[3]'],
                                ['cin', 'cout'])
@@ -142,7 +142,7 @@ def test_circuit_to_text():
              'b[3]', 'cout']
     # order = ['cin', 'a0', 'a1', 'a2', 'a3', 'b0', 'b1', 'b2', 'b3','cout']
 
-    text = qf.circuit_to_text(circ, order)
+    text = qf.circuit_to_diagram(circ, order)
 
     res = """\
 cin:  ───────X───●───────────────────────────────────────────────────────────────────●───X───●───
@@ -171,7 +171,7 @@ cout: ────────────────────────�
 
     assert res == text
 
-    ascii_circ = qf.circuit_to_text(circ, order, use_unicode=False)
+    ascii_circ = qf.circuit_to_diagram(circ, order, use_unicode=False)
     ascii_res = """\
 cin:  -------X---@-------------------------------------------------------------------@---X---@---
              |   |                                                                   |   |   |   
@@ -292,8 +292,8 @@ X─┼─┼─┼─┼─┼─┼─● │ │
 │ │ │ │ │ │ │ │ │ │\
 """     # noqa
 
-    text = qf.circuit_to_text(circ, order,
-                              transpose=True, qubit_labels=False)
+    text = qf.circuit_to_diagram(circ, order,
+                                 transpose=True, qubit_labels=False)
     print(text)
     assert text == transposed
 

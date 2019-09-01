@@ -35,15 +35,27 @@ def print_versions(file: typing.TextIO = None) -> None:
     print('networkx    \t', nx.__version__, file=file)
     print('cvxpy      \t', cvx.__version__, file=file)
 
+    print(bk.name, '   \t', bk.version, '(BACKEND)', file=file)
+
     # Optional packages
-    try:                    # pragma: no cover
+    try:
         import pyquil
-        print('pyquil      \t', pyquil.__version__, file=file)
-    except ImportError:     # pragma: no cover
+        print('pyquil      \t', pyquil.__version__, '(Optional)', file=file)
+    except ImportError:
         pass
 
-    print(bk.name, '   \t', bk.version, '(BACKEND)', file=file)
+    try:
+        import cirq
+        print('cirq        \t', cirq.__version__, '(Optional)', file=file)
+    except ImportError:
+        pass
+
+    try:
+        import qiskit
+        print('qiskit      \t', qiskit.__version__, '(Optional)', file=file)
+    except ImportError:
+        pass
 
 
 if __name__ == '__main__':
-    print_versions()            # pragma: no cover
+    print_versions()

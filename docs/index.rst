@@ -34,7 +34,8 @@ quantum simulation using commodity classical GPUs.
       decomp
       measures
       gradients
-      compile
+      translate
+      transform
       backends
       forest      
       examples
