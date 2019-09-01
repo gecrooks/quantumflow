@@ -417,7 +417,7 @@ class JumpUnless(Instruction):
         return '{} @{} {}'.format(self.name, self.target, self.condition)
 
     def run(self, ket: State) -> State:
-        if not ket.memory[self.condition]:
+        if not ket.memory[self.condition]:  # pragma: no cover  # FIXME
             dest = ket.memory[TARGETS][self.target]
             return ket.store({PC: dest})
         return ket
