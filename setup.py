@@ -15,11 +15,9 @@ setup(
     install_requires=[
         'numpy',
         'scipy',
-        'tensorflow',
         'networkx',
-        'pyquil>=2.0.0b1',
         'pillow',
-        'cvxpy',
+        'cvxpy',    # FIXME: Make optional?
         'sympy'
     ],
     use_scm_version={'write_to': 'quantumflow/version.py'},
