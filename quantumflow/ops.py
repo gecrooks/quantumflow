@@ -38,7 +38,7 @@ and Pauli.
 # separately, in test_gates.py, and test_channels.py.
 
 
-from typing import Dict, Union, Any, Optional, Tuple
+from typing import Dict, Union, Any, Tuple
 from copy import copy
 from abc import ABC  # Abstract Base Class
 
