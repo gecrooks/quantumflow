@@ -8,7 +8,10 @@ pytest.importorskip("qiskit")      # noqa: 402
 
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
 import quantumflow as qf
-from quantumflow.xqiskit import (qiskit_to_circuit, circuit_to_qiskit)
+from quantumflow.xqiskit import (
+    qiskit_to_circuit,
+    circuit_to_qiskit,
+    translate_gates_to_qiskit)
 
 
 def test_qiskit_to_circuit():
@@ -53,7 +56,7 @@ CCNOT 0 1 2
 CH 0 1
 CRZ(1/10) 0 1
 CSWAP 0 1 2
-CRZ(1/10) 0 1
+CPHASE(1/10) 0 1
 CU3(1/10, 1/5, 3/10) 0 1
 CNOT 0 1
 CY 0 1
@@ -70,7 +73,7 @@ S_H 2
 SWAP 0 1
 T 1
 T_H 1
-U1(1/5) 2
+PHASE(1/5) 2
 U2(1/10, 1/5) 2
 U3(1/10, 1/5, 3/10) 2
 X 0
@@ -94,15 +97,18 @@ def test_qiskit_if():
     assert op.key == c
     assert op.value == 1
 
-    # TODO
-    # qc2 = circuit_to_qiskit(circ)
-
 
 def test_circuit_to_qiskit():
     circ = qf.Circuit()
     circ += qf.X(0)
     circ += qf.Y(1)
     circ += qf.Z(2)
+    circ += qf.CAN(0.1, 0.2, 0.2, 0, 1)
 
-    qc = circuit_to_qiskit(circ)
+    circ1 = translate_gates_to_qiskit(circ)
+    print(qf.circuit_diagram(circ1))
+
+    qc = circuit_to_qiskit(circ, translate=True)
     print(qc)
+
+    assert len(circ1) == len(qc)
