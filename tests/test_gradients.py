@@ -79,7 +79,7 @@ def test_gradient_errors():
         qf.parameter_shift_circuits(circ, 0)
 
     with pytest.raises(ValueError):
-        qf.expectation_gradients(ket0, circ, qf.I(0, 1))
+        qf.expectation_gradients(ket0, circ, qf.identity_gate([0, 1]))
 
 
 @skip_torch  # FIXME

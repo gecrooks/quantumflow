@@ -186,7 +186,7 @@ def test_canonical_decomp_errors():
 
 @skip_tensorflow
 def test_decomp_stdgates():
-    gate0 = qf.I(0, 1)
+    gate0 = qf.IDEN(0, 1)
     gate1 = qf.canonical_decomposition(gate0).asgate()
     assert qf.gates_close(gate0, gate1)
 

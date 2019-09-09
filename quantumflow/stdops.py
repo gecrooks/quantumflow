@@ -32,7 +32,7 @@ from .qubits import Qubit, Qubits, asarray, QubitVector
 from .states import State, Density
 from .ops import Operation, Gate, Channel
 from .gates import P0, P1
-from .gates import SWAP, I
+from .gates import SWAP, I, IDEN
 from .circuits import Circuit
 from . import backend as bk
 
@@ -203,7 +203,7 @@ class QubitPermutation(Operation):
         N = circ.qubit_nb
         perm = list(range(N))
         for elem in circ:
-            if isinstance(elem, I):
+            if isinstance(elem, I) or isinstance(elem, IDEN):
                 continue
             assert isinstance(elem, SWAP)
             q0, q1 = elem.qubits
@@ -347,6 +347,7 @@ class Display(Operation):
 
 
 # TESTME
+# RENAME? StateDisplay?
 class StoreState(Display):
     """
     Store a copy of the state in the classical memory. (This operation

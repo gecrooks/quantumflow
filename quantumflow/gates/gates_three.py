@@ -3,12 +3,15 @@
 QuantumFlow: Three qubit gates
 """
 
+import numpy as np
+
 from .. import backend as bk
 from ..qubits import Qubit
+from ..states import State, Density
 from ..ops import Gate
 
 
-__all__ = ['CCNOT', 'CSWAP', 'CCZ']
+__all__ = ['CCNOT', 'CSWAP', 'CCZ', 'IDEN']
 
 
 class CCNOT(Gate):
@@ -49,8 +52,10 @@ class CCNOT(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CCNOT':
         return self  # Hermitian
+
+    # TODO: __pow__
 
 
 class CSWAP(Gate):
@@ -90,8 +95,10 @@ class CSWAP(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CSWAP':
         return self  # Hermitian
+
+    # TODO: __pow__
 
 
 class CCZ(Gate):
@@ -135,3 +142,32 @@ class CCZ(Gate):
     @property
     def H(self) -> Gate:
         return self  # Hermitian
+
+    # TODO: __pow__
+
+
+class IDEN(Gate):                                      # noqa: E742
+    r"""
+    The multi-qubit identity gate.
+    """
+    def __init__(self, *qubits: Qubit) -> None:
+        if not qubits:
+            qubits = (0,)
+        super().__init__(qubits=qubits)
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho
+
+    @property
+    def H(self) -> 'IDEN':
+        return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'IDEN':
+        return self

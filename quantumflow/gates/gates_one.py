@@ -8,11 +8,39 @@ import numpy as np
 
 from .. import backend as bk
 from ..qubits import Qubit
+from ..states import State, Density
 from ..ops import Gate
-from .gates_utils import I
 
 
 # Standard 1 qubit gates
+
+class I(Gate):                                      # noqa: E742
+    r"""
+    The 1-qubit identity gate.
+
+    .. math::
+        I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
+    """
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct(np.eye(2))
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho
+
+    @property
+    def H(self) -> 'I':
+        return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'I':
+        return self
+
 
 class X(Gate):
     r"""
@@ -29,12 +57,12 @@ class X(Gate):
         unitary = [[0, 1], [1, 0]]
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
-        return TX(t, *self.qubits)
-
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'X':
         return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'TX':
+        return TX(t, *self.qubits)
 
 
 class Y(Gate):
@@ -54,12 +82,12 @@ class Y(Gate):
         unitary = np.asarray([[0, -1.0j], [1.0j, 0]])
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
-        return TY(t, *self.qubits)
-
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'Y':
         return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'TY':
+        return TY(t, *self.qubits)
 
 
 class Z(Gate):
@@ -77,12 +105,12 @@ class Z(Gate):
         unitary = np.asarray([[1, 0], [0, -1.0]])
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
-        return TZ(t, *self.qubits)
-
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'Z':
         return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'TZ':
+        return TZ(t, *self.qubits)
 
 
 class H(Gate):
@@ -101,12 +129,17 @@ class H(Gate):
         unitary = np.asarray([[1, 1], [1, -1]]) / sqrt(2)
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
+    @property
+    def H(self) -> '_H':
+        return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'TH':
         return TH(t, *self.qubits)
 
-    @property
-    def H(self) -> Gate:
-        return self  # Hermitian
+
+# Hack. H().H -> H, but the method shadows the class, so can't
+# annotate directly.
+_H = H
 
 
 class S(Gate):
@@ -127,11 +160,11 @@ class S(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'S_H':
         return S_H(*self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
-        return PHASE(pi / 2 * t, *self.qubits)
+    def __pow__(self, t: float) -> 'TZ':
+        return TZ(t/2, *self.qubits)
 
 
 class T(Gate):
@@ -151,16 +184,17 @@ class T(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'T_H':
         return T_H(*self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
-        return PHASE(pi / 4 * t, *self.qubits)
+    def __pow__(self, t: float) -> 'TZ':
+        return TZ(t/4, *self.qubits)
 
 
 class PHASE(Gate):
     r"""
-    A 1-qubit parametric phase shift gate
+    A 1-qubit parametric phase shift gate.
+    Equivalent to RZ upto a global phase.
 
     .. math::
         \text{PHASE}(\theta) \equiv \begin{pmatrix}
@@ -177,14 +211,12 @@ class PHASE(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = self.params['theta']
-        theta = 2. * pi - theta % (2. * pi)
-        return PHASE(theta, *self.qubits)
+    def H(self) -> 'PHASE':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
-        theta = self.params['theta'] * t
-        return PHASE(theta, *self.qubits)
+    def __pow__(self, t: float) -> 'PHASE':
+        theta = self.params['theta']
+        return PHASE(theta * t, *self.qubits)
 
 
 class RX(Gate):
@@ -211,11 +243,10 @@ class RX(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = self.params['theta']
-        return RX(-theta, *self.qubits)
+    def H(self) -> 'RX':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'RX':
         theta = self.params['theta']
         return RX(theta * t, *self.qubits)
 
@@ -243,11 +274,10 @@ class RY(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = self.params['theta']
-        return RY(-theta, *self.qubits)
+    def H(self) -> 'RY':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'RY':
         theta = self.params['theta']
         return RY(theta * t, *self.qubits)
 
@@ -276,11 +306,10 @@ class RZ(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = self.params['theta']
-        return RZ(-theta, *self.qubits)
+    def H(self) -> 'RZ':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'RZ':
         theta = self.params['theta']
         return RZ(theta * t, *self.qubits)
 
@@ -304,11 +333,11 @@ class S_H(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'S':
         return S(*self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
-        return PHASE(-pi / 2 * t, *self.qubits)
+    def __pow__(self, t: float) -> 'TZ':
+        return TZ(-t/2, *self.qubits)
 
 
 class T_H(Gate):
@@ -328,11 +357,11 @@ class T_H(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'T':
         return T(*self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
-        return PHASE(-pi / 4 * t, *self.qubits)
+    def __pow__(self, t: float) -> 'TZ':
+        return TZ(-t/4, *self.qubits)
 
 
 class RN(Gate):
@@ -368,11 +397,10 @@ class RN(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta, nx, ny, nz = self.params.values()
-        return RN(-theta, nx, ny, nz, *self.qubits)
+    def H(self) -> 'RN':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'RN':
         theta, nx, ny, nz = self.params.values()
         return RN(t * theta, nx, ny, nz, *self.qubits)
 
@@ -394,7 +422,7 @@ class TX(Gate):
     def tensor(self) -> bk.BKTensor:
         t = self.params['t']
         ctheta = bk.ccast(pi * t)
-        phase = bk.exp(0.5j * ctheta)
+        phase = bk.cis(0.5 * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2),
                     phase * -1.0j * bk.sin(ctheta / 2)],
                    [phase * -1.0j * bk.sin(ctheta / 2),
@@ -402,11 +430,10 @@ class TX(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return TX(t, *self.qubits)
+    def H(self) -> 'TX':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TX':
         t = self.params['t'] * t
         return TX(t, *self.qubits)
 
@@ -424,7 +451,7 @@ class TY(Gate):
 
     """
     def __init__(self, t: float, q0: Qubit = 0) -> None:
-        t = t % 2
+        # t = t % 2
         super().__init__(params=dict(t=t), qubits=[q0])
 
     @property
@@ -439,11 +466,10 @@ class TY(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return TY(t, *self.qubits)
+    def H(self) -> 'TY':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TY':
         t = self.params['t'] * t
         return TY(t, *self.qubits)
 
@@ -471,11 +497,11 @@ class TZ(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'TZ':
         t = - self.params['t']
         return TZ(t, *self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TZ':
         t = self.params['t'] * t
         return TZ(t, *self.qubits)
 
@@ -510,15 +536,15 @@ class TH(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return TH(t, *self.qubits)
+    def H(self) -> 'TH':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TH':
         t = self.params['t'] * t
         return TH(t, *self.qubits)
 
 
+# FIXME: Replace with euler_circuit
 class ZYZ(Gate):
     r"""A Z-Y-Z decomposition of one-qubit rotations in the Bloch sphere
 
@@ -564,6 +590,7 @@ class ZYZ(Gate):
         return ZYZ(-t2, -t1, -t0, *self.qubits)
 
 
+# TODO: Rename to SX (sqrt-X)? Add SY gate, (SZ is S)
 class V(Gate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
@@ -576,10 +603,10 @@ class V(Gate):
         return TX(0.5).tensor
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'V_H':
         return V_H(*self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TX':
         return TX(0.5*t, *self.qubits)
 
 
@@ -595,10 +622,10 @@ class V_H(Gate):
         return TX(-0.5).tensor
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'V':
         return V(*self.qubits)
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TX':
         return TX(-0.5*t, *self.qubits)
 
 
@@ -617,11 +644,12 @@ class W(Gate):
         gate = TZ(p) @ X() @ TZ(-p)
         return gate.tensor
 
+    # TESTME
     @property
-    def H(self) -> Gate:
-        return self ** -1
+    def H(self) -> 'W':
+        return self
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TW':
         p = self.params['p']
         return TW(p, t, *self.qubits)
 
@@ -642,10 +670,10 @@ class TW(Gate):
         return gate.tensor
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'TW':
         return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'TW':
         p, s = self.params.values()
         return TW(p, s * t, *self.qubits)
 
