@@ -201,15 +201,21 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
     K = rank(tensor0) // 2
     assert K == len(indices)
 
-    out = list(EINSUM_SUBSCRIPTS[0:N])
-    left_in = list(EINSUM_SUBSCRIPTS[N:N+K])
-    left_out = [out[idx] for idx in indices]
-    right = list(EINSUM_SUBSCRIPTS[0:N])
+    left_out = indices
+    left_in = list(range(N, N+K))
+    right = list(range(0, N))
     for idx, s in zip(indices, left_in):
         right[idx] = s
 
-    subscripts = ''.join(left_out + left_in + [','] + right + ['->'] + out)
-    # print('>>>', K, N, subscripts)
+    tensor = einsum_sublist(tensor0, left_out+left_in, tensor1, right)
 
-    tensor = einsum(subscripts, tensor0, tensor1)
     return tensor
+
+
+def einsum_sublist(*args):
+    """Einsum supporting the sublist interface.
+    `einsum(op0, sublist0, op1, sublist1, ..., [sublistout])`
+    https://docs.scipy.org/doc/numpy/reference/generated/numpy.einsum.html
+    """
+    # Numpy accepts this natively.
+    return einsum(*args)
