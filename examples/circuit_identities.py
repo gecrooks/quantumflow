@@ -12,31 +12,31 @@ from itertools import zip_longest
 import numpy as np
 
 from quantumflow import (
-    I, H, X, Y, Z, CNOT, CZ, SWAP, ISWAP, XX, YY, ZZ, S, CAN,
-    CCNOT, RZ, Circuit, gates_close, RX, CPHASE, TZ, TY,
+    I, H, X, Y, Z, CNOT, CZ, SWAP, ISWAP, XX, YY, ZZ, S, CAN, TX,
+    CCNOT, RZ, Circuit, gates_close, RX, CPHASE, TZ, TY, V,
     CPHASE00, CPHASE10, CPHASE01, PSWAP, translate_ccnot_to_cnot,
     circuit_to_diagram)
 
 import quantumflow as qf
 
-from sympy import Symbol
+from sympy import Symbol, pi
 
 syms = {
     'alpha':    Symbol('α'),
     'lam':      Symbol('λ'),
-    'nx':       Symbol('n_x'),
-    'ny':       Symbol('n_y'),
-    'nz':       Symbol('n_z'),
+    'nx':       Symbol('nx'),
+    'ny':       Symbol('ny'),
+    'nz':       Symbol('nz'),
     'p':        Symbol('p'),
     'phi':      Symbol('φ'),
     't':        Symbol('t'),
-    't0':       Symbol('t_0'),
-    't1':       Symbol('t_1'),
-    't2':       Symbol('t_2'),
+    't0':       Symbol('t0'),
+    't1':       Symbol('t1'),
+    't2':       Symbol('t2'),
     'theta':    Symbol('θ'),
-    'tx':       Symbol('t_x'),
-    'ty':       Symbol('t_y'),
-    'tz':       Symbol('t_z'),
+    'tx':       Symbol('tx'),
+    'ty':       Symbol('ty'),
+    'tz':       Symbol('tz'),
     }
 
 
@@ -47,7 +47,15 @@ def identities():
     circuit_identities = []
 
     # Pick random parameter
-    theta = np.pi * np.random.uniform()
+    # theta = np.pi * np.random.uniform()
+    # t = np.random.uniform()
+
+    theta = syms['theta']
+    t = syms['t']
+
+    tx = syms['tx']
+    ty = syms['ty']
+    tz = syms['tz']
 
     # Single qubit gate identities
 
@@ -79,6 +87,60 @@ def identities():
     name = "Hadamards convert RZ to RX"
     circ0 = Circuit([H(0), RZ(theta, 0), H(0)])
     circ1 = Circuit([RX(theta, 0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    # Simplified from Cirq's "_potential_cross_whole_w"
+    # "_potential_cross_partial_w" is essentially same identity
+    # X and TZ commute
+    name = "X-sandwich inverts TZ"
+    circ0 = Circuit([X(0), TZ(t, 0), X(0)])
+    circ1 = Circuit([TZ(-t, 0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    # Same relation  as previous
+    name = "Commute X past TZ"
+    circ0 = Circuit([X(0), TZ(t, 0)])
+    circ1 = Circuit([TZ(-t, 0), X(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute X past TY"
+    circ0 = Circuit([X(0), TY(t, 0)])
+    circ1 = Circuit([TY(-t, 0), X(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute V past TZ"
+    circ0 = Circuit([V(0), TZ(t, 0)])
+    circ1 = Circuit([TY(t, 0), V(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute V past TY"
+    circ0 = Circuit([V(0), TY(t, 0)])
+    circ1 = Circuit([TZ(-t, 0), V(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute V.H past TZ"
+    circ0 = Circuit([V(0).H, TZ(t, 0)])
+    circ1 = Circuit([TY(-t, 0), V(0).H])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute V.H past TY"
+    circ0 = Circuit([V(0).H, TY(t, 0)])
+    circ1 = Circuit([TZ(t, 0), V(0).H])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Couumte S.H past TX"
+    circ0 = Circuit([S(0).H, TX(t, 0)])
+    circ1 = Circuit([TY(t, 0), S(0).H])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute S past TX"
+    circ0 = Circuit([S(0), TX(t, 0)])
+    circ1 = Circuit([TY(-t, 0), S(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Y to ZX"
+    circ0 = Circuit([Y(0)])
+    circ1 = Circuit([Z(0), X(0)])
     circuit_identities.append([name, circ0, circ1])
 
     # ZYZ Decompositions
@@ -161,7 +223,47 @@ def identities():
     circ1 = Circuit([CNOT(0, 1), Z(0)])
     circuit_identities.append([name, circ0, circ1])
 
-    #  Canonical gate identities
+    name = "Commute X with CZ"
+    circ0 = Circuit([X(0), CZ(0, 1)])
+    circ1 = Circuit([CZ(0, 1), X(0), Z(1)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute X with XX"
+    circ0 = Circuit([X(0), XX(t, 0, 1)])
+    circ1 = Circuit([XX(t, 0, 1), X(0), ])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute X with YY"
+    circ0 = Circuit([X(0), YY(t, 0, 1)])
+    circ1 = Circuit([YY(-t, 0, 1), X(0), ])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute X with ZZ"
+    circ0 = Circuit([X(0), ZZ(t, 0, 1)])
+    circ1 = Circuit([ZZ(-t, 0, 1), X(0), ])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute X with Canonical"
+    circ0 = Circuit([X(0), CAN(tx, ty, tz, 0, 1)])
+    circ1 = Circuit([CAN(tx, -ty, -tz, 0, 1), X(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute Y with Canonical"
+    circ0 = Circuit([Y(0), CAN(tx, ty, tz, 0, 1)])
+    circ1 = Circuit([CAN(-tx, ty, -tz, 0, 1), Y(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute Z with Canonical"
+    circ0 = Circuit([Z(0), CAN(tx, ty, tz, 0, 1)])
+    circ1 = Circuit([CAN(-tx, -ty, tz, 0, 1), Z(0)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute Sqrt(X) with Canonical switches ty and tz arguments"
+    circ0 = Circuit([V(0), V(1), CAN(tx, ty, tz, 0, 1)])
+    circ1 = Circuit([CAN(tx, tz, ty, 0, 1), V(0), V(1)])
+    circuit_identities.append([name, circ0, circ1])
+
+    #  Canonical decompositions
 
     name = "Canonical gates: CZ to ZZ"
     circ0 = Circuit([CZ(0, 1),
@@ -237,39 +339,49 @@ def identities():
     circ1 = Circuit([CZ(1, 2), CZ(0, 1)])
     circuit_identities.append([name, circ0, circ1])
 
+    name = "Z's shift ZZ by one unit"
+    circ0 = Circuit([ZZ(t, 0, 1)])
+    circ1 = Circuit([ZZ(t+1, 0, 1), Z(0), Z(1)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Z's shift ZZ by one unit"
+    circ0 = Circuit([XX(t, 0, 1)])
+    circ1 = Circuit([XX(t+1, 0, 1), X(0), X(1)])
+    circuit_identities.append([name, circ0, circ1])
+
     # Parametric circuits
 
     name = "ZZ to CNOTs"  # 1108.4318
-    circ0 = Circuit([ZZ(theta/np.pi, 0, 1)])
+    circ0 = Circuit([ZZ(theta/pi, 0, 1)])
     circ1 = Circuit([CNOT(0, 1), RZ(theta, 1), CNOT(0, 1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "XX to CNOTs"  # 1108.4318
-    circ0 = Circuit([XX(theta/np.pi, 0, 1)])
+    circ0 = Circuit([XX(theta/pi, 0, 1)])
     circ1 = Circuit([H(0), H(1), CNOT(0, 1), RZ(theta, 1), CNOT(0, 1),
                      H(0), H(1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "XX to CNOTs (2)"
-    circ0 = Circuit([XX(theta/np.pi, 0, 1)])
+    circ0 = Circuit([XX(theta/pi, 0, 1)])
     circ1 = Circuit([Y(0)**0.5, Y(1)**0.5, CNOT(0, 1), RZ(theta, 1),
                      CNOT(0, 1), Y(0)**-0.5, Y(1)**-0.5])
     circuit_identities.append([name, circ0, circ1])
 
     name = "YY to CNOTs"
-    circ0 = Circuit([YY(theta/np.pi, 0, 1)])
+    circ0 = Circuit([YY(theta/pi, 0, 1)])
     circ1 = Circuit([X(0)**0.5, X(1)**0.5, CNOT(0, 1), RZ(theta, 1),
                      CNOT(0, 1), X(0)**-0.5, X(1)**-0.5])
     circuit_identities.append([name, circ0, circ1])
 
     def cphase_to_zz(gate: CPHASE):
-        t = - gate.params['theta'] / (2 * np.pi)
+        t = - gate.params['theta'] / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([ZZ(t, q0, q1), TZ(-t, q0), TZ(-t, q1)])
         return circ
 
     def cphase00_to_zz(gate: CPHASE00):
-        t = - gate.params['theta'] / (2 * np.pi)
+        t = - gate.params['theta'] / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([X(0), X(1),
                         ZZ(t, q0, q1), TZ(-t, q0), TZ(-t, q1),
@@ -277,7 +389,7 @@ def identities():
         return circ
 
     def cphase01_to_zz(gate: CPHASE00):
-        t = - gate.params['theta'] / (2 * np.pi)
+        t = - gate.params['theta'] / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([X(0),
                         ZZ(t, q0, q1), TZ(-t, q0), TZ(-t, q1),
@@ -285,7 +397,7 @@ def identities():
         return circ
 
     def cphase10_to_zz(gate: CPHASE00):
-        t = - gate.params['theta'] / (2 * np.pi)
+        t = - gate.params['theta'] / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([X(1),
                         ZZ(t, q0, q1), TZ(-t, q0), TZ(-t, q1),
@@ -318,11 +430,10 @@ def identities():
 
     name = "PSWAP to Canonical"
     gate = PSWAP(theta, 0, 1)
-    t = 0.5 - theta / np.pi
     circ0 = Circuit([gate])
     circ1 = Circuit()
     circ1 += TY(1, 0)
-    circ1 += CAN(0.5, 0.5, t)
+    circ1 += CAN(0.5, 0.5, 0.5 - theta / pi)
     circ1 += TY(1, 1)
     circuit_identities.append([name, circ0, circ1])
 
@@ -383,14 +494,12 @@ def identities():
 
     # from sympy import Symbol, pi
     name = "CTX to ZZ"
-    gate = qf.CTX(0.2, 0, 1)
+    gate = qf.CTX(t, 0, 1)
     circ0 = Circuit([gate])
     circ1 = Circuit(qf.translate_ctx_to_zz(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "PISWAP to Canonical"
-    # theta = Symbol('θ')
-    theta = 0.2
     gate = qf.PISWAP(theta, 0, 1)
     circ0 = Circuit([gate])
     circ1 = Circuit(qf.translate_piswap_to_can(gate))
@@ -421,7 +530,10 @@ def _print_circuit_identity(name, circ0, circ1,
     print()
     print()
 
-    assert gates_close(circ0.asgate(), circ1.asgate())
+    concrete = {name: np.random.uniform() for name in syms.values()}
+    circ0f = circ0.resolve(concrete)
+    circ1f = circ1.resolve(concrete)
+    assert gates_close(circ0f.asgate(), circ1f.asgate())
 
 
 def _check_circuit_identities(circuit_identities):
