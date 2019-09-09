@@ -139,10 +139,6 @@ def productdiag(tensor: BKTensor) -> BKTensor:
     return tensor
 
 
-# def matmul(tensor0: BKTensor, tensor1: BKTensor):
-#    return tensor0 @ tensor1
-
-
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
               indices: typing.List[int]) -> BKTensor:
     N = rank(tensor1)
