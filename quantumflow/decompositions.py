@@ -1,4 +1,3 @@
-
 # Copyright 2016-2018, Rigetti Computing
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
@@ -37,8 +36,8 @@ from .qubits import asarray
 from .config import TOLERANCE
 from .ops import Gate
 from .measures import gates_close
-from .gates import RN, CAN, TX, TY, TZ, Y, S_H, I
-from .circuits import Circuit
+from .gates import RN, CAN, TY, TZ, Y, S_H, I
+from .circuits import Circuit, euler_circuit
 
 __all__ = ['bloch_decomposition',
            'zyz_decomposition',
@@ -143,15 +142,6 @@ def euler_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     if euler == 'ZYZ':
         return zyz_decomposition(gate)
 
-    euler_circ = {
-        'XYX': (TX, TY, TX),
-        'XZX': (TX, TZ, TX),
-        'YXY': (TY, TX, TY),
-        'YZY': (TY, TZ, TY),
-        'ZXZ': (TZ, TX, TZ),
-        'ZYZ': (TZ, TY, TZ)
-    }
-
     euler_trans = {
         'XYX': Y() ** 0.5,
         'XZX': RN(+2*np.pi/3, np.sqrt(1/3), np.sqrt(1/3), np.sqrt(1/3)),
@@ -161,17 +151,12 @@ def euler_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
         'ZYZ': I()
     }
 
-    q = gate.qubits[0]
-    trans = euler_trans[euler].relabel([q])
+    q0 = gate.qubits[0]
+    trans = euler_trans[euler].relabel([q0])
     gate = Circuit([trans, gate, trans.H]).asgate()
     zyz = zyz_decomposition(gate)
     params = [elem.params['t'] for elem in zyz.elements]    # type: ignore
-    gates = euler_circ[euler]
-    circ = Circuit([gates[0](params[0], q),
-                    gates[1](params[1], q),
-                    gates[2](params[2], q)])
-
-    return circ
+    return euler_circuit(params[0], params[1], params[2], q0, euler)
 
 
 def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
