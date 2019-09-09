@@ -119,19 +119,11 @@ Import Hierarchy
               |---> gates
               |       ^
               |       |
-              |---> stdgates
-              |       ^
-              |       |
               |---> channels
               |       ^
               |       |
-              |---> circuits
-              |       ^
-              |       |
-              |---> programs
-              |       ^
-              |       |
-              \---> forest
+              \---> circuits
+
 
 
 
