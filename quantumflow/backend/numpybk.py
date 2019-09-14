@@ -159,7 +159,6 @@ def productdiag(tensor: BKTensor) -> BKTensor:
     return tensor
 
 
-
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
               indices: typing.List[int]) -> BKTensor:
     r"""
