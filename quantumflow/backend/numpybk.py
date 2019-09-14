@@ -15,12 +15,14 @@ import string
 
 import numpy as np
 from numpy import (  # noqa: F401
-    sqrt, pi, conj, transpose, minimum,
+    sqrt, pi, conj, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
-    einsum, outer)
+    outer, tensordot, einsum, transpose)
 
 from numpy import sum as reduce_sum                 # noqa: F401
+
+from opt_einsum import contract
 
 TL = np
 """'TensorLibrary'. The actual imported backend python package
@@ -157,6 +159,7 @@ def productdiag(tensor: BKTensor) -> BKTensor:
     return tensor
 
 
+
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
               indices: typing.List[int]) -> BKTensor:
     r"""
@@ -184,18 +187,55 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
 
     """
 
-    # Note: This method is the critical computational core of QuantumFlow
-    # We currently have two implementations, one that uses einsum, the other
-    # using matrix multiplication
-    #
-    # numpy:
-    #   einsum is much faster particularly for small numbers of qubits
-    # tensorflow:
-    #   Little different is performance, but einsum would restrict the
-    #   maximum number of qubits to 26 (Because tensorflow only allows 26
-    #   einsum subscripts at present]
-    # torch:
-    #   einsum is slower than matmul
+    return _tensormul_tensordot(tensor0, tensor1, indices)
+    # return _tensormul_matmul(tensor0, tensor1, indices)
+    # return _tensormul_contract(tensor0, tensor1, indices)
+
+
+# Note: This method is the critical computational core of QuantumFlow
+# Different implementations kept for edification.
+
+
+def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
+                         indices: typing.List[int]) -> BKTensor:
+    # Significantly fater than using einsum.
+    N = rank(tensor1)
+    K = rank(tensor0) // 2
+    assert K == len(indices)
+
+    perm = list(indices) + [n for n in range(N) if n not in indices]
+    inv_perm = np.argsort(perm)
+
+    tensor = tensordot(tensor0, tensor1, (range(K, 2*K), indices))
+    tensor = transpose(tensor, inv_perm)
+
+    return tensor
+
+
+def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
+                      indices: typing.List[int]) -> BKTensor:
+    # About the same speed as tensordot
+    N = rank(tensor1)
+    K = rank(tensor0) // 2
+    assert K == len(indices)
+
+    gate = reshape(tensor0, [2**K, 2**K])
+
+    perm = list(indices) + [n for n in range(N) if n not in indices]
+    inv_perm = np.argsort(perm)
+
+    tensor = tensor1
+    tensor = transpose(tensor, perm)
+    tensor = reshape(tensor, [2**K, 2**(N-K)])
+    tensor = matmul(gate, tensor)
+    tensor = reshape(tensor, [2]*N)
+    tensor = transpose(tensor, inv_perm)
+
+    return tensor
+
+
+def _tensormul_contract(tensor0: BKTensor, tensor1: BKTensor,
+                        indices: typing.List[int]) -> BKTensor:
 
     N = rank(tensor1)
     K = rank(tensor0) // 2
@@ -207,15 +247,6 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
     for idx, s in zip(indices, left_in):
         right[idx] = s
 
-    tensor = einsum_sublist(tensor0, left_out+left_in, tensor1, right)
+    tensor = contract(tensor0, left_out+left_in, tensor1, right)
 
     return tensor
-
-
-def einsum_sublist(*args):
-    """Einsum supporting the sublist interface.
-    `einsum(op0, sublist0, op1, sublist1, ..., [sublistout])`
-    https://docs.scipy.org/doc/numpy/reference/generated/numpy.einsum.html
-    """
-    # Numpy accepts this natively.
-    return einsum(*args)
