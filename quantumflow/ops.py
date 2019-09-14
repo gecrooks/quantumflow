@@ -144,6 +144,11 @@ class Operation(ABC):
     def __iter__(self) -> Any:
         yield self
 
+    # Make Operations sortable. (So we can use Operations in opt_einsum
+    # axis lables.)
+    def __lt__(self, other) -> bool:
+        return id(self) < id(other)
+
 # End class Operation
 
 
@@ -239,7 +244,7 @@ class Gate(Operation):
 
     def evolve(self, rho: Density) -> Density:
         """Apply the action of this gate upon a density"""
-        # TODO: implement without explicit channel creation?
+        # TODO: implement without explicit channel creation? Withg Kraus?
         chan = self.aschannel()
         return chan.evolve(rho)
 
@@ -410,6 +415,7 @@ class Channel(Operation):
         return cls(tensor, qubits).sharp
 
     # TESTME
+    # FIXME: Can't be right, same as choi?
     def chi(self) -> bk.BKTensor:
         """Return the chi (or process) matrix representation of this
         superoperator"""
