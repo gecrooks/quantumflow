@@ -15,6 +15,7 @@ Operations Per Second).
 import argparse
 import random
 import timeit
+import time
 
 import quantumflow as qf
 
@@ -23,9 +24,9 @@ __description__ = 'Simple benchmark of QuantumFlow performance' + \
                     'measured in GOPS (Gate Operations Per Second)'
 
 
-GATES = 100
-REPS = 1
-QUBITS = 16
+GATES = 512
+REPS = 8
+QUBITS = 18
 
 
 def benchmark(N, gates):
@@ -45,9 +46,32 @@ def benchmark(N, gates):
     return ket.vec.tensor
 
 
+def benchmark_circuit(N, gates):
+    """Create a random circuit with N qubits and given number of gates.
+    Half the gates will be 1-qubit, and half 2-qubit
+    """
+    qubits = list(range(0, N))
+    circ = qf.Circuit()
+
+    # for n in range(0, N):
+    #     circ += qf.H(n)
+
+    for _ in range(0, gates//4):
+        q0, q1 = random.sample(qubits, 2)
+        circ += qf.CNOT(q1, q0)
+        circ += qf.Y(q0)
+        circ += qf.T(q1)
+        circ += qf.CNOT(q0, q1)
+
+    return circ
+
+
 def benchmark_gops(N, gates, reps):
     """Return benchmark performance in GOPS (Gate operations per second)"""
-    t = timeit.timeit(lambda: benchmark(N, gates), number=reps)
+
+    circ = benchmark_circuit(N, gates)
+
+    t = timeit.timeit(lambda: circ.run(), number=reps, timer=time.process_time)
     gops = (GATES*REPS)/t
     gops = int((gops * 100) + 0.5) / 100.0
     return gops
