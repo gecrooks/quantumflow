@@ -28,7 +28,7 @@ import numpy as np
 
 from sympy.combinatorics import Permutation
 
-from .qubits import Qubit, Qubits, asarray, QubitVector
+from .qubits import Qubit, Qubits, asarray
 from .states import State, Density
 from .ops import Operation, Gate, Channel
 from .gates import P0, P1
@@ -93,6 +93,9 @@ class Measure(Operation):
         return rho
 
 
+# TODO: Should perhaps be 1-qubit gate like P0 and P1?
+# Having no qubits specified screws up visualization
+# and dagc
 class Reset(Operation):
     r"""An operation that resets qubits to zero irrespective of the
     initial state.
@@ -102,11 +105,7 @@ class Reset(Operation):
             qubits = ()
         self._qubits = tuple(qubits)
 
-        self.vec = QubitVector([[1, 1], [0, 0]], [0])
-
-    @property
-    def H(self) -> 'Reset':
-        return self  # Hermitian
+        self._gate = Gate(tensor=[[1, 1], [0, 0]])
 
     def run(self, ket: State) -> State:
         if self.qubits:
@@ -115,10 +114,10 @@ class Reset(Operation):
             qubits = ket.qubits
 
         indices = [ket.qubits.index(q) for q in qubits]
-        ket_tensor = ket.tensor
         for idx in indices:
-            ket_tensor = bk.tensormul(self.vec.tensor, ket_tensor, [idx])
-        ket = State(ket_tensor, ket.qubits, ket.memory).normalize()
+            gate = self._gate.relabel(idx)
+            ket = ket.run(gate)
+        ket = ket.normalize()
         return ket
 
     def evolve(self, rho: Density) -> Density:
