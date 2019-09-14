@@ -113,8 +113,13 @@ class State:
         """Return a copy of this state with new qubits"""
         return State(self.vec.tensor, qubits, self.memory)
 
-    def permute(self, qubits: Qubits) -> 'State':
-        """Return a copy of this state with qubit labels permuted"""
+    def permute(self, qubits: Qubits = None) -> 'State':
+        """Return a copy of this state with state tensor transposed to
+        put qubits in the given order. If an explicet qubit
+        ordering isn't supplied, we put qubits in sorted order.
+        """
+        if qubits is None:
+            qubits = sorted(self.qubits)
         vec = self.vec.permute(qubits)
         return State(vec.tensor, vec.qubits, self.memory)
 
@@ -301,8 +306,10 @@ class Density(State):
         """Return a copy of this state with new qubits"""
         return Density(self.vec.tensor, qubits, self.memory)
 
-    def permute(self, qubits: Qubits) -> 'Density':
+    def permute(self, qubits: Qubits = None) -> 'Density':
         """Return a copy of this state with qubit labels permuted"""
+        if qubits is None:
+            qubits = sorted(self.qubits)
         vec = self.vec.permute(qubits)
         return Density(vec.tensor, vec.qubits, self.memory)
 
