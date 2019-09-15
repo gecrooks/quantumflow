@@ -129,7 +129,7 @@ def circuit_to_qiskit(circ: Circuit,
 # DOCME TESTME
 def translate_gates_to_qiskit(circ: Circuit) -> Circuit:
     target_gates = list([NAMED_GATES[n] for n in QASM_TO_QF.values()])
-    trans = select_translators(target_gates)
+    trans = select_translators(target_gates)  # type: ignore
 
     circ = translate(circ, trans)
     return circ

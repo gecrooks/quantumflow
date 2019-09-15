@@ -241,8 +241,7 @@ GATESET = frozenset([
 
 # DOCME
 # TODO: FrozenDict?
-NAMED_GATES: Dict[str, Type[Gate]] = \
-    {gate_class.__name__: gate_class for gate_class in GATESET}
+NAMED_GATES = {gate_class.__name__: gate_class for gate_class in GATESET}
 
 
 STD_GATES = NAMED_GATES.values()
