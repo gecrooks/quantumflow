@@ -12,6 +12,8 @@ import numpy as np
 
 import quantumflow as qf
 
+from quantumflow.dagcircuit import In, Out
+
 
 # TODO Refactor in test_circuit
 def _test_circ():
@@ -145,7 +147,7 @@ def test_components():
     assert len(comps) == 3
 
 
-def test_next():
+def test_next_prev():
     circ = qf.ghz_circuit([0, 2, 4, 6, 8])
     elem = circ.elements[3]
     dag = qf.DAGCircuit(circ)
@@ -153,6 +155,5 @@ def test_next():
     assert dag.next_element(elem, elem.qubits[1]) == circ.elements[4]
     assert dag.prev_element(elem, elem.qubits[0]) == circ.elements[2]
 
-    # FIXME: out and in nodes should also be Operation's ?
-    assert dag.next_element(elem, elem.qubits[0]) == ('out', 4)
-    assert dag.prev_element(elem, elem.qubits[1]) == ('in', 6)
+    assert dag.next_element(elem, elem.qubits[0]) == Out(4)
+    assert dag.prev_element(elem, elem.qubits[1]) == In(6)

@@ -25,6 +25,7 @@ def test_translations():
     _check_circuit_translations()
 
 
+# FIXME
 def test_select_translators():
     targets = [qf.I, qf.TX, qf.TZ, qf.XX]
 
@@ -42,6 +43,5 @@ def test_select_translators():
 
     trans2 = qf.select_translators(targets, trans)
     print(trans2)
-#
 
     assert set(trans2) == set(trans)
