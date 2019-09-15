@@ -27,9 +27,9 @@ from .gates import (
     # BARENCO,
     CV, CV_H, CY, CH, FSIM,
     # three qubit
-    CCNOT, CSWAP, CCZ,
+    CCNOT, CSWAP, CCZ, IDEN,
     # qasm gates
-    U3, U2, U1, CU3, CRZ, RZZ
+    U3, U2, CU3, CRZ, RZZ
     )
 
 # Note: __all__ at end of module
@@ -287,9 +287,9 @@ def translate_th_to_tx(gate: TH) -> Iterator[Union[TX, H, S, T, S_H, T_H]]:
     yield H(q0)
     yield T(q0)
     yield TX(t, q0)
-    yield T_H(q0)
+    yield T(q0).H
     yield H(q0)
-    yield S_H(q0)
+    yield S(q0).H
 
 
 def translate_ty_to_zxz(gate: TY) -> Iterator[Union[TX, S, S_H]]:
@@ -343,11 +343,11 @@ def translate_u2_to_zyz(gate: U2) -> Iterator[Union[RZ, RY]]:
     yield RZ(phi, q0)
 
 
-def translate_u1_to_rz(gate: U1) -> Iterator[RZ]:
-    """Translate QASMs U1 gate to RZ and RY"""
-    q0, = gate.qubits
-    lam, = gate.params.values()
-    yield RZ(lam, q0)
+# def translate_u1_to_rz(gate: U1) -> Iterator[RZ]:
+#     """Translate QASMs U1 gate to RZ and RY"""
+#     q0, = gate.qubits
+#     lam, = gate.params.values()
+#     yield RZ(lam, q0)
 
 
 # FIXME: ZYZ gate needed at all?
@@ -465,10 +465,41 @@ def translate_cphase10_to_zz(gate: CPHASE10) -> Iterator[Union[X, ZZ, TZ]]:
     yield X(q1)
 
 
+def translate_can_to_cnot(gate: CAN) -> Iterator[Union[CNOT, Z, TZ, TY]]:
+    """Translate canonical gate to 3 CNOTS
+
+    Ref:
+        Optimal Quantum Circuits for General Two-Qubit Gates, Vatan & Williams
+        (2004) (quant-ph/0308006) Fig. 6
+    """
+    # Note: sign flip on central TZ, TY, TY because of differing sign
+    # conventions for Canonical.
+    tx, ty, tz = gate.params.values()
+    q0, q1 = gate.qubits
+    yield TZ(+0.5, q1)
+    yield CNOT(1, 0)
+    yield TZ(tz-0.5, q0)
+    yield TY(-0.5+tx, q1)
+    yield CNOT(0, 1)
+    yield TY(-ty+0.5, q1)
+    yield CNOT(1, 0)
+    yield TZ(-0.5, q0)
+
+    # yield TZ(-0.5, q1)
+    # yield CNOT(1, 0)
+    # yield TZ(tz-0.5, q0)
+    # yield TY(0.5-tx, q1)
+    # yield CNOT(0, 1)
+    # yield TY(ty-0.5, q1)
+    # yield CNOT(1, 0)
+    # yield TZ(0.5, q0)
+
+
 def translate_can_to_xx_yy_zz(gate: CAN) -> Iterator[Union[XX, YY, ZZ]]:
     """Convert a canonical gate to a circuit with XX, YY, and ZZ gates."""
     tx, ty, tz = gate.params.values()
     q0, q1 = gate.qubits
+
     if isinstance(tx, Symbol) or not np.isclose(tx, 0.0):
         yield XX(tx, q0, q1)
     if isinstance(tx, Symbol) or not np.isclose(ty, 0.0):
@@ -827,22 +858,22 @@ def translate_cy_to_cnot(gate: CY) -> Iterator[Union[CNOT, S, S_H]]:
 
 # QASM Gates
 
-def translate_cu3_to_cnot(gate: CU3) -> Iterator[Union[CNOT, U1, U3]]:
+def translate_cu3_to_cnot(gate: CU3) -> Iterator[Union[CNOT, PHASE, U3]]:
     """Translate QASM's CU3 gate to standard gates"""
     # Kudos: Adapted from qiskit
     # https://github.com/Qiskit/qiskit-terra/blob/master/qiskit/extensions/standard/cu3.py
     q0, q1 = gate.qubits
     theta, phi, lam = gate.params.values()
 
-    yield U1((lam+phi)/2, q0)
-    yield U1((lam-phi)/2, q1)
+    yield PHASE((lam+phi)/2, q0)
+    yield PHASE((lam-phi)/2, q1)
     yield CNOT(q0, q1)
     yield U3(-theta / 2, 0, -(phi+lam)/2, q1)
     yield CNOT(q0, q1)
     yield U3(theta / 2, phi, 0, q1)
 
 
-def translate_crz_to_cnot(gate: CRZ) -> Iterator[Union[CNOT, U1, U3]]:
+def translate_crz_to_cnot(gate: CRZ) -> Iterator[Union[CNOT, PHASE, U3]]:
     """Translate QASM's CRZ gate to standard gates.
 
     Ref:
@@ -851,18 +882,18 @@ def translate_crz_to_cnot(gate: CRZ) -> Iterator[Union[CNOT, U1, U3]]:
     q0, q1 = gate.qubits
     theta, = gate.params.values()
 
-    yield U1(theta/2, q1)
+    yield PHASE(theta/2, q1)
     yield CNOT(q0, q1)
-    yield U1(-theta/2, q1)
+    yield PHASE(-theta/2, q1)
     yield CNOT(q0, q1)
 
 
-def translate_rzz_to_cnot(gate: RZZ) -> Iterator[Union[CNOT, U1, U3]]:
+def translate_rzz_to_cnot(gate: RZZ) -> Iterator[Union[CNOT, PHASE, U3]]:
     """Translate QASM's RZZ gate to standard gates"""
     q0, q1 = gate.qubits
     theta, = gate.params.values()
     yield CNOT(q0, q1)
-    yield U1(theta, q1)
+    yield PHASE(theta, q1)
     yield CNOT(q0, q1)
 
 
@@ -876,6 +907,11 @@ def translate_pswap_to_canonical(gate: PSWAP) -> Iterator[Union[CAN, Y]]:
     yield CAN(0.5, 0.5, t, q0, q1)
     yield Y(q1)
 
+
+def translate_iden(gate: IDEN) -> Iterator[I]:
+    """Translate multi-qubit identity gate to single qubit identities"""
+    for q in gate.qubits:
+        yield I(q)
 
 # def translate_rn_zyz(gate: RN) -> Iterator[Union[TZ, TY]]:
 #     # FIXME: Numerical decomposition. Not ideal, but I don't know
