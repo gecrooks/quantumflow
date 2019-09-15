@@ -146,7 +146,7 @@ class Operation(ABC):
 
     # Make Operations sortable. (So we can use Operations in opt_einsum
     # axis lables.)
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Any) -> bool:
         return id(self) < id(other)
 
 # End class Operation
