@@ -113,10 +113,9 @@ class Reset(Operation):
         else:
             qubits = ket.qubits
 
-        indices = [ket.qubits.index(q) for q in qubits]
-        for idx in indices:
-            gate = self._gate.relabel(idx)
-            ket = ket.run(gate)
+        for q in qubits:
+            gate = self._gate.relabel([q])
+            ket = gate.run(ket)
         ket = ket.normalize()
         return ket
 
