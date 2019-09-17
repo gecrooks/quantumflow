@@ -248,7 +248,7 @@ class Gate(Operation):
 
     def evolve(self, rho: Density) -> Density:
         """Apply the action of this gate upon a density"""
-        # TODO: implement without explicit channel creation? Withg Kraus?
+        # TODO: implement without explicit channel creation? With Kraus?
         chan = self.aschannel()
         return chan.evolve(rho)
 

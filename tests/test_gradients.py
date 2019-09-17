@@ -6,7 +6,8 @@ import networkx as nx
 
 import quantumflow as qf
 
-from . import ALMOST_ZERO, tensorflow2_only, skip_ctf
+from . import ALMOST_ZERO, tensorflow2_only
+# from .import skip_ctf
 
 
 def test_gradients():
@@ -35,11 +36,11 @@ def test_gradients():
     # Check that qf.expectation_gradients() gives same answers for
     # fidelity as f.state_fidelity_gradients()
     for g0, g1 in zip(grads0, grads2):
-        assert qf.asarray(g0 - g1) == ALMOST_ZERO
+        assert g0 - g1 == ALMOST_ZERO
         print(g0, g1)
 
 
-@skip_ctf    # FIXME
+# @skip_ctf    # FIXME
 def test_gradients_func():
     graph = nx.grid_graph([2, 1])
     layers = 2
@@ -59,7 +60,7 @@ def test_gradients_func():
     # print(grads3)
 
     for g0, g1 in zip(grads1, grads3):
-        assert qf.asarray(g0 - g1) == ALMOST_ZERO
+        assert g0 - g1 == ALMOST_ZERO
         print(g0, g1)
 
 

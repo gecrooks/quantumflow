@@ -14,17 +14,24 @@ import string
 import numpy as np
 
 import tensorflow as tf
-from tensorflow import transpose, minimum, exp, cos, sin        # noqa: F401
-from tensorflow import conj, real, imag, sqrt, matmul, trace    # noqa: F401
+from tensorflow import (  # noqa: F401
+    transpose,
+    minimum,
+    exp, cos, sin,
+    conj, real, imag, sqrt, matmul, trace,
+    einsum, reshape, reduce_sum,
+    roll,
+    tensordot)
+
 from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import diag_part as diag                        # noqa: F401
-from tensorflow import einsum, reshape                          # noqa: F401
 from tensorflow.python.client import device_lib
-from tensorflow import reduce_sum                               # noqa: F401
 
 from .numpybk import rank
 from .numpybk import set_random_seed as np_set_random_seed
 from .numpybk import TensorLike, BKTensor
+
+from opt_einsum import contract                                 # noqa: F401
 
 TL = tf
 name = TL.__name__

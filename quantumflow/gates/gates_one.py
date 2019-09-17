@@ -72,11 +72,19 @@ class X(Gate):
     def run(self, ket: State) -> State:
         # Fast implementation for X special case
         idx, = ket.qubit_indices(self.qubits)
-        take = multi_slice(axes=[idx], items=[[1, 0]])
-        tensor = ket.tensor[take]
-        return State(tensor, ket.qubits, ket.memory)
+
+        if bk.BACKEND == 'numpy':
+            take = multi_slice(axes=[idx], items=[[1, 0]])
+            tensor = ket.tensor[take]
+            return State(tensor, ket.qubits, ket.memory)
+        elif bk.BACKEND != 'ctf':
+            tensor = bk.roll(ket.tensor, axis=idx, shift=1)  # pragma: no cover
+            return State(tensor, ket.qubits, ket.memory)
+        return super().run(ket)
 
     # TODO: Optimized evolve method
+
+# end class X
 
 
 class Y(Gate):
@@ -217,6 +225,8 @@ class S(Gate):
     def run(self, ket: State) -> State:
         return TZ(1/2, *self.qubits).run(ket)
 
+# end class S
+
 
 class T(Gate):
     r"""
@@ -245,6 +255,8 @@ class T(Gate):
 
     def run(self, ket: State) -> State:
         return TZ(1/4, *self.qubits).run(ket)
+
+# end class T
 
 
 class PHASE(Gate):
@@ -281,6 +293,8 @@ class PHASE(Gate):
         theta, = self.params.values()
         return TZ(theta/pi, *self.qubits).run(ket)
 
+# end class PHASE
+
 
 class RX(Gate):
     r"""A 1-qubit Pauli-X parametric rotation gate.
@@ -313,6 +327,8 @@ class RX(Gate):
         theta = self.params['theta']
         return RX(theta * t, *self.qubits)
 
+# end class RX
+
 
 class RY(Gate):
     r"""A 1-qubit Pauli-Y parametric rotation gate
@@ -343,6 +359,8 @@ class RY(Gate):
     def __pow__(self, t: float) -> 'RY':
         theta = self.params['theta']
         return RY(theta * t, *self.qubits)
+
+# end class RY
 
 
 class RZ(Gate):
@@ -383,6 +401,8 @@ class RZ(Gate):
         theta, = self.params.values()
         return TZ(theta/pi, *self.qubits).run(ket)
 
+# end class RZ
+
 
 # Other 1-qubit gates
 
@@ -414,6 +434,8 @@ class S_H(Gate):
     def run(self, ket: State) -> State:
         return TZ(-1/2, *self.qubits).run(ket)
 
+# end class S_H
+
 
 class T_H(Gate):
     r"""
@@ -442,7 +464,6 @@ class T_H(Gate):
 
     def run(self, ket: State) -> State:
         return TZ(-1/4, *self.qubits).run(ket)
-
 
 # end class T_H
 
@@ -772,6 +793,8 @@ class TW(Gate):
     def __pow__(self, t: float) -> 'TW':
         p, s = self.params.values()
         return TW(p, s * t, *self.qubits)
+
+# end class TW
 
 
 cliffords = (
