@@ -29,7 +29,6 @@ def benchmark_circuit(N, gate_nb, gate):
 
 
 def _cli():
-    sim = cirq.Simulator()
 
     gates = [
              qf.I(), qf.X(), qf.Y(), qf.Z(), qf.S(), qf.T(), qf.H(),
@@ -46,8 +45,8 @@ def _cli():
         t = timeit.timeit(lambda: circ.run(), number=REPS,
                           timer=time.process_time)
 
-        cq = xcirq.circuit_to_cirq(circ)
-        t2 = timeit.timeit(lambda: sim.simulate(cq), number=REPS,
+        cq = xcirq.CirqSimulator(circ)
+        t2 = timeit.timeit(lambda: cq.run(), number=REPS,
                            timer=time.process_time)
 
         gops = int((GATES*REPS)/t)
