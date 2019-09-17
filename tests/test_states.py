@@ -66,6 +66,9 @@ def test_state_labels():
 
     ket = ket.permute([4, 3, 0, 1])
 
+    ket = ket.permute()
+    assert ket.qubits == (0, 1, 3, 4)
+
 
 def test_probability():
     state = qf.w_state(3)
@@ -168,6 +171,8 @@ def test_density():
 
     rho = rho.relabel([10, 11, 12]).permute([12, 11, 10])
     assert rho.qubits == (12, 11, 10)
+
+    rho.permute()
 
 
 def test_state_to_density():
