@@ -5,6 +5,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 import pytest
+pytest.importorskip("pyquil")      # noqa: 402
 
 from quantumflow import xforest as pq
 
