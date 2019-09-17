@@ -245,3 +245,5 @@ def test_cirq_simulator():
 
     print(qf.state_angle(ket1, ket2))
     assert qf.states_close(ket1, ket2)
+
+    assert qf.states_close(circ0.run(), sim.run())

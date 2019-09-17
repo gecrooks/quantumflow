@@ -53,6 +53,7 @@ CIRQ_GATESET = frozenset([I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
 """Set of QuantumFlow gates that we know how to convert to Cirq"""
 
 
+# TODO: Prototype
 class CirqSimulator(Operation):
     def __init__(self, elements: Iterable[Operation] = None) -> None:
         self._circuit = Circuit(elements)
@@ -64,7 +65,6 @@ class CirqSimulator(Operation):
     def qubits(self) -> Qubits:
         return self._circuit.qubits
 
-    # TESTME: Do qubits come oput in correct order?
     def run(self, ket: State = None) -> State:
         if ket is None:
             qubits = self.qubits
