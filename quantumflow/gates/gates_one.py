@@ -77,10 +77,10 @@ class X(Gate):
             take = multi_slice(axes=[idx], items=[[1, 0]])
             tensor = ket.tensor[take]
             return State(tensor, ket.qubits, ket.memory)
-        elif bk.BACKEND != 'ctf':
-            tensor = bk.roll(ket.tensor, axis=idx, shift=1)  # pragma: no cover
+        elif bk.BACKEND != 'ctf':                            # pragma: no cover
+            tensor = bk.roll(ket.tensor, axis=idx, shift=1)
             return State(tensor, ket.qubits, ket.memory)
-        return super().run(ket)
+        return super().run(ket)                              # pragma: no cover
 
     # TODO: Optimized evolve method
 

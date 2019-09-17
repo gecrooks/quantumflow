@@ -111,7 +111,6 @@ QASM gates
 **********
 .. autoclass::  U3
 .. autoclass::  U2
-.. autoclass::  U1
 .. autoclass::  CU3
 .. autoclass::  CRZ
 .. autoclass::  RZZ
