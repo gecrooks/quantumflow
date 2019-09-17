@@ -9,6 +9,7 @@ from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State, Density
 from ..ops import Gate
+from ..utils import multi_slice
 
 
 __all__ = ['CCNOT', 'CSWAP', 'CCZ', 'IDEN']
@@ -57,6 +58,18 @@ class CCNOT(Gate):
 
     # TODO: __pow__
 
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s110 = multi_slice(axes, [1, 1, 0])
+            s111 = multi_slice(axes, [1, 1, 1])
+            tensor = ket.tensor.copy()
+            tensor[s110] = ket.tensor[s111]
+            tensor[s111] = ket.tensor[s110]
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+
 
 class CSWAP(Gate):
     r"""
@@ -100,6 +113,18 @@ class CSWAP(Gate):
 
     # TODO: __pow__
 
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s101 = multi_slice(axes, [1, 0, 1])
+            s110 = multi_slice(axes, [1, 1, 0])
+            tensor = ket.tensor.copy()
+            tensor[s101] = ket.tensor[s110]
+            tensor[s110] = ket.tensor[s101]
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+
 
 class CCZ(Gate):
     r"""
@@ -120,6 +145,7 @@ class CCZ(Gate):
             \end{pmatrix}
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self,
                  q0: Qubit = 0,
@@ -145,11 +171,24 @@ class CCZ(Gate):
 
     # TODO: __pow__
 
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s11 = multi_slice(axes, [1, 1, 1])
+            tensor = ket.tensor.copy()
+            tensor[s11] *= -1
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+
 
 class IDEN(Gate):                                      # noqa: E742
     r"""
     The multi-qubit identity gate.
     """
+    interchangeable = True
+    diagonal = True
+
     def __init__(self, *qubits: Qubit) -> None:
         if not qubits:
             qubits = (0,)
@@ -159,15 +198,15 @@ class IDEN(Gate):                                      # noqa: E742
     def tensor(self) -> bk.BKTensor:
         return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
 
-    def run(self, ket: State) -> State:
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        return rho
-
     @property
     def H(self) -> 'IDEN':
         return self  # Hermitian
 
     def __pow__(self, t: float) -> 'IDEN':
         return self
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho

@@ -145,6 +145,8 @@ class CU3(Gate):
 class CRZ(Gate):
     r"""A controlled RZ gate.
     """
+    diagonal = True
+
     def __init__(self,
                  theta: float,
                  q0: Qubit = 0,
@@ -171,8 +173,8 @@ class RZZ(Gate):
     """A two-qubit ZZ-rotation gate, as defined by QASM.
     Same as ZZ(theta/pi), up to phase.
     """
-
     interchangeable = True
+    diagonal = True
 
     def __init__(self,
                  theta: float,

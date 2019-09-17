@@ -3,6 +3,8 @@ from numpy import pi, random
 
 import quantumflow as qf
 
+import pytest
+
 from . import REPS, ALMOST_ZERO
 # from . skip_torch, skip_eager
 
@@ -176,7 +178,6 @@ def test_FSIM():
         gate0 = qf.FSIM(theta, phi)
 
         # Test with decomposition from Cirq.
-        # TODO: Add decomposition somewhere in QF
         circ = qf.Circuit()
         circ += qf.XX(theta / pi, 0, 1)
         circ += qf.YY(theta / pi, 0, 1)
@@ -204,5 +205,51 @@ def test_W_TW():
         p2, t2 = gate2.params.values()
         assert p2 == p
         assert t2 == t ** 2
+
+
+def test_IDEN():
+    gate0 = qf.IDEN(0, 1)
+    assert gate0.qubit_nb == 2
+
+    gate1 = qf.IDEN(0, 1, 4, 5)
+    assert gate1.qubit_nb == 4
+
+    assert gate1 ** 0.5 == gate1
+
+    ket = qf.random_state([0, 1])
+    assert gate0.run(ket) == ket
+
+    rho = qf.random_density([0, 1])
+    assert gate0.evolve(rho) == rho
+
+
+opt_gates = [qf.I(), qf.X(), qf.Z(), qf.Y(), qf.H(), qf.T(), qf.S(), qf.T_H(),
+             qf.S_H(), qf.TX(0.1), qf.TY(0.2), qf.TZ(0.2),
+             qf.CNOT(), qf.CZ(), qf.SWAP(), qf.CCNOT(),
+             qf.CSWAP(), qf.CCZ(), qf.IDEN(0, 1, 2), qf.PHASE(0.2), qf.ISWAP()]
+
+
+@pytest.mark.parametrize("gate", opt_gates)
+def test_optimized_run(gate):
+    # Some gates have speccially optimized run() methods for faster simulation.
+    # Here, make sure optimizations produces same result as direct application
+    # of gate tensor.
+
+    ket = qf.random_state([0, 1, 2])
+
+    gate0 = gate
+    gate1 = qf.Gate(gate0.tensor)
+
+    ket0 = gate0.run(ket)
+    ket1 = gate1.run(ket)
+
+    print()
+    qf.print_state(ket0)
+    print()
+    qf.print_state(ket1)
+    print()
+
+    assert qf.states_close(ket0, ket1)
+
 
 # fin

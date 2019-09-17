@@ -13,7 +13,6 @@ import typing
 import string
 import numpy as np
 
-
 import tensorflow as tf
 from tensorflow import transpose, minimum, exp, cos, sin        # noqa: F401
 from tensorflow import conj, real, imag, sqrt, matmul, trace    # noqa: F401
@@ -133,7 +132,8 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int]) -> BKTensor:
+              indices: typing.List[int],
+              diagonal: bool = False) -> BKTensor:
     N = rank(tensor1)
     K = rank(tensor0) // 2
     assert K == len(indices)

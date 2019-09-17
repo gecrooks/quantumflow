@@ -18,11 +18,13 @@ from numpy import (  # noqa: F401
     sqrt, pi, conj, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
-    outer, tensordot, einsum, transpose)
+    outer, tensordot, einsum, transpose, roll)
 
 from numpy import sum as reduce_sum                 # noqa: F401
 
 from opt_einsum import contract
+
+from ..utils import multi_slice
 
 TL = np
 """'TensorLibrary'. The actual imported backend python package
@@ -160,7 +162,8 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int]) -> BKTensor:
+              indices: typing.List[int],
+              diagonal: bool = False) -> BKTensor:
     r"""
     Generalization of matrix multiplication to product tensors.
 
@@ -185,34 +188,27 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
         Resultant state or gate tensor
 
     """
+    # Note: This method is the critical computational core of QuantumFlow
+    # Different implementations kept for edification.
 
-    return _tensormul_tensordot(tensor0, tensor1, indices)
-    # return _tensormul_matmul(tensor0, tensor1, indices)
+    if diagonal and len(indices) == 1:
+        d = np.diag(tensor0)
+        tensor = tensor1.copy()
+        s0 = multi_slice(indices, [0])
+        s1 = multi_slice(indices, [1])
+        tensor[s0] *= d[0]
+        tensor[s1] *= d[1]
+        return tensor
+
+    # return _tensormul_tensordot(tensor0, tensor1, indices)
+    # return _tensormul_cirq(tensor0, tensor1, indices)
+    return _tensormul_matmul(tensor0, tensor1, indices, diagonal)
     # return _tensormul_contract(tensor0, tensor1, indices)
 
 
-# Note: This method is the critical computational core of QuantumFlow
-# Different implementations kept for edification.
-
-
-def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
-                         indices: typing.List[int]) -> BKTensor:
-    # Significantly fater than using einsum.
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
-    assert K == len(indices)
-
-    perm = list(indices) + [n for n in range(N) if n not in indices]
-    inv_perm = np.argsort(perm)
-
-    tensor = tensordot(tensor0, tensor1, (range(K, 2*K), indices))
-    tensor = transpose(tensor, inv_perm)
-
-    return tensor
-
-
 def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
-                      indices: typing.List[int]) -> BKTensor:
+                      indices: typing.List[int],
+                      diagonal: bool = False) -> BKTensor:
     # About the same speed as tensordot
     N = rank(tensor1)
     K = rank(tensor0) // 2
@@ -226,8 +222,38 @@ def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
     tensor = tensor1
     tensor = transpose(tensor, perm)
     tensor = reshape(tensor, [2**K, 2**(N-K)])
-    tensor = matmul(gate, tensor)
+
+    if diagonal:
+        tensor = transpose(tensor)
+        tensor = tensor * np.diag(gate)
+        tensor = transpose(tensor)
+    else:
+        tensor = matmul(gate, tensor)
+
     tensor = reshape(tensor, [2]*N)
+    tensor = transpose(tensor, inv_perm)
+
+    return tensor
+
+
+def _tensormul_cirq(tensor0: BKTensor, tensor1: BKTensor,
+                    indices: typing.List[int]) -> BKTensor:
+    from cirq import targeted_left_multiply
+    tensor = targeted_left_multiply(tensor0, tensor1, indices)
+    return tensor
+
+
+def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
+                         indices: typing.List[int]) -> BKTensor:
+    # Significantly faster than using einsum.
+    N = rank(tensor1)
+    K = rank(tensor0) // 2
+    assert K == len(indices)
+
+    perm = list(indices) + [n for n in range(N) if n not in indices]
+    inv_perm = np.argsort(perm)
+
+    tensor = tensordot(tensor0, tensor1, (range(K, 2*K), indices))
     tensor = transpose(tensor, inv_perm)
 
     return tensor

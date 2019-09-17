@@ -73,6 +73,9 @@ class Operation(ABC):
     """ Is this a multi-qubit operation that is known to be invariant under
     permutations of qubits?"""
 
+    diagonal = False     # Class attribute
+    """Is the tensor know to be diagonal in the computation basis?"""
+
     def __init__(self,
                  qubits: Qubits = (),
                  params: Dict[str, Parameter] = None,
@@ -239,7 +242,8 @@ class Gate(Operation):
         """Apply the action of this gate upon a state"""
         qubits = self.qubits
         indices = [ket.qubits.index(q) for q in qubits]
-        tensor = bk.tensormul(self.tensor, ket.tensor, indices)
+        tensor = bk.tensormul(self.tensor, ket.tensor, indices,
+                              diagonal=self.diagonal)
         return State(tensor, ket.qubits, ket.memory)
 
     def evolve(self, rho: Density) -> Density:

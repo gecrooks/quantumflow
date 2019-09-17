@@ -9,6 +9,8 @@ import numpy as np
 from .. import backend as bk
 from ..qubits import Qubit
 from ..ops import Gate
+from ..states import State
+from ..utils import multi_slice
 
 from .gates_one import V, V_H
 from .gates_utils import control_gate
@@ -33,6 +35,8 @@ class CZ(Gate):
     """
     interchangeable = True
 
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
@@ -51,6 +55,18 @@ class CZ(Gate):
     def __pow__(self, t: float) -> 'CPHASE':
         # FIXME
         return CPHASE(pi * t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s11 = multi_slice(axes, [1, 1])
+            tensor = ket.tensor.copy()
+            # tensor[s11] = -ket.tensor[s11]
+            tensor[s11] *= -1
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+# End class CZ
 
 
 class CNOT(Gate):
@@ -81,6 +97,19 @@ class CNOT(Gate):
 
     def __pow__(self, t: float) -> 'CTX':
         return CTX(t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s10 = multi_slice(axes, [1, 0])
+            s11 = multi_slice(axes, [1, 1])
+            tensor = ket.tensor.copy()
+            tensor[s10] = ket.tensor[s11]
+            tensor[s11] = ket.tensor[s10]
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+# end class CNOT
 
 
 class CTX(Gate):
@@ -164,13 +193,13 @@ class SWAP(Gate):
 
     # TESTME DOCME
     # TODO: evolve
-    # def run(self, ket: State) -> State:
-    #     """Apply the action of this gate upon a state"""
-    #     idx = [ket.qubits.index(q) for q in self.qubits]
-    #     qubits = list(ket.qubits)
-    #     qubits[idx[0]] = ket.qubits[idx[1]]
-    #     qubits[idx[1]] = ket.qubits[idx[0]]
-    #     return ket.permute(qubits) # Or relable?
+    def run(self, ket: State) -> State:
+        idx0, idx1 = ket.qubit_indices(self.qubits)
+        perm = list(range(ket.qubit_nb))
+        perm[idx0] = idx1
+        perm[idx1] = idx0
+        tensor = bk.transpose(ket.tensor, perm)
+        return State(tensor, ket.qubits, ket.memory)
 
 
 class ISWAP(Gate):
@@ -199,6 +228,18 @@ class ISWAP(Gate):
 
     # TODO: H, __pow__
 
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            tensor = ket.tensor.copy()
+            axes = ket.qubit_indices(self.qubits)
+            s10 = multi_slice(axes, [1, 0])
+            s01 = multi_slice(axes, [0, 1])
+            tensor[s01] = 1.0j * ket.tensor[s10]
+            tensor[s10] = 1.0j * ket.tensor[s01]
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+
 
 class CPHASE00(Gate):
     r"""A 2-qubit 00 phase-shift gate
@@ -207,6 +248,7 @@ class CPHASE00(Gate):
         \text{CPHASE00}(\theta) \equiv \text{diag}(e^{i \theta}, 1, 1, 1)
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -237,7 +279,7 @@ class CPHASE01(Gate):
     .. math::
         \text{CPHASE01}(\theta) \equiv \text{diag}(1, e^{i \theta}, 1, 1)
     """
-    interchangeable = True
+    diagonal = True
 
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -268,6 +310,8 @@ class CPHASE10(Gate):
     .. math::
         \text{CPHASE10}(\theta) \equiv \text{diag}(1, 1, e^{i \theta}, 1)
     """
+    diagonal = True
+
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
@@ -298,6 +342,7 @@ class CPHASE(Gate):
         \text{CPHASE}(\theta) \equiv \text{diag}(1, 1, 1, e^{i \theta})
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -517,6 +562,7 @@ class ZZ(Gate):
         t:
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(t=t), qubits=[q0, q1])

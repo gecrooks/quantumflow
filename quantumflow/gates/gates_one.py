@@ -10,9 +10,10 @@ from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State, Density
 from ..ops import Gate
-
+from ..utils import multi_slice
 
 # Standard 1 qubit gates
+
 
 class I(Gate):                                      # noqa: E742
     r"""
@@ -21,6 +22,8 @@ class I(Gate):                                      # noqa: E742
     .. math::
         I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
     """
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
@@ -28,18 +31,18 @@ class I(Gate):                                      # noqa: E742
     def tensor(self) -> bk.BKTensor:
         return bk.astensorproduct(np.eye(2))
 
-    def run(self, ket: State) -> State:
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        return rho
-
     @property
     def H(self) -> 'I':
         return self  # Hermitian
 
     def __pow__(self, t: float) -> 'I':
         return self
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho
 
 
 class X(Gate):
@@ -54,8 +57,10 @@ class X(Gate):
 
     @property
     def tensor(self) -> bk.BKTensor:
-        unitary = [[0, 1], [1, 0]]
-        return bk.astensorproduct(unitary)
+        if self._tensor is None:
+            unitary = [[0, 1], [1, 0]]
+            self._tensor = bk.astensorproduct(unitary)
+        return self._tensor
 
     @property
     def H(self) -> 'X':
@@ -63,6 +68,15 @@ class X(Gate):
 
     def __pow__(self, t: float) -> 'TX':
         return TX(t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        # Fast implementation for X special case
+        idx, = ket.qubit_indices(self.qubits)
+        take = multi_slice(axes=[idx], items=[[1, 0]])
+        tensor = ket.tensor[take]
+        return State(tensor, ket.qubits, ket.memory)
+
+    # TODO: Optimized evolve method
 
 
 class Y(Gate):
@@ -89,6 +103,14 @@ class Y(Gate):
     def __pow__(self, t: float) -> 'TY':
         return TY(t, *self.qubits)
 
+    def run(self, ket: State) -> State:
+        # Since X and Z have fast optimizations, this is actually faster
+        ket = Z(*self.qubits).run(ket)
+        ket = X(*self.qubits).run(ket)
+        return ket
+
+# end class Y
+
 
 class Z(Gate):
     r"""
@@ -97,6 +119,9 @@ class Z(Gate):
     .. math::
         Z() &\equiv \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}
     """
+
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
@@ -111,6 +136,11 @@ class Z(Gate):
 
     def __pow__(self, t: float) -> 'TZ':
         return TZ(t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        return TZ(1, *self.qubits).run(ket)
+
+# end class Z
 
 
 class H(Gate):
@@ -136,10 +166,26 @@ class H(Gate):
     def __pow__(self, t: float) -> 'TH':
         return TH(t, *self.qubits)
 
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s0 = multi_slice(axes, [0])
+            s1 = multi_slice(axes, [1])
+            tensor = ket.tensor.copy()
+            tensor[s1] -= tensor[s0]
+            tensor[s1] *= -0.5
+            tensor[s0] -= tensor[s1]
+            tensor *= np.sqrt(2)
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)     # pragma: no cover
+
 
 # Hack. H().H -> H, but the method shadows the class, so can't
 # annotate directly.
 _H = H
+
+# End class H
 
 
 class S(Gate):
@@ -151,6 +197,8 @@ class S(Gate):
         S() \equiv \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}
 
     """
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
@@ -166,6 +214,9 @@ class S(Gate):
     def __pow__(self, t: float) -> 'TZ':
         return TZ(t/2, *self.qubits)
 
+    def run(self, ket: State) -> State:
+        return TZ(1/2, *self.qubits).run(ket)
+
 
 class T(Gate):
     r"""
@@ -175,6 +226,8 @@ class T(Gate):
     .. math::
         \begin{pmatrix} 1 & 0 \\ 0 & e^{i \pi / 4} \end{pmatrix}
     """
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
@@ -190,6 +243,9 @@ class T(Gate):
     def __pow__(self, t: float) -> 'TZ':
         return TZ(t/4, *self.qubits)
 
+    def run(self, ket: State) -> State:
+        return TZ(1/4, *self.qubits).run(ket)
+
 
 class PHASE(Gate):
     r"""
@@ -200,6 +256,8 @@ class PHASE(Gate):
         \text{PHASE}(\theta) \equiv \begin{pmatrix}
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
+    diagonal = True
+
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
 
@@ -217,6 +275,11 @@ class PHASE(Gate):
     def __pow__(self, t: float) -> 'PHASE':
         theta = self.params['theta']
         return PHASE(theta * t, *self.qubits)
+
+    # TODO: CHECKME
+    def run(self, ket: State) -> State:
+        theta, = self.params.values()
+        return TZ(theta/pi, *self.qubits).run(ket)
 
 
 class RX(Gate):
@@ -294,6 +357,8 @@ class RZ(Gate):
     Args:
         theta: Angle of rotation in Bloch sphere
     """
+    diagonal = True
+
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
 
@@ -313,6 +378,11 @@ class RZ(Gate):
         theta = self.params['theta']
         return RZ(theta * t, *self.qubits)
 
+    # TODO: CHECKME
+    def run(self, ket: State) -> State:
+        theta, = self.params.values()
+        return TZ(theta/pi, *self.qubits).run(ket)
+
 
 # Other 1-qubit gates
 
@@ -324,6 +394,8 @@ class S_H(Gate):
         \begin{pmatrix} 1 & 0 \\ 0 & -i \end{pmatrix}
 
     """
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
@@ -339,6 +411,9 @@ class S_H(Gate):
     def __pow__(self, t: float) -> 'TZ':
         return TZ(-t/2, *self.qubits)
 
+    def run(self, ket: State) -> State:
+        return TZ(-1/2, *self.qubits).run(ket)
+
 
 class T_H(Gate):
     r"""
@@ -348,6 +423,8 @@ class T_H(Gate):
     .. math::
         \begin{pmatrix} 1 & 0 \\ 0 & e^{-i \pi / 4} \end{pmatrix}
     """
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
@@ -362,6 +439,12 @@ class T_H(Gate):
 
     def __pow__(self, t: float) -> 'TZ':
         return TZ(-t/4, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        return TZ(-1/4, *self.qubits).run(ket)
+
+
+# end class T_H
 
 
 class RN(Gate):
@@ -483,6 +566,8 @@ class TZ(Gate):
     Args:
         t: Number of half turns (quarter cycles) on Block sphere
     """
+    diagonal = True
+
     def __init__(self, t: float, q0: Qubit = 0) -> None:
         # t = t % 2
         super().__init__(params=dict(t=t), qubits=[q0])
@@ -504,6 +589,17 @@ class TZ(Gate):
     def __pow__(self, t: float) -> 'TZ':
         t = self.params['t'] * t
         return TZ(t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            t = self.params['t']
+            axes = ket.qubit_indices(self.qubits)
+            s1 = multi_slice(axes, [1])
+            tensor = ket.tensor.copy()
+            tensor[s1] *= bk.exp(+1.0j*pi*t)
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
 
 
 class TH(Gate):
@@ -544,7 +640,7 @@ class TH(Gate):
         return TH(t, *self.qubits)
 
 
-# FIXME: Replace with euler_circuit
+# FIXME: Replace with euler_circuit?
 class ZYZ(Gate):
     r"""A Z-Y-Z decomposition of one-qubit rotations in the Bloch sphere
 
@@ -590,7 +686,7 @@ class ZYZ(Gate):
         return ZYZ(-t2, -t1, -t0, *self.qubits)
 
 
-# TODO: Rename to SX (sqrt-X)? Add SY gate, (SZ is S)
+# TODO: Rename to SX (sqrt-X)? Add SY gate, (SZ is S)?
 class V(Gate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
