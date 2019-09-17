@@ -100,8 +100,8 @@ class State:
         """Return the total number of qubits"""
         return self.vec.qubit_nb
 
-    # DOCME. Experimental
     def qubit_indices(self, qubits: Qubits) -> List[int]:
+        """Convert qubits to index positions."""
         return [self.qubits.index(q) for q in qubits]
 
     def norm(self) -> bk.BKTensor:
