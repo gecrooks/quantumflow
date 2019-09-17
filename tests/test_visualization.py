@@ -63,7 +63,7 @@ def test_visualize_circuit():
 
     circ += qf.CNOT(1, 2)
     circ += qf.CNOT(2, 1)
-    circ += qf.I(*range(8))
+#    circ += qf.I(*range(8))
     circ += qf.ISWAP(4, 2)
     circ += qf.ISWAP(6, 5)
     circ += qf.CZ(1, 3)
@@ -98,6 +98,8 @@ def test_visualize_circuit():
 
     circ += qf.PSWAP(pi/2, 6, 7)
 
+    circ += qf.visualization.NoWire(0, 1, 2)
+    circ += qf.visualization.NoWire(0, 1, 2)
     circ += qf.visualization.NoWire(0, 1, 2)
 
     qf.circuit_to_latex(circ)

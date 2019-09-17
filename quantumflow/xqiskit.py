@@ -20,7 +20,7 @@ from .circuits import Circuit
 from .stdops import If
 from .gates import NAMED_GATES
 from .utils import invert_map
-
+from .translate import select_translators, translate
 import qiskit as qk
 
 # This module imports qiskit, so we do not include it at top level.
@@ -31,12 +31,14 @@ import qiskit as qk
 # Concevable you might want to use those gates in QuantumFlow without loading
 # qiskit
 
+# TODO: __all__
+
 QASM_TO_QF = {
     'ccx': 'CCNOT',
     'ch': 'CH',
     'crz': 'CRZ',
     'cswap': 'CSWAP',
-    'cu1': 'CRZ',
+    'cu1': 'CPHASE',
     'cu3': 'CU3',
     'cx': 'CNOT',
     'cy': 'CY',
@@ -52,7 +54,7 @@ QASM_TO_QF = {
     'swap': 'SWAP',
     't': 'T',
     'tdg': 'T_H',
-    'u1': 'U1',
+    'u1': 'PHASE',
     'u2': 'U2',
     'u3': 'U3',
     'x': 'X',
@@ -91,13 +93,17 @@ def qiskit_to_circuit(qkcircuit: qk.QuantumCircuit) -> Circuit:
     return circ
 
 
-def circuit_to_qiskit(circ: Circuit) -> qk.QuantumCircuit:
+def circuit_to_qiskit(circ: Circuit,
+                      translate: bool = False) -> qk.QuantumCircuit:
     """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
     # monkey patched onto QuantumCircuit which will create that gate and
     # append it to the circuit. The method names correspond to the qasm
     # names in QASM_TO_QF
+
+    if translate:
+        circ = translate_gates_to_qiskit(circ)
 
     QF_TO_QASM = invert_map(QASM_TO_QF)
     QF_TO_QASM['I'] = 'iden'
@@ -118,3 +124,12 @@ def circuit_to_qiskit(circ: Circuit) -> qk.QuantumCircuit:
         # TODO: Handle If seperatly
 
     return qkcircuit
+
+
+# DOCME TESTME
+def translate_gates_to_qiskit(circ: Circuit) -> Circuit:
+    target_gates = list([NAMED_GATES[n] for n in QASM_TO_QF.values()])
+    trans = select_translators(target_gates)  # type: ignore
+
+    circ = translate(circ, trans)
+    return circ

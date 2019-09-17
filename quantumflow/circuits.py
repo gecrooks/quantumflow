@@ -95,10 +95,7 @@ class Circuit(MutableSequence, Operation):
         del self.elements[key]
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-        print("SETITEM", key, value)
-        print("BN", len(self.elements))
         self.elements[key] = value
-        print("AFTE", len(self.elements))
 
     def __len__(self) -> int:
         return self.elements.__len__()
@@ -294,12 +291,34 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
     return circ
 
 
-def zyz_circuit(t0: float, t1: float, t2: float, q0: Qubit) -> Circuit:
+def zyz_circuit(t0: float, t1: float, t2: float, q0: Qubit = 0) -> Circuit:
     """Circuit equivalent of 1-qubit ZYZ gate"""
+    return euler_circuit(t0, t1, t2, q0, 'ZYZ')
+
+
+def euler_circuit(t0: float, t1: float, t2: float,
+                  q0: Qubit = 0,
+                  euler: str = 'ZYZ',) -> Circuit:
+    """
+    DOCME
+
+    The 'euler' argument can be used to specify any of the 6 Euler
+    decompositions: 'XYX', 'XZX', 'YXY', 'YZY', 'ZXZ', 'ZYZ' (Default)
+    """
+    euler_circ = {
+        'XYX': (TX, TY, TX),
+        'XZX': (TX, TZ, TX),
+        'YXY': (TY, TX, TY),
+        'YZY': (TY, TZ, TY),
+        'ZXZ': (TZ, TX, TZ),
+        'ZYZ': (TZ, TY, TZ)
+    }
+
+    gate0, gate1, gate2 = euler_circ[euler]
     circ = Circuit()
-    circ += TZ(t0, q0)
-    circ += TY(t1, q0)
-    circ += TZ(t2, q0)
+    circ += gate0(t0, q0)
+    circ += gate1(t1, q0)
+    circ += gate2(t2, q0)
     return circ
 
 

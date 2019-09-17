@@ -21,7 +21,6 @@ from . import REPS, ALMOST_ONE
 
 def test_I():
     assert np.allclose(qf.I().vec.asarray(), np.eye(2))
-    assert np.allclose(qf.I(0, 1).vec.asarray().reshape((4, 4)), np.eye(4))
 
 
 def test_unitary_1qubit():

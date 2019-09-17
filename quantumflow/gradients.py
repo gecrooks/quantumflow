@@ -191,7 +191,7 @@ def state_angle_gradients(ket0: State,
     """
     grads = state_fidelity_gradients(ket0, ket1, circ)
     fid = state_fidelity(circ.run(ket0), ket1)
-    fid = asarray(np.real(fid))
+    fid = np.real(fid)
     grads = - np.asarray(grads) / (2*np.sqrt((1-fid)*fid))
     return grads
 

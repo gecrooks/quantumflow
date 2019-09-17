@@ -18,7 +18,7 @@ import quantumflow as qf
 from quantumflow import backend as bk
 from quantumflow.utils import FrozenDict
 
-from . import ALMOST_ZERO, ALMOST_ONE, REPS, skip_torch
+from . import ALMOST_ZERO, ALMOST_ONE, REPS
 
 
 # Test States
@@ -65,6 +65,9 @@ def test_state_labels():
     assert ket.vec.asarray()[0, 0, 1, 1] == ALMOST_ONE
 
     ket = ket.permute([4, 3, 0, 1])
+
+    ket = ket.permute()
+    assert ket.qubits == (0, 1, 3, 4)
 
 
 def test_probability():
@@ -169,6 +172,8 @@ def test_density():
     rho = rho.relabel([10, 11, 12]).permute([12, 11, 10])
     assert rho.qubits == (12, 11, 10)
 
+    rho.permute()
+
 
 def test_state_to_density():
     density = qf.ghz_state(4).asdensity()
@@ -188,7 +193,6 @@ def test_state_to_density():
         assert prob - density_prob[index] == ALMOST_ZERO
 
 
-@skip_torch  # FIXME: Currently broken in torch backend
 def test_density_trace():
     rho = qf.random_density(3)
     assert qf.asarray(rho.trace()) == ALMOST_ONE

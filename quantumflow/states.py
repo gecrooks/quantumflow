@@ -33,7 +33,7 @@ Actions on states
 """
 
 from math import sqrt
-from typing import Union, TextIO, Any, Mapping
+from typing import Union, TextIO, Any, Mapping, List
 from functools import reduce
 from collections import ChainMap
 
@@ -100,6 +100,10 @@ class State:
         """Return the total number of qubits"""
         return self.vec.qubit_nb
 
+    def qubit_indices(self, qubits: Qubits) -> List[int]:
+        """Convert qubits to index positions."""
+        return [self.qubits.index(q) for q in qubits]
+
     def norm(self) -> bk.BKTensor:
         """Return the state vector norm"""
         return self.vec.norm()
@@ -113,8 +117,13 @@ class State:
         """Return a copy of this state with new qubits"""
         return State(self.vec.tensor, qubits, self.memory)
 
-    def permute(self, qubits: Qubits) -> 'State':
-        """Return a copy of this state with qubit labels permuted"""
+    def permute(self, qubits: Qubits = None) -> 'State':
+        """Return a copy of this state with state tensor transposed to
+        put qubits in the given order. If an explicet qubit
+        ordering isn't supplied, we put qubits in sorted order.
+        """
+        if qubits is None:
+            qubits = sorted(self.qubits)
         vec = self.vec.permute(qubits)
         return State(vec.tensor, vec.qubits, self.memory)
 
@@ -301,8 +310,10 @@ class Density(State):
         """Return a copy of this state with new qubits"""
         return Density(self.vec.tensor, qubits, self.memory)
 
-    def permute(self, qubits: Qubits) -> 'Density':
+    def permute(self, qubits: Qubits = None) -> 'Density':
         """Return a copy of this state with qubit labels permuted"""
+        if qubits is None:
+            qubits = sorted(self.qubits)
         vec = self.vec.permute(qubits)
         return Density(vec.tensor, vec.qubits, self.memory)
 

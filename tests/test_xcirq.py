@@ -9,7 +9,8 @@ from numpy import pi
 import cirq as cq
 import quantumflow as qf
 from quantumflow.xcirq import (from_cirq_qubit, to_cirq_qubit,
-                               cirq_to_circuit, circuit_to_cirq)
+                               cirq_to_circuit, circuit_to_cirq,
+                               CirqSimulator)
 
 
 def test_from_cirq_qubit():
@@ -199,3 +200,51 @@ def test_circuit_to_circ_exception():
     circ0 = qf.Circuit([qf.CAN(0.2, 0.3, 0.1)])
     with pytest.raises(NotImplementedError):
         circuit_to_cirq(circ0)
+
+
+def test_cirq_simulator():
+    q0, q1, q2 = 'q0', 'q1', 'q2'
+
+    circ0 = qf.Circuit()
+    circ0 += qf.I(q0)
+    circ0 += qf.I(q1)
+    circ0 += qf.I(q2)
+    circ0 += qf.X(q1)
+    circ0 += qf.Y(q2)
+
+    circ0 += qf.Z(q0)
+    circ0 += qf.S(q1)
+    circ0 += qf.T(q2)
+
+    circ0 += qf.H(q0)
+    circ0 += qf.H(q1)
+    circ0 += qf.H(q2)
+
+    circ0 += qf.TX(0.6, q0)
+    circ0 += qf.TY(0.6, q1)
+    circ0 += qf.TZ(0.6, q2)
+
+    circ0 += qf.XX(0.2, q0, q1)
+    circ0 += qf.YY(0.3, q1, q2)
+    circ0 += qf.ZZ(0.4, q2, q0)
+
+    circ0 += qf.CZ(q0, q1)
+    circ0 += qf.CNOT(q0, q1)
+    circ0 += qf.SWAP(q0, q1)
+    circ0 += qf.ISWAP(q0, q1)
+
+    circ0 += qf.CCZ(q0, q1, q2)
+    circ0 += qf.CCNOT(q0, q1, q2)
+    circ0 += qf.CSWAP(q0, q1, q2)
+
+    ket0 = qf.random_state([q0, q1, q2])
+    ket1 = circ0.run(ket0)
+    sim = CirqSimulator(circ0)
+    ket2 = sim.run(ket0)
+
+    assert ket1.qubits == ket2.qubits
+
+    print(qf.state_angle(ket1, ket2))
+    assert qf.states_close(ket1, ket2)
+
+    assert qf.states_close(circ0.run(), sim.run())

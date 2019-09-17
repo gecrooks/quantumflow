@@ -9,6 +9,8 @@ import numpy as np
 from .. import backend as bk
 from ..qubits import Qubit
 from ..ops import Gate
+from ..states import State
+from ..utils import multi_slice
 
 from .gates_one import V, V_H
 from .gates_utils import control_gate
@@ -33,6 +35,8 @@ class CZ(Gate):
     """
     interchangeable = True
 
+    diagonal = True
+
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
@@ -45,11 +49,24 @@ class CZ(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CZ':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'CPHASE':
+        # FIXME
         return CPHASE(pi * t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s11 = multi_slice(axes, [1, 1])
+            tensor = ket.tensor.copy()
+            # tensor[s11] = -ket.tensor[s11]
+            tensor[s11] *= -1
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+# End class CZ
 
 
 class CNOT(Gate):
@@ -75,11 +92,24 @@ class CNOT(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CNOT':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'CTX':
         return CTX(t, *self.qubits)
+
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            axes = ket.qubit_indices(self.qubits)
+            s10 = multi_slice(axes, [1, 0])
+            s11 = multi_slice(axes, [1, 1])
+            tensor = ket.tensor.copy()
+            tensor[s10] = ket.tensor[s11]
+            tensor[s11] = ket.tensor[s10]
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+# end class CNOT
 
 
 class CTX(Gate):
@@ -121,7 +151,11 @@ class CTX(Gate):
                    [0, 0, phase * -1.0j * sht, phase * cht]]
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
+    @property
+    def H(self) -> 'CTX':
+        return self ** -1
+
+    def __pow__(self, t: float) -> 'CTX':
         t = self.params['t'] * t
         return CTX(t, *self.qubits)
 
@@ -152,8 +186,20 @@ class SWAP(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'SWAP':
         return self  # Hermitian
+
+    # TODO: Powers give EXCH gate
+
+    # TESTME DOCME
+    # TODO: evolve
+    def run(self, ket: State) -> State:
+        idx0, idx1 = ket.qubit_indices(self.qubits)
+        perm = list(range(ket.qubit_nb))
+        perm[idx0] = idx1
+        perm[idx1] = idx0
+        tensor = bk.transpose(ket.tensor, perm)
+        return State(tensor, ket.qubits, ket.memory)
 
 
 class ISWAP(Gate):
@@ -180,6 +226,20 @@ class ISWAP(Gate):
 
         return bk.astensorproduct(unitary)
 
+    # TODO: H, __pow__
+
+    def run(self, ket: State) -> State:
+        if bk.BACKEND == 'numpy':
+            tensor = ket.tensor.copy()
+            axes = ket.qubit_indices(self.qubits)
+            s10 = multi_slice(axes, [1, 0])
+            s01 = multi_slice(axes, [0, 1])
+            tensor[s01] = 1.0j * ket.tensor[s10]
+            tensor[s10] = 1.0j * ket.tensor[s01]
+            return State(tensor, ket.qubits, ket.memory)
+
+        return super().run(ket)  # pragma: no cover
+
 
 class CPHASE00(Gate):
     r"""A 2-qubit 00 phase-shift gate
@@ -188,6 +248,7 @@ class CPHASE00(Gate):
         \text{CPHASE00}(\theta) \equiv \text{diag}(e^{i \theta}, 1, 1, 1)
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -204,9 +265,12 @@ class CPHASE00(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = - self.params['theta']
-        return CPHASE00(theta, *self.qubits)
+    def H(self) -> 'CPHASE00':
+        return self ** -1
+
+    def __pow__(self, t: float) -> 'CPHASE00':
+        theta = self.params['theta']
+        return CPHASE00(theta*t, *self.qubits)
 
 
 class CPHASE01(Gate):
@@ -215,7 +279,7 @@ class CPHASE01(Gate):
     .. math::
         \text{CPHASE01}(\theta) \equiv \text{diag}(1, e^{i \theta}, 1, 1)
     """
-    interchangeable = True
+    diagonal = True
 
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -232,9 +296,12 @@ class CPHASE01(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = - self.params['theta']
-        return CPHASE01(theta, *self.qubits)
+    def H(self) -> 'CPHASE01':
+        return self ** -1
+
+    def __pow__(self, t: float) -> 'CPHASE01':
+        theta = self.params['theta']
+        return CPHASE01(theta*t, *self.qubits)
 
 
 class CPHASE10(Gate):
@@ -243,6 +310,8 @@ class CPHASE10(Gate):
     .. math::
         \text{CPHASE10}(\theta) \equiv \text{diag}(1, 1, e^{i \theta}, 1)
     """
+    diagonal = True
+
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
@@ -258,9 +327,12 @@ class CPHASE10(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = - self.params['theta']
-        return CPHASE10(theta, *self.qubits)
+    def H(self) -> 'CPHASE10':
+        return self ** -1
+
+    def __pow__(self, t: float) -> 'CPHASE10':
+        theta = self.params['theta']
+        return CPHASE10(theta*t, *self.qubits)
 
 
 class CPHASE(Gate):
@@ -270,6 +342,7 @@ class CPHASE(Gate):
         \text{CPHASE}(\theta) \equiv \text{diag}(1, 1, 1, e^{i \theta})
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self, theta: float,
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -286,11 +359,10 @@ class CPHASE(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        theta = - self.params['theta']
-        return CPHASE(theta, *self.qubits)
+    def H(self) -> 'CPHASE':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'CPHASE':
         theta = self.params['theta'] * t
         return CPHASE(theta, *self.qubits)
 
@@ -325,6 +397,8 @@ class PSWAP(Gate):
         theta = 2. * pi - theta % (2. * pi)
         return PSWAP(theta, *self.qubits)
 
+    # TODO: __pow__
+
 
 class PISWAP(Gate):
     r"""A parametric iswap gate, generated from XY interaction.
@@ -356,13 +430,13 @@ class PISWAP(Gate):
                     [[0, 0], [0, 1]]]]
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
+    @property
+    def H(self) -> 'PISWAP':
+        return self ** -1
+
+    def __pow__(self, t: float) -> 'PISWAP':
         theta = self.params['theta'] * t
         return PISWAP(theta, *self.qubits)
-
-    @property
-    def H(self) -> Gate:
-        return self ** -1
 
 
 # Other 2-qubit gates
@@ -370,7 +444,7 @@ class PISWAP(Gate):
 # TODO: Add references and explanation
 # DOCME: Comment on sign conventions.
 class CAN(Gate):
-    r"""A canonical 2-qubit gate
+    r"""The canonical 2-qubit gate
 
     The canonical decomposition of 2-qubits gates removes local 1-qubit
     rotations, and leaves only the non-local interactions.
@@ -400,11 +474,10 @@ class CAN(Gate):
         return gate.tensor
 
     @property
-    def H(self) -> Gate:
-        tx, ty, tz = self.params.values()
-        return CAN(-tx, -ty, -tz, *self.qubits)
+    def H(self) -> 'CAN':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'CAN':
         tx, ty, tz = self.params.values()
         return CAN(tx * t, ty * t, tz * t, *self.qubits)
 
@@ -438,11 +511,10 @@ class XX(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return XX(t, *self.qubits)
+    def H(self) -> 'XX':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'XX':
         t = self.params['t'] * t
         return XX(t, *self.qubits)
 
@@ -472,11 +544,10 @@ class YY(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return YY(t, *self.qubits)
+    def H(self) -> 'YY':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'YY':
         t = self.params['t'] * t
         return YY(t, *self.qubits)
 
@@ -491,6 +562,7 @@ class ZZ(Gate):
         t:
     """
     interchangeable = True
+    diagonal = True
 
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(t=t), qubits=[q0, q1])
@@ -506,11 +578,10 @@ class ZZ(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return ZZ(t, *self.qubits)
+    def H(self) -> 'ZZ':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'ZZ':
         t = self.params['t'] * t
         return ZZ(t, *self.qubits)
 
@@ -533,11 +604,10 @@ class EXCH(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
-        t = - self.params['t']
-        return EXCH(t, *self.qubits)
+    def H(self) -> 'EXCH':
+        return self ** -1
 
-    def __pow__(self, t: float) -> Gate:
+    def __pow__(self, t: float) -> 'EXCH':
         t = self.params['t'] * t
         return EXCH(t, *self.qubits)
 
@@ -557,8 +627,10 @@ class CV(Gate):
         return control_gate(q0, V(q1)).tensor
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CV_H':
         return CV_H(*self.qubits)
+
+    # TODO: __pow__
 
 
 class CV_H(Gate):
@@ -574,8 +646,10 @@ class CV_H(Gate):
         return control_gate(q0, V_H(q1)).tensor
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CV':
         return CV(*self.qubits)
+
+    # TODO: __pow__
 
 
 class BARENCO(Gate):
@@ -612,6 +686,8 @@ class BARENCO(Gate):
                     bk.cis(calpha) * bk.cos(ctheta)]]
         return bk.astensorproduct(unitary)
 
+    # TODO: H, __pow__
+
 
 class CY(Gate):
     r"""A controlled-Y gate
@@ -640,8 +716,10 @@ class CY(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CY':
         return self  # Hermitian
+
+    # TODO: __pow__
 
 
 class CH(Gate):
@@ -671,8 +749,10 @@ class CH(Gate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> Gate:
+    def H(self) -> 'CH':
         return self  # Hermitian
+
+    # TODO: __pow__
 
 
 class FSIM(Gate):
@@ -715,12 +795,12 @@ class FSIM(Gate):
                    [0, 0, 0, bk.cis(-phi)]]
         return bk.astensorproduct(unitary)
 
-    def __pow__(self, t: float) -> Gate:
+    @property
+    def H(self) -> 'FSIM':
+        return self ** -1
+
+    def __pow__(self, t: float) -> 'FSIM':
         theta, phi = list(self.params.values())
         return FSIM(theta * t, phi * t, *self.qubits)
-
-    @property
-    def H(self) -> Gate:
-        return self ** -1
 
 # fin

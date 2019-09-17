@@ -7,11 +7,13 @@
 QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 """
 
-from typing import List, Dict, Iterable, Iterator, Generator
+from typing import List, Dict, Iterable, Iterator, Generator, Any, Tuple
+import itertools
 
 import numpy as np
 import networkx as nx
 
+from . import backend as bk
 from .qubits import Qubit, Qubits
 from .states import State, Density
 from .ops import Operation, Gate, Channel
@@ -20,6 +22,28 @@ from .utils import invert_map
 
 
 __all__ = 'DAGCircuit',
+
+
+class In(Operation):
+    def __init__(self, q0: Qubit):
+        super().__init__([q0])
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, In) and other.qubits == self.qubits
+
+    def __hash__(self) -> int:
+        return(hash(self.qubits))
+
+
+class Out(Operation):
+    def __init__(self, q0: Qubit):
+        super().__init__([q0])
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, Out) and other.qubits == self.qubits
+
+    def __hash__(self) -> int:
+        return(hash(self.qubits))
 
 
 class DAGCircuit(Operation):
@@ -42,33 +66,32 @@ class DAGCircuit(Operation):
     Note: Provisional API
     """
     def __init__(self, elements: Iterable[Operation]) -> None:
-        G = nx.MultiDiGraph()
+        self.graph = nx.MultiDiGraph()
+        self._qubits_in: Dict[Qubit, In] = {}
+        self._qubits_out: Dict[Qubit, Out] = {}
 
         for elem in elements:
-            if isinstance(elem, tuple):  # Filter in and out nodes
-                continue
-            G.add_node(elem)
-            for qubit in elem.qubits:
-                qin = ('in', qubit)
-                qout = ('out', qubit)
-                if not G.has_node(qout):
-                    G.add_edge(qin, qout)
-                prev = list(G.predecessors(qout))[0]
-                G.remove_edge(prev, qout)
-                G.add_edge(prev, elem, key=qubit)
-                G.add_edge(elem, qout, key=qubit)
+            self.append(elem)
 
-        self.graph = G
+    def append(self, elem: Operation) -> None:
+        G = self.graph
+        G.add_node(elem)
+        for qubit in elem.qubits:
+            if qubit not in self._qubits_in:
+                qin = In(qubit)
+                qout = Out(qubit)
+                self._qubits_in[qubit] = qin
+                self._qubits_out[qubit] = qout
+                G.add_edge(qin, qout, key=qubit)
+            qout = self._qubits_out[qubit]
+            prev = list(G.predecessors(qout))[0]
+            G.remove_edge(prev, qout)
+            G.add_edge(prev, elem, key=qubit)
+            G.add_edge(elem, qout, key=qubit)
 
     @property
     def qubits(self) -> Qubits:
-        G = self.graph
-        in_nodes = [node for node, deg in G.in_degree() if deg == 0]
-        if not in_nodes:
-            return ()
-        _, qubits = zip(*in_nodes)
-        qubits = tuple(sorted(qubits))
-        return qubits
+        return tuple(self._qubits_in.keys())
 
     @property
     def qubit_nb(self) -> int:
@@ -89,7 +112,28 @@ class DAGCircuit(Operation):
         return rho
 
     def asgate(self) -> Gate:
-        return Circuit(self).asgate()
+        # Note: Experimental
+        # Contract entrie tensor network graph using einsum
+        # TODO: Do same for run() and evolve() and aschannel()
+        tensors = []
+        sublists = []
+
+        for elem in self:
+            assert isinstance(elem, Gate)
+            tensors.append(elem.tensor)
+            sublists.append(self.next_edges(elem) + self.prev_edges(elem))
+
+        tensors_sublists = list(itertools.chain(*zip(tensors, sublists)))
+
+        for qout in self._qubits_out.values():
+            outsubs = self.prev_edges(qout)
+        for qin in self._qubits_in.values():
+            outsubs.extend(self.next_edges(qin))
+        tensors_sublists.append(tuple(outsubs))
+
+        tensor = bk.contract(*tensors_sublists)
+
+        return Gate(tensor, self.qubits)
 
     def aschannel(self) -> Channel:
         return Circuit(self).aschannel()
@@ -154,7 +198,8 @@ class DAGCircuit(Operation):
 
     def __iter__(self) -> Iterator[Operation]:
         for elem in nx.topological_sort(self.graph):
-            if isinstance(elem, Operation):
+            # Filter in and out nodes
+            if not isinstance(elem, In) and not isinstance(elem, Out):
                 yield elem
 
     # DOCME TESTME
@@ -162,13 +207,32 @@ class DAGCircuit(Operation):
         for _, node, key in self.graph.edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False        # Insanity check
+        assert False        # Insanity check  # FIXME, raise exception
 
     # DOCME TESTME
     def prev_element(self, elem: Operation, qubit: Qubit = None) -> Operation:
         for node, _, key in self.graph.in_edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False         # Insanity check
+        assert False         # Insanity check  # FIXME, raise exception
+
+    def next_edges(self, elem: Operation) -> List[Tuple[Any, Any, Qubit]]:
+        qubits = elem.qubits
+        N = len(qubits)
+        edges = [None]*N
+        for edge in self.graph.out_edges(elem, keys=True):
+            edges[qubits.index(edge[2])] = edge
+
+        return list(edges)  # type: ignore
+
+    def prev_edges(self, elem: Operation) -> List[Tuple[Any, Any, Qubit]]:
+        qubits = elem.qubits
+        N = len(qubits)
+        edges = [None]*N
+        for edge in self.graph.in_edges(elem, keys=True):
+            edges[qubits.index(edge[2])] = edge
+
+        return list(edges)  # type: ignore
+
 
 # End class DAGCircuit

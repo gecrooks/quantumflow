@@ -42,8 +42,8 @@ The principle operations are creating states and then applying sequences of quan
 
 	>>> ket = qf.H(0).run(ket)              # Apply a Hadamard gate to the 0th qubit
 	>>> qf.print_state(ket)
-	0 : (0.7071067811865475+0j)
-	1 : (0.7071067811865475+0j)
+	0 : (0.7071067811865476+0j)
+	1 : (0.7071067811865476+0j)
 
 
 Create a Bell state
@@ -54,10 +54,10 @@ Create a Bell state
 	>>> ket = qf.H(0).run(ket)
 	>>> ket = qf.CNOT(0, 1).run(ket)       # Apply a cnot to qubits 0 and 1
 	>>> qf.print_state(ket)
-	00 : (0.7071067811865475+0j)
+	00 : (0.7071067811865476+0j)
 	01 : 0j
-	10 : 0j
-	11 : (0.7071067811865475+0j)
+	10 : (-0+0j)
+	11 : (0.7071067811865476+0j)
 
 States
 ######
@@ -68,8 +68,8 @@ States contain a tensor object defined by QuantumFlow's tensor library backend. 
 .. doctest::
 
 	>>> ket.tensor
-	array([[0.70710678+0.j, 0.        +0.j],
-	       [0.        +0.j, 0.70710678+0.j]])
+	array([[ 0.70710678+0.j,  0.        +0.j],
+	       [-0.        +0.j,  0.70710678+0.j]])
 	>>> ket.tensor.shape
 	(2, 2)
 
@@ -173,10 +173,10 @@ A QuantumFlow circuit is a sequence of gates.
 	>>> ket = qf.zero_state([0, 1])     # Prepare initial state
 	>>> ket = circ.run(ket)             # Run circuit
 	>>> qf.print_state(ket)
-	00 : (0.7071067811865475+0j)
+	00 : (0.7071067811865476+0j)
 	01 : 0j
-	10 : 0j
-	11 : (0.7071067811865475+0j)
+	10 : (-0+0j)
+	11 : (0.7071067811865476+0j)
 
 
 

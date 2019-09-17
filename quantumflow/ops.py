@@ -73,6 +73,9 @@ class Operation(ABC):
     """ Is this a multi-qubit operation that is known to be invariant under
     permutations of qubits?"""
 
+    diagonal = False     # Class attribute
+    """Is the tensor know to be diagonal in the computation basis?"""
+
     def __init__(self,
                  qubits: Qubits = (),
                  params: Dict[str, Parameter] = None,
@@ -143,6 +146,11 @@ class Operation(ABC):
     # So that we can ``extend`` Circuits with Operations
     def __iter__(self) -> Any:
         yield self
+
+    # Make Operations sortable. (So we can use Operations in opt_einsum
+    # axis lables.)
+    def __lt__(self, other: Any) -> bool:
+        return id(self) < id(other)
 
 # End class Operation
 
@@ -234,12 +242,13 @@ class Gate(Operation):
         """Apply the action of this gate upon a state"""
         qubits = self.qubits
         indices = [ket.qubits.index(q) for q in qubits]
-        tensor = bk.tensormul(self.tensor, ket.tensor, indices)
+        tensor = bk.tensormul(self.tensor, ket.tensor, indices,
+                              diagonal=self.diagonal)
         return State(tensor, ket.qubits, ket.memory)
 
     def evolve(self, rho: Density) -> Density:
         """Apply the action of this gate upon a density"""
-        # TODO: implement without explicit channel creation?
+        # TODO: implement without explicit channel creation? With Kraus?
         chan = self.aschannel()
         return chan.evolve(rho)
 
@@ -410,6 +419,7 @@ class Channel(Operation):
         return cls(tensor, qubits).sharp
 
     # TESTME
+    # FIXME: Can't be right, same as choi?
     def chi(self) -> bk.BKTensor:
         """Return the chi (or process) matrix representation of this
         superoperator"""

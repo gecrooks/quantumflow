@@ -5,8 +5,6 @@ import pytest
 
 import quantumflow as qf
 
-from . import skip_torch
-
 
 def test_measure():
     prog = qf.Circuit()
@@ -85,7 +83,6 @@ def test_project():
     assert proj.H is qf.dagger(proj)
 
 
-@skip_torch     # FIXME
 def test_permutation():
     # Should be same as a swap.
     perm0 = qf.QubitPermutation([0, 1], [1, 0])
@@ -104,10 +101,10 @@ def test_permutation():
     assert qf.gates_close(perm0.asgate(), perm1.asgate())
     iden = qf.Circuit([permN, permN.H]).asgate()
     assert qf.almost_identity(iden)
-    assert qf.circuits_close(iden, qf.Circuit([qf.I(*qubits_in)]))
+    assert qf.circuits_close(iden, qf.Circuit([qf.IDEN(*qubits_in)]))
 
     swaps = permN.ascircuit()
-    swaps += qf.I(*permN.qubits_in)  # Add identity so we don't lose qubits
+    swaps += qf.IDEN(*permN.qubits_in)  # Add identity so we don't lose qubits
     permN2 = qf.QubitPermutation.from_circuit(swaps)
     # print(permN2.qubits_in, permN2.qubits_out)
 

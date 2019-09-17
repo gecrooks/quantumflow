@@ -17,7 +17,7 @@ import sympy
 
 from .qubits import Qubits
 from .gates import P0, P1
-from .gates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP)
+from .gates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP, IDEN)
 
 from .ops import Gate
 from .stdops import Reset, Measure
@@ -43,7 +43,7 @@ LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
 # TODO: DIAGRAM_GATESET gateset
 
 
-class NoWire(I):
+class NoWire(IDEN):
     """Dummy gate used to draw a gap in a circuit"""
     pass
 

@@ -100,11 +100,11 @@ Import Hierarchy
 
                     version
                       ^
-                      |                 tensorflow      torch         numpy
-    quantumflow --> config                  ^             ^             ^
-              |       ^               ......:......       :             :
-              |       |               :           :       :             :
-              |---> backend ---> [tensorflowbk|eagerbk|torchbk] ---> numpybk
+                      |                 tensorflow      tensorflow v2     numpy
+    quantumflow --> config                  ^             ^                 ^
+              |       ^               ......:......       :                 :
+              |       |               :           :       :                 :
+              |---> backend ---> [tensorflowbk|eagerbk|tensorflow2bk] ---> numpybk
               |       ^
               |       |
               |---> qubits
@@ -119,19 +119,11 @@ Import Hierarchy
               |---> gates
               |       ^
               |       |
-              |---> stdgates
-              |       ^
-              |       |
               |---> channels
               |       ^
               |       |
-              |---> circuits
-              |       ^
-              |       |
-              |---> programs
-              |       ^
-              |       |
-              \---> forest
+              \---> circuits
+
 
 
 

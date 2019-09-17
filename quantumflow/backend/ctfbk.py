@@ -11,6 +11,7 @@ https://github.com/cyclops-community/ctf/
 import math
 import typing
 import string
+from typing import Any
 
 import numpy as np
 from numpy import pi, cos, sin, arccos, exp                # noqa: F401
@@ -36,12 +37,14 @@ from ctf import (  # noqa: F401
     diag,
     einsum,
     # outer,
+    tensordot,
     )
 
 
 from ctf import abs as absolute                       # noqa: F401
 from ctf import sum as reduce_sum                     # noqa: F401
 
+import opt_einsum
 
 TL = ctf
 
@@ -182,7 +185,8 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int]) -> BKTensor:
+              indices: typing.List[int],
+              diagonal: bool = False) -> BKTensor:
     N = rank(tensor1)
     K = rank(tensor0) // 2
     assert K == len(indices)
@@ -198,3 +202,7 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
 
     tensor = einsum(subscripts, tensor0, tensor1)
     return tensor
+
+
+def contract(*args: Any) -> BKTensor:
+    return opt_einsum.contract(*args,  backend='ctf')

@@ -6,10 +6,10 @@ import networkx as nx
 
 import quantumflow as qf
 
-from . import ALMOST_ZERO, tensorflow2_only, skip_torch, skip_ctf
+from . import ALMOST_ZERO, tensorflow2_only
+# from .import skip_ctf
 
 
-@skip_torch  # FIXME
 def test_gradients():
     # This test only checks that code runs, not that we get correct answers
     # graph = nx.grid_graph([2, 3])
@@ -36,12 +36,11 @@ def test_gradients():
     # Check that qf.expectation_gradients() gives same answers for
     # fidelity as f.state_fidelity_gradients()
     for g0, g1 in zip(grads0, grads2):
-        assert qf.asarray(g0 - g1) == ALMOST_ZERO
+        assert g0 - g1 == ALMOST_ZERO
         print(g0, g1)
 
 
-@skip_torch  # FIXME
-@skip_ctf    # FIXME
+# @skip_ctf    # FIXME
 def test_gradients_func():
     graph = nx.grid_graph([2, 1])
     layers = 2
@@ -61,7 +60,7 @@ def test_gradients_func():
     # print(grads3)
 
     for g0, g1 in zip(grads1, grads3):
-        assert qf.asarray(g0 - g1) == ALMOST_ZERO
+        assert g0 - g1 == ALMOST_ZERO
         print(g0, g1)
 
 
@@ -79,10 +78,9 @@ def test_gradient_errors():
         qf.parameter_shift_circuits(circ, 0)
 
     with pytest.raises(ValueError):
-        qf.expectation_gradients(ket0, circ, qf.I(0, 1))
+        qf.expectation_gradients(ket0, circ, qf.identity_gate([0, 1]))
 
 
-@skip_torch  # FIXME
 def test_parameter_shift_circuits():
     """Checks that gradients calculated with middle out algorithm
     match gradients calcuated from paramter shift rule.

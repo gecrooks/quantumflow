@@ -25,10 +25,13 @@ from tensorflow.linalg import trace                             # noqa: F401
 from tensorflow import einsum, reshape                          # noqa: F401
 from tensorflow.python.client import device_lib
 from tensorflow import reduce_sum                               # noqa: F401
+from tensorflow import roll, tensordot                          # noqa: F401
 
 from .numpybk import rank
 from .numpybk import set_random_seed as np_set_random_seed
 from .numpybk import TensorLike, BKTensor
+
+from opt_einsum import contract                                 # noqa: F401
 
 TL = tf
 name = TL.__name__
@@ -139,12 +142,9 @@ def productdiag(tensor: BKTensor) -> BKTensor:
     return tensor
 
 
-# def matmul(tensor0: BKTensor, tensor1: BKTensor):
-#    return tensor0 @ tensor1
-
-
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int]) -> BKTensor:
+              indices: typing.List[int],
+              diagonal: bool = False) -> BKTensor:
     N = rank(tensor1)
     K = rank(tensor0) // 2
     assert K == len(indices)

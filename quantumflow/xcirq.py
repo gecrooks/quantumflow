@@ -25,7 +25,13 @@ Interface between Google's Cirq and QuantumFlow
 # ('cirq' is too close to our common abbrevation of 'circ' for 'circuit'.)
 # cqc: Abbreviation for Cirq circuit
 
-from .qubits import Qubit
+from typing import Iterable
+
+import numpy as np
+
+from .qubits import Qubit, Qubits, asarray
+from .ops import Operation
+from .states import State, zero_state
 from .circuits import Circuit
 from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
                     CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
@@ -34,8 +40,10 @@ from .translate import translate, simplify_tz
 
 import cirq as cq
 
+
 __all__ = ('from_cirq_qubit', 'to_cirq_qubit',
-           'cirq_to_circuit', 'circuit_to_cirq')
+           'cirq_to_circuit', 'circuit_to_cirq',
+           'CirqSimulator')
 
 # DOCME TESTME
 # TODO: FSIM
@@ -43,6 +51,32 @@ CIRQ_GATESET = frozenset([I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
                           CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
                           CCNOT, CSWAP, CCZ, FSIM])
 """Set of QuantumFlow gates that we know how to convert to Cirq"""
+
+
+# TODO: Prototype
+class CirqSimulator(Operation):
+    def __init__(self, elements: Iterable[Operation] = None) -> None:
+        self._circuit = Circuit(elements)
+        self._cirq = circuit_to_cirq(self._circuit)
+
+        # TODO: Translate gates
+
+    @property
+    def qubits(self) -> Qubits:
+        return self._circuit.qubits
+
+    def run(self, ket: State = None) -> State:
+        if ket is None:
+            qubits = self.qubits
+            ket = zero_state(qubits=qubits)
+
+        tensor = asarray(ket.tensor).flatten()
+        tensor = np.asarray(tensor, dtype=np.complex64)
+        sim = cq.Simulator()
+        res = sim.simulate(self._cirq,
+                           initial_state=tensor)
+        tensor = res.state_vector()
+        return State(tensor, self._circuit.qubits, ket.memory)
 
 
 def from_cirq_qubit(qb: cq.Qid) -> Qubit:

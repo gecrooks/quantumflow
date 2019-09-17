@@ -4,14 +4,16 @@ numpy
 scipy               >= 1.0.0
 tensorflow          >= 1.6.0
 networkx            >= 2.1
+pillow
+matplotlib
+cvxpy               >= 1.0.24
+sympy
+opt_einsum
+
 sphinx              >= 1.6.6
 pytest              >= 2.6.0
 pytest-cov
 flake8
 tox
 mypy
-pillow
-matplotlib
-cvxpy				>= 1.0.24
-sympy
 setuptools_scm

@@ -9,6 +9,7 @@ from ..qubits import Qubit, Qubits, qubits_count_tuple, asarray
 from ..qubits import outer_product
 from ..ops import Gate
 from .. import utils
+from .gates_three import IDEN
 
 __all__ = ['identity_gate',
            'random_gate',
@@ -22,36 +23,10 @@ __all__ = ['identity_gate',
            'print_gate']
 
 
-class I(Gate):                                              # noqa: E742
-    r"""
-    The identity gate.
-
-    This gate can take a variable number of qubits.
-
-    .. math::
-        I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
-    """
-    def __init__(self, *qubits: Qubit) -> None:
-        if not qubits:
-            qubits = (0,)
-        super().__init__(qubits=qubits)
-
-    @property
-    def tensor(self) -> bk.BKTensor:
-        return bk.astensorproduct(np.eye(2**self.qubit_nb))
-
-    @property
-    def H(self) -> Gate:
-        return self  # Hermitian
-
-    def __pow__(self, t: float) -> Gate:
-        return self
-
-
 def identity_gate(qubits: Union[int, Qubits]) -> Gate:
     """Returns the K-qubit identity gate"""
     _, qubits = qubits_count_tuple(qubits)
-    return I(*qubits)
+    return IDEN(*qubits)
 
 
 def join_gates(*gates: Gate) -> Gate:
