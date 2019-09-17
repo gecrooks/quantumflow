@@ -11,7 +11,7 @@ Useful routines not necessarily intended to be part of the public API.
 """
 
 from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
-from typing import Optional, Mapping, TypeVar
+from typing import Optional, Mapping, TypeVar, List
 import warnings
 import functools
 from fractions import Fraction
@@ -25,7 +25,8 @@ import scipy
 # from scipy.linalg import fractional_matrix_power as matpow # Matrix power
 # from scipy.linalg import sqrtm as matsqrt   # Matrix square root
 
-__all__ = ['invert_map',
+__all__ = ['multi_slice',
+           'invert_map',
            'FrozenDict',
            'bitlist_to_int',
            'int_to_bitlist',
@@ -36,6 +37,22 @@ __all__ = ['invert_map',
            'octagonal_tiling_graph',
            'cis',
            'rationalize']
+
+
+def multi_slice(axes: Sequence, items: Sequence,
+                axes_nb: int = None) -> Tuple:
+    """Construct a multidimensional slice to access array data.
+    e.g. mydata[multi_slice([3,5], [1,2]))] is equivelent as
+    mydata[:,:,:,1,:,2,...]
+    """
+
+    N = max(axes)+1 if axes_nb is None else axes_nb
+    slices: List[Any] = [slice(None)] * N
+    for axis, item in zip(axes, items):
+        slices[axis] = item
+    if axes_nb is None:
+        slices.append(Ellipsis)
+    return tuple(slices)
 
 
 def invert_map(mapping: dict, one_to_one: bool = True) -> dict:
@@ -210,7 +227,7 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
 def cis(x: float) -> complex:
     r"""
     Implements Euler's formula
-    :math:`\text{cis}(x) = e^{i \pi x} = \cos(x) + i \sin(x)`
+    :math:`\text{cis}(x) = e^{i x} = \cos(x) + i \sin(x)`
     """
     return np.cos(x) + 1.0j * np.sin(x)
 
@@ -254,8 +271,12 @@ def symbolize(flt: float) -> sympy.Symbol:
         ratio = rationalize(flt)
         res = sympy.simplify(ratio)
     except ValueError:
-        ratio = rationalize(flt/np.pi)
-        res = sympy.simplify(ratio) * sympy.pi
+        try:
+            ratio = rationalize(flt/np.pi)
+            res = sympy.simplify(ratio) * sympy.pi
+        except ValueError:
+            ratio = rationalize(flt*np.pi)
+            res = sympy.simplify(ratio) / sympy.pi
     return res
 
 
