@@ -6,7 +6,6 @@ import quantumflow as qf
 import time
 
 from quantumflow import xcirq
-import cirq
 
 GATES = 512
 REPS = 8

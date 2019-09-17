@@ -201,6 +201,7 @@ def test_circuit_to_circ_exception():
     with pytest.raises(NotImplementedError):
         circuit_to_cirq(circ0)
 
+
 def test_cirq_simulator():
     q0, q1, q2 = 'q0', 'q1', 'q2'
 
