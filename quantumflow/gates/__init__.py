@@ -197,8 +197,6 @@ products of single qubit gates.
 
 # Kudos: Standard gate definitions adapted from Nick Rubin's reference-qvm
 
-from typing import Dict, Type
-from ..ops import Gate
 
 from .gates_utils import (  # noqa: F401
     identity_gate,
