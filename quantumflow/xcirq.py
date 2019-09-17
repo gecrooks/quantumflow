@@ -29,7 +29,7 @@ from typing import Iterable
 
 import numpy as np
 
-from .qubits import Qubit, Qubits
+from .qubits import Qubit, Qubits, asarray
 from .ops import Operation
 from .states import State, zero_state
 from .circuits import Circuit
@@ -70,7 +70,7 @@ class CirqSimulator(Operation):
             qubits = self.qubits
             ket = zero_state(qubits=qubits)
 
-        tensor = ket.tensor.flatten()
+        tensor = asarray(ket.tensor).flatten()
         tensor = np.asarray(tensor, dtype=np.complex64)
         sim = cq.Simulator()
         res = sim.simulate(self._cirq,
