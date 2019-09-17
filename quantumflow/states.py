@@ -33,7 +33,7 @@ Actions on states
 """
 
 from math import sqrt
-from typing import Union, TextIO, Any, Mapping
+from typing import Union, TextIO, Any, Mapping, List
 from functools import reduce
 from collections import ChainMap
 
@@ -99,6 +99,10 @@ class State:
     def qubit_nb(self) -> int:
         """Return the total number of qubits"""
         return self.vec.qubit_nb
+
+    # DOCME. Experimental
+    def qubit_indices(self, qubits: Qubits) -> List[int]:
+        return [self.qubits.index(q) for q in qubits]
 
     def norm(self) -> bk.BKTensor:
         """Return the state vector norm"""
