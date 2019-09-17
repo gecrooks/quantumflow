@@ -6,7 +6,6 @@ import quantumflow as qf
 import pytest
 
 from . import REPS, ALMOST_ZERO
-# from . skip_torch, skip_eager
 
 # TODO: Refactor to match split of gates in gates subpackage.
 

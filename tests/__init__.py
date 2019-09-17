@@ -43,10 +43,6 @@ skip_eager = pytest.mark.skipif(
     bk.BACKEND == 'eager',
     reason="Unsupported backend")
 
-skip_torch = pytest.mark.skipif(
-    bk.BACKEND == 'torch',
-    reason="Unsupported backend")
-
 skip_ctf = pytest.mark.skipif(
     bk.BACKEND == 'ctf',
     reason="Unsupported backend")

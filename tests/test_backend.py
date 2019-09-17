@@ -62,6 +62,9 @@ def test_import():
     assert bk.einsum
     assert bk.tensordot
 
+    assert bk.roll
+    assert bk.contract
+
 
 def test_gpu_available():
     bk.gpu_available()

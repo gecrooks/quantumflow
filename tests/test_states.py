@@ -18,7 +18,7 @@ import quantumflow as qf
 from quantumflow import backend as bk
 from quantumflow.utils import FrozenDict
 
-from . import ALMOST_ZERO, ALMOST_ONE, REPS, skip_torch
+from . import ALMOST_ZERO, ALMOST_ONE, REPS
 
 
 # Test States
@@ -193,7 +193,6 @@ def test_state_to_density():
         assert prob - density_prob[index] == ALMOST_ZERO
 
 
-@skip_torch  # FIXME: Currently broken in torch backend
 def test_density_trace():
     rho = qf.random_density(3)
     assert qf.asarray(rho.trace()) == ALMOST_ONE

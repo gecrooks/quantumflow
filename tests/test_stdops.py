@@ -5,8 +5,6 @@ import pytest
 
 import quantumflow as qf
 
-from . import skip_torch
-
 
 def test_measure():
     prog = qf.Circuit()
@@ -85,7 +83,6 @@ def test_project():
     assert proj.H is qf.dagger(proj)
 
 
-@skip_torch     # FIXME
 def test_permutation():
     # Should be same as a swap.
     perm0 = qf.QubitPermutation([0, 1], [1, 0])
