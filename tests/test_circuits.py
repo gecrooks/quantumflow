@@ -38,7 +38,7 @@ def test_str():
 
 
 def test_name():
-    assert qf.Circuit().name == 'CIRCUIT'
+    assert qf.Circuit().name == 'Circuit'
 
 
 def test_qaoa_circuit():

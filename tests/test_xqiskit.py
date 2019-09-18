@@ -11,7 +11,8 @@ import quantumflow as qf
 from quantumflow.xqiskit import (
     qiskit_to_circuit,
     circuit_to_qiskit,
-    translate_gates_to_qiskit)
+    translate_gates_to_qiskit,
+    QiskitSimulator)
 
 
 def test_qiskit_to_circuit():
@@ -64,7 +65,7 @@ CZ 0 1
 H 0
 I 1
 I 2
-RZ(0) 0
+RX(0) 0
 RY(1/10) 1
 RZ(1/5) 2
 RZZ(1/10) 0 1
@@ -112,3 +113,19 @@ def test_circuit_to_qiskit():
     print(qc)
 
     assert len(circ1) == len(qc)
+
+
+def test_qiskitsimulator():
+    circ = qf.Circuit()
+    circ += qf.H(1)
+    circ += qf.X(0)
+    circ += qf.H(2)
+    circ += qf.Y(3)
+    circ += qf.Z(2)
+    circ += qf.CAN(0.1, 0.2, 0.2, 0, 1)
+
+    sim = QiskitSimulator(circ)
+    assert qf.states_close(circ.run(), sim.run())
+
+    ket0 = qf.random_state([0, 1, 2, 3])
+    assert qf.states_close(circ.run(ket0), sim.run(ket0))

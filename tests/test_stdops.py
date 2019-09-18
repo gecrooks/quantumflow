@@ -59,10 +59,10 @@ def test_if():
     assert circ.evolve().memory[c[0]] == 1
 
 
-def test_store_state():
+def test_display_state():
     circ = qf.Circuit()
     circ += qf.X(1)
-    circ += qf.StoreState(key='state0')
+    circ += qf.DisplayState(key='state0')
 
     ket = circ.run()
     assert 'state0' in ket.memory
@@ -122,3 +122,15 @@ def test_permutation():
     rho1 = perm0.evolve(rho0)
     rho2 = gate0.aschannel().evolve(rho0)
     assert qf.densities_close(rho1, rho2)
+
+
+def test_initialize():
+    circ = qf.Circuit()
+    circ += qf.H(1)
+    ket = qf.random_state([0, 1, 2])
+    circ += qf.Initialize(ket)
+
+    assert circ.qubits == (0, 1, 2)
+    assert qf.states_close(circ.run(), ket)
+
+    assert qf.states_close(circ.evolve(), ket.asdensity())

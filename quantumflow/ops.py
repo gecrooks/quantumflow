@@ -97,7 +97,7 @@ class Operation(ABC):
     @property
     def name(self) -> str:
         """Return the name of this operation"""
-        return self.__class__.__name__.upper()
+        return self.__class__.__name__
 
     @property
     def params(self) -> Dict[str, Parameter]:

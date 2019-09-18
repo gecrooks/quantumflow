@@ -12,6 +12,8 @@
 Interface between Google's Cirq and QuantumFlow
 
 
+.. autoclass:: CirqSimulator
+
 .. autofunction:: cirq_to_circuit
 .. autofunction:: circuit_to_cirq
 
@@ -38,7 +40,7 @@ from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
                     CCNOT, CSWAP, CCZ, FSIM)
 from .translate import translate, simplify_tz
 
-import cirq as cq
+import cirq
 
 
 __all__ = ('from_cirq_qubit', 'to_cirq_qubit',
@@ -53,8 +55,17 @@ CIRQ_GATESET = frozenset([I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
 """Set of QuantumFlow gates that we know how to convert to Cirq"""
 
 
-# TODO: Prototype
+# TODO
 class CirqSimulator(Operation):
+    """Interface to Cirq's quantum simulator. Adapts a QF Circuit (or
+    other sequence of Operations). Can itself be included in Circuits,
+    like any other Operation.
+
+    Note that Cirq uses 64 bit complex floats (QF uses 128 bist), so
+    results will not be as accurate.
+
+    """
+
     def __init__(self, elements: Iterable[Operation] = None) -> None:
         self._circuit = Circuit(elements)
         self._cirq = circuit_to_cirq(self._circuit)
@@ -72,71 +83,73 @@ class CirqSimulator(Operation):
 
         tensor = asarray(ket.tensor).flatten()
         tensor = np.asarray(tensor, dtype=np.complex64)
-        sim = cq.Simulator()
+        sim = cirq.Simulator()
         res = sim.simulate(self._cirq,
                            initial_state=tensor)
         tensor = res.state_vector()
         return State(tensor, self._circuit.qubits, ket.memory)
 
+    # TODO: evolve, ...
 
-def from_cirq_qubit(qb: cq.Qid) -> Qubit:
+
+def from_cirq_qubit(qb: cirq.Qid) -> Qubit:
     """
     Convert a cirq qubit (a subtype of Qid) into regular python type.
     A ``LineQubit`` becomes an int, a ``GridQubit`` becomes a tuple of two
     ints, and ``NamedQubit`` (and anything else) becomes a string
     """
-    if isinstance(qb, cq.LineQubit):
+    if isinstance(qb, cirq.LineQubit):
         return qb.x
-    elif isinstance(qb, cq.GridQubit):
+    elif isinstance(qb, cirq.GridQubit):
         return (qb.row, qb.col)
-    elif isinstance(qb, cq.NamedQubit):
+    elif isinstance(qb, cirq.NamedQubit):
         return qb.name
     return str(qb)  # pragma: no cover
 
 
-def to_cirq_qubit(qubit: Qubit) -> cq.Qid:
+def to_cirq_qubit(qubit: Qubit) -> cirq.Qid:
     """Convert qubit names (any python object) into
     cirq qubits (subtypes of Qid). Returns either
     a LineQubit (for ints), GridQubit (for tuples of row and column),
     or a NamedQubit for all other objects.
     """
     if isinstance(qubit, int):
-        return cq.LineQubit(qubit)
+        return cirq.LineQubit(qubit)
     elif isinstance(qubit, tuple) and len(qubit) == 2 \
             and isinstance(qubit[0], int) and isinstance(qubit[1], int):
-        return cq.GridQubit(row=qubit[0], col=qubit[1])
-    return cq.NamedQubit(str(qubit))
+        return cirq.GridQubit(row=qubit[0], col=qubit[1])
+    return cirq.NamedQubit(str(qubit))
 
 
 # TODO: ops.FSimGate
-def cirq_to_circuit(cqc: cq.Circuit) -> Circuit:
+def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
     """Convert a Cirq circuit to a QuantumFlow circuit"""
 
     simple_gates = {
-        cq.ops.CSwapGate: CSWAP,
-        cq.ops.common_gates.IdentityGate: I,
+        cirq.ops.CSwapGate: CSWAP,
+        cirq.ops.common_gates.IdentityGate: I,
     }
 
     exponent_gates = {
-        cq.ops.pauli_gates._PauliX: X,
-        cq.ops.pauli_gates._PauliY: Y,
-        cq.ops.pauli_gates._PauliZ: Z,
-        cq.ops.XPowGate: X,
-        cq.ops.YPowGate: Y,
-        cq.ops.ZPowGate: Z,
-        cq.ops.HPowGate: H,
-        cq.ops.CZPowGate: CZ,
-        cq.ops.CNotPowGate: CNOT,
-        cq.ops.SwapPowGate: SWAP,
-        cq.ops.ISwapPowGate: ISWAP,
-        cq.ops.CCXPowGate: CCNOT,
-        cq.ops.CCZPowGate: CCZ,
+        cirq.ops.pauli_gates._PauliX: X,
+        cirq.ops.pauli_gates._PauliY: Y,
+        cirq.ops.pauli_gates._PauliZ: Z,
+        cirq.ops.XPowGate: X,
+        cirq.ops.YPowGate: Y,
+        cirq.ops.ZPowGate: Z,
+        cirq.ops.HPowGate: H,
+        cirq.ops.CZPowGate: CZ,
+        cirq.ops.CNotPowGate: CNOT,
+        cirq.ops.SwapPowGate: SWAP,
+        cirq.ops.ISwapPowGate: ISWAP,
+        cirq.ops.CCXPowGate: CCNOT,
+        cirq.ops.CCZPowGate: CCZ,
     }
 
     parity_gates = {
-        cq.ops.XXPowGate: XX,
-        cq.ops.YYPowGate: YY,
-        cq.ops.ZZPowGate: ZZ
+        cirq.ops.XXPowGate: XX,
+        cirq.ops.YYPowGate: YY,
+        cirq.ops.ZZPowGate: ZZ
     }
 
     circ = Circuit()
@@ -164,37 +177,37 @@ def cirq_to_circuit(cqc: cq.Circuit) -> Circuit:
     return circ
 
 
-def circuit_to_cirq(circ: Circuit) -> cq.Circuit:
+def circuit_to_cirq(circ: Circuit) -> cirq.Circuit:
     """Convert a QuantumFlow circuit to a Cirq circuit."""
     qubit_map = {q: to_cirq_qubit(q) for q in circ.qubits}
 
-    cqc = cq.Circuit()
+    cqc = cirq.Circuit()
 
     operations = {
-        I:      cq.I,
-        X:      cq.X,
-        Y:      cq.Y,
-        Z:      cq.Z,
-        S:      cq.S,
-        T:      cq.T,
-        H:      cq.H,
-        CNOT:   cq.CNOT,
-        CZ:     cq.CZ,
-        SWAP:   cq.SWAP,
-        ISWAP:  cq.ISWAP,
-        CCZ:    cq.CCZ,
-        CCNOT:  cq.CCX,
-        CSWAP:  cq.CSWAP,
+        I:      cirq.I,
+        X:      cirq.X,
+        Y:      cirq.Y,
+        Z:      cirq.Z,
+        S:      cirq.S,
+        T:      cirq.T,
+        H:      cirq.H,
+        CNOT:   cirq.CNOT,
+        CZ:     cirq.CZ,
+        SWAP:   cirq.SWAP,
+        ISWAP:  cirq.ISWAP,
+        CCZ:    cirq.CCZ,
+        CCNOT:  cirq.CCX,
+        CSWAP:  cirq.CSWAP,
     }
 
-    # TODO: TH -> cq.ops.HPowGate,
+    # TODO: TH -> cirq.ops.HPowGate,
     turn_gates = {
-        TX:     cq.ops.XPowGate,
-        TY:     cq.ops.YPowGate,
-        TZ:     cq.ops.ZPowGate,
-        XX:     cq.ops.XXPowGate,
-        YY:     cq.ops.YYPowGate,
-        ZZ:     cq.ops.ZZPowGate,
+        TX:     cirq.ops.XPowGate,
+        TY:     cirq.ops.YPowGate,
+        TZ:     cirq.ops.ZPowGate,
+        XX:     cirq.ops.XXPowGate,
+        YY:     cirq.ops.YYPowGate,
+        ZZ:     cirq.ops.ZZPowGate,
     }
 
     for op in circ:

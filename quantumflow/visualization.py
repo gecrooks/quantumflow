@@ -38,7 +38,7 @@ __all__ = ('LATEX_GATESET',
 LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
                            'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
-                           'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'RESET'])
+                           'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'Reset'])
 
 # TODO: DIAGRAM_GATESET gateset
 
@@ -59,7 +59,7 @@ def circuit_to_latex(
 
     Can currently draw X, Y, Z, H, T, S, T_H, S_H, RX, RY, RZ, TX, TY, TZ,
     TH, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, CAN, P0 and P1 gates,
-    and the RESET operation.
+    and the Reset operation.
 
     Args:
         circ:       A quantum Circuit
@@ -403,7 +403,7 @@ def circuit_diagram(
         'YY': 'YY^%s',
         'ZZ': 'ZZ^%s',
         'ISWAP': 'iSWAP',
-        'RESET': BOX_CHARS[LEFT+BOT+TOP] + ' <0|',
+        'Reset': BOX_CHARS[LEFT+BOT+TOP] + ' <0|',
         }
 
     multi_labels = {
@@ -487,7 +487,7 @@ def circuit_diagram(
             if name == 'I':
                 pass
 
-            elif name == 'RESET' or name == 'NoWire':
+            elif name == 'Reset' or name == 'NoWire':
                 for i in idx:
                     code[i] = label
 

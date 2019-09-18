@@ -12,17 +12,19 @@ or channels.
 .. autofunction :: dagger
 .. autoclass :: Measure
 .. autoclass :: Reset
+.. autoclass :: Initialize
 .. autoclass :: Barrier
 .. autoclass :: Projection
 .. autoclass :: QubitPermutation
 .. autoclass :: Store
 .. autoclass :: If
 .. autoclass :: Display
-.. autoclass :: StoreState
+.. autoclass :: DisplayState
+
 """
 
 
-from typing import Sequence, Hashable, Callable, Any
+from typing import Sequence, Hashable, Any, Callable
 
 import numpy as np
 
@@ -37,8 +39,8 @@ from .circuits import Circuit
 from . import backend as bk
 
 
-__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'Store',
-           'If', 'Projection', 'QubitPermutation', 'Display', 'StoreState']
+__all__ = ['dagger', 'Measure', 'Reset', 'Initialize', 'Barrier', 'Store',
+           'If', 'Projection', 'QubitPermutation',  'Display', 'DisplayState']
 
 
 def dagger(elem: Operation) -> Operation:
@@ -133,6 +135,25 @@ class Reset(Operation):
         if self.qubits:
             return 'RESET ' + ' '.join([str(q) for q in self.qubits])
         return 'RESET'
+
+
+class Initialize(Operation):
+    """ An operation that initilizes the quantum state"""
+    def __init__(self, ket: State):
+        self._ket = ket
+        self._qubits = ket.qubits
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return self._ket.tensor
+
+    def run(self, ket: State) -> State:
+        return self._ket.permute(ket.qubits)
+
+    def evolve(self, rho: Density) -> Density:
+        return self._ket.permute(rho.qubits).asdensity()
+
+    # TODO: aschannel? __str___?
 
 
 class Barrier(Operation):
@@ -279,11 +300,13 @@ class QubitPermutation(Operation):
 
 
 # TESTME
+# FIXME: Conflicts with Store in xforest?
 class Store(Operation):
-    """Store a value in the classical memory of the state"""
+    """Store a value in the classical memory of the state.
+    """
     def __init__(self,
                  key: Hashable,
-                 value: bool = True) -> None:
+                 value: Any) -> None:
         super().__init__()
         self.key = key
         self.value = value
@@ -298,7 +321,7 @@ class Store(Operation):
 class If(Operation):
     """
     Look up key in classical memory, and apply the given
-    quantum operation only if the truth value is the same as value.
+    quantum operation only if the truth value matches.
     """
     def __init__(self, elem: Operation,
                  key: Hashable,
@@ -332,7 +355,7 @@ class Display(Operation):
     # Terminology comes from cirq: cirq/ops/display.py
     def __init__(self,
                  key: Hashable,
-                 action: Callable[[State], Any]) -> None:
+                 action: Callable) -> None:
         super().__init__()
         self.key = key
         self.action = action
@@ -345,8 +368,7 @@ class Display(Operation):
 
 
 # TESTME
-# RENAME? StateDisplay?
-class StoreState(Display):
+class DisplayState(Display):
     """
     Store a copy of the state in the classical memory. (This operation
     can be memoty intensive, since it stores the entire quantum state.)

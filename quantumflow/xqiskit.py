@@ -10,18 +10,22 @@
 
 Interface between IBM's Qiskit and QuantumFlow
 
-
+.. autoclass:: QiskitSimulator
 .. autofunction:: qiskit_to_circuit
 .. autofunction:: circuit_qiskit
 """
 
+from typing import Iterable
 
+from .qubits import Qubits, asarray
+from .states import State
 from .circuits import Circuit
-from .stdops import If
+from .ops import Operation
+from .stdops import If, Initialize
 from .gates import NAMED_GATES
 from .utils import invert_map
 from .translate import select_translators, translate
-import qiskit as qk
+import qiskit
 
 # This module imports qiskit, so we do not include it at top level.
 # Must be imorted explicitly. e.g.
@@ -31,7 +35,10 @@ import qiskit as qk
 # Concevable you might want to use those gates in QuantumFlow without loading
 # qiskit
 
-# TODO: __all__
+__all__ = ['QiskitSimulator',
+           'qiskit_to_circuit',
+           'circuit_to_qiskit',
+           'translate_gates_to_qiskit']
 
 QASM_TO_QF = {
     'ccx': 'CCNOT',
@@ -45,7 +52,7 @@ QASM_TO_QF = {
     'cz': 'CZ',
     'h': 'H',
     'id': 'I',
-    'rx': 'RZ',
+    'rx': 'RX',
     'ry': 'RY',
     'rz': 'RZ',
     'rzz': 'RZZ',
@@ -62,11 +69,40 @@ QASM_TO_QF = {
     'z': 'Z',
     # 'barrier': 'Barrier',   # TODO TESTME
     # 'measure': 'Measure'   # TODO
+    #  'initialize': 'Initialize',
     }
 """Map from qiskit operation names to QuantumFlow names"""
 
 
-def qiskit_to_circuit(qkcircuit: qk.QuantumCircuit) -> Circuit:
+# TODO: 'multiplexer', 'snapshot', 'unitary'
+
+class QiskitSimulator(Operation):
+    def __init__(self, elements: Iterable[Operation] = None) -> None:
+        self._circuit = Circuit(elements)
+
+    @property
+    def qubits(self) -> Qubits:
+        return self._circuit.qubits
+
+    def run(self, ket: State = None) -> State:
+        circ = self._circuit
+        if ket is not None:
+            circ = Circuit(Initialize(ket)) + circ
+
+        qkcircuit = circuit_to_qiskit(circ, translate=True)
+        simulator = qiskit.Aer.get_backend('statevector_simulator')
+        job = qiskit.execute(qkcircuit, simulator)
+        result = job.result()
+        tensor = result.get_statevector()
+
+        res = State(tensor, list(reversed(self.qubits)))
+
+        if ket is not None:
+            res = res.permute(ket.qubits)
+        return res
+
+
+def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
     """Convert a qsikit QuantumCircuit to QuantumFlow's Circuit"""
     # We assume that there is only one quantum register of qubits.
 
@@ -94,7 +130,7 @@ def qiskit_to_circuit(qkcircuit: qk.QuantumCircuit) -> Circuit:
 
 
 def circuit_to_qiskit(circ: Circuit,
-                      translate: bool = False) -> qk.QuantumCircuit:
+                      translate: bool = False) -> qiskit.QuantumCircuit:
     """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
@@ -109,19 +145,25 @@ def circuit_to_qiskit(circ: Circuit,
     QF_TO_QASM['I'] = 'iden'
 
     # We assume only one QuantumRegister. Represent qubits by index in register
-    qreg = qk.QuantumRegister(circ.qubit_nb)
+    qreg = qiskit.QuantumRegister(circ.qubit_nb)
     qubit_map = {q: qreg[i] for i, q in enumerate(circ.qubits)}
 
-    qkcircuit = qk.QuantumCircuit(qreg)
+    qkcircuit = qiskit.QuantumCircuit(qreg)
 
     for op in circ:
-        name = QF_TO_QASM[op.name]
-        params = op.params.values()
-        qbs = [qubit_map[qb] for qb in op.qubits]
+        if op.name == 'Initialize':
+            name = 'initialize'
+            params = asarray(op.tensor).transpose().flatten()
 
-        getattr(qkcircuit, name)(*params, *qbs)
+            qbs = [qubit_map[qb] for qb in op.qubits]
+            getattr(qkcircuit, name)(params, qbs)
+        else:
+            name = QF_TO_QASM[op.name]
+            params = op.params.values()
+            qbs = [qubit_map[qb] for qb in op.qubits]
+            getattr(qkcircuit, name)(*params, *qbs)
 
-        # TODO: Handle If seperatly
+        # TODO: Handle If, Reset, ...
 
     return qkcircuit
 
