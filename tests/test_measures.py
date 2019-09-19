@@ -47,6 +47,16 @@ def test_gate_angle():
     assert qf.gates_close(gate0, gate0)
 
 
+def test_gates_commute():
+    assert qf.gates_commute(qf.X(0), qf.X(0))
+    assert not qf.gates_commute(qf.X(0), qf.T(0))
+    assert qf.gates_commute(qf.X(0), qf.T(1))
+    assert qf.gates_commute(qf.S(0), qf.T(0))
+    assert qf.gates_commute(qf.S(0), qf.T(0))
+    assert qf.gates_commute(qf.XX(0.1, 0, 1), qf.X(0))
+    assert not qf.gates_commute(qf.ZZ(0.1, 0, 1), qf.X(0))
+
+
 def test_channel_angle():
     chan0 = qf.X(0).aschannel()
     chan1 = qf.Y(0).aschannel()
