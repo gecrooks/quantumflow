@@ -27,7 +27,7 @@ from tensorflow.python.client import device_lib
 from tensorflow import reduce_sum                               # noqa: F401
 from tensorflow import roll, tensordot                          # noqa: F401
 
-from .numpybk import rank
+from .tensorflow import rank as ndim                            # noqa: F401
 from .numpybk import set_random_seed as np_set_random_seed
 from .numpybk import TensorLike, BKTensor
 
@@ -100,7 +100,7 @@ def evaluate(tensor: BKTensor) -> TensorLike:
 def inner(tensor0: BKTensor, tensor1: BKTensor) -> BKTensor:
     """Return the inner product between two states"""
     # Note: Relying on fact that vdot flattens arrays
-    N = rank(tensor0)
+    N = ndim(tensor0)
     axes = list(range(N))
     return tf.tensordot(tf.math.conj(tensor0), tensor1, axes=(axes, axes))
 
@@ -135,7 +135,7 @@ def getitem(tensor: BKTensor, key: typing.Any) -> BKTensor:
 
 
 def productdiag(tensor: BKTensor) -> BKTensor:
-    N = rank(tensor)
+    N = ndim(tensor)
     tensor = reshape(tensor, [2**(N//2), 2**(N//2)])
     tensor = tf.linalg.tensor_diag_part(tensor)
     tensor = reshape(tensor, [2]*(N//2))
@@ -145,8 +145,8 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
               indices: typing.List[int],
               diagonal: bool = False) -> BKTensor:
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     out = list(EINSUM_SUBSCRIPTS[0:N])

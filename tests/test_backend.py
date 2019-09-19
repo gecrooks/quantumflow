@@ -56,13 +56,14 @@ def test_import():
     assert bk.transpose
     assert bk.inner
     assert bk.outer
+    assert bk.ndim
 
     assert bk.contract
     assert bk.transpose
     assert bk.einsum
     assert bk.tensordot
 
-    # assert bk.roll
+    assert bk.roll
     assert bk.contract
 
 
@@ -89,7 +90,7 @@ def test_outer():
         + 1.0j * np.random.normal(size=[2, 2, 2])
 
     res = bk.astensorproduct(bk.outer(bk.astensor(s0), bk.astensor(s1)))
-    assert bk.rank(res) == 5
+    assert bk.ndim(res) == 5
 
     res2 = np.outer(s0, s1).reshape([2]*5)
     assert np.allclose(bk.evaluate(res), res2)

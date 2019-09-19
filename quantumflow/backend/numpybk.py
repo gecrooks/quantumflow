@@ -18,7 +18,7 @@ from numpy import (  # noqa: F401
     sqrt, pi, conj, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
-    outer, tensordot, einsum, transpose, roll)
+    outer, tensordot, einsum, transpose, roll, ndim)
 
 from numpy import sum as reduce_sum                 # noqa: F401
 
@@ -122,11 +122,6 @@ def evaluate(tensor: BKTensor) -> TensorLike:
     return tensor
 
 
-def rank(tensor: BKTensor) -> int:
-    """Return the number of dimensions of a tensor"""
-    return len(tensor.shape)
-
-
 def inner(tensor0: BKTensor, tensor1: BKTensor) -> BKTensor:
     """Return the inner product between two tensors"""
     # Note: Relying on fact that vdot flattens arrays
@@ -154,7 +149,7 @@ def getitem(tensor: BKTensor, key: typing.Any) -> BKTensor:
 
 def productdiag(tensor: BKTensor) -> BKTensor:
     """Returns the matrix diagonal of the product tensor"""  # DOCME: Explain
-    N = rank(tensor)
+    N = ndim(tensor)
     tensor = reshape(tensor, [2**(N//2), 2**(N//2)])
     tensor = np.diag(tensor)
     tensor = reshape(tensor, [2]*(N//2))
@@ -210,8 +205,8 @@ def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
                       indices: typing.List[int],
                       diagonal: bool = False) -> BKTensor:
     # About the same speed as tensordot
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     gate = reshape(tensor0, [2**K, 2**K])
@@ -246,8 +241,8 @@ def _tensormul_cirq(tensor0: BKTensor, tensor1: BKTensor,
 def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
                          indices: typing.List[int]) -> BKTensor:
     # Significantly faster than using einsum.
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     perm = list(indices) + [n for n in range(N) if n not in indices]
@@ -262,8 +257,8 @@ def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
 def _tensormul_contract(tensor0: BKTensor, tensor1: BKTensor,
                         indices: typing.List[int]) -> BKTensor:
 
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     left_out = indices

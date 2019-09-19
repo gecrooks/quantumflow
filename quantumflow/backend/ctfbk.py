@@ -137,7 +137,7 @@ def minimum(tensor0: BKTensor, tensor1: BKTensor) -> TensorLike:
     return np.minimum(evaluate(tensor0), evaluate(tensor1))
 
 
-def rank(tensor: BKTensor) -> int:
+def ndim(tensor: BKTensor) -> int:
     """Return the number of dimensions of a tensor"""
     return len(tensor.shape)
 
@@ -148,7 +148,7 @@ def size(tensor: BKTensor) -> int:
 
 def inner(tensor0: BKTensor, tensor1: BKTensor) -> BKTensor:
     """Return the inner product between two states"""
-    N = rank(tensor0)
+    N = ndim(tensor0)
     axes = list(range(N))
     return conj(tensor0).tensordot(tensor1, axes=(axes, axes))
 
@@ -177,7 +177,7 @@ def getitem(tensor: BKTensor, key: typing.Any) -> BKTensor:
 
 def productdiag(tensor: BKTensor) -> BKTensor:
     """Returns the matrix diagonal of the product tensor"""
-    N = rank(tensor)
+    N = ndim(tensor)
     tensor = reshape(tensor, [2**(N//2), 2**(N//2)])
     tensor = ctf.diag(tensor)
     tensor = reshape(tensor, [2]*(N//2))
@@ -186,9 +186,9 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
               indices: typing.List[int],
-              diagonal: bool = False) -> BKTensor:
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+              **kwargs) -> BKTensor:
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     out = list(EINSUM_SUBSCRIPTS[0:N])

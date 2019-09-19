@@ -123,16 +123,16 @@ class QubitVector:
             if N == 0:   # FIXME: Why this special case!?
                 rank = 1
             else:
-                rank = bk.rank(tensor) // N
+                rank = bk.ndim(tensor) // N
 
-        if rank not in [1, 2, 4, 8] or rank * N != bk.rank(tensor):
+        if rank not in [1, 2, 4, 8] or rank * N != bk.ndim(tensor):
             raise ValueError('Incompatibility between tensor and qubits')
 
         self.qubits = tuple(qubits)
         self.qubit_nb = N
 
         # TODO: Rename rank to order or degree in effort to disambiguate
-        # different uses of rank fro tensor?
+        # different uses of rank from tensor?
         self.rank = rank
 
     # FIXME: Does not respect qubits

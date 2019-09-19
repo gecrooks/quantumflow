@@ -187,7 +187,7 @@ class Gate(Operation):
 
         if tensor is not None:
             tensor = bk.astensorproduct(tensor)
-            N = bk.rank(tensor) // 2
+            N = bk.ndim(tensor) // 2
             if qubits is None:
                 qubits = range(N)
             elif len(qubits) != N:

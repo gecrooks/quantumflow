@@ -28,7 +28,7 @@ from tensorflow import roll, tensordot                          # noqa: F401
 
 
 from .tensorflowbk import (                                     # noqa: F401
-    rank, reduce_sum, ccast, CTYPE, FTYPE, TENSOR, BKTensor, TensorLike, inner,
+    ndim, reduce_sum, ccast, CTYPE, FTYPE, TENSOR, BKTensor, TensorLike, inner,
     outer, gpu_available, set_random_seed, cis, arccos, getitem, size,
     productdiag, EINSUM_SUBSCRIPTS, einsum, tensormul)
 

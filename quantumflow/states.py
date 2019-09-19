@@ -73,7 +73,7 @@ class State:
         """
         if qubits is None:
             tensor = bk.astensorproduct(tensor)
-            bits = bk.rank(tensor)
+            bits = bk.ndim(tensor)
             qubits = range(bits)
 
         self.vec = QubitVector(tensor, qubits)
@@ -291,7 +291,7 @@ class Density(State):
                  memory: Mapping = None) -> None:
         if qubits is None:
             tensor = bk.astensorproduct(tensor)
-            bits = bk.rank(tensor) // 2
+            bits = bk.ndim(tensor) // 2
             qubits = range(bits)
 
         super().__init__(tensor, qubits, memory)

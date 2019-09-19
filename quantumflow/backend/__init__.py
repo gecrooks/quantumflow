@@ -143,7 +143,7 @@ __all__ = [  # noqa: F405
            'ccast', 'cis', 'conj', 'cos', 'diag', 'evaluate', 'exp', 'fcast',
            'gpu_available', 'imag', 'inner', 'minimum',
            'outer', 'matmul',
-           'rank', 'real', 'reshape', 'set_random_seed', 'sin',
+           'ndim', 'real', 'reshape', 'set_random_seed', 'sin',
            'sqrt', 'reduce_sum', 'tensormul', 'trace', 'transpose',
            'getitem', 'astensorproduct', 'productdiag',
            'EINSUM_SUBSCRIPTS', 'einsum',
