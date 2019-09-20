@@ -17,7 +17,7 @@ from quantumflow.utils import (
     invert_map, FrozenDict, bitlist_to_int, int_to_bitlist,
     to_graph6, from_graph6,
     spanning_tree_count, octagonal_tiling_graph, deprecated,
-    immutable_property,
+    cached_property,
     rationalize, symbolize)
 
 
@@ -73,17 +73,17 @@ def test_deprecated():
         obj.some_thing()
 
 
-def test_immutable_property():
+def test_cached_property():
 
     class thing():
         def __init__(self, value):
             self.value = value
 
-        @immutable_property
+        @cached_property
         def plus1(self):
             return self.value+1
 
-        @immutable_property
+        @cached_property
         def plus2(self):
             return self.value+2
 

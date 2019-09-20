@@ -164,12 +164,12 @@ def deprecated(func: Callable) -> Callable:
     return _new_func
 
 
-class immutable_property:
+class cached_property:
     """
-    Method decorator for immutable properties that are
-    expensive to build. On first call caches the result.
+    Method decorator for immutable properties.
+    The result is cached on the first call.
     """
-    # Kudos: Adapted from django's cached_property. Much simpler
+    # Kudos: Adapted from django's cached_property. Simpler
     # implementation because we don't try to support Python < 3.6
 
     # This class uses the descriptor protocol
