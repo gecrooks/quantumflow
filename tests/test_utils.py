@@ -17,6 +17,7 @@ from quantumflow.utils import (
     invert_map, FrozenDict, bitlist_to_int, int_to_bitlist,
     to_graph6, from_graph6,
     spanning_tree_count, octagonal_tiling_graph, deprecated,
+    immutable_property,
     rationalize, symbolize)
 
 
@@ -70,6 +71,36 @@ def test_deprecated():
 
     with pytest.deprecated_call():
         obj.some_thing()
+
+
+def test_immutable_property():
+
+    class thing():
+        def __init__(self, value):
+            self.value = value
+
+        @immutable_property
+        def plus1(self):
+            return self.value+1
+
+        @immutable_property
+        def plus2(self):
+            return self.value+2
+
+    two = thing(2)
+    assert two.plus1 == 2+1
+    assert two.plus1 == 2+1
+    assert two.plus2 == 2+2
+    assert two.plus1 == 2+1
+
+    ten = thing(10)
+    assert ten.plus1 == 10+1
+    assert ten.plus1 == 10+1
+    assert ten.plus2 == 10+2
+    assert ten.plus2 == 10+2
+
+    assert two.plus1 == 2+1
+    assert two.plus2 == 2+2
 
 
 def test_bitlist_to_int():

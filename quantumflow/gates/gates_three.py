@@ -9,7 +9,7 @@ from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State, Density
 from ..ops import Gate
-from ..utils import multi_slice
+from ..utils import multi_slice, immutable_property
 
 
 __all__ = ['CCNOT', 'CSWAP', 'CCZ', 'IDEN']
@@ -40,7 +40,7 @@ class CCNOT(Gate):
                  q2: Qubit = 2) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
@@ -95,7 +95,7 @@ class CSWAP(Gate):
                  q2: Qubit = 2) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
@@ -153,7 +153,7 @@ class CCZ(Gate):
                  q2: Qubit = 2) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
@@ -194,7 +194,7 @@ class IDEN(Gate):                                      # noqa: E742
             qubits = (0,)
         super().__init__(qubits=qubits)
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
 

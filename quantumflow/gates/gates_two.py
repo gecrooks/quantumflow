@@ -10,7 +10,7 @@ from .. import backend as bk
 from ..qubits import Qubit
 from ..ops import Gate
 from ..states import State
-from ..utils import multi_slice
+from ..utils import multi_slice, immutable_property
 
 from .gates_one import V, V_H
 from .gates_utils import control_gate
@@ -40,7 +40,7 @@ class CZ(Gate):
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0],
                    [0, 1, 0, 0],
@@ -83,7 +83,7 @@ class CNOT(Gate):
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0],
                    [0, 1, 0, 0],
@@ -138,7 +138,7 @@ class CTX(Gate):
         # t = t % 2
         super().__init__(params=dict(t=t), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         t = self.params['t']
         ctheta = bk.ccast(pi * t)
@@ -177,7 +177,7 @@ class SWAP(Gate):
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0],
                    [0, 0, 1, 0],
@@ -217,7 +217,7 @@ class ISWAP(Gate):
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.array([[1, 0, 0, 0],
                             [0, 0, 1j, 0],
@@ -254,7 +254,7 @@ class CPHASE00(Gate):
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -285,7 +285,7 @@ class CPHASE01(Gate):
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -316,7 +316,7 @@ class CPHASE10(Gate):
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -348,7 +348,7 @@ class CPHASE(Gate):
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -383,7 +383,7 @@ class PSWAP(Gate):
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -420,7 +420,7 @@ class PISWAP(Gate):
     def __init__(self, theta: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -462,7 +462,7 @@ class CAN(Gate):
                  q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(tx=tx, ty=ty, tz=tz), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         tx, ty, tz = self.params.values()
         xx = XX(tx)
@@ -500,7 +500,7 @@ class XX(Gate):
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(t=t), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         t, = self.params.values()
         theta = bk.ccast(pi * t)
@@ -533,7 +533,7 @@ class YY(Gate):
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(t=t), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         t, = self.params.values()
         theta = bk.ccast(pi * t)
@@ -567,7 +567,7 @@ class ZZ(Gate):
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(t=t), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         t, = self.params.values()
         theta = bk.ccast(pi * t)
@@ -597,7 +597,7 @@ class EXCH(Gate):
     def __init__(self, t: float, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=dict(t=t), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         t, = self.params.values()
         unitary = CAN(t, t, t).tensor
@@ -621,7 +621,7 @@ class CV(Gate):
                  q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         q0, q1 = self.qubits
         return control_gate(q0, V(q1)).tensor
@@ -640,7 +640,7 @@ class CV_H(Gate):
                  q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         q0, q1 = self.qubits
         return control_gate(q0, V_H(q1)).tensor
@@ -670,7 +670,7 @@ class BARENCO(Gate):
         qubits = [q0, q1]
         super().__init__(params=params, qubits=qubits)
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         alpha, phi, theta = self.params.values()
 
@@ -707,7 +707,7 @@ class CY(Gate):
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 0, 0, 0],
                               [0, 1, 0, 0],
@@ -740,7 +740,7 @@ class CH(Gate):
     def __init__(self, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 0, 0, 0],
                               [0, 1, 0, 0],
@@ -784,7 +784,7 @@ class FSIM(Gate):
         """
         super().__init__(params=dict(theta=theta, phi=phi), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta, phi = list(self.params.values())
         theta = bk.ccast(theta)

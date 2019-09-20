@@ -39,6 +39,8 @@ __all__ = ['multi_slice',
            'rationalize']
 
 
+
+
 def multi_slice(axes: Sequence, items: Sequence,
                 axes_nb: int = None) -> Tuple:
     """Construct a multidimensional slice to access array data.
@@ -145,6 +147,8 @@ def int_to_bitlist(x: int, pad: int = None) -> Sequence[int]:
     return [int(b) for b in form.format(x)]
 
 
+# -- Function decorators --
+
 def deprecated(func: Callable) -> Callable:
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -158,6 +162,32 @@ def deprecated(func: Callable) -> Callable:
         warnings.simplefilter('default', DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
     return _new_func
+
+
+class immutable_property:
+    """
+    Method decorator for immutable properties that are
+    expensive to build. On first call caches the result.
+    """
+    # Kudos: Adapted from django's cached_property. Much simpler
+    # implementation because we don't try to support Python < 3.6
+
+    # This class uses the descriptor protocol
+    # https://docs.python.org/3.6/howto/descriptor.html
+
+    def __init__(self, func):
+        self.func = func
+        self.__doc__ = func.__doc__
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, cls=None):
+        if instance is None:
+            return self
+        result = self.func(instance)
+        instance.__dict__[self.name] = result
+        return result
 
 
 # -- Graphs --

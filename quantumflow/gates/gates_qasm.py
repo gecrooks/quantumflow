@@ -7,6 +7,7 @@ from .. import backend as bk
 from ..ops import Gate
 from ..qubits import Qubit
 from ..circuits import Circuit
+from ..utils import immutable_property
 
 from .gates_utils import control_gate
 from .gates_one import RZ, PHASE
@@ -55,7 +56,7 @@ class U3(Gate):
         super().__init__(params=dict(theta=theta, phi=phi, lam=lam),
                          qubits=[q0])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta, phi, lam = self.params.values()
 
@@ -89,7 +90,7 @@ class U2(Gate):
         super().__init__(params=dict(phi=phi, lam=lam),
                          qubits=[q0])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         phi, lam = self.params.values()
         return U3(pi/2, phi, lam).tensor
@@ -117,7 +118,7 @@ class CU3(Gate):
         super().__init__(params=dict(theta=theta, phi=phi, lam=lam),
                          qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         q0, q1 = self.qubits
         theta, phi, lam = self.params.values()
@@ -153,7 +154,7 @@ class CRZ(Gate):
                  q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta, = self.params.values()
         q0, q1 = self.qubits
@@ -182,7 +183,7 @@ class RZZ(Gate):
                  q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @immutable_property
     def tensor(self) -> bk.BKTensor:
         theta, = self.params.values()
         q0, q1 = self.qubits
