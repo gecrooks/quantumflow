@@ -185,8 +185,8 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int],
-              **kwargs) -> BKTensor:
+              indices: typing.Tuple[int, ...],
+              diagonal: bool = False) -> BKTensor:
     N = ndim(tensor1)
     K = ndim(tensor0) // 2
     assert K == len(indices)

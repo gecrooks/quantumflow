@@ -242,7 +242,7 @@ class Gate(Operation):
         """Apply the action of this gate upon a state"""
         qubits = self.qubits
         indices = [ket.qubits.index(q) for q in qubits]
-        tensor = bk.tensormul(self.tensor, ket.tensor, indices,
+        tensor = bk.tensormul(self.tensor, ket.tensor, tuple(indices),
                               diagonal=self.diagonal)
         return State(tensor, ket.qubits, ket.memory)
 
@@ -278,8 +278,8 @@ class Gate(Operation):
             raise NotImplementedError()
         gate0 = self
         gate1 = other
-        indices = [gate1.qubits.index(q) for q in gate0.qubits]
-        tensor = bk.tensormul(gate0.tensor, gate1.tensor, indices)
+        indices = (gate1.qubits.index(q) for q in gate0.qubits)
+        tensor = bk.tensormul(gate0.tensor, gate1.tensor, tuple(indices))
         return Gate(tensor=tensor, qubits=gate1.qubits)
 
     def __str__(self) -> str:
@@ -437,7 +437,7 @@ class Channel(Operation):
         indices = list([qubits.index(q) for q in self.qubits]) + \
             list([qubits.index(q) + N for q in self.qubits])
 
-        tensor = bk.tensormul(self.tensor, rho.tensor, indices)
+        tensor = bk.tensormul(self.tensor, rho.tensor, tuple(indices))
         return Density(tensor, qubits, rho.memory)
 
     def asgate(self) -> 'Gate':
@@ -472,7 +472,7 @@ class Channel(Operation):
         indices = list([chan1.qubits.index(q) for q in chan0.qubits]) + \
             list([chan1.qubits.index(q) + N for q in chan0.qubits])
 
-        tensor = bk.tensormul(chan0.tensor, chan1.tensor, indices)
+        tensor = bk.tensormul(chan0.tensor, chan1.tensor, tuple(indices))
 
         return Channel(tensor, qubits)
 

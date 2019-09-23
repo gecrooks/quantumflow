@@ -157,7 +157,7 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int],
+              indices: typing.Tuple[int, ...],
               diagonal: bool = False) -> BKTensor:
     r"""
     Generalization of matrix multiplication to product tensors.
@@ -202,7 +202,7 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
-                      indices: typing.List[int],
+                      indices: typing.Tuple[int, ...],
                       diagonal: bool = False) -> BKTensor:
     # About the same speed as tensordot
     N = ndim(tensor1)
@@ -232,14 +232,14 @@ def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def _tensormul_cirq(tensor0: BKTensor, tensor1: BKTensor,
-                    indices: typing.List[int]) -> BKTensor:
+                    indices: typing.Tuple[int, ...]) -> BKTensor:
     from cirq import targeted_left_multiply
     tensor = targeted_left_multiply(tensor0, tensor1, indices)
     return tensor
 
 
 def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
-                         indices: typing.List[int]) -> BKTensor:
+                         indices: typing.Tuple[int, ...]) -> BKTensor:
     # Significantly faster than using einsum.
     N = ndim(tensor1)
     K = ndim(tensor0) // 2
@@ -255,18 +255,18 @@ def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def _tensormul_contract(tensor0: BKTensor, tensor1: BKTensor,
-                        indices: typing.List[int]) -> BKTensor:
+                        indices: typing.Tuple[int, ...]) -> BKTensor:
 
     N = ndim(tensor1)
     K = ndim(tensor0) // 2
     assert K == len(indices)
 
-    left_out = indices
+    left_out = list(indices)
     left_in = list(range(N, N+K))
     right = list(range(0, N))
     for idx, s in zip(indices, left_in):
         right[idx] = s
 
-    tensor = contract(tensor0, left_out+left_in, tensor1, right)
+    tensor = contract(tensor0, tuple(left_out+left_in), tensor1, tuple(right))
 
     return tensor
