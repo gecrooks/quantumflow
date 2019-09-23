@@ -27,7 +27,7 @@ from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import diag_part as diag                        # noqa: F401
 from tensorflow.python.client import device_lib
 
-from .tensorflow import rank as ndim                             # noqa: F401
+from tensorflow import rank as ndim                             # noqa: F401
 from .numpybk import set_random_seed as np_set_random_seed
 from .numpybk import TensorLike, BKTensor
 
