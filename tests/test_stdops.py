@@ -62,13 +62,42 @@ def test_if():
 def test_display_state():
     circ = qf.Circuit()
     circ += qf.X(1)
-    circ += qf.DisplayState(key='state0')
+    circ += qf.X(2)
+    circ += qf.StateDisplay(key='state0')
 
     ket = circ.run()
     assert 'state0' in ket.memory
 
     rho = circ.evolve()
     assert 'state0' in rho.memory
+
+
+def test_display_probabilities():
+    circ = qf.Circuit()
+    circ += qf.X(1)
+    circ += qf.X(2)
+    circ += qf.ProbabilityDisplay(key='prob')
+
+    ket = circ.run()
+    assert 'prob' in ket.memory
+
+    rho = circ.evolve()
+    assert 'prob' in rho.memory
+
+
+def test_density_display():
+    circ = qf.Circuit()
+    circ += qf.X(1)
+    circ += qf.X(2)
+    circ += qf.DensityDisplay(key='bloch1', qubits=[1])
+
+    ket = circ.run()
+    assert 'bloch1' in ket.memory
+    assert ket.memory['bloch1'].qubits == (1,)
+
+    rho = circ.evolve()
+    assert 'bloch1' in rho.memory
+    assert rho.memory['bloch1'].qubits == (1,)
 
 
 def test_project():
@@ -85,19 +114,19 @@ def test_project():
 
 def test_permutation():
     # Should be same as a swap.
-    perm0 = qf.QubitPermutation([0, 1], [1, 0])
+    perm0 = qf.PermuteQubits([0, 1], [1, 0])
     gate0 = qf.SWAP(0, 1)
     assert qf.gates_close(perm0.asgate(), gate0)
     assert qf.gates_close(perm0.asgate(), perm0.H.asgate())
 
-    perm1 = qf.QubitPermutation.from_circuit(qf.Circuit([gate0]))
+    perm1 = qf.PermuteQubits.from_circuit(qf.Circuit([gate0]))
     assert qf.gates_close(perm0.asgate(), perm1.asgate())
 
     N = 8
     qubits_in = list(range(N))
     qubits_out = np.random.permutation(qubits_in)
-    # print(qubits_out)
-    permN = qf.QubitPermutation(qubits_in, qubits_out)
+
+    permN = qf.PermuteQubits(qubits_in, qubits_out)
     assert qf.gates_close(perm0.asgate(), perm1.asgate())
     iden = qf.Circuit([permN, permN.H]).asgate()
     assert qf.almost_identity(iden)
@@ -105,15 +134,14 @@ def test_permutation():
 
     swaps = permN.ascircuit()
     swaps += qf.IDEN(*permN.qubits_in)  # Add identity so we don't lose qubits
-    permN2 = qf.QubitPermutation.from_circuit(swaps)
-    # print(permN2.qubits_in, permN2.qubits_out)
+    permN2 = qf.PermuteQubits.from_circuit(swaps)
 
     assert qf.circuits_close(swaps, qf.Circuit([permN]))
     assert qf.circuits_close(swaps, qf.Circuit([permN2]))
     assert qf.circuits_close(qf.Circuit([permN]), qf.Circuit([permN2]))
 
     with pytest.raises(ValueError):
-        _ = qf.QubitPermutation([0, 1], [1, 2])
+        _ = qf.PermuteQubits([0, 1], [1, 2])
 
     # Channels
     assert qf.channels_close(perm0.aschannel(), gate0.aschannel())
@@ -122,6 +150,18 @@ def test_permutation():
     rho1 = perm0.evolve(rho0)
     rho2 = gate0.aschannel().evolve(rho0)
     assert qf.densities_close(rho1, rho2)
+
+
+def test_reversequbits():
+    rev = qf.ReverseQubits([0, 1, 2, 3, 4])
+    perm = qf.PermuteQubits([0, 1, 2, 3, 4], [4, 3, 2, 1, 0])
+    assert qf.circuits_close(rev.ascircuit(), perm.ascircuit())
+
+
+def test_rotatequbits():
+    rev = qf.RotateQubits([0, 1, 2, 3, 4], 2)
+    perm = qf.PermuteQubits([0, 1, 2, 3, 4], [2, 3, 4, 0, 1])
+    assert qf.circuits_close(rev.ascircuit(), perm.ascircuit())
 
 
 def test_initialize():

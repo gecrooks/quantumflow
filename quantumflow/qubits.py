@@ -235,12 +235,12 @@ class QubitVector:
         if R == 1:
             raise ValueError('Cannot take trace of vector')
 
+        if not qubits:
+            raise ValueError('Cannot remove all qubits with partial_trace.')
+
         contract_qubits: List[Qubit] = list(self.qubits)
         for q in qubits:
             contract_qubits.remove(q)
-
-        if not qubits:
-            raise ValueError('Cannot remove all qubits with partial_trace.')
 
         indices = [self.qubits.index(qubit) for qubit in contract_qubits]
         subscripts = list(EINSUM_SUBSCRIPTS)[0:N*R]

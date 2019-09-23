@@ -11,7 +11,7 @@ Useful routines not necessarily intended to be part of the public API.
 """
 
 from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
-from typing import Optional, Mapping, TypeVar, List, cast
+from typing import Optional, Mapping, TypeVar, List
 import warnings
 import functools
 from fractions import Fraction

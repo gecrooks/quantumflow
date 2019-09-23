@@ -15,11 +15,15 @@ or channels.
 .. autoclass :: Initialize
 .. autoclass :: Barrier
 .. autoclass :: Projection
-.. autoclass :: QubitPermutation
+.. autoclass :: PermuteQubits
+.. autoclass :: ReverseQubits
+.. autoclass :: RotateQubits
 .. autoclass :: Store
 .. autoclass :: If
 .. autoclass :: Display
-.. autoclass :: DisplayState
+.. autoclass :: StateDisplay
+.. autoclass :: ProbabilityDisplay
+.. autoclass :: DensityDisplay
 
 """
 
@@ -40,7 +44,9 @@ from . import backend as bk
 
 
 __all__ = ['dagger', 'Measure', 'Reset', 'Initialize', 'Barrier', 'Store',
-           'If', 'Projection', 'QubitPermutation',  'Display', 'DisplayState']
+           'If', 'Projection',
+           'PermuteQubits',  'ReverseQubits', 'RotateQubits',
+           'Display', 'StateDisplay', 'ProbabilityDisplay', 'DensityDisplay']
 
 
 def dagger(elem: Operation) -> Operation:
@@ -206,7 +212,7 @@ class Projection(Operation):
         return self
 
 
-class QubitPermutation(Operation):
+class PermuteQubits(Operation):
     """A permutation of qubits. A generalized multi-qubit SWAP."""
     def __init__(self, qubits_in: Qubits, qubits_out: Qubits) -> None:
         if set(qubits_in) != set(qubits_out):
@@ -216,7 +222,7 @@ class QubitPermutation(Operation):
         self.qubits_in = tuple(qubits_in)
 
     @classmethod
-    def from_circuit(cls, circ: Circuit) -> 'QubitPermutation':
+    def from_circuit(cls, circ: Circuit) -> 'PermuteQubits':
         """Create a qubit pertumtation from a circuit of swap gates"""
         qubits_in = circ.qubits
         N = circ.qubit_nb
@@ -224,12 +230,12 @@ class QubitPermutation(Operation):
         for elem in circ:
             if isinstance(elem, I) or isinstance(elem, IDEN):
                 continue
-            assert isinstance(elem, SWAP)
+            assert isinstance(elem, SWAP)  # FIXME
             q0, q1 = elem.qubits
             i0 = qubits_in.index(q0)
             i1 = qubits_in.index(q1)
             perm[i1], perm[i0] = perm[i0], perm[i1]
-            # TODO: Should also accept QubitPermutations
+            # TODO: Should also accept PermuteQubits
 
         qubits_out = [qubits_in[p] for p in perm]
         return cls(qubits_in, qubits_out)
@@ -240,7 +246,7 @@ class QubitPermutation(Operation):
 
     @property
     def H(self) -> Operation:
-        return QubitPermutation(self.qubits_out, self.qubits_in)
+        return PermuteQubits(self.qubits_out, self.qubits_in)
 
     def run(self, ket: State) -> State:
         qubits = ket.qubits
@@ -299,6 +305,31 @@ class QubitPermutation(Operation):
         return circ
 
 
+# DOCME TESTME
+class ReverseQubits(PermuteQubits):
+    """A qubit permutation that reverses the order of qubits"""
+    def __init__(self, qubits: Qubits) -> None:
+        super().__init__(qubits, tuple(reversed(qubits)))
+
+    def ascircuit(self) -> Circuit:
+        circ = Circuit()
+        qubits = self.qubits
+        for idx in range(self.qubit_nb//2):
+            circ += SWAP(qubits[idx], qubits[-idx-1])
+        return circ
+
+
+# DOCME TESTME
+class RotateQubits(PermuteQubits):
+    def __init__(self, qubits: Qubits, shift: int = 1) -> None:
+        qubits_in = tuple(qubits)
+        nshift = shift % len(qubits)
+        qubits_out = qubits_in[nshift:] + qubits_in[:nshift]
+
+        super().__init__(qubits_in, qubits_out)
+        self.shift = shift
+
+
 # TESTME
 # FIXME: Conflicts with Store in xforest?
 class Store(Operation):
@@ -306,8 +337,9 @@ class Store(Operation):
     """
     def __init__(self,
                  key: Hashable,
-                 value: Any) -> None:
-        super().__init__()
+                 value: Any,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(qubits=qubits)
         self.key = key
         self.value = value
 
@@ -326,7 +358,7 @@ class If(Operation):
     def __init__(self, elem: Operation,
                  key: Hashable,
                  value: bool = True) -> None:
-        super().__init__()
+        super().__init__(qubits=elem.qubits)
         self.element = elem
         self.key = key
         self.value = value
@@ -352,15 +384,17 @@ class Display(Operation):
     quantum state and stores it in classical memory, without performing
     any effect on the qubits.
     """
-    # Terminology comes from cirq: cirq/ops/display.py
+    # Terminology 'Display' used by Quirk and cirq (cirq/ops/display.py).
     def __init__(self,
                  key: Hashable,
-                 action: Callable) -> None:
-        super().__init__()
+                 action: Callable,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(qubits=qubits)
         self.key = key
         self.action = action
 
     def run(self, ket: State) -> State:
+        print('runnin')
         return ket.store({self.key: self.action(ket)})
 
     def evolve(self, rho: Density) -> Density:
@@ -368,14 +402,39 @@ class Display(Operation):
 
 
 # TESTME
-class DisplayState(Display):
+class StateDisplay(Display):
     """
     Store a copy of the state in the classical memory. (This operation
-    can be memoty intensive, since it stores the entire quantum state.)
+    can be memory intensive, since it stores the entire quantum state.)
     """
 
     def __init__(self,
-                 key: Hashable) -> None:
-        super().__init__(key, lambda x: x)
+                 key: Hashable,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(key, lambda x: x, qubits=qubits)
+
+
+# TESTME DOCME
+# FIXME: Act on qubit subspace
+class ProbabilityDisplay(Display):
+    """
+    Store the state probabilities in classical memory.
+    """
+
+    def __init__(self,
+                 key: Hashable,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(key, lambda state: state.probabilities(),
+                         qubits=qubits)
+
+
+# TESTME DOCME
+class DensityDisplay(Display):
+    def __init__(self,
+                 key: Hashable,
+                 qubits: Qubits) -> None:
+        super().__init__(key,
+                         lambda state: state.asdensity(self.qubits),
+                         qubits=qubits)
 
 # fin

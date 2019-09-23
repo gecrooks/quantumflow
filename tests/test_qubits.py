@@ -88,8 +88,13 @@ def test_partial_trace():
     assert qf.channels_close(chan2, qf.I(2).aschannel())
     # TODO: Channel.normalize()
 
+    # cannot take trace of vector
     with pytest.raises(ValueError):
         qf.zero_state(4).vec.partial_trace([1, 2])
+
+    # Can't trace over all qubits
+    with pytest.raises(ValueError):
+        r4.partial_trace([])
 
 
 def test_outer_partial_trace_on_states():

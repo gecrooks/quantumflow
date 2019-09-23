@@ -188,10 +188,8 @@ class State:
             qubits: The qubit subspace. If not given return the density
                     matrix for all the qubits (which can take a lot of memory!)
         """
-        if qubits is None:
-            qubits = self.qubits
-        tensor = self.vec.promote_to_operator(qubits).tensor
-        return Density(tensor, qubits, self.memory)
+        vec = self.vec.promote_to_operator(qubits)
+        return Density(vec.tensor, vec.qubits, self.memory)
 
     def __str__(self) -> str:
         state = self.vec.asarray()
