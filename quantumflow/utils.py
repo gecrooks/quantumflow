@@ -11,7 +11,7 @@ Useful routines not necessarily intended to be part of the public API.
 """
 
 from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
-from typing import Optional, Mapping, TypeVar, List
+from typing import Optional, Mapping, TypeVar, List, cast
 import warnings
 import functools
 from fractions import Fraction
@@ -37,8 +37,6 @@ __all__ = ['multi_slice',
            'octagonal_tiling_graph',
            'cis',
            'rationalize']
-
-
 
 
 def multi_slice(axes: Sequence, items: Sequence,
@@ -164,30 +162,54 @@ def deprecated(func: Callable) -> Callable:
     return _new_func
 
 
-class cached_property:
-    """
-    Method decorator for immutable properties.
-    The result is cached on the first call.
-    """
-    # Kudos: Adapted from django's cached_property. Simpler
-    # implementation because we don't try to support Python < 3.6
+try:
+    # Python >3.8
+    from func_tools import cached_property
+except ImportError:
 
-    # This class uses the descriptor protocol
-    # https://docs.python.org/3.6/howto/descriptor.html
+    def cached_property(func):  # type: ignore
+        """
+         Method decorator for immutable properties.
+         The result is cached on the first call.
+        """
+        def wrapper(instance):  # type: ignore
+            attr = '_cached_property_'+func.__name__
+            if hasattr(instance, attr):
+                return getattr(instance, attr)
+            result = func(instance)
+            setattr(instance, attr, result)
+            return result
+        return property(wrapper)
 
-    def __init__(self, func):
-        self.func = func
-        self.__doc__ = func.__doc__
 
-    def __set_name__(self, owner, name):
-        self.name = name
+# Note: I can't get mypy to like this decorator
+# class cached_property:
+#     """
+#     Method decorator for immutable properties.
+#     The result is cached on the first call.
+#     """
+#     # Kudos: Adapted from django's cached_property. Simpler
+#     # implementation because we don't try to support Python < 3.6
+#     # Essentailly same idea added to Python 3.8
 
-    def __get__(self, instance, cls=None):
-        if instance is None:
-            return self
-        result = self.func(instance)
-        instance.__dict__[self.name] = result
-        return result
+#     # This class uses the descriptor protocol
+#     # https://docs.python.org/3.6/howto/descriptor.html
+
+#     def __init__(self, func) -> None:
+#         self.func = func
+#         self.__doc__ = func.__doc__
+
+#     def __set_name__(self, owner, name: str) -> None:
+#         self.name = name
+#         print(name)
+#         sys.exit()
+
+#     def __get__(self, instance, owner=None) -> Any:
+#         if instance is None:
+#             return self
+#         result = self.func(instance)
+#         instance.__dict__[self.name] = result
+#         return result
 
 
 # -- Graphs --
