@@ -22,7 +22,7 @@ so don't mix different uncomparable data types.
 
 """
 
-from typing import Any, Hashable, Sequence, Union, Tuple, List
+from typing import Hashable, Sequence, Union, Tuple, List
 from copy import copy
 
 import numpy as np
@@ -126,7 +126,9 @@ class QubitVector:
                 rank = bk.ndim(tensor) // N
 
         if rank not in [1, 2, 4, 8] or rank * N != bk.ndim(tensor):
-            raise ValueError('Incompatibility between tensor and qubits')
+            raise ValueError('Incompatibility between tensor and qubits: '
+                             'rank={} qubit_nb={} shape={}'
+                             .format(rank, N, tensor.shape))
 
         self.qubits = tuple(qubits)
         self.qubit_nb = N
@@ -135,9 +137,9 @@ class QubitVector:
         # different uses of rank from tensor?
         self.rank = rank
 
-    # FIXME: Does not respect qubits
-    def __getitem__(self, key: Any) -> bk.BKTensor:
-        return bk.getitem(self.tensor, key)
+    # # FIXME: Does not respect qubits
+    # def __getitem__(self, key: Any) -> bk.BKTensor:
+    #     return bk.getitem(self.tensor, key)
 
     def asarray(self) -> np.ndarray:
         """Return the tensor as a numpy array"""
@@ -175,10 +177,11 @@ class QubitVector:
 
         return QubitVector(tensor, qubits)
 
-    # TESTME For superoperators, needs more tests
-    @property
-    def H(self) -> 'QubitVector':
-        """Return the conjugate transpose of this tensor."""
+    # TESTME For superoperators
+    def transpose(self, perm: Sequence[int] = None) -> 'QubitVector':
+        """(Super)-operator transpose. Permutes the meta-indices.
+        Default is to invert the meta-index order.
+        """
         N = self.qubit_nb
         R = self.rank
 
@@ -188,6 +191,13 @@ class QubitVector:
         tensor = bk.transpose(tensor)
         tensor = bk.reshape(tensor, [2] * R * N)
 
+        return QubitVector(tensor, self.qubits)
+
+    # TESTME For superoperators, needs more tests
+    @property
+    def H(self) -> 'QubitVector':
+        """Return the conjugate transpose of this tensor."""
+        tensor = self.transpose().tensor
         tensor = bk.conj(tensor)
 
         return QubitVector(tensor, self.qubits)
@@ -215,20 +225,24 @@ class QubitVector:
     # DOCME
     def partial_trace(self, qubits: Qubits) -> 'QubitVector':
         """
-        Return the partial trace over some subset of qubits"""
+        Return the partial trace over some subset of qubits,
+
+        args:
+            qubits: The set of qubits that should be kept.
+        """
         N = self.qubit_nb
         R = self.rank
         if R == 1:
             raise ValueError('Cannot take trace of vector')
 
-        new_qubits: List[Qubit] = list(self.qubits)
+        contract_qubits: List[Qubit] = list(self.qubits)
         for q in qubits:
-            new_qubits.remove(q)
+            contract_qubits.remove(q)
 
-        if not new_qubits:
+        if not qubits:
             raise ValueError('Cannot remove all qubits with partial_trace.')
 
-        indices = [self.qubits.index(qubit) for qubit in qubits]
+        indices = [self.qubits.index(qubit) for qubit in contract_qubits]
         subscripts = list(EINSUM_SUBSCRIPTS)[0:N*R]
         for idx in indices:
             for r in range(1, R):
@@ -239,7 +253,56 @@ class QubitVector:
         tensor = self.asarray()
         tensor = np.einsum(subscript_str, tensor)
 
-        return QubitVector(tensor, new_qubits)
+        return QubitVector(tensor, qubits)
+
+    # TODO: Generalize for channels?
+    # DOCME
+    # TODO: Need better name?
+    def promote_to_operator(self, qubits: Qubits = None) -> 'QubitVector':
+        """
+        Promote a vector to an operator. If qubits argument given then
+        return operator for that subset of qubits (By taking a partial trace
+        over the rest.)
+        """
+        # We do two steps in one to avoid creating a large intermediate
+        # operator.
+
+        # FIXME: Feels complicated. Is there a similar way?
+
+        N = self.qubit_nb
+        R = self.rank
+        assert R == 1  # FIXME: Generalize?
+
+        if qubits is None:
+            qubits = self.qubits
+
+        contract_qubits: List[Qubit] = list(self.qubits)
+        for q in qubits:
+            contract_qubits.remove(q)
+
+        left = np.asarray([list(range(r*N, (r+1)*N)) for r in range(R)])
+        right = np.asarray([list(range(r*N, (r+1)*N)) for r in range(R, 2*R)])
+
+        # FIXME: Add method to vec
+        indices = [self.qubits.index(qubit) for qubit in contract_qubits]
+        for idx in indices:
+            for r in range(R):
+                right[r, idx] = left[r, idx]
+
+        left_subs = tuple(left.flat)
+        right_subs = tuple(right.flat)
+
+        left_tensor = self.asarray()
+        right_tensor = np.conj(left_tensor)
+
+        tensor = bk.contract(left_tensor, left_subs, right_tensor, right_subs)
+
+        # NN = len(qubits)
+        # tensor = bk.reshape(tensor, ([2**NN] * R) + ([2**NN] * R))
+        # perm = [idx for ij in zip(range(0, R), range(R, 2*R)) for idx in ij]
+        # tensor = bk.transpose(tensor, perm)
+
+        return QubitVector(tensor, qubits)
 
 # End QubitVector
 

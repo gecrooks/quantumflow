@@ -181,10 +181,17 @@ class State:
         res = indices[res]
         return res
 
-    def asdensity(self) -> 'Density':
-        """Convert a pure state to a density matrix"""
-        matrix = bk.outer(self.tensor, bk.conj(self.tensor))
-        return Density(matrix, self.qubits, self.memory)
+    def asdensity(self, qubits: Qubits = None) -> 'Density':
+        """Convert a pure state to a density matrix.
+
+        args:
+            qubits: The qubit subspace. If not given return the density
+                    matrix for all the qubits (which can take a lot of memory!)
+        """
+        if qubits is None:
+            qubits = self.qubits
+        tensor = self.vec.promote_to_operator(qubits).tensor
+        return Density(tensor, qubits, self.memory)
 
     def __str__(self) -> str:
         state = self.vec.asarray()
@@ -253,6 +260,8 @@ def join_states(*states: State) -> State:
 
 # = Output =
 
+# FIXME: clean up. Move to visulization?
+
 def print_state(state: State, file: TextIO = None) -> None:
     """Print a state vector"""
     state = state.vec.asarray()
@@ -300,12 +309,6 @@ class Density(State):
         """Return the trace of this density operator"""
         return self.vec.trace()
 
-    # TESTME
-    def partial_trace(self, qubits: Qubits) -> 'Density':
-        """Return the partial trace over the specified qubits"""
-        vec = self.vec.partial_trace(qubits)
-        return Density(vec.tensor, vec.qubits, self.memory)
-
     def relabel(self, qubits: Qubits) -> 'Density':
         """Return a copy of this state with new qubits"""
         return Density(self.vec.tensor, qubits, self.memory)
@@ -332,9 +335,12 @@ class Density(State):
         """Return the density matrix as a square array"""
         return self.vec.flatten()
 
-    def asdensity(self) -> 'Density':
-        """Returns self"""
-        return self
+    # TESTME, DOCME
+    def asdensity(self, qubits: Qubits = None) -> 'Density':
+        if qubits is None:
+            return self
+        vec = self.vec.partial_trace(qubits)
+        return Density(vec.tensor, vec.qubits, self.memory)
 
     # DOCME TESTME
     def store(self, *args: Any, **kwargs: Any) -> 'Density':

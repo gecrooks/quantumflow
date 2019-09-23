@@ -233,8 +233,8 @@ def mutual_info(rho: Density,
     if qubits1 is None:
         qubits1 = tuple(set(rho.qubits) - set(qubits0))
 
-    rho0 = rho.partial_trace(qubits1)
-    rho1 = rho.partial_trace(qubits0)
+    rho0 = rho.asdensity(qubits0)
+    rho1 = rho.asdensity(qubits1)
 
     ent = entropy(rho, base)
     ent0 = entropy(rho0, base)
