@@ -112,7 +112,7 @@ class Circuit(MutableSequence, Operation):
 
     def add(self, other: 'Circuit') -> 'Circuit':
         """Concatenate gates and return new circuit"""
-        return Circuit(self.elements + other.elements)
+        return Circuit(chain(self, other))
 
     def __add__(self, other: 'Circuit') -> 'Circuit':
         return self.add(other)
