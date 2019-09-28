@@ -236,7 +236,7 @@ class Gate(Operation):
 
     def asoperator(self) -> bk.BKTensor:
         """Return the gate tensor as a square array"""
-        return self.vec.flatten()
+        return self.vec.flatten().copy()
 
     def run(self, ket: State) -> State:
         """Apply the action of this gate upon a state"""
