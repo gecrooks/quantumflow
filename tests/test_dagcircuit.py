@@ -14,6 +14,8 @@ import quantumflow as qf
 
 from quantumflow.dagcircuit import In, Out
 
+import pytest
+
 
 # TODO Refactor in test_circuit
 def _test_circ():
@@ -108,12 +110,14 @@ def test_depth():
     assert dag.depth(local=False) == 4
 
 
-def test_layers():
+def test_moments():
     circ0 = qf.ghz_circuit(range(5))
     dag = qf.DAGCircuit(circ0)
-    layers = dag.layers()
-    assert len(layers.elements) == dag.depth()
+    circ = dag.moments()
+    assert circ.size() == dag.depth()
 
+    with pytest.warns(DeprecationWarning):
+        circ = dag.layers()
 
 def test_components():
     circ = qf.Circuit()

@@ -534,7 +534,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     """Separate a circuit into groups of gates that do not visually overlap"""
     N = len(qubits)
     qubit_idx = dict(zip(qubits, range(N)))
-    gate_layers = DAGCircuit(circ).layers()
+    gate_layers = DAGCircuit(circ).moments()
 
     layers = []
     lcirc = Circuit()

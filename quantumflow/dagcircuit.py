@@ -17,8 +17,9 @@ from . import backend as bk
 from .qubits import Qubit, Qubits
 from .states import State, Density
 from .ops import Operation, Gate, Channel
+from .stdops import Moment
 from .circuits import Circuit
-from .utils import invert_map
+from .utils import invert_map, deprecated
 
 
 __all__ = 'DAGCircuit',
@@ -113,7 +114,7 @@ class DAGCircuit(Operation):
 
     def asgate(self) -> Gate:
         # Note: Experimental
-        # Contract entrie tensor network graph using einsum
+        # Contract entire tensor network graph using einsum
         # TODO: Do same for run() and evolve() and aschannel()
         tensors = []
         sublists = []
@@ -172,11 +173,11 @@ class DAGCircuit(Operation):
                  for c in nx.weakly_connected_components(G))
         return [DAGCircuit(comp) for comp in comps]
 
-    def layers(self) -> Circuit:
-        """Split DAGCircuit into layers, where the operations within each
-        layer operate on different qubits (and therefore commute).
+    def moments(self) -> Circuit:
+        """Split DAGCircuit into Moments, where the operations within each
+        moment operate on different qubits (and therefore commute).
 
-        Returns: A Circuit of Circuits, one Circuit per layer
+        Returns: A Circuit of Moments
         """
         node_depth: Dict[Qubit, int] = {}
         G = self.graph
@@ -188,13 +189,16 @@ class DAGCircuit(Operation):
 
         depth_nodes = invert_map(node_depth, one_to_one=False)
 
-        layers = []
+        circ = Circuit()
         for nd in range(0, self.depth()):
             elements = depth_nodes[nd]
-            circ = Circuit(list(elements))
-            layers.append(circ)
+            circ += Moment(elements)
 
-        return Circuit(layers)
+        return Circuit(circ)
+
+    @deprecated
+    def layers(self) -> Circuit:
+        return self.moments()
 
     def __iter__(self) -> Iterator[Operation]:
         for elem in nx.topological_sort(self.graph):
