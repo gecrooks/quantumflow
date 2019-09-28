@@ -10,6 +10,8 @@ Various standard operations on quantum states, which arn't gates
 or channels.
 
 .. autofunction :: dagger
+.. autoclass :: Moment
+
 .. autoclass :: Measure
 .. autoclass :: Reset
 .. autoclass :: Initialize
@@ -28,7 +30,7 @@ or channels.
 """
 
 
-from typing import Sequence, Hashable, Any, Callable
+from typing import Sequence, Hashable, Any, Callable, Iterable, Iterator
 
 import numpy as np
 
@@ -43,7 +45,8 @@ from .circuits import Circuit
 from . import backend as bk
 
 
-__all__ = ['dagger', 'Measure', 'Reset', 'Initialize', 'Barrier', 'Store',
+__all__ = ['dagger', 'Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
+           'Store',
            'If', 'Projection',
            'PermuteQubits',  'ReverseQubits', 'RotateQubits',
            'Display', 'StateDisplay', 'ProbabilityDisplay', 'DensityDisplay']
@@ -52,6 +55,42 @@ __all__ = ['dagger', 'Measure', 'Reset', 'Initialize', 'Barrier', 'Store',
 def dagger(elem: Operation) -> Operation:
     """Return the complex conjugate of the Operation"""
     return elem.H
+
+
+# TESTME
+class Moment(Operation):
+    """
+    Represents a collection of Operations that operate on disjoint qubits,
+    so that they may be applied at the same moment of time.
+    """
+    def __init__(self, elements: Iterable[Operation]) -> None:
+        circ = Circuit(elements)
+        qbs = list(q for elem in circ for q in elem.qubits)
+        if len(qbs) != len(set(qbs)):
+            raise ValueError('Qubits of operations within Moments '
+                             'must be disjoint.')
+
+        self._qubits = tuple(qbs)
+        self._circ = circ
+
+    def __iter__(self) -> Iterator[Operation]:
+        return self._circ.__iter__()
+
+    def run(self, ket: State = None) -> State:
+        return self._circ.run(ket)
+
+    def evolve(self, ket: State = None) -> State:
+        return self._circ.evolve(ket)
+
+    def asgate(self) -> 'Gate':
+        return self._circ.asgate()
+
+    def aschannel(self) -> 'Channel':
+        return self._circ.aschannel()
+
+    @property
+    def H(self) -> 'Moment':
+        return Moment(self._circ.H)
 
 
 class Measure(Operation):

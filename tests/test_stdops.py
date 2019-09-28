@@ -6,6 +6,23 @@ import pytest
 import quantumflow as qf
 
 
+def test_moment():
+    circ = qf.Circuit()
+    circ += qf.X(0)
+    circ += qf.SWAP(1, 2)
+
+    moment = qf.Moment(circ)
+
+    assert moment.qubits == (0, 1, 2)
+    assert moment.run()
+    assert moment.evolve()
+    assert isinstance(moment.H, qf.Moment)
+
+    circ += qf.Y(0)
+    with pytest.raises(ValueError):
+        moment = qf.Moment(circ)
+
+
 def test_measure():
     prog = qf.Circuit()
     prog += qf.Measure(0, ('c', 0))
