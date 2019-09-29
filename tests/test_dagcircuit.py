@@ -116,8 +116,24 @@ def test_moments():
     circ = dag.moments()
     assert circ.size() == dag.depth()
 
+    circ1 = qf.Circuit([
+        qf.Z(0),
+        qf.Z(1),
+        qf.Z(2),
+        qf.CNOT(0, 1),
+        qf.Measure(0, 0),
+        qf.Measure(1, 1),
+        qf.Measure(2, 2),
+        ])
+    moments = qf.DAGCircuit(circ1).moments()
+    assert len(moments) == 3
+    assert len(moments[0]) == 3
+    assert len(moments[1]) == 1
+    assert len(moments[2]) == 3
+
     with pytest.warns(DeprecationWarning):
         circ = dag.layers()
+
 
 def test_components():
     circ = qf.Circuit()

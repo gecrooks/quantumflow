@@ -202,8 +202,7 @@ class DAGCircuit(Operation):
         for elem in self:
             depth = node_depth[elem]
             height = node_height[elem]
-
-            if depth <= D-height:
+            if depth <= D-height-1:
                 moments[depth] += elem
             else:
                 moments[height] += elem

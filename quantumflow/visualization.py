@@ -537,11 +537,11 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     gate_layers = DAGCircuit(circ).moments()
 
     layers = []
-    lcirc = Circuit()
-    layers.append(lcirc)
-    unused = [True] * N
 
     for gl in gate_layers:
+        lcirc = Circuit()
+        layers.append(lcirc)
+        unused = [True] * N
         for gate in gl:
             indices = [qubit_idx[q] for q in gate.qubits]
 
