@@ -19,7 +19,7 @@ from .states import State, Density
 from .ops import Operation, Gate, Channel
 from .stdops import Moment
 from .circuits import Circuit
-from .utils import invert_map, deprecated
+from .utils import deprecated
 
 
 __all__ = 'DAGCircuit',
@@ -179,22 +179,38 @@ class DAGCircuit(Operation):
 
         Returns: A Circuit of Moments
         """
-        node_depth: Dict[Qubit, int] = {}
+        D = self.depth()
         G = self.graph
+
+        node_depth: Dict[Qubit, int] = {}
+        node_height: Dict[Qubit, int] = {}
 
         for elem in self:
             depth = np.max(list(node_depth.get(prev, -1) + 1
                            for prev in G.predecessors(elem)))
             node_depth[elem] = depth
 
-        depth_nodes = invert_map(node_depth, one_to_one=False)
+        for elem in reversed(list(self)):
+            height = np.min(list(node_height.get(next, D) - 1
+                                 for next in G.successors(elem)))
+            node_height[elem] = height
 
-        circ = Circuit()
-        for nd in range(0, self.depth()):
-            elements = depth_nodes[nd]
-            circ += Moment(elements)
+        # Place operations in Moment closest to
+        # beginning or end of circuit.
+        moments = [Circuit() for _ in range(D)]
 
-        return Circuit(circ)
+        for elem in self:
+            depth = node_depth[elem]
+            height = node_height[elem]
+
+            if depth <= D-height:
+                moments[depth] += elem
+            else:
+                moments[height] += elem
+
+        circ = Circuit(Moment(moment) for moment in moments)
+
+        return circ
 
     @deprecated
     def layers(self) -> Circuit:

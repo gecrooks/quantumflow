@@ -542,7 +542,6 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     unused = [True] * N
 
     for gl in gate_layers:
-        assert isinstance(gl, Circuit)
         for gate in gl:
             indices = [qubit_idx[q] for q in gate.qubits]
 

@@ -30,7 +30,7 @@ or channels.
 """
 
 
-from typing import Sequence, Hashable, Any, Callable, Iterable, Iterator
+from typing import Sequence, Hashable, Any, Callable, Iterable, Union
 
 import numpy as np
 
@@ -57,8 +57,7 @@ def dagger(elem: Operation) -> Operation:
     return elem.H
 
 
-# TESTME
-class Moment(Operation):
+class Moment(Sequence, Operation):
     """
     Represents a collection of Operations that operate on disjoint qubits,
     so that they may be applied at the same moment of time.
@@ -73,8 +72,11 @@ class Moment(Operation):
         self._qubits = tuple(qbs)
         self._circ = circ
 
-    def __iter__(self) -> Iterator[Operation]:
-        return self._circ.__iter__()
+    def __getitem__(self, key: Union[int, slice]) -> Any:
+        return self._circ[key]
+
+    def __len__(self) -> int:
+        return self._circ.__len__()
 
     def run(self, ket: State = None) -> State:
         return self._circ.run(ket)
@@ -344,7 +346,6 @@ class PermuteQubits(Operation):
         return circ
 
 
-# DOCME TESTME
 class ReverseQubits(PermuteQubits):
     """A qubit permutation that reverses the order of qubits"""
     def __init__(self, qubits: Qubits) -> None:
@@ -358,7 +359,6 @@ class ReverseQubits(PermuteQubits):
         return circ
 
 
-# DOCME TESTME
 class RotateQubits(PermuteQubits):
     def __init__(self, qubits: Qubits, shift: int = 1) -> None:
         qubits_in = tuple(qubits)
@@ -369,7 +369,6 @@ class RotateQubits(PermuteQubits):
         self.shift = shift
 
 
-# TESTME
 # FIXME: Conflicts with Store in xforest?
 class Store(Operation):
     """Store a value in the classical memory of the state.
@@ -417,7 +416,6 @@ class If(Operation):
         return rho
 
 
-# TESTME
 class Display(Operation):
     """A Display is an operation that extracts information from the
     quantum state and stores it in classical memory, without performing
