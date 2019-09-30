@@ -18,7 +18,7 @@ Importation should be simplified in pyQuil 2.0
 from pyquil import *                                        # noqa: F401,F403
 
 
-from pyquil import (
+from pyquil.quilbase import (
 	Halt,
 	Pragma,
 	Measurement,
