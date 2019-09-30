@@ -6,8 +6,8 @@ Miscellaneous Operations
 
 .. currentmodule:: quantumflow
 
-Various standard operations on quantum states, which arn't gates
-or channels.
+Various standard operations on quantum states, which arn't gates,
+channels, circuits, or DAGCircuit's.
 
 .. autofunction :: dagger
 .. autoclass :: Moment
@@ -29,8 +29,8 @@ or channels.
 
 """
 
-
 from typing import Sequence, Hashable, Any, Callable, Iterable, Union
+import textwrap
 
 import numpy as np
 
@@ -63,7 +63,7 @@ class Moment(Sequence, Operation):
     so that they may be applied at the same moment of time.
     """
     def __init__(self, elements: Iterable[Operation]) -> None:
-        circ = Circuit(elements)
+        circ = Circuit(Circuit(elements).flat())
         qbs = list(q for elem in circ for q in elem.qubits)
         if len(qbs) != len(set(qbs)):
             raise ValueError('Qubits of operations within Moments '
@@ -94,6 +94,12 @@ class Moment(Sequence, Operation):
     def H(self) -> 'Moment':
         return Moment(self._circ.H)
 
+    # TESTME
+    def __str__(self) -> str:
+        circ_str = '\n'.join([str(elem) for elem in self])
+        circ_str = textwrap.indent(circ_str, '    ')
+        return '\n'.join([self.name, circ_str])
+
 
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
@@ -103,8 +109,8 @@ class Measure(Operation):
 
     def __str__(self) -> str:
         if self.cbit is not None:
-            return '{} {} {}'.format(self.name.upper(), self.qubit, self.cbit)
-        return '{} {}'.format(self.name.upper(), self.qubit)
+            return '{} {} {}'.format(self.name, self.qubit, self.cbit)
+        return '{} {}'.format(self.name, self.qubit)
 
     @property
     def qubits(self) -> Qubits:

@@ -22,6 +22,10 @@ def test_moment():
     with pytest.raises(ValueError):
         moment = qf.Moment(circ)
 
+    assert str(moment) == """Moment
+    X 0
+    SWAP 1 2"""
+
 
 def test_measure():
     prog = qf.Circuit()
