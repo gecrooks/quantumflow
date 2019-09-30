@@ -26,7 +26,6 @@ install:
 script:
   - python -m quantumflow.meta
   - QUANTUMFLOW_BACKEND=numpy pytest --disable-pytest-warnings --cov=quantumflow --cov-config .toxcoveragerc --cov-fail-under 100  --cov-report term-missing tests/
-  - QUANTUMFLOW_BACKEND=eager pytest --disable-pytest-warnings
   - flake8 quantumflow examples tests tools setup.py
   - mypy -p quantumflow --ignore-missing-imports
   - sphinx-build -M html docs docs/_build

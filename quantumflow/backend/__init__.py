@@ -113,7 +113,7 @@ from ..config import ENV_PREFIX, SEED
 from .numpybk import set_random_seed as np_set_random_seed
 
 DEFAULT_BACKEND = 'numpy'
-BACKENDS = ('tensorflow', 'tensorflow2', 'eager', 'ctf', 'numpy64', 'numpy')
+BACKENDS = ('tensorflow2', 'ctf', 'numpy64', 'numpy')
 
 # Environment variable override
 _BACKEND_EV = ENV_PREFIX + 'BACKEND'
