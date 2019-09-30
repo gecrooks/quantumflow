@@ -27,9 +27,9 @@ from tensorflow.python.client import device_lib
 from tensorflow import reduce_sum                               # noqa: F401
 from tensorflow import roll, tensordot                          # noqa: F401
 
-from .tensorflow import rank as ndim                            # noqa: F401
+from tensorflow import rank as ndim                             # noqa: F401
 from .numpybk import set_random_seed as np_set_random_seed
-from .numpybk import TensorLike, BKTensor
+from .numpybk import TensorLike, BKTensor, __all__              # noqa: F401
 
 from opt_einsum import contract                                 # noqa: F401
 

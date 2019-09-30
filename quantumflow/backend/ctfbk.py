@@ -44,6 +44,8 @@ from ctf import (  # noqa: F401
 from ctf import abs as absolute                       # noqa: F401
 from ctf import sum as reduce_sum                     # noqa: F401
 
+from .numpybk import __all__              # noqa: F401
+
 import opt_einsum
 
 TL = ctf
