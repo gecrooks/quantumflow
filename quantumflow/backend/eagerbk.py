@@ -32,9 +32,7 @@ from .tensorflowbk import (                                     # noqa: F401
     ndim, reduce_sum, ccast, CTYPE, FTYPE, TENSOR, BKTensor, TensorLike, inner,
     outer, gpu_available, set_random_seed, cis, arccos, getitem, size,
     productdiag, EINSUM_SUBSCRIPTS, einsum, tensormul)
-from .numpybk import __all__              # noqa: F401
 
-__all__.append('tfe')
 from opt_einsum import contract                                 # noqa: F401
 
 DEFAULT_DEVICE = 'gpu' if gpu_available() else 'cpu'
