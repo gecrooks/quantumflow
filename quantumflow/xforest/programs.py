@@ -147,7 +147,7 @@ class Instruction(Operation):
 
     def evolve(self, rho: Density) -> Density:
         # For purely classical Instructions the action of run() and evolve()
-        # is the same
+        # are the same
         res = self.run(rho)
         assert isinstance(res, Density)
         return res
