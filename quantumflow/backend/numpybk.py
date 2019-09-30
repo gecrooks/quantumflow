@@ -18,7 +18,7 @@ from numpy import (  # noqa: F401
     sqrt, pi, conj, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
-    outer, tensordot, einsum, transpose, roll, ndim)
+    outer, tensordot, einsum, transpose, roll, ndim, copy)
 
 from numpy import sum as reduce_sum                 # noqa: F401
 
@@ -37,7 +37,7 @@ __all__ = [  # noqa: F405
            'sqrt', 'reduce_sum', 'tensormul', 'trace', 'transpose',
            'getitem', 'astensorproduct', 'productdiag',
            'EINSUM_SUBSCRIPTS', 'einsum',
-           'version', 'name', 'size', 'contract', 'tensordot', 'roll']
+           'version', 'name', 'size', 'contract', 'tensordot', 'roll', 'copy']
 
 
 TL = np

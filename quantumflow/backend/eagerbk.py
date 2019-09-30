@@ -25,6 +25,7 @@ from tensorflow import conj, real, imag, sqrt, matmul, trace    # noqa: F401
 from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import diag_part as diag                        # noqa: F401
 from tensorflow import roll, tensordot                          # noqa: F401
+from tensorflow import identity as copy                         # noqa: F401
 
 
 from .tensorflowbk import (                                     # noqa: F401
@@ -33,12 +34,12 @@ from .tensorflowbk import (                                     # noqa: F401
     productdiag, EINSUM_SUBSCRIPTS, einsum, tensormul)
 from .numpybk import __all__              # noqa: F401
 
+__all__.append('tfe')
 from opt_einsum import contract                                 # noqa: F401
 
 DEFAULT_DEVICE = 'gpu' if gpu_available() else 'cpu'
 DEVICE = os.getenv('QUANTUMFLOW_DEVICE', DEFAULT_DEVICE)
 assert DEVICE in {'cpu', 'gpu'}
-
 
 TL = tf
 name = TL.__name__

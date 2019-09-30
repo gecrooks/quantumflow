@@ -24,7 +24,7 @@ from .numpybk import (                      # noqa: F401
        sqrt, reduce_sum, tensormul, trace, transpose,
        getitem, productdiag,
        EINSUM_SUBSCRIPTS, einsum,
-       version, name, size, contract, tensordot, roll)
+       version, name, size, contract, tensordot, roll, copy)
 
 
 CTYPE = np.complex64

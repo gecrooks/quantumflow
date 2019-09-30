@@ -23,11 +23,11 @@ from tensorflow import (  # noqa: F401
     roll,
     tensordot)
 
+from tensorflow import identity as copy                         # noqa: F401
 from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import diag_part as diag                        # noqa: F401
 from tensorflow.python.client import device_lib
 
-from tensorflow import rank as ndim                             # noqa: F401
 from .numpybk import set_random_seed as np_set_random_seed
 from .numpybk import TensorLike, BKTensor, __all__              # noqa: F401
 
@@ -60,6 +60,11 @@ DEVICE = 'gpu' if gpu_available() else 'cpu'
 
 EINSUM_SUBSCRIPTS = string.ascii_lowercase
 # Tensorflow's einsum only allows 26 indices alas
+
+
+def ndim(tensor: BKTensor) -> int:
+    """Return the number of dimensions of a tensor"""
+    return len(tensor.shape)
 
 
 def ccast(value: complex) -> TensorLike:
