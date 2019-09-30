@@ -11,7 +11,7 @@ Useful routines not necessarily intended to be part of the public API.
 """
 
 from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
-from typing import Optional, Mapping, TypeVar, List
+from typing import Optional, Mapping, TypeVar, List, cast, Iterable
 import warnings
 import functools
 from fractions import Fraction
@@ -92,10 +92,11 @@ class FrozenDict(Mapping[KT, VT]):
         self._dict = dict(*args, **kwargs)
         self._hash = None  # type: Optional[int]
 
-    def __getitem__(self, key: Hashable) -> VT:
-        return self._dict[key]
+    def __getitem__(self, key: KT) -> VT:
+        # FIXME: can't seem to make mypy 0.730 happy
+        return self._dict[key]  # type: ignore
 
-    def __contains__(self, key: Hashable) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self._dict
 
     def copy(self, *args: Any, **kwargs: Any) -> 'FrozenDict':
@@ -104,7 +105,8 @@ class FrozenDict(Mapping[KT, VT]):
         return self.__class__(d)
 
     def __iter__(self) -> Iterator[KT]:
-        return iter(self._dict)
+        for key in self._dict:
+            yield cast(KT, key)
 
     def __len__(self) -> int:
         return len(self._dict)

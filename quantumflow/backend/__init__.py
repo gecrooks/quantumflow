@@ -104,24 +104,54 @@ numpy's arccos())
 Note that numpy's sum() is imported as reduce_sum, to avoid conflicts with
 python's builtin sum() function.
 
+In addition each backend implements the following methods and variables.
+
+
+.. automodule:: quantumflow.backend.numpybk
+   :members:
 """
 
+
 import os
-import importlib
 
 from ..config import ENV_PREFIX, SEED
 from .numpybk import set_random_seed as np_set_random_seed
-from .numpybk import __all__    # noqa: F401
 
 DEFAULT_BACKEND = 'numpy'
+BACKENDS = ('tensorflow', 'tensorflow2', 'eager', 'ctf', 'numpy64', 'numpy')
 
+# Environment variable override
 _BACKEND_EV = ENV_PREFIX + 'BACKEND'
 BACKEND = os.getenv(_BACKEND_EV, DEFAULT_BACKEND)
+if BACKEND not in BACKENDS:  # pragma: no cover
+    raise ValueError('Unknown backend: {}={}'.format(_BACKEND_EV, BACKEND))
 
-_module = importlib.import_module('quantumflow.backend.{}bk'.format(BACKEND))
-globals().update({name: _module.__dict__[name] for name in __all__})
+if BACKEND == 'tensorflow':                          # pragma: no cover
+    from quantumflow.backend.tensorflowbk import *   # noqa: F403
+elif BACKEND == 'eager':                             # pragma: no cover
+    from quantumflow.backend.eagerbk import *        # noqa: F403
+elif BACKEND == 'tensorflow2':                       # pragma: no cover
+    from quantumflow.backend.tensorflow2bk import *  # noqa: F403
+elif BACKEND == 'ctf':                               # pragma: no cover
+    from quantumflow.backend.ctfbk import *          # noqa: F403
+elif BACKEND == 'numpy64':                           # pragma: no cover
+    from quantumflow.backend.numpy64bk import *      # noqa: F403
+else:                                                # pragma: no cover
+    from quantumflow.backend.numpybk import *        # noqa: F403
+
+__all__ = [  # noqa: F405
+           'BKTensor', 'CTYPE', 'DEVICE', 'FTYPE', 'MAX_QUBITS', 'TENSOR',
+           'TL', 'TensorLike', 'absolute', 'arccos', 'astensor',
+           'ccast', 'cis', 'conj', 'cos', 'diag', 'evaluate', 'exp', 'fcast',
+           'gpu_available', 'imag', 'inner', 'minimum',
+           'outer', 'matmul',
+           'rank', 'real', 'reshape', 'set_random_seed', 'sin',
+           'sqrt', 'reduce_sum', 'tensormul', 'trace', 'transpose',
+           'getitem', 'astensorproduct', 'productdiag',
+           'EINSUM_SUBSCRIPTS', 'einsum',
+           '__version__', '__name__']
 
 
 if SEED is not None:               # pragma: no cover
     np_set_random_seed(SEED)
-    getattr(_module, 'set_random_seed')(SEED)     # noqa: F821
+    set_random_seed(SEED)          # noqa: F405

@@ -17,6 +17,42 @@ Importation should be simplified in pyQuil 2.0
 
 from pyquil import *                                        # noqa: F401,F403
 
+
+from pyquil import (
+	Halt,
+	Pragma,
+	Measurement,
+	ClassicalEqual,
+	ClassicalLessThan,
+	ClassicalLessEqual,
+	ClassicalGreaterThan,
+	ClassicalGreaterEqual,
+	ClassicalAdd,
+	ClassicalMul,
+	ClassicalDiv,
+	ClassicalSub,
+	ClassicalAnd,
+	ClassicalExchange,
+	ClassicalInclusiveOr,
+	ClassicalMove,
+	ClassicalNeg,
+	ClassicalNot,
+	ClassicalExclusiveOr,
+	Jump,
+	JumpTarget,
+	JumpWhen,
+	JumpUnless,
+	Pragma,
+	Measurement,
+	Nop,
+	Wait,
+	Reset,
+	ResetQubit,
+	ClassicalStore,
+	ClassicalLoad,)
+
+
+
 from pyquil.gates import (                                  # noqa: F401
     CCNOT, CNOT, CPHASE, CPHASE00, CPHASE01, CPHASE10, CSWAP, CZ, H, I, ISWAP,
     PHASE, PSWAP, RX, RY, RZ, S, SWAP, T, X, Y, Z, STANDARD_GATES)
