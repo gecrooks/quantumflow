@@ -109,8 +109,8 @@ class Measure(Operation):
 
     def __str__(self) -> str:
         if self.cbit is not None:
-            return '{} {} {}'.format(self.name, self.qubit, self.cbit)
-        return '{} {}'.format(self.name, self.qubit)
+            return '{} {} {}'.format(self.name.upper(), self.qubit, self.cbit)
+        return '{} {}'.format(self.name.upper(), self.qubit)
 
     @property
     def qubits(self) -> Qubits:

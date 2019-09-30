@@ -52,34 +52,34 @@ def test_qiskit_to_circuit():
     circ = qiskit_to_circuit(qc)
     # print(circ)
 
-    assert str(circ) == """\
-CCNOT 0 1 2
-CH 0 1
-CRZ(1/10) 0 1
-CSWAP 0 1 2
-CPHASE(1/10) 0 1
-CU3(1/10, 1/5, 3/10) 0 1
-CNOT 0 1
-CY 0 1
-CZ 0 1
-H 0
-I 1
-I 2
-RX(0) 0
-RY(1/10) 1
-RZ(1/5) 2
-RZZ(1/10) 0 1
-S 2
-S_H 2
-SWAP 0 1
-T 1
-T_H 1
-PHASE(1/5) 2
-U2(1/10, 1/5) 2
-U3(1/10, 1/5, 3/10) 2
-X 0
-Y 0
-Z 0"""
+    assert str(circ) == """Circuit
+    CCNOT 0 1 2
+    CH 0 1
+    CRZ(1/10) 0 1
+    CSWAP 0 1 2
+    CPHASE(1/10) 0 1
+    CU3(1/10, 1/5, 3/10) 0 1
+    CNOT 0 1
+    CY 0 1
+    CZ 0 1
+    H 0
+    I 1
+    I 2
+    RX(0) 0
+    RY(1/10) 1
+    RZ(1/5) 2
+    RZZ(1/10) 0 1
+    S 2
+    S_H 2
+    SWAP 0 1
+    T 1
+    T_H 1
+    PHASE(1/5) 2
+    U2(1/10, 1/5) 2
+    U3(1/10, 1/5, 3/10) 2
+    X 0
+    Y 0
+    Z 0"""
 
     circuit_to_qiskit(circ)
 
