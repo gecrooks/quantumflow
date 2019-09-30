@@ -124,9 +124,9 @@ _BACKEND_EV = ENV_PREFIX + 'BACKEND'
 BACKEND = os.getenv(_BACKEND_EV, DEFAULT_BACKEND)
 
 _module = importlib.import_module('quantumflow.backend.{}bk'.format(BACKEND))
-globals().update({name: _module.__dict__[name] for name in _module.__all__})
+globals().update({name: _module.__dict__[name] for name in __all__})
 
 
 if SEED is not None:               # pragma: no cover
     np_set_random_seed(SEED)
-    set_random_seed(SEED)          # noqa: F821
+    getattr(_module, 'set_random_seed')(SEED)     # noqa: F821

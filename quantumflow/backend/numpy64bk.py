@@ -1,4 +1,9 @@
 
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 QuantumFlow numpy backend with 64 bit complex numbers
 """
@@ -6,8 +11,21 @@ QuantumFlow numpy backend with 64 bit complex numbers
 
 import numpy as np
 
-from .numpybk import *                  # noqa: F403
-from .numpybk import __all__            # noqa: F401
+
+from .numpybk import __all__                # noqa: F401
+
+from .numpybk import (                      # noqa: F401
+       BKTensor, DEVICE, MAX_QUBITS, TENSOR,
+       TL, TensorLike, absolute, arccos,
+       ccast, cis, conj, cos, diag, evaluate, exp, fcast,
+       gpu_available, imag, inner, minimum,
+       outer, matmul,
+       ndim, real, reshape, set_random_seed, sin,
+       sqrt, reduce_sum, tensormul, trace, transpose,
+       getitem, productdiag,
+       EINSUM_SUBSCRIPTS, einsum,
+       version, name, size, contract, tensordot, roll)
+
 
 CTYPE = np.complex64
 

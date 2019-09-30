@@ -126,12 +126,12 @@ class Circuit(MutableSequence, Operation):
         return self.elements.__iter__()
 
     def flat(self) -> Iterator[Operation]:
-        """Iterate over all elemenary elements of Circuit,
+        """Iterate over all elementary elements of Circuit,
         recursively flattening composite elements such as
-        sub-Circuits, DAGCircuits, and Moments"""
+        sub-Circuit's, DAGCircuit's, and Moment's"""
         for elem in self:
             if hasattr(elem, 'flat'):
-                yield from elem.flat()
+                yield from elem.flat()  # type: ignore
             else:
                 yield from elem
 

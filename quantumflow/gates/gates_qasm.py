@@ -1,5 +1,14 @@
 
-# QuantumFlow: Gates specific to QASM
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+# Copyright 2016-2018, Rigetti Computing
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
+"""
+QuantumFlow: Gates specific to QASM
+"""
+
 
 from numpy import pi
 
