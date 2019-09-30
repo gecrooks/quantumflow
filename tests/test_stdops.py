@@ -26,6 +26,9 @@ def test_moment():
     X 0
     SWAP 1 2"""
 
+    assert moment.asgate()
+    assert moment.aschannel()
+
 
 def test_measure():
     prog = qf.Circuit()

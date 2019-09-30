@@ -1,3 +1,9 @@
+
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 ========================
 Miscellaneous Operations
@@ -81,8 +87,8 @@ class Moment(Sequence, Operation):
     def run(self, ket: State = None) -> State:
         return self._circ.run(ket)
 
-    def evolve(self, ket: State = None) -> State:
-        return self._circ.evolve(ket)
+    def evolve(self, rho: Density = None) -> Density:
+        return self._circ.evolve(rho)
 
     def asgate(self) -> 'Gate':
         return self._circ.asgate()
