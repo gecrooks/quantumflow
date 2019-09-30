@@ -65,5 +65,6 @@ def print_versions(file: typing.TextIO = None) -> None:
     print()
     print()
 
+
 if __name__ == '__main__':
     print_versions()

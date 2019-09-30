@@ -18,39 +18,36 @@ Importation should be simplified in pyQuil 2.0
 from pyquil import *                                        # noqa: F401,F403
 
 
-from pyquil.quilbase import (
-	Halt,
-	Pragma,
-	Measurement,
-	ClassicalEqual,
-	ClassicalLessThan,
-	ClassicalLessEqual,
-	ClassicalGreaterThan,
-	ClassicalGreaterEqual,
-	ClassicalAdd,
-	ClassicalMul,
-	ClassicalDiv,
-	ClassicalSub,
-	ClassicalAnd,
-	ClassicalExchange,
-	ClassicalInclusiveOr,
-	ClassicalMove,
-	ClassicalNeg,
-	ClassicalNot,
-	ClassicalExclusiveOr,
-	Jump,
-	JumpTarget,
-	JumpWhen,
-	JumpUnless,
-	Pragma,
-	Measurement,
-	Nop,
-	Wait,
-	Reset,
-	ResetQubit,
-	ClassicalStore,
-	ClassicalLoad,)
-
+from pyquil.quilbase import (                               # noqa: F401
+    Halt,
+    ClassicalEqual,
+    ClassicalLessThan,
+    ClassicalLessEqual,
+    ClassicalGreaterThan,
+    ClassicalGreaterEqual,
+    ClassicalAdd,
+    ClassicalMul,
+    ClassicalDiv,
+    ClassicalSub,
+    ClassicalAnd,
+    ClassicalExchange,
+    ClassicalInclusiveOr,
+    ClassicalMove,
+    ClassicalNeg,
+    ClassicalNot,
+    ClassicalExclusiveOr,
+    Jump,
+    JumpTarget,
+    JumpWhen,
+    JumpUnless,
+    Pragma,
+    Measurement,
+    Nop,
+    Wait,
+    Reset,
+    ResetQubit,
+    ClassicalStore,
+    ClassicalLoad,)
 
 
 from pyquil.gates import (                                  # noqa: F401
@@ -78,4 +75,4 @@ from pyquil.api import local_qvm                            # noqa: F401
 
 from pyquil.noise import decoherence_noise_with_asymmetric_ro  # noqa: F401
 
-import pyquil.parser as parser								# noqa: F401
+import pyquil.parser as parser                              # noqa: F401

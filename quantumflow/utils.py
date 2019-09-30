@@ -10,8 +10,8 @@ QuantumFlow: utilities
 Useful routines not necessarily intended to be part of the public API.
 """
 
-from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
-from typing import Optional, Mapping, TypeVar, List, cast, Iterable
+from typing import Any, Sequence, Callable, Set, Tuple, Iterator, Dict
+from typing import Optional, Mapping, TypeVar, List
 import warnings
 import functools
 from fractions import Fraction
@@ -89,12 +89,11 @@ class FrozenDict(Mapping[KT, VT]):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._dict = dict(*args, **kwargs)
-        self._hash = None  # type: Optional[int]
+        self._dict: Dict[KT, VT] = dict(*args, **kwargs)
+        self._hash: Optional[int] = None
 
     def __getitem__(self, key: KT) -> VT:
-        # FIXME: can't seem to make mypy 0.730 happy
-        return self._dict[key]  # type: ignore
+        return self._dict[key]
 
     def __contains__(self, key: object) -> bool:
         return key in self._dict
@@ -105,8 +104,7 @@ class FrozenDict(Mapping[KT, VT]):
         return self.__class__(d)
 
     def __iter__(self) -> Iterator[KT]:
-        for key in self._dict:
-            yield cast(KT, key)
+        yield from self._dict
 
     def __len__(self) -> int:
         return len(self._dict)

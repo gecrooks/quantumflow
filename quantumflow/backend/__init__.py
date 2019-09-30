@@ -104,11 +104,6 @@ numpy's arccos())
 Note that numpy's sum() is imported as reduce_sum, to avoid conflicts with
 python's builtin sum() function.
 
-In addition each backend implements the following methods and variables.
-
-
-.. automodule:: quantumflow.backend.numpybk
-   :members:
 """
 
 
