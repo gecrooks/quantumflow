@@ -352,6 +352,7 @@ def test_ghz_circuit():
 def test_zyz_circuit():
     gate0 = qf.zyz_circuit(0.1, 0.3, 0.2, 0).asgate()
     gate1 = qf.ZYZ(0.1, 0.3, 0.2, q0=0)
+
     assert qf.gates_close(gate0, gate1)
 
 
@@ -408,3 +409,15 @@ def test_circuit_mutable_sequence_interface():
 
     circ[0] = qf.X(4)
     assert len(circ) == 3
+
+
+def test_circuit_flat():
+    circ0 = qf.Circuit([qf.X(0), qf.X(1)])
+    circ1 = qf.Circuit([qf.Y(0), qf.Y(1)])
+    circ2 = qf.Circuit([circ1, qf.Z(0), qf.Z(1)])
+    circ = qf.Circuit([circ0, circ2])
+
+    flat = qf.Circuit(circ.flat())
+    assert len(flat) == 6
+    assert flat[2].name == 'Y'
+    # print(flat)

@@ -46,6 +46,7 @@ from math import pi
 from itertools import chain
 from collections import defaultdict
 from collections.abc import MutableSequence
+import textwrap
 
 import numpy as np
 import networkx as nx
@@ -77,7 +78,7 @@ class Circuit(MutableSequence, Operation):
     These can be any quantum Operation, including other circuits.
 
     QuantumFlow's circuit can only contain Operations. They do not contain
-    control flow of other classical computations(similar to pyquil's
+    control flow of other classical computations (similar to pyquil's
     protoquil). For hybrid algorithms involving control flow and other
     classical processing use QuantumFlow's Program class.
     """
@@ -124,7 +125,16 @@ class Circuit(MutableSequence, Operation):
     def __iter__(self) -> Iterator[Operation]:
         return self.elements.__iter__()
 
-    # TESTME
+    def flat(self) -> Iterator[Operation]:
+        """Iterate over all elemenary elements of Circuit,
+        recursively flattening composite elements such as
+        sub-Circuits, DAGCircuits, and Moments"""
+        for elem in self:
+            if hasattr(elem, 'flat'):
+                yield from elem.flat()
+            else:
+                yield from elem
+
     def size(self) -> int:
         """Return the number of operations in this circuit"""
         return len(self.elements)
@@ -165,9 +175,10 @@ class Circuit(MutableSequence, Operation):
             rho = elem.evolve(rho)
         return rho
 
+    # DOCME: What gets raised if we can't construct a gate?
     def asgate(self) -> Gate:
         """
-        Return the action of this circuit as a gate
+        Return the action of this circuit as a gate (If possible)
         """
         gate = identity_gate(self.qubits)
         for elem in self.elements:
@@ -189,8 +200,11 @@ class Circuit(MutableSequence, Operation):
         """
         return Circuit([elem.H for elem in self.elements[::-1]])
 
+    # TESTME
     def __str__(self) -> str:
-        return '\n'.join([str(elem) for elem in self.elements])
+        circ_str = '\n'.join([str(elem) for elem in self])
+        circ_str = textwrap.indent(circ_str, '    ')
+        return '\n'.join([self.name, circ_str])
 
     # TESTME DOCME
     def resolve(self, resolver: Dict[Symbol, float]) -> 'Circuit':
@@ -198,6 +212,7 @@ class Circuit(MutableSequence, Operation):
         return Circuit(op.resolve(resolver) for op in self)
 
     # TODO: overide params, so that fails, or returns all paramerters?
+
 
 # End class Circuit
 
@@ -214,13 +229,14 @@ def count_operations(elements: Iterable[Operation]) \
 
 
 def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
-    """Applies the same gate all input qubits in the argument list.
+    """Applies the same gate to all input qubits in the argument list.
 
     >>> circ = qf.map_gate(qf.H(), [[0], [1], [2]])
     >>> print(circ)
-    H(0)
-    H(1)
-    H(2)
+    Circuit
+        H(0)
+        H(1)
+        H(2)
 
     """
     circ = Circuit()
@@ -230,6 +246,8 @@ def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
 
     return circ
 
+
+# TODO: Move standard circuits to stdcircuits module?
 
 # FIXME: Use ZZ gates, not CPHASE
 # TODO: Add circuit diagram
