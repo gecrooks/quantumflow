@@ -16,7 +16,7 @@ import os
 import numpy as np
 
 import tensorflow as tf
-from tensorflow.contrib.eager.python import tfe
+from tensorflow.eager.python import tfe
 tfe.enable_eager_execution()
 
 from tensorflow import transpose, minimum                       # noqa: F401
