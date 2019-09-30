@@ -9,6 +9,7 @@ QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 
 from typing import List, Dict, Iterable, Iterator, Generator, Any, Tuple
 import itertools
+import textwrap
 
 import numpy as np
 import networkx as nx
@@ -199,7 +200,8 @@ class DAGCircuit(Operation):
         # beginning or end of circuit.
         moments = [Circuit() for _ in range(D)]
 
-        for elem in self:
+        # Iterate nodes in reverse seems to preserve original circuit ordering
+        for elem in reversed(list(self)):
             depth = node_depth[elem]
             height = node_height[elem]
             if depth <= D-height-1:
@@ -252,6 +254,11 @@ class DAGCircuit(Operation):
             edges[qubits.index(edge[2])] = edge
 
         return list(edges)  # type: ignore
+
+    def __str__(self) -> str:
+        circ_str = '\n'.join([str(elem) for elem in self])
+        circ_str = textwrap.indent(circ_str, '    ')
+        return '\n'.join([self.name, circ_str])
 
 
 # End class DAGCircuit

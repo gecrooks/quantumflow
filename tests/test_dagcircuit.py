@@ -69,6 +69,19 @@ def test_ascircuit():
     assert dag.qubit_nb == 5
 
 
+def test_str():
+    circ0 = qf.ghz_circuit(range(5))
+    dag = qf.DAGCircuit(circ0)
+    string = str(dag)
+    assert string == """DAGCircuit
+    H 0
+    CNOT 0 1
+    CNOT 1 2
+    CNOT 2 3
+    CNOT 3 4\
+"""
+
+
 def test_asgate():
     gate0 = qf.ZYZ(0.1, 2.2, 0.5)
     circ0 = qf.zyz_circuit(0.1, 2.2, 0.5, 0)
@@ -126,6 +139,9 @@ def test_moments():
         qf.Measure(2, 2),
         ])
     moments = qf.DAGCircuit(circ1).moments()
+    print()
+    print(moments)
+
     assert len(moments) == 3
     assert len(moments[0]) == 3
     assert len(moments[1]) == 1
