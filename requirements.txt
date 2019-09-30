@@ -2,7 +2,7 @@
 
 numpy
 scipy               >= 1.0.0
-tensorflow          >= 1.6.0
+tensorflow          >= 2.0.0
 networkx            >= 2.1
 pillow
 matplotlib

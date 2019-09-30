@@ -27,21 +27,9 @@ tensorflow_only = pytest.mark.skipif(
     bk.BACKEND != 'tensorflow',
     reason="Unsupported backend")
 
-tensorflow2_only = pytest.mark.skipif(
-    bk.BACKEND != 'tensorflow2',
-    reason="Unsupported backend")
-
-eager_only = pytest.mark.skipif(
-    bk.BACKEND != 'eager',
-    reason="Unsupported backend")
-
 skip_windows = pytest.mark.skipif(
     sys.platform == 'win32',
     reason="Does not run on windows")
-
-skip_eager = pytest.mark.skipif(
-    bk.BACKEND == 'eager',
-    reason="Unsupported backend")
 
 skip_ctf = pytest.mark.skipif(
     bk.BACKEND == 'ctf',

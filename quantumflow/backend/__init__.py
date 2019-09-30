@@ -113,7 +113,7 @@ from ..config import ENV_PREFIX, SEED
 from .numpybk import set_random_seed as np_set_random_seed
 
 DEFAULT_BACKEND = 'numpy'
-BACKENDS = ('tensorflow2', 'ctf', 'numpy64', 'numpy')
+BACKENDS = ('tensorflow', 'ctf', 'numpy64', 'numpy')
 
 # Environment variable override
 _BACKEND_EV = ENV_PREFIX + 'BACKEND'
@@ -123,10 +123,6 @@ if BACKEND not in BACKENDS:  # pragma: no cover
 
 if BACKEND == 'tensorflow':                          # pragma: no cover
     from quantumflow.backend.tensorflowbk import *   # noqa: F403
-elif BACKEND == 'eager':                             # pragma: no cover
-    from quantumflow.backend.eagerbk import *        # noqa: F403
-elif BACKEND == 'tensorflow2':                       # pragma: no cover
-    from quantumflow.backend.tensorflow2bk import *  # noqa: F403
 elif BACKEND == 'ctf':                               # pragma: no cover
     from quantumflow.backend.ctfbk import *          # noqa: F403
 elif BACKEND == 'numpy64':                           # pragma: no cover

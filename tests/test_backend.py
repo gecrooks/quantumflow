@@ -13,10 +13,6 @@ import numpy as np
 import quantumflow.backend as bk
 from . import ALMOST_ZERO
 
-if bk.BACKEND == 'tensorflow':
-    import tensorflow as tf
-    tf.InteractiveSession()
-
 
 def test_import():
 
@@ -136,9 +132,7 @@ def test_trace():
                                      [0, -1, 0, 0],
                                      [0, 0, 2.7, 1],
                                      [0, 0, 1, 0.3j]]))
-    tensor = bk.reshape(tensor, (4, 4))  # FIXME astensor should not reshape
     tr = bk.evaluate(bk.trace(tensor))
-    print(tr)
 
     assert tr - (2.7+0.3j) == ALMOST_ZERO
 

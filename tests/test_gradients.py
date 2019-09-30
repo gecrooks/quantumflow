@@ -6,7 +6,7 @@ import networkx as nx
 
 import quantumflow as qf
 
-from . import ALMOST_ZERO, tensorflow2_only
+from . import ALMOST_ZERO, tensorflow_only
 # from .import skip_ctf
 
 
@@ -104,7 +104,7 @@ def test_parameter_shift_circuits():
     assert ALMOST_ZERO == qf.asarray(grad-grads[n])
 
 
-@tensorflow2_only
+@tensorflow_only
 def test_fidelity_gradients_tf():
     # Compare gradients cacluated using middle_out versus tensorflow
     import tensorflow as tf
