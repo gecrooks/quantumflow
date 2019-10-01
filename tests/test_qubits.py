@@ -141,7 +141,7 @@ def test_fubini_study_angle():
         theta = random.uniform(-pi, +pi)
 
         ang = qf.asarray(qf.fubini_study_angle(qf.I().vec,
-                                               qf.RX(theta).vec))
+                                               qf.RX(theta).su().vec))
         assert 2 * ang / abs(theta) == ALMOST_ONE
 
         ang = qf.asarray(qf.fubini_study_angle(qf.I().vec,

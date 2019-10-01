@@ -368,6 +368,15 @@ def fubini_study_angle(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
     The Fubini–Study metric between states is equal to the Burr angle
     between pure states.
     """
+    fs_fidelity = fubini_study_fidelity(vec0, vec1)
+    return bk.arccos(fs_fidelity)
+
+
+def fubini_study_fidelity(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
+    """
+    Cosine of the Fubini–Study metric.
+    """
+    # Suffers from less floating poitn errors compared to fubini_study_angle
     if vec0.rank != vec1.rank or vec0.qubit_nb != vec1.qubit_nb:
         raise ValueError('Incompatibly vectors. Qubits and rank must match')
 
@@ -379,8 +388,8 @@ def fubini_study_angle(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
     hs00 = bk.inner(t0, t0)
     hs11 = bk.inner(t1, t1)
     ratio = bk.absolute(hs01) / bk.sqrt(bk.absolute(hs00*hs11))
-    ratio = bk.minimum(ratio, bk.fcast(1.))  # Compensate for rounding errors.
-    return bk.arccos(ratio)
+    fid = bk.minimum(ratio, bk.fcast(1.))  # Compensate for rounding errors.
+    return fid
 
 
 # TODO: move to measures.py ?
@@ -399,7 +408,7 @@ def vectors_close(vec0: QubitVector, vec1: QubitVector,
     if set(vec0.qubits) ^ set(vec1.qubits):
         return False
 
-    return bk.evaluate(fubini_study_angle(vec0, vec1)) <= tolerance
+    return 1 - bk.evaluate(fubini_study_fidelity(vec0, vec1)) <= tolerance
 
 
 # Note: Not a public method

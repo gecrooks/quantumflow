@@ -108,7 +108,7 @@ def circuit_to_latex(
 
     layer_code = []
 
-    for layer in layers.elements:
+    for layer in layers:
         code = [r'\qw'] * N
         assert isinstance(layer, Circuit)
         for gate in layer:
@@ -460,7 +460,7 @@ def circuit_diagram(
     layer_text.append(qpad(qubit_layer))
 
     # Gate layers
-    for layer in layers.elements:
+    for layer in layers:
         code = [''] * (2*N-1)
 
         assert isinstance(layer, Circuit)

@@ -86,8 +86,7 @@ class Circuit(MutableSequence, Operation):
     def __init__(self, elements: Iterable[Operation] = None) -> None:
         if elements is None:
             elements = []
-        # TODO: Make elements private
-        self.elements: List[Operation] = list(elements)
+        self._elements: List[Operation] = list(elements)
 
     # Methods for MutableSequence
     @overload
@@ -96,29 +95,29 @@ class Circuit(MutableSequence, Operation):
     @overload       # noqa: F811
     def __getitem__(self, key: slice) -> 'Circuit': ...
 
-    def __getitem__(self, key: Union[int, slice]) -> Operation:   # noqa: F811
+    def __getitem__(self, key: Union[int, slice]) -> Operation:   # noqa: F811s
         if isinstance(key, slice):
-            return Circuit(self.elements[key])
-        return self.elements[key]
+            return Circuit(self._elements[key])
+        return self._elements[key]
 
     def __delitem__(self, key: Union[int, slice]) -> None:
-        del self.elements[key]
+        del self._elements[key]
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-        self.elements[key] = value
+        self._elements[key] = value
 
     def __len__(self) -> int:
-        return self.elements.__len__()
+        return self._elements.__len__()
 
     def insert(self, idx: int, value: Any) -> None:
-        self.elements.insert(idx, value)
+        self._elements.insert(idx, value)
 
     def extend(self, other: Iterable[Any]) -> None:
         """Append gates from circuit to the end of this circuit"""
         if other is self:
             # We can go into infinite regress otherwise.
-            other = list(self.elements)
-        self.elements.extend(other)
+            other = list(self._elements)
+        self._elements.extend(other)
 
     def add(self, other: 'Circuit') -> 'Circuit':
         """Concatenate gates and return new circuit"""
@@ -132,7 +131,7 @@ class Circuit(MutableSequence, Operation):
         return self
 
     def __iter__(self) -> Iterator[Operation]:
-        return self.elements.__iter__()
+        yield from self._elements
 
     # End methods for MutableSequence
 
@@ -148,7 +147,7 @@ class Circuit(MutableSequence, Operation):
 
     def size(self) -> int:
         """Return the number of operations in this circuit"""
-        return len(self.elements)
+        return len(self._elements)
 
     @property
     def qubits(self) -> Qubits:
@@ -157,7 +156,7 @@ class Circuit(MutableSequence, Operation):
         Raises:
             TypeError: If qubits cannot be sorted into unique order.
         """
-        qbs = [q for elem in self.elements for q in elem.qubits]    # gather
+        qbs = [q for elem in self for q in elem.qubits]    # gather
         qbs = list(set(qbs))                                        # unique
         qbs = sorted(qbs)                                           # sort
         return tuple(qbs)
@@ -172,7 +171,7 @@ class Circuit(MutableSequence, Operation):
             qubits = self.qubits
             ket = zero_state(qubits=qubits)
 
-        for elem in self.elements:
+        for elem in self:
             ket = elem.run(ket)
         return ket
 
@@ -182,7 +181,7 @@ class Circuit(MutableSequence, Operation):
             qubits = self.qubits
             rho = zero_state(qubits=qubits).asdensity()
 
-        for elem in self.elements:
+        for elem in self:
             rho = elem.evolve(rho)
         return rho
 
@@ -192,7 +191,7 @@ class Circuit(MutableSequence, Operation):
         Return the action of this circuit as a gate (If possible)
         """
         gate = identity_gate(self.qubits)
-        for elem in self.elements:
+        for elem in self:
             gate = elem.asgate() @ gate
         return gate
 
@@ -200,7 +199,7 @@ class Circuit(MutableSequence, Operation):
     # DOCME
     def aschannel(self) -> Channel:
         chan = identity_gate(self.qubits).aschannel()
-        for elem in self.elements:
+        for elem in self:
             chan = elem.aschannel() @ chan
         return chan
 
@@ -209,7 +208,7 @@ class Circuit(MutableSequence, Operation):
         """Returns the Hermitian conjugate of this circuit.
         If all the subsidiary gates are unitary, returns the circuit inverse.
         """
-        return Circuit([elem.H for elem in self.elements[::-1]])
+        return Circuit([elem.H for elem in reversed(self)])
 
     # TESTME
     def __str__(self) -> str:

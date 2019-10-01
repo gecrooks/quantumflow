@@ -186,7 +186,7 @@ def circuit_to_pyquil(circuit: Circuit) -> pyquil.Program:
     """Convert a QuantumFlow circuit to a pyQuil program"""
     prog = pyquil.Program()
 
-    for elem in circuit.elements:
+    for elem in circuit:
         if isinstance(elem, Gate) and elem.name in QUIL_GATES:
             params = list(elem.params.values()) if elem.params else []
             prog.gate(elem.name, params, elem.qubits)

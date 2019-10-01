@@ -109,7 +109,7 @@ def expectation_gradients(ket0: State,
 
     expectation = (bk.inner(forward.tensor, back.tensor))
 
-    for elem in circ.elements:
+    for elem in circ:
         assert isinstance(elem, Gate)
         back = elem.run(back)
         forward = elem.run(forward)
@@ -156,7 +156,7 @@ def state_fidelity_gradients(ket0: State,
     back = circ.H.run(ket1)
     ol = bk.inner(forward.tensor, back.tensor)
 
-    for elem in circ.elements:
+    for elem in circ:
         assert isinstance(elem, Gate)
         back = elem.run(back)
         forward = elem.run(forward)
@@ -229,7 +229,7 @@ def parameter_shift_circuits(circ: Circuit,
 
     """
 
-    elem = circ.elements[index]
+    elem = circ[index]
     assert isinstance(elem, Gate)
     gate_type = type(elem)
     if gate_type not in shift_constant:
@@ -239,11 +239,11 @@ def parameter_shift_circuits(circ: Circuit,
     param = list(elem.params.values())[0]
     gate0 = gate_type(param - 0.25*pi/r, *elem.qubits)  # type: ignore
     circ0 = Circuit(circ)
-    circ0.elements[index] = gate0
+    circ0[index] = gate0
 
     gate1 = gate_type(param + 0.25*pi/r, *elem.qubits)  # type: ignore
     circ1 = Circuit(circ)
-    circ1.elements[index] = gate1
+    circ1[index] = gate1
 
     return r, circ0, circ1
 

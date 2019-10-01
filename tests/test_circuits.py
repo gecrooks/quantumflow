@@ -27,7 +27,7 @@ def true_ket():
 
 def test_asgate():
     circ = qf.zyz_circuit(0.1, 2.2, 0.5, 0)
-    print(">>>>", circ, len(circ.elements))
+    print(">>>>", circ, len(circ))
     assert qf.gates_close(circ.asgate(), qf.ZYZ(0.1, 2.2, 0.5))
 
 
@@ -182,7 +182,7 @@ def test_elements():
     circ += circ1
     circ.extend(circ2)
 
-    gates = list(circ.elements)
+    gates = list(circ)
     assert len(gates) == 11
     assert circ.size() == 11
     assert gates[4].name == 'CNOT'
@@ -226,10 +226,10 @@ def test_add():
     assert len(list(circ)) == 3
 
     circ = circ + circ
-    assert len(list(circ.elements)) == 6
+    assert len(circ) == 6
 
     circ += circ
-    assert len(list(circ.elements)) == 12
+    assert len(circ) == 12
 
 
 def test_ccnot_circuit_evolve():
@@ -358,10 +358,10 @@ def test_zyz_circuit():
 
 def test_map_gate():
     circ = qf.map_gate(qf.X(), [[0], [1], [2]])
-    assert circ.elements[1].qubits[0] == 1
+    assert circ[1].qubits[0] == 1
 
     circ = qf.map_gate(qf.CNOT(), [[0, 1], [1, 2]])
-    assert circ.elements[1].qubits == (1, 2)
+    assert circ[1].qubits == (1, 2)
 
 
 def test_count():

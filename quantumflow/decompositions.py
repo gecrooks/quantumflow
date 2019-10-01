@@ -155,7 +155,7 @@ def euler_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     trans = euler_trans[euler].relabel([q0])
     gate = Circuit([trans, gate, trans.H]).asgate()
     zyz = zyz_decomposition(gate)
-    params = [elem.params['t'] for elem in zyz.elements]    # type: ignore
+    params = [elem.params['t'] for elem in zyz]    # type: ignore
     return euler_circuit(params[0], params[1], params[2], q0, euler)
 
 
@@ -204,7 +204,7 @@ def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
 def canonical_coords(gate: Gate) -> Sequence[float]:
     """Returns the canonical coordinates of a 2-qubit gate"""
     circ = canonical_decomposition(gate)
-    gate = circ.elements[6]  # type: ignore
+    gate = circ[6]  # type: ignore
     params = [gate.params[key] for key in ('tx', 'ty', 'tz')]
     return params
 

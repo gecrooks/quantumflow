@@ -185,11 +185,11 @@ def test_components():
 
 def test_next_prev():
     circ = qf.ghz_circuit([0, 2, 4, 6, 8])
-    elem = circ.elements[3]
+    elem = circ[3]
     dag = qf.DAGCircuit(circ)
 
-    assert dag.next_element(elem, elem.qubits[1]) == circ.elements[4]
-    assert dag.prev_element(elem, elem.qubits[0]) == circ.elements[2]
+    assert dag.next_element(elem, elem.qubits[1]) == circ[4]
+    assert dag.prev_element(elem, elem.qubits[0]) == circ[2]
 
     assert dag.next_element(elem, elem.qubits[0]) == Out(4)
     assert dag.prev_element(elem, elem.qubits[1]) == In(6)

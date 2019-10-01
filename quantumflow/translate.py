@@ -130,7 +130,7 @@ def translate(circ: Circuit,
             if recurse:
                 gates.extend(reversed(list(trans)))
             else:
-                translated.elements.extend(trans)
+                translated.extend(trans)
         else:
             translated += gate
 

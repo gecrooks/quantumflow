@@ -27,13 +27,13 @@ def test_qubo_circuit():
     graph.add_edge(1, 2, weight=0.4)
 
     circ = qubo_circuit(graph, 2, [1, 1], [2, 2])
-    assert len(circ.elements) == 13
+    assert len(circ) == 13
     # print(circ)
 
     # Add node weights
     graph.nodes[0]['weight'] = 4
     circ = qubo_circuit(graph, 2, [1, 1], [2, 2])
-    assert len(circ.elements) == 15
+    assert len(circ) == 15
     print(circ)
 
 
