@@ -410,6 +410,8 @@ def test_circuit_mutable_sequence_interface():
     circ[0] = qf.X(4)
     assert len(circ) == 3
 
+    assert isinstance(circ[0:2], qf.Circuit)
+
 
 def test_circuit_flat():
     circ0 = qf.Circuit([qf.X(0), qf.X(1)])

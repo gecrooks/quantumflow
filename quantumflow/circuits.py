@@ -42,6 +42,7 @@ Visualizations
 """
 
 from typing import Sequence, Iterator, Iterable, Dict, Type, Any, Union
+from typing import List, overload
 from math import pi
 from itertools import chain
 from collections import defaultdict
@@ -86,10 +87,18 @@ class Circuit(MutableSequence, Operation):
         if elements is None:
             elements = []
         # TODO: Make elements private
-        self.elements = list(elements)
+        self.elements: List[Operation] = list(elements)
 
     # Methods for MutableSequence
-    def __getitem__(self, key: Union[int, slice]) -> Any:
+    @overload
+    def __getitem__(self, key: int) -> Operation: ...
+
+    @overload       # noqa: F811
+    def __getitem__(self, key: slice) -> 'Circuit': ...
+
+    def __getitem__(self, key: Union[int, slice]) -> Operation:   # noqa: F811
+        if isinstance(key, slice):
+            return Circuit(self.elements[key])
         return self.elements[key]
 
     def __delitem__(self, key: Union[int, slice]) -> None:
@@ -124,6 +133,8 @@ class Circuit(MutableSequence, Operation):
 
     def __iter__(self) -> Iterator[Operation]:
         return self.elements.__iter__()
+
+    # End methods for MutableSequence
 
     def flat(self) -> Iterator[Operation]:
         """Iterate over all elementary elements of Circuit,
