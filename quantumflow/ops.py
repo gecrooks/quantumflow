@@ -49,7 +49,7 @@ from sympy import Symbol
 
 import quantumflow.backend as bk
 
-from .qubits import Qubits, QubitVector, qubits_count_tuple, asarray
+from .qubits import Qubit, Qubits, QubitVector, qubits_count_tuple, asarray
 from .states import State, Density
 
 from .utils import symbolize
@@ -216,10 +216,14 @@ class Gate(Operation):
     def qubit_nb(self) -> int:
         return len(self.qubits)
 
-    def relabel(self, qubits: Qubits) -> 'Gate':
+    def relabel(self, labels: Union[Qubits, Dict[Qubit, Qubit]]) -> 'Gate':
         """Return a copy of this Gate with new qubits"""
-        qubits = tuple(qubits)
-        assert len(qubits) == self.qubit_nb     # FIXME: raise exception
+        if isinstance(labels, dict):
+            qubits = tuple(labels[q] for q in self.qubits)
+        else:
+            qubits = tuple(labels)
+            if len(qubits) != self.qubit_nb:
+                raise ValueError("Wrong number of qubits")
         gate = copy(self)
         gate._qubits = qubits
         return gate

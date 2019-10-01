@@ -354,4 +354,17 @@ def test_exceptions():
     with pytest.raises(ValueError):
         qf.Gate()
 
+
+def test_relabel():
+    gate0 = qf.CNOT(1, 0)
+    gate1 = gate0.relabel(['B', 'A'])
+    assert gate1.qubits == ('B', 'A')
+
+    gate2 = gate1.relabel({'A': 'a', 'B': 'b', 'C': 'c'})
+    assert gate2.qubits == ('b', 'a')
+
+    with pytest.raises(ValueError):
+        gate1 = gate0.relabel(['B', 'A', 'C'])
+
+
 # fin
