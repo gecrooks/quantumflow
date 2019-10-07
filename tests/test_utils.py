@@ -19,7 +19,7 @@ from quantumflow.utils import (
     to_graph6, from_graph6,
     spanning_tree_count, octagonal_tiling_graph, deprecated,
     cached_property,
-    rationalize, symbolize)
+    rationalize, symbolize, truncated_grid_2d_graph)
 
 
 def test_invert_dict():
@@ -131,6 +131,14 @@ def test_spanning_tree_count():
 def test_octagonal_tiling_graph():
     grp = octagonal_tiling_graph(4, 4)
     assert len(grp) == 128
+
+
+def test_truncated_grid_2d_graph():
+    G = truncated_grid_2d_graph(12, 11)
+    assert len(G) == 72
+
+    G = truncated_grid_2d_graph(8, 8, 2)
+    assert len(G) == 8*8 - 4*3
 
 
 def test_rationalize():

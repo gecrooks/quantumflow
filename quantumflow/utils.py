@@ -165,7 +165,7 @@ def deprecated(func: Callable) -> Callable:
 
 try:
     # Python >3.8
-    from func_tools import cached_property
+    from functools import cached_property   # type: ignore
 except ImportError:
 
     def cached_property(func):  # type: ignore
@@ -241,9 +241,10 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
     """Return the octagonal tiling graph (4.8.8, truncated square tiling,
     truncated quadrille) of MxNx8 nodes
 
-    The 'positions' node attribute gives node coordinates for the octagonal
-    tiling. (Nodes are located on a square lattice, and edge lengths are
-    uneven)
+    To visualize with networkx and matplot lib:
+    > import matplotlib.pyplot as plt
+    > nx.draw(G, pos={node: node for node in G.nodes})
+    >plt.show()
     """
 
     grp = nx.Graph()
@@ -268,11 +269,28 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
 
             for (x0, y0), (x1, y1) in edges:
                 grp.add_edge((m*4+x0, n*4+y0), (m*4+x1, n*4+y1))
-
-    positions = {node: node for node in grp}
-    nx.set_node_attributes(grp, positions, 'positions')
-
     return grp
+
+
+def truncated_grid_2d_graph(m: int, n: int, t: int = None) -> nx.Graph:
+    """Generate a rectangular grid graph (of width `m` and height `n`),
+    with corners removed. It the truncation `t` is not given, then it
+    is set to half the shortest side (rounded down)
+
+    truncated_grid_graph(12, 11) returns the topology of Google's
+    bristlecone chip.
+    """
+    G = nx.grid_2d_graph(m, n)
+    if t is None:
+        t = min(m, n) // 2
+
+    for mm in range(t):
+        for nn in range(t-mm):
+            G.remove_node((mm, nn))
+            G.remove_node((m-mm-1, nn))
+            G.remove_node((mm, n-nn-1))
+            G.remove_node((m-mm-1, n-nn-1))
+    return G
 
 
 # -- More Math --
