@@ -209,13 +209,13 @@ from .gates_utils import (  # noqa: F401
     almost_hermitian,
     print_gate)
 from .gates_one import (   # noqa: F401
-    I, X, Y, Z, H, S, T, PHASE, RX, RY, RZ,
+    IDEN, I, X, Y, Z, H, S, T, PHASE, RX, RY, RZ,
     RN, TX, TY, TZ, TH, ZYZ, S_H, T_H, V, V_H, W, TW,
     cliffords)
 from .gates_two import (CZ, CNOT, SWAP, ISWAP, CPHASE00, CPHASE01, CPHASE10,
                         CPHASE, PSWAP, CAN, XX, YY, ZZ, PISWAP, EXCH, CTX,
                         BARENCO, CV, CV_H, CY, CH, FSIM)
-from .gates_three import (CCNOT, CSWAP, CCZ, IDEN)
+from .gates_three import (CCNOT, CSWAP, CCZ)
 from .gates_qasm import (U3, U2, CU3, CRZ, RZZ)
 
 # TODO: Add __all__ ?

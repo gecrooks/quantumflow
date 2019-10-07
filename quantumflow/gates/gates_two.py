@@ -19,7 +19,7 @@ from ..ops import Gate
 from ..states import State
 from ..utils import multi_slice, cached_property
 
-from .gates_one import V, V_H
+from .gates_one import IDEN, I, V, V_H
 from .gates_utils import control_gate
 
 __all__ = ['CZ', 'CNOT', 'SWAP', 'ISWAP', 'CPHASE00', 'CPHASE01', 'CPHASE10',
@@ -122,7 +122,7 @@ class CNOT(Gate):
 class CTX(Gate):
     r"""Powers of the CNOT gate.
 
-    Equivalent to ``controlled_gate(TX(t))``, and locally equivelant to
+    Equivalent to ``controlled_gate(TX(t))``, and locally equivalent to
     ``CAN(t/2, 0 ,0)``. Cirq calls this a ``CNotPowGate``.
 
     .. math::
@@ -165,6 +165,15 @@ class CTX(Gate):
     def __pow__(self, t: float) -> 'CTX':
         t = self.params['t'] * t
         return CTX(t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['t'] % 2
+        if np.isclose(t, 0.0) or np.isclose(t, 2.0):
+            return IDEN(*qbs)
+        elif np.isclose(t, 1.0):
+            return CNOT(*qbs)
+        return self
 
 
 class SWAP(Gate):
@@ -488,6 +497,24 @@ class CAN(Gate):
         tx, ty, tz = self.params.values()
         return CAN(tx * t, ty * t, tz * t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        tx, ty, tz = [t % 2 for t in self.params.values()]
+
+        tx_zero = (np.isclose(tx, 0.0) or np.isclose(tx, 2.0))
+        ty_zero = (np.isclose(ty, 0.0) or np.isclose(ty, 2.0))
+        tz_zero = (np.isclose(tz, 0.0) or np.isclose(tz, 2.0))
+
+        if ty_zero and tz_zero:
+            return XX(tx, *qbs).specialize()
+        elif tx_zero and tz_zero:
+            return YY(ty, *qbs).specialize()
+        elif tx_zero and ty_zero:
+            return ZZ(tz, *qbs).specialize()
+        elif np.isclose(tx, ty) and np.isclose(tx, tz):
+            return EXCH(tx, *qbs).specialize()
+        return self
+
 
 class XX(Gate):
     r"""A parametric 2-qubit gate generated from an XX interaction,
@@ -525,6 +552,13 @@ class XX(Gate):
         t = self.params['t'] * t
         return XX(t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['t'] % 2
+        if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
+            return IDEN(*qbs)
+        return self
+
 
 class YY(Gate):
     r"""A parametric 2-qubit gate generated from a YY interaction.
@@ -557,6 +591,13 @@ class YY(Gate):
     def __pow__(self, t: float) -> 'YY':
         t = self.params['t'] * t
         return YY(t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['t'] % 2
+        if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
+            return IDEN(*qbs)
+        return self
 
 
 class ZZ(Gate):
@@ -592,6 +633,13 @@ class ZZ(Gate):
         t = self.params['t'] * t
         return ZZ(t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['t'] % 2
+        if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
+            return IDEN(*qbs)
+        return self
+
 
 class EXCH(Gate):
     r"""A 2-qubit parametric gate generated from an exchange interaction.
@@ -617,6 +665,13 @@ class EXCH(Gate):
     def __pow__(self, t: float) -> 'EXCH':
         t = self.params['t'] * t
         return EXCH(t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['t'] % 2
+        if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
+            return IDEN(*qbs)
+        return self
 
 
 # More 2-qubit gates

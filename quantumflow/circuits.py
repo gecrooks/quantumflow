@@ -223,6 +223,10 @@ class Circuit(MutableSequence, Operation):
 
     # TODO: overide params, so that fails, or returns all paramerters?
 
+    # DOCME
+    # TESTME
+    def specialize(self) -> 'Circuit':
+        return Circuit([elem.specialize() for elem in self])
 
 # End class Circuit
 

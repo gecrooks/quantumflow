@@ -152,6 +152,14 @@ class Operation(ABC):
     def __lt__(self, other: Any) -> bool:
         return id(self) < id(other)
 
+    def specialize(self) -> 'Operation':
+        """For parameterized operations, return appropriate special cases
+        for particular parameters. Else return the original Operation.
+
+              e.g. RX(0).specialize() -> I()
+        """
+        return self
+
 # End class Operation
 
 
@@ -330,6 +338,7 @@ class Gate(Operation):
         U = asarray(self.asoperator())
         U /= np.linalg.det(U) ** (1/rank)
         return Gate(tensor=U, qubits=self.qubits)
+
 
 # End class Gate
 

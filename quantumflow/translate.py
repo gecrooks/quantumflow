@@ -137,22 +137,6 @@ def translate(circ: Circuit,
     return translated
 
 
-def simplify_tz(gate: TZ) -> Iterator[Gate]:
-    """
-    Simplify TZ gates to T, S, Z, S_H, T_H gates where possible,
-    and drop identities.
-    """
-    qbs = gate.qubits
-    t = gate.params['t'] % 2
-    idx = int(t*4)
-    if np.isclose(t*4, idx):    # FIXME: Tolerance parameter
-        if idx != 0:  # Skip Identity
-            gatetype = (I, T, S, Z, S_H, T_H)[idx]
-            yield gatetype(*qbs)
-    else:
-        yield gate
-
-
 def translate_x_to_tx(gate: X) -> Iterator[TX]:
     """Translate X gate to TX"""
     q0, = gate.qubits
@@ -942,7 +926,6 @@ TRANSLATORS = {name: func for name, func in globals().items()
 # Note: Translators automagically added
 __all__ = (
     'translate',
-    'simplify_tz',
     'select_translators',
     'TRANSLATORS') + tuple(TRANSLATORS.keys())
 

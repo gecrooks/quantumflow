@@ -12,6 +12,7 @@ Unit tests for quantumflow.gates
 
 import io
 import numpy as np
+from numpy import pi
 
 import pytest
 from sympy import Symbol
@@ -239,7 +240,7 @@ def test_inverse_random():
 
 
 def test_hermitian():
-    gate_names = ['I', 'X', 'Y', 'Z', 'H']
+    gate_names = ['I', 'X', 'Y', 'Z', 'H', 'SWAP']
     for name in gate_names:
         print(name)
         gate = qf.NAMED_GATES[name]()
@@ -365,6 +366,55 @@ def test_relabel():
 
     with pytest.raises(ValueError):
         gate1 = gate0.relabel(['B', 'A', 'C'])
+
+
+def test_specialize_1q():
+    assert isinstance(qf.TZ(0.0).specialize(), qf.I)
+    assert isinstance(qf.TZ(0.25).specialize(), qf.T)
+    assert isinstance(qf.TZ(0.5).specialize(), qf.S)
+    assert isinstance(qf.TZ(1.0).specialize(), qf.Z)
+    assert isinstance(qf.TZ(1.5).specialize(), qf.S_H)
+    assert isinstance(qf.TZ(1.75).specialize(), qf.T_H)
+    assert isinstance(qf.TZ(1.99999999999).specialize(), qf.I)
+
+    special_values = (0.0, 0.25, 0.5, 1.0, 1.5, 1.75, 2.0, 0.17365,
+                      pi, pi/2, pi/4)
+    special1p1q = (qf.RX, qf.RY, qf.RZ, qf.TX, qf.TY, qf.TZ, qf.PHASE, qf.TH,
+                   qf.W)
+
+    for gatetype in special1p1q:
+        for value in special_values:
+            gate0 = gatetype(value, 'q0')
+            gate1 = gate0.specialize()
+            assert gate0.qubits == gate1.qubits
+            assert qf.gates_close(gate0, gate1)
+
+    assert isinstance(qf.TW(0.1234, 0.0).specialize(), qf.I)
+    assert isinstance(qf.TW(0.0, 1.0).specialize(), qf.X)
+    assert isinstance(qf.TW(0.0213, 1.0).specialize(), qf.TW)
+
+
+def test_specialize_IDEN():
+    assert isinstance(qf.IDEN(0).specialize(), qf.I)
+    assert isinstance(qf.IDEN(0, 1).specialize(), qf.IDEN)
+
+
+def test_specialize_2q():
+    assert isinstance(qf.CAN(0.0, 0.0, 0.0).specialize(), qf.IDEN)
+    assert isinstance(qf.CAN(0.213, 0.0, 0.0).specialize(), qf.XX)
+    assert isinstance(qf.CAN(0.0, 0.213, 0.0).specialize(), qf.YY)
+    assert isinstance(qf.CAN(0.0, 0.0, 0.213).specialize(), qf.ZZ)
+    assert isinstance(qf.CAN(0.213, 0.213, 0.213).specialize(), qf.EXCH)
+    assert isinstance(qf.CAN(0.5, 0.32, 0.213).specialize(), qf.CAN)
+
+    assert isinstance(qf.CTX(0.2).specialize(), qf.CTX)
+    assert isinstance(qf.CTX(0.0).specialize(), qf.IDEN)
+    assert isinstance(qf.CTX(1.0).specialize(), qf.CNOT)
+
+    assert isinstance(qf.XX(0.0).specialize(), qf.IDEN)
+    assert isinstance(qf.YY(0.0).specialize(), qf.IDEN)
+    assert isinstance(qf.ZZ(0.0).specialize(), qf.IDEN)
+    assert isinstance(qf.EXCH(0.0).specialize(), qf.IDEN)
 
 
 # fin

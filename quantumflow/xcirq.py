@@ -38,7 +38,6 @@ from .circuits import Circuit
 from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
                     CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
                     CCNOT, CSWAP, CCZ, FSIM)
-from .translate import translate, simplify_tz
 
 import cirq
 
@@ -172,7 +171,7 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         else:
             raise NotImplementedError(str(op.gate))  # pragma: nocover
 
-    circ = translate(circ, [simplify_tz], recurse=False)
+    circ = circ.specialize()
 
     return circ
 

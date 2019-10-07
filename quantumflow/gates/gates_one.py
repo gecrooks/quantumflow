@@ -18,8 +18,8 @@ from ..states import State, Density
 from ..ops import Gate
 from ..utils import multi_slice, cached_property
 
-# Standard 1 qubit gates
 
+# Standard 1 qubit gates
 
 class I(Gate):                                      # noqa: E742
     r"""
@@ -49,6 +49,44 @@ class I(Gate):                                      # noqa: E742
 
     def evolve(self, rho: Density) -> Density:
         return rho
+
+
+# TODO: Move to gate_utils?
+class IDEN(Gate):
+    r"""
+    The multi-qubit identity gate.
+    """
+    interchangeable = True
+    diagonal = True
+
+    def __init__(self, *qubits: Qubit) -> None:
+        if not qubits:
+            qubits = (0,)
+        super().__init__(qubits=qubits)
+
+    @cached_property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
+
+    @property
+    def H(self) -> 'IDEN':
+        return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'IDEN':
+        return self
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho
+
+    def specialize(self) -> Gate:
+        if len(self.qubits) == 1:
+            return I(*self.qubits)
+        return self
+
+# end class IDEN
 
 
 class X(Gate):
@@ -116,7 +154,7 @@ class Y(Gate):
         return TY(t, *self.qubits)
 
     def run(self, ket: State) -> State:
-        # Since X and Z have fast optimizations, this is actually faster
+        # This is fast Since X and Z have fast optimizations.
         ket = Z(*self.qubits).run(ket)
         ket = X(*self.qubits).run(ket)
         return ket
@@ -297,6 +335,15 @@ class PHASE(Gate):
         theta, = self.params.values()
         return TZ(theta/pi, *self.qubits).run(ket)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TZ(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
+
 # end class PHASE
 
 
@@ -331,6 +378,15 @@ class RX(Gate):
         theta = self.params['theta']
         return RX(theta * t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TX(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
+
 # end class RX
 
 
@@ -363,6 +419,15 @@ class RY(Gate):
     def __pow__(self, t: float) -> 'RY':
         theta = self.params['theta']
         return RY(theta * t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TY(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
 
 # end class RY
 
@@ -404,6 +469,15 @@ class RZ(Gate):
     def run(self, ket: State) -> State:
         theta, = self.params.values()
         return TZ(theta/pi, *self.qubits).run(ket)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TZ(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
 
 # end class RZ
 
@@ -545,6 +619,14 @@ class TX(Gate):
         t = self.params['t'] * t
         return TX(t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 0.5: V, 1.0: X, 1.5: V_H, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
+
 
 class TY(Gate):
     r"""Powers of the 1-qubit Pauli-Y gate.
@@ -580,6 +662,14 @@ class TY(Gate):
     def __pow__(self, t: float) -> 'TY':
         t = self.params['t'] * t
         return TY(t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 1.0: Y, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
 
 
 class TZ(Gate):
@@ -626,6 +716,15 @@ class TZ(Gate):
 
         return super().run(ket)  # pragma: no cover
 
+    # TESTME
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 0.25: T, 0.5: S, 1.0: Z, 1.5: S_H, 1.75: T_H, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
+
 
 class TH(Gate):
     r"""
@@ -663,6 +762,14 @@ class TH(Gate):
     def __pow__(self, t: float) -> 'TH':
         t = self.params['t'] * t
         return TH(t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 1.0: H, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
 
 
 # FIXME: Replace with euler_circuit?
@@ -774,6 +881,13 @@ class W(Gate):
         p = self.params['p']
         return TW(p, t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        p = self.params['p'] % 2
+        if np.isclose(p, 0.0) or np.isclose(p, 2.0):
+            return X(*qbs)
+        return self
+
 
 class TW(Gate):
     """A phased X gate raise to a power.
@@ -797,6 +911,16 @@ class TW(Gate):
     def __pow__(self, t: float) -> 'TW':
         p, s = self.params.values()
         return TW(p, s * t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        p = self.params['p'] % 2
+        t = self.params['t'] % 2
+        if np.isclose(t, 0.0) or np.isclose(t, 2.0):
+            return I(*qbs)
+        if np.isclose(p, 0.0):
+            return TX(t, *qbs).specialize()
+        return self
 
 # end class TW
 

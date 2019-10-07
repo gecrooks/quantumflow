@@ -16,7 +16,7 @@ from ..qubits import Qubit, Qubits, qubits_count_tuple, asarray
 from ..qubits import outer_product
 from ..ops import Gate
 from .. import utils
-from .gates_three import IDEN
+from .gates_one import IDEN
 
 __all__ = ['identity_gate',
            'random_gate',
