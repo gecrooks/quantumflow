@@ -301,10 +301,10 @@ def latex_to_image(latex: str) -> Image:      # pragma: no cover
         with open(tmppath + '.tex', 'w') as latex_file:
             latex_file.write(latex)
 
-        subprocess.run(["pdflatex",
-                        "-halt-on-error",
-                        "-output-directory={}".format(tmpdirname),
-                        "{}".format(tmpfilename+'.tex')],
+        subprocess.run([f"pdflatex",
+                        f"-halt-on-error",
+                        f"-output-directory={tmpdirname}",
+                        f"{tmpfilename}.tex"],
                        stdout=subprocess.PIPE,
                        stderr=subprocess.DEVNULL,
                        check=True)
@@ -568,7 +568,7 @@ def _pretty(obj: Any, format: str = 'text') -> str:
             else:
                 return str(symbolize(obj)).replace('pi', 'π')
         except ValueError:
-            return "{0:.4g}".format(obj)
+            return f'{obj:.4g}'
 
     out = str(obj)
     if format == 'text':

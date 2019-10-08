@@ -302,7 +302,7 @@ class Gate(Operation):
                 try:
                     return str(symbolize(obj))
                 except ValueError:
-                    return "{}".format(obj)
+                    return f'{obj}'
             return str(obj)
 
         if self.name == 'Gate':
@@ -316,7 +316,7 @@ class Gate(Operation):
         else:
             fparams = ""
 
-        return "{}{}{}".format(self.name, fparams, fqubits)
+        return f'{self.name}{fparams}{fqubits}'
 
     def asgate(self) -> 'Gate':
         return self

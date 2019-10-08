@@ -79,73 +79,6 @@ QUIL_RESERVED_WORDS = ['DEFGATE', 'DEFCIRCUIT', 'MEASURE', 'LABEL', 'HALT',
 """Quil keywords"""
 
 
-# def get_virtual_qc(qubit_nb: int,
-#                    device: pyquil.NxDevice = None,
-#                    connection: pyquil.ForestConnection = None,
-#                    compiler: pyquil.AbstractCompiler = None,
-#                    noisy: bool = False,
-#                    name: str = None) -> pyquil.QuantumComputer:
-#     """
-#     Return a virtual quantum computer.
-
-#     Args:
-#         qubit_nb: Number of qubits
-#         device: An NxDevice. Defaults to a completely connected machine with
-#             gates between all qubit pairs.
-#         connection: Optional preexisting Forest connection
-#         compiler: If not specified, then we default to either a local or
-#             remote Rigetti quilc compiler
-#         noisy: Optionally add standard noise to the simulation.
-#         name: A name for this virtual quantum computer. Defaults to
-#             'NNq-generic-qvm', where NN is the number of qubits.
-#     """
-#     if name is None:
-#         name = '{}q-generic-qvm'.format(qubit_nb)
-
-#     if device is None:
-#         topology = nx.complete_graph(qubit_nb)
-#         device = pyquil.NxDevice(topology)
-
-#     if connection is None:
-#         connection = pyquil.ForestConnection()
-
-#     if noisy:
-#         gates = pyquil.gates_in_isa(device.get_isa())
-#         noise_model = pyquil.decoherence_noise_with_asymmetric_ro(gates)
-#     else:
-#         noise_model = None
-
-#     qvm = pyquil.QVM(connection=connection, noise_model=noise_model)
-
-#     if compiler is None:
-#         compiler = get_compiler(qubit_nb, device, connection)
-
-#     vqc = pyquil.QuantumComputer(name=name,
-#                                  qam=qvm,
-#                                  device=device,
-#                                  compiler=compiler)
-
-#     return vqc
-
-
-# def get_compiler(qubit_nb: int,
-#                  device: pyquil.NxDevice = None,
-#                  connection: pyquil.ForestConnection = None) \
-#         -> pyquil.AbstractCompiler:
-#     """
-#     Return a connection to `quilc`, the quil compiler.
-#     """
-#     if device is None:
-#         topology = nx.complete_graph(qubit_nb)
-#         device = pyquil.NxDevice(topology)
-
-#     if connection is None:
-#         connection = pyquil.ForestConnection()
-
-#     endpoint = connection.compiler_endpoint
-#     return _get_qvm_compiler_based_on_endpoint(endpoint, device)
-
-
 class NullCompiler(pyquil.AbstractCompiler):
     """A null pyQuil compiler. Passes programs through unchanged"""
     def get_version_info(self) -> dict:
@@ -157,19 +90,6 @@ class NullCompiler(pyquil.AbstractCompiler):
     def native_quil_to_executable(self, nq_program: pyquil.Program) \
             -> pyquil.Program:
         return nq_program
-
-
-# def qvm_run_and_measure(circ: Circuit, trials: int = 1) \
-#         -> Dict[Qubit, np.ndarray]:  # pragma: no cover
-#     # Tests only run if qvm and quilc are installed locally.
-#     N = circ.qubit_nb
-
-#     vqc = get_virtual_qc(N, compiler=NullCompiler())
-
-#     prog = circuit_to_pyquil(circ)
-#     results = vqc.run_and_measure(prog, trials)
-
-#     return results
 
 
 def pyquil_to_image(program: pyquil.Program) -> PIL.Image:  # pragma: no cover
@@ -354,9 +274,8 @@ def pyquil_to_program(program: pyquil.Program) -> Program:
         # elif isinstance(inst, pyquil.ClassicalConvert):
         #     prog += Convert(inst.target, _reg(inst.left), _reg(inst.right))
 
-        else:
-            raise ValueError('Unknown pyQuil instruction: {}'
-                             .format(str(inst)))   # pragma: no cover
+        else:  # pragma: no cover
+            raise ValueError(f'Unknown pyQuil instruction: {inst}')
 
     return prog
 

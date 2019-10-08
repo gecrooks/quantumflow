@@ -199,8 +199,8 @@ class State:
         for index, amplitude in np.ndenumerate(state):
             if not np.isclose(amplitude, 0.0):
                 ket = '|' + ''.join([str(n) for n in index]) + '>'
-                s.append('({c.real:0.04g}{c.imag:+0.04g}i) {k}'
-                         .format(c=amplitude, k=ket))
+                s.append(f'({amplitude.real:0.04g}'
+                         f'{amplitude.imag:+0.04g}i) {ket}')
                 count += 1
                 if count > MAX_ELEMENTS:
                     s.append('...')

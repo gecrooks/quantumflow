@@ -105,7 +105,7 @@ def print_gate(gate: Gate, ndigits: int = 2,
         ket = "".join([str(n) for n in index[0:N]])
         bra = "".join([str(index[n]) for n in range(N, 2*N)])
         if round(abs(amplitude)**2, ndigits) > 0.0:
-            lines.append('{} -> {} : {}'.format(bra, ket, amplitude))
+            lines.append(f'{bra} -> {ket} : {amplitude}')
     lines.sort(key=lambda x: int(x[0:N]))
     print('\n'.join(lines), file=file)
 
@@ -149,4 +149,4 @@ def random_gate(qubits: Union[int, Qubits]) -> Gate:
     """
     N, qubits = qubits_count_tuple(qubits)
     unitary = utils.unitary_ensemble(2**N)
-    return Gate(unitary, qubits=qubits, name='RAND{}'.format(N))
+    return Gate(unitary, qubits=qubits, name=f'RAND{N}')

@@ -119,7 +119,7 @@ BACKENDS = ('tensorflow', 'ctf', 'numpy64', 'numpy')
 _BACKEND_EV = ENV_PREFIX + 'BACKEND'
 BACKEND = os.getenv(_BACKEND_EV, DEFAULT_BACKEND)
 if BACKEND not in BACKENDS:  # pragma: no cover
-    raise ValueError('Unknown backend: {}={}'.format(_BACKEND_EV, BACKEND))
+    raise ValueError(f'Unknown backend: {_BACKEND_EV}={BACKEND}')
 
 if BACKEND == 'tensorflow':                          # pragma: no cover
     from quantumflow.backend.tensorflowbk import *   # noqa: F403

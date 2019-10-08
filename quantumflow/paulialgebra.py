@@ -189,10 +189,10 @@ class Pauli(Operation):
     def __str__(self) -> str:
         out = []
         for term in self.terms:
-            out.append('+ {:+}'.format(term[1]))
+            out.append(f'+ {term[1]:+}')
 
             for q, op in term[0]:
-                out.append(op+'('+str(q)+')')
+                out.append(f'{op}({q})')
 
         return ' '.join(out)
 

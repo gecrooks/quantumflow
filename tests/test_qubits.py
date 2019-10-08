@@ -112,20 +112,20 @@ def test_inner_product():
         theta = random.uniform(-4*pi, +4*pi)
 
         hs = qf.asarray(qf.inner_product(qf.RX(theta).vec, qf.RX(theta).vec))
-        print('RX({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'RX({theta}), hilbert_schmidt = {hs}')
         assert hs/2 == ALMOST_ONE
 
         hs = qf.asarray(qf.inner_product(qf.RZ(theta).vec, qf.RZ(theta).vec))
-        print('RZ({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'RZ({theta}), hilbert_schmidt = {hs}')
         assert hs/2 == ALMOST_ONE
 
         hs = qf.asarray(qf.inner_product(qf.RY(theta).vec, qf.RY(theta).vec))
-        print('RY({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'RY({theta}), hilbert_schmidt = {hs}')
         assert hs/2 == ALMOST_ONE
 
         hs = qf.asarray(qf.inner_product(qf.PSWAP(theta).vec,
                                          qf.PSWAP(theta).vec))
-        print('PSWAP({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'PSWAP({theta}), hilbert_schmidt = {hs}')
         assert hs/4 == ALMOST_ONE
 
     with pytest.raises(ValueError):

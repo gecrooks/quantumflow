@@ -126,9 +126,8 @@ class QubitVector:
                 rank = bk.ndim(tensor) // N
 
         if rank not in [1, 2, 4, 8] or rank * N != bk.ndim(tensor):
-            raise ValueError('Incompatibility between tensor and qubits: '
-                             'rank={} qubit_nb={} shape={}'
-                             .format(rank, N, tensor.shape))
+            raise ValueError(f'Incompatibility between tensor and qubits: '
+                             f'rank={rank} qubit_nb={N} shape={tensor.shape}')
 
         self.qubits = tuple(qubits)
         self.qubit_nb = N

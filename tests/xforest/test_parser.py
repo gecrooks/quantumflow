@@ -393,7 +393,7 @@ def test_gate_1qubit():
     gates = 'I', 'H', 'X', 'Y', 'Z', 'S', 'T'
 
     for g in gates:
-        quil = '{} 42'.format(g)
+        quil = f'{g} 42'
         cmd = forest.quil_to_program(quil)[0]
         assert cmd.name == g
         assert cmd.qubits == (42,)
@@ -404,7 +404,7 @@ def test_gate_2qubit():
     gates = 'SWAP', 'CZ', 'CNOT', 'ISWAP'
 
     for g in gates:
-        quil = '{} 2 42'.format(g)
+        quil = f'{g} 2 42'
         cmd = forest.quil_to_program(quil)[0]
         assert cmd.name == g
         assert cmd.qubits == (2, 42)
@@ -415,7 +415,7 @@ def test_gate_3qubit():
     gates = 'CCNOT', 'CSWAP'
 
     for g in gates:
-        quil = '{} 2 42 5'.format(g)
+        quil = f'{g} 2 42 5'
         cmd = forest.quil_to_program(quil)[0]
         assert cmd.name == g
         assert cmd.qubits == (2, 42, 5)
@@ -425,7 +425,7 @@ def test_gate_3qubit():
 def test_gate_1qubit_param():
     gates = 'RX', 'RY', 'RZ'
     for g in gates:
-        quil = '{}(2.8) 42'.format(g)
+        quil = f'{g}(2.8) 42'
         cmd = forest.quil_to_program(quil)[0]
         assert cmd.name == g
         assert cmd.qubits == (42,)
@@ -436,7 +436,7 @@ def test_gate_2qubit_param():
     gates = 'CPHASE00', 'CPHASE01', 'CPHASE10', 'CPHASE', 'PSWAP'
 
     for g in gates:
-        quil = '{}(0.5) 2 42'.format(g)
+        quil = f'{g}(0.5) 2 42'
         cmd = forest.quil_to_program(quil)[0]
         assert cmd.name == g
         assert cmd.qubits == (2, 42)
