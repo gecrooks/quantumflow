@@ -30,83 +30,83 @@ def test_cirq_to_circuit():
     q1 = cq.LineQubit(1)
     q2 = cq.LineQubit(2)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.X(q0)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.X(q0)))[0]
     assert isinstance(gate, qf.X)
     assert gate.qubits == (0,)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.X(q1)**0.4))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.X(q1)**0.4))[0]
     assert isinstance(gate, qf.TX)
     assert gate.qubits == (1,)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CZ(q1, q0)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CZ(q1, q0)))[0]
     assert isinstance(gate, qf.CZ)
     assert gate.qubits == (1, 0)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CZ(q1, q0) ** 0.3))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CZ(q1, q0) ** 0.3))[0]
     assert isinstance(gate, qf.CPHASE)
     assert gate.qubits == (1, 0)
     assert gate.params['theta'] == 0.3*pi
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CNOT(q0, q1)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CNOT(q0, q1)))[0]
     assert isinstance(gate, qf.CNOT)
     assert gate.qubits == (0, 1)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CNOT(q0, q1) ** 0.25))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CNOT(q0, q1) ** 0.25))[0]
     assert isinstance(gate, qf.CTX)
     assert gate.qubits == (0, 1)
     assert gate.params['t'] == 0.25
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.SWAP(q0, q1)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.SWAP(q0, q1)))[0]
     assert isinstance(gate, qf.SWAP)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.ISWAP(q0, q1)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.ISWAP(q0, q1)))[0]
     assert isinstance(gate, qf.ISWAP)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CSWAP(q0, q1, q2)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CSWAP(q0, q1, q2)))[0]
     assert isinstance(gate, qf.CSWAP)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CCX(q0, q1, q2)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CCX(q0, q1, q2)))[0]
     assert isinstance(gate, qf.CCNOT)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.CCZ(q0, q1, q2)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.CCZ(q0, q1, q2)))[0]
     assert isinstance(gate, qf.CCZ)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.Rx(0.5).on(q0)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.Rx(0.5).on(q0)))[0]
     assert isinstance(gate, qf.TX)
     assert gate.params['t'] == 0.5/pi
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.Ry(0.5).on(q0)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.Ry(0.5).on(q0)))[0]
     assert isinstance(gate, qf.TY)
     assert gate.params['t'] == 0.5/pi
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.Rz(0.5).on(q0)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.Rz(0.5).on(q0)))[0]
     assert isinstance(gate, qf.TZ)
     assert gate.params['t'] == 0.5/pi
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.I(q0)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.I(q0)))[0]
     assert isinstance(gate, qf.I)
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.XX(q0, q2)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.XX(q0, q2)))[0]
     assert isinstance(gate, qf.XX)
     assert gate.params['t'] == 1.0
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.XX(q0, q2) ** 0.3))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.XX(q0, q2) ** 0.3))[0]
     assert isinstance(gate, qf.XX)
     assert gate.params['t'] == 0.3
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.YY(q0, q2)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.YY(q0, q2)))[0]
     assert isinstance(gate, qf.YY)
     assert gate.params['t'] == 1.0
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.YY(q0, q2) ** 0.3))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.YY(q0, q2) ** 0.3))[0]
     assert isinstance(gate, qf.YY)
     assert gate.params['t'] == 0.3
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.ZZ(q0, q2)))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.ZZ(q0, q2)))[0]
     assert isinstance(gate, qf.ZZ)
     assert gate.params['t'] == 1.0
 
-    gate = cirq_to_circuit(cq.Circuit.from_ops(cq.ZZ(q0, q2) ** 0.3))[0]
+    gate = cirq_to_circuit(cq.Circuit(cq.ZZ(q0, q2) ** 0.3))[0]
     assert isinstance(gate, qf.ZZ)
     assert gate.params['t'] == 0.3
 

@@ -27,7 +27,7 @@ Interface between Google's Cirq and QuantumFlow
 # ('cirq' is too close to our common abbrevation of 'circ' for 'circuit'.)
 # cqc: Abbreviation for Cirq circuit
 
-from typing import Iterable
+from typing import Iterable, cast
 
 import numpy as np
 
@@ -85,6 +85,7 @@ class CirqSimulator(Operation):
         sim = cirq.Simulator()
         res = sim.simulate(self._cirq,
                            initial_state=tensor)
+        res = cast(cirq.WaveFunctionTrialResult, res)
         tensor = res.state_vector()
         return State(tensor, self._circuit.qubits, ket.memory)
 
@@ -125,30 +126,30 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
     """Convert a Cirq circuit to a QuantumFlow circuit"""
 
     simple_gates = {
-        cirq.ops.CSwapGate: CSWAP,
-        cirq.ops.common_gates.IdentityGate: I,
+        cirq.CSwapGate: CSWAP,
+        cirq.IdentityGate: I,
     }
 
     exponent_gates = {
         cirq.ops.pauli_gates._PauliX: X,
         cirq.ops.pauli_gates._PauliY: Y,
         cirq.ops.pauli_gates._PauliZ: Z,
-        cirq.ops.XPowGate: X,
-        cirq.ops.YPowGate: Y,
-        cirq.ops.ZPowGate: Z,
-        cirq.ops.HPowGate: H,
-        cirq.ops.CZPowGate: CZ,
-        cirq.ops.CNotPowGate: CNOT,
-        cirq.ops.SwapPowGate: SWAP,
-        cirq.ops.ISwapPowGate: ISWAP,
-        cirq.ops.CCXPowGate: CCNOT,
-        cirq.ops.CCZPowGate: CCZ,
+        cirq.XPowGate: X,
+        cirq.YPowGate: Y,
+        cirq.ZPowGate: Z,
+        cirq.HPowGate: H,
+        cirq.CZPowGate: CZ,
+        cirq.CNotPowGate: CNOT,
+        cirq.SwapPowGate: SWAP,
+        cirq.ISwapPowGate: ISWAP,
+        cirq.CCXPowGate: CCNOT,
+        cirq.CCZPowGate: CCZ,
     }
 
     parity_gates = {
-        cirq.ops.XXPowGate: XX,
-        cirq.ops.YYPowGate: YY,
-        cirq.ops.ZZPowGate: ZZ
+        cirq.XXPowGate: XX,
+        cirq.YYPowGate: YY,
+        cirq.ZZPowGate: ZZ
     }
 
     circ = Circuit()
@@ -157,17 +158,17 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         gatetype = type(op.gate)
 
         qbs = [qubit_map[qb] for qb in op.qubits]
+        t = getattr(op.gate, 'exponent', 1)
 
         if gatetype in simple_gates:
-            circ += simple_gates[gatetype](*qbs)
+            circ += simple_gates[gatetype](*qbs)     # type: ignore
         elif gatetype in exponent_gates:
-            gate = exponent_gates[gatetype](*qbs)
-            if op.gate.exponent != 1:
-                gate **= op.gate.exponent
+            gate = exponent_gates[gatetype](*qbs)    # type: ignore
+            if t != 1:
+                gate **= t
             circ += gate
         elif gatetype in parity_gates:
-            t = op.gate.exponent
-            circ += parity_gates[gatetype](t, *qbs)
+            circ += parity_gates[gatetype](t, *qbs)   # type: ignore
         else:
             raise NotImplementedError(str(op.gate))  # pragma: nocover
 
@@ -201,12 +202,12 @@ def circuit_to_cirq(circ: Circuit) -> cirq.Circuit:
 
     # TODO: TH -> cirq.ops.HPowGate,
     turn_gates = {
-        TX:     cirq.ops.XPowGate,
-        TY:     cirq.ops.YPowGate,
-        TZ:     cirq.ops.ZPowGate,
-        XX:     cirq.ops.XXPowGate,
-        YY:     cirq.ops.YYPowGate,
-        ZZ:     cirq.ops.ZZPowGate,
+        TX:     cirq.X,
+        TY:     cirq.Y,
+        TZ:     cirq.Z,
+        XX:     cirq.XX,
+        YY:     cirq.YY,
+        ZZ:     cirq.ZZ,
     }
 
     for op in circ:
@@ -216,7 +217,7 @@ def circuit_to_cirq(circ: Circuit) -> cirq.Circuit:
             cqc.append(operations[type(op)].on(*qbs))
         elif type(op) in turn_gates:
             t = op.params['t']
-            cqc.append(turn_gates[type(op)]().on(*qbs) ** t)
+            cqc.append(turn_gates[type(op)](*qbs) ** t)
         else:
             raise NotImplementedError(str(op))
 

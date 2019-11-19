@@ -19,7 +19,7 @@ from ..ops import Gate
 from ..states import State
 from ..utils import multi_slice, cached_property
 
-from .gates_one import IDEN, I, V, V_H
+from .gates_one import IDEN, V, V_H
 from .gates_utils import control_gate
 
 __all__ = ['CZ', 'CNOT', 'SWAP', 'ISWAP', 'CPHASE00', 'CPHASE01', 'CPHASE10',
