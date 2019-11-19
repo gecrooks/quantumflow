@@ -157,6 +157,10 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
     for op in cqc.all_operations():
         gatetype = type(op.gate)
 
+        # Extra check needed for cirq 0.6, but not 0.7?
+        if isinstance(op, cirq.ops.identity.IdentityOperation):
+            gatetype = cirq.IdentityGate             # pragma: nocover
+
         qbs = [qubit_map[qb] for qb in op.qubits]
         t = getattr(op.gate, 'exponent', 1)
 
