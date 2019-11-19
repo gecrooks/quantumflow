@@ -16,12 +16,10 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow import transpose, minimum, exp, cos, sin        # noqa: F401
-from tensorflow.math import real, imag, sqrt                    # noqa: F401
-from tensorflow.math import conj                                # noqa: F401
+
+
 from tensorflow import matmul                                   # noqa: F401
 from tensorflow import abs as absolute                          # noqa: F401
-from tensorflow.linalg import diag_part as diag                 # noqa: F401
-from tensorflow.linalg import trace                             # noqa: F401
 from tensorflow import einsum, reshape                          # noqa: F401
 from tensorflow.python.client import device_lib
 from tensorflow import reduce_sum                               # noqa: F401
@@ -32,6 +30,16 @@ from .numpybk import set_random_seed as np_set_random_seed
 from .numpybk import TensorLike, BKTensor, __all__              # noqa: F401
 
 from opt_einsum import contract                                 # noqa: F401
+
+# Tensorflow 2.0 is doing something weird with imports so that
+# we can't use 'from tensorflow import real, imag, sqrt' any more.
+real = tf.math.real
+imag = tf.math.imag
+sqrt = tf.math.sqrt
+conj = tf.math.conj
+diag = tf.linalg.diag_part
+trace = tf.linalg.trace
+
 
 TL = tf
 name = TL.__name__
