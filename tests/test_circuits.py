@@ -27,7 +27,7 @@ def true_ket():
 
 def test_asgate():
     circ = qf.zyz_circuit(0.1, 2.2, 0.5, 0)
-    print(">>>>", circ, len(circ.elements))
+    print(">>>>", circ, len(circ))
     assert qf.gates_close(circ.asgate(), qf.ZYZ(0.1, 2.2, 0.5))
 
 
@@ -38,7 +38,7 @@ def test_str():
 
 
 def test_name():
-    assert qf.Circuit().name == 'CIRCUIT'
+    assert qf.Circuit().name == 'Circuit'
 
 
 def test_qaoa_circuit():
@@ -182,7 +182,7 @@ def test_elements():
     circ += circ1
     circ.extend(circ2)
 
-    gates = list(circ.elements)
+    gates = list(circ)
     assert len(gates) == 11
     assert circ.size() == 11
     assert gates[4].name == 'CNOT'
@@ -226,10 +226,10 @@ def test_add():
     assert len(list(circ)) == 3
 
     circ = circ + circ
-    assert len(list(circ.elements)) == 6
+    assert len(circ) == 6
 
     circ += circ
-    assert len(list(circ.elements)) == 12
+    assert len(circ) == 12
 
 
 def test_ccnot_circuit_evolve():
@@ -352,15 +352,16 @@ def test_ghz_circuit():
 def test_zyz_circuit():
     gate0 = qf.zyz_circuit(0.1, 0.3, 0.2, 0).asgate()
     gate1 = qf.ZYZ(0.1, 0.3, 0.2, q0=0)
+
     assert qf.gates_close(gate0, gate1)
 
 
 def test_map_gate():
     circ = qf.map_gate(qf.X(), [[0], [1], [2]])
-    assert circ.elements[1].qubits[0] == 1
+    assert circ[1].qubits[0] == 1
 
     circ = qf.map_gate(qf.CNOT(), [[0, 1], [1, 2]])
-    assert circ.elements[1].qubits == (1, 2)
+    assert circ[1].qubits == (1, 2)
 
 
 def test_count():
@@ -408,3 +409,17 @@ def test_circuit_mutable_sequence_interface():
 
     circ[0] = qf.X(4)
     assert len(circ) == 3
+
+    assert isinstance(circ[0:2], qf.Circuit)
+
+
+def test_circuit_flat():
+    circ0 = qf.Circuit([qf.X(0), qf.X(1)])
+    circ1 = qf.Circuit([qf.Y(0), qf.Y(1)])
+    circ2 = qf.Circuit([circ1, qf.Z(0), qf.Z(1)])
+    circ = qf.Circuit([circ0, circ2])
+
+    flat = qf.Circuit(circ.flat())
+    assert len(flat) == 6
+    assert flat[2].name == 'Y'
+    # print(flat)

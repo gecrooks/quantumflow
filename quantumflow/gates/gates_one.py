@@ -1,4 +1,10 @@
 
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+# Copyright 2016-2018, Rigetti Computing
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 QuantumFlow: One qubit gates
 """
@@ -10,10 +16,10 @@ from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State, Density
 from ..ops import Gate
-from ..utils import multi_slice
+from ..utils import multi_slice, cached_property
+
 
 # Standard 1 qubit gates
-
 
 class I(Gate):                                      # noqa: E742
     r"""
@@ -27,7 +33,7 @@ class I(Gate):                                      # noqa: E742
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         return bk.astensorproduct(np.eye(2))
 
@@ -45,6 +51,44 @@ class I(Gate):                                      # noqa: E742
         return rho
 
 
+# TODO: Move to gate_utils?
+class IDEN(Gate):
+    r"""
+    The multi-qubit identity gate.
+    """
+    interchangeable = True
+    diagonal = True
+
+    def __init__(self, *qubits: Qubit) -> None:
+        if not qubits:
+            qubits = (0,)
+        super().__init__(qubits=qubits)
+
+    @cached_property
+    def tensor(self) -> bk.BKTensor:
+        return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
+
+    @property
+    def H(self) -> 'IDEN':
+        return self  # Hermitian
+
+    def __pow__(self, t: float) -> 'IDEN':
+        return self
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho
+
+    def specialize(self) -> Gate:
+        if len(self.qubits) == 1:
+            return I(*self.qubits)
+        return self
+
+# end class IDEN
+
+
 class X(Gate):
     r"""
     A 1-qubit Pauli-X gate.
@@ -55,12 +99,10 @@ class X(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
-        if self._tensor is None:
-            unitary = [[0, 1], [1, 0]]
-            self._tensor = bk.astensorproduct(unitary)
-        return self._tensor
+        unitary = [[0, 1], [1, 0]]
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> 'X':
@@ -99,7 +141,7 @@ class Y(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[0, -1.0j], [1.0j, 0]])
         return bk.astensorproduct(unitary)
@@ -112,7 +154,7 @@ class Y(Gate):
         return TY(t, *self.qubits)
 
     def run(self, ket: State) -> State:
-        # Since X and Z have fast optimizations, this is actually faster
+        # This is fast Since X and Z have fast optimizations.
         ket = Z(*self.qubits).run(ket)
         ket = X(*self.qubits).run(ket)
         return ket
@@ -133,7 +175,7 @@ class Z(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 0], [0, -1.0]])
         return bk.astensorproduct(unitary)
@@ -162,7 +204,7 @@ class H(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 1], [1, -1]]) / sqrt(2)
         return bk.astensorproduct(unitary)
@@ -210,7 +252,7 @@ class S(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, 1.0j]])
         return bk.astensorproduct(unitary)
@@ -241,7 +283,7 @@ class T(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.cis(pi / 4.0))]]
         return bk.astensorproduct(unitary)
@@ -273,7 +315,7 @@ class PHASE(Gate):
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -293,6 +335,15 @@ class PHASE(Gate):
         theta, = self.params.values()
         return TZ(theta/pi, *self.qubits).run(ket)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TZ(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
+
 # end class PHASE
 
 
@@ -311,7 +362,7 @@ class RX(Gate):
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -326,6 +377,15 @@ class RX(Gate):
     def __pow__(self, t: float) -> 'RX':
         theta = self.params['theta']
         return RX(theta * t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TX(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
 
 # end class RX
 
@@ -344,7 +404,7 @@ class RY(Gate):
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -359,6 +419,15 @@ class RY(Gate):
     def __pow__(self, t: float) -> 'RY':
         theta = self.params['theta']
         return RY(theta * t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TY(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
 
 # end class RY
 
@@ -380,7 +449,7 @@ class RZ(Gate):
     def __init__(self, theta: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
@@ -401,6 +470,15 @@ class RZ(Gate):
         theta, = self.params.values()
         return TZ(theta/pi, *self.qubits).run(ket)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        t = self.params['theta']/pi
+        gate0 = TZ(t, *qbs)
+        gate1 = gate0.specialize()
+        if gate0 is gate1:
+            return self
+        return gate1
+
 # end class RZ
 
 
@@ -419,7 +497,7 @@ class S_H(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, -1.0j]])
         return bk.astensorproduct(unitary)
@@ -450,7 +528,7 @@ class T_H(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.cis(-pi / 4.0))]]
         return bk.astensorproduct(unitary)
@@ -489,7 +567,7 @@ class RN(Gate):
         params = dict(theta=theta, nx=nx, ny=ny, nz=nz)
         super().__init__(params=params, qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta, nx, ny, nz = self.params.values()
         ctheta = bk.ccast(theta)
@@ -522,7 +600,7 @@ class TX(Gate):
         t = t % 2
         super().__init__(params=dict(t=t), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         t = self.params['t']
         ctheta = bk.ccast(pi * t)
@@ -541,6 +619,14 @@ class TX(Gate):
         t = self.params['t'] * t
         return TX(t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 0.5: V, 1.0: X, 1.5: V_H, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
+
 
 class TY(Gate):
     r"""Powers of the 1-qubit Pauli-Y gate.
@@ -558,7 +644,7 @@ class TY(Gate):
         # t = t % 2
         super().__init__(params=dict(t=t), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         t = self.params['t']
         ctheta = bk.ccast(pi * t)
@@ -577,6 +663,14 @@ class TY(Gate):
         t = self.params['t'] * t
         return TY(t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 1.0: Y, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
+
 
 class TZ(Gate):
     r"""Powers of the 1-qubit Pauli-Z gate.
@@ -593,7 +687,7 @@ class TZ(Gate):
         # t = t % 2
         super().__init__(params=dict(t=t), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         t = self.params['t']
         ctheta = bk.ccast(pi * t)
@@ -622,6 +716,15 @@ class TZ(Gate):
 
         return super().run(ket)  # pragma: no cover
 
+    # TESTME
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 0.25: T, 0.5: S, 1.0: Z, 1.5: S_H, 1.75: T_H, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
+
 
 class TH(Gate):
     r"""
@@ -639,7 +742,7 @@ class TH(Gate):
     def __init__(self, t: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(t=t), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         t = self.params['t']
         theta = bk.ccast(pi * t)
@@ -659,6 +762,14 @@ class TH(Gate):
     def __pow__(self, t: float) -> 'TH':
         t = self.params['t'] * t
         return TH(t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        t = self.params['t'] % 2
+        opts = {0.0: I, 1.0: H, 2.0: I}
+        for key, gatetype in opts.items():
+            if np.isclose(t, key):
+                return gatetype(*self.qubits)
+        return self
 
 
 # FIXME: Replace with euler_circuit?
@@ -686,7 +797,7 @@ class ZYZ(Gate):
                  t2: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(t0=t0, t1=t1, t2=t2), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         t0, t1, t2 = self.params.values()
         ct0 = bk.ccast(pi * t0)
@@ -715,7 +826,7 @@ class V(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         return TX(0.5).tensor
 
@@ -734,7 +845,7 @@ class V_H(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         return TX(-0.5).tensor
 
@@ -755,7 +866,7 @@ class W(Gate):
     def __init__(self, p: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(p=p), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         p = self.params['p']
         gate = TZ(p) @ X() @ TZ(-p)
@@ -770,6 +881,13 @@ class W(Gate):
         p = self.params['p']
         return TW(p, t, *self.qubits)
 
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        p = self.params['p'] % 2
+        if np.isclose(p, 0.0) or np.isclose(p, 2.0):
+            return X(*qbs)
+        return self
+
 
 class TW(Gate):
     """A phased X gate raise to a power.
@@ -780,7 +898,7 @@ class TW(Gate):
     def __init__(self, p: float, t: float, q0: Qubit = 0) -> None:
         super().__init__(params=dict(p=p, t=t), qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         p, t = self.params.values()
         gate = TZ(p) @ TX(t) @ TZ(-p)
@@ -793,6 +911,16 @@ class TW(Gate):
     def __pow__(self, t: float) -> 'TW':
         p, s = self.params.values()
         return TW(p, s * t, *self.qubits)
+
+    def specialize(self) -> Gate:
+        qbs = self.qubits
+        p = self.params['p'] % 2
+        t = self.params['t'] % 2
+        if np.isclose(t, 0.0) or np.isclose(t, 2.0):
+            return I(*qbs)
+        if np.isclose(p, 0.0):
+            return TX(t, *qbs).specialize()
+        return self
 
 # end class TW
 

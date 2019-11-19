@@ -38,7 +38,7 @@ __all__ = ('LATEX_GATESET',
 LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
                            'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
-                           'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'RESET'])
+                           'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'Reset'])
 
 # TODO: DIAGRAM_GATESET gateset
 
@@ -59,7 +59,7 @@ def circuit_to_latex(
 
     Can currently draw X, Y, Z, H, T, S, T_H, S_H, RX, RY, RZ, TX, TY, TZ,
     TH, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, CAN, P0 and P1 gates,
-    and the RESET operation.
+    and the Reset operation.
 
     Args:
         circ:       A quantum Circuit
@@ -108,7 +108,7 @@ def circuit_to_latex(
 
     layer_code = []
 
-    for layer in layers.elements:
+    for layer in layers:
         code = [r'\qw'] * N
         assert isinstance(layer, Circuit)
         for gate in layer:
@@ -301,10 +301,10 @@ def latex_to_image(latex: str) -> Image:      # pragma: no cover
         with open(tmppath + '.tex', 'w') as latex_file:
             latex_file.write(latex)
 
-        subprocess.run(["pdflatex",
-                        "-halt-on-error",
-                        "-output-directory={}".format(tmpdirname),
-                        "{}".format(tmpfilename+'.tex')],
+        subprocess.run([f"pdflatex",
+                        f"-halt-on-error",
+                        f"-output-directory={tmpdirname}",
+                        f"{tmpfilename}.tex"],
                        stdout=subprocess.PIPE,
                        stderr=subprocess.DEVNULL,
                        check=True)
@@ -403,7 +403,7 @@ def circuit_diagram(
         'YY': 'YY^%s',
         'ZZ': 'ZZ^%s',
         'ISWAP': 'iSWAP',
-        'RESET': BOX_CHARS[LEFT+BOT+TOP] + ' <0|',
+        'Reset': BOX_CHARS[LEFT+BOT+TOP] + ' <0|',
         }
 
     multi_labels = {
@@ -460,7 +460,7 @@ def circuit_diagram(
     layer_text.append(qpad(qubit_layer))
 
     # Gate layers
-    for layer in layers.elements:
+    for layer in layers:
         code = [''] * (2*N-1)
 
         assert isinstance(layer, Circuit)
@@ -487,7 +487,7 @@ def circuit_diagram(
             if name == 'I':
                 pass
 
-            elif name == 'RESET' or name == 'NoWire':
+            elif name == 'Reset' or name == 'NoWire':
                 for i in idx:
                     code[i] = label
 
@@ -534,15 +534,14 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     """Separate a circuit into groups of gates that do not visually overlap"""
     N = len(qubits)
     qubit_idx = dict(zip(qubits, range(N)))
-    gate_layers = DAGCircuit(circ).layers()
+    gate_layers = DAGCircuit(circ).moments()
 
     layers = []
-    lcirc = Circuit()
-    layers.append(lcirc)
-    unused = [True] * N
 
     for gl in gate_layers:
-        assert isinstance(gl, Circuit)
+        lcirc = Circuit()
+        layers.append(lcirc)
+        unused = [True] * N
         for gate in gl:
             indices = [qubit_idx[q] for q in gate.qubits]
 
@@ -569,7 +568,7 @@ def _pretty(obj: Any, format: str = 'text') -> str:
             else:
                 return str(symbolize(obj)).replace('pi', 'π')
         except ValueError:
-            return "{0:.4g}".format(obj)
+            return f'{obj:.4g}'
 
     out = str(obj)
     if format == 'text':

@@ -18,13 +18,27 @@ from numpy import (  # noqa: F401
     sqrt, pi, conj, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
-    outer, tensordot, einsum, transpose, roll)
+    outer, tensordot, einsum, transpose, roll, ndim, copy)
 
 from numpy import sum as reduce_sum                 # noqa: F401
 
 from opt_einsum import contract
 
 from ..utils import multi_slice
+
+
+__all__ = [  # noqa: F405
+           'BKTensor', 'CTYPE', 'DEVICE', 'FTYPE', 'MAX_QUBITS', 'TENSOR',
+           'TL', 'TensorLike', 'absolute', 'arccos', 'astensor',
+           'ccast', 'cis', 'conj', 'cos', 'diag', 'evaluate', 'exp', 'fcast',
+           'gpu_available', 'imag', 'inner', 'minimum',
+           'outer', 'matmul',
+           'ndim', 'real', 'reshape', 'set_random_seed', 'sin',
+           'sqrt', 'reduce_sum', 'tensormul', 'trace', 'transpose',
+           'getitem', 'astensorproduct', 'productdiag',
+           'EINSUM_SUBSCRIPTS', 'einsum',
+           'version', 'name', 'size', 'contract', 'tensordot', 'roll', 'copy']
+
 
 TL = np
 """'TensorLibrary'. The actual imported backend python package
@@ -122,11 +136,6 @@ def evaluate(tensor: BKTensor) -> TensorLike:
     return tensor
 
 
-def rank(tensor: BKTensor) -> int:
-    """Return the number of dimensions of a tensor"""
-    return len(tensor.shape)
-
-
 def inner(tensor0: BKTensor, tensor1: BKTensor) -> BKTensor:
     """Return the inner product between two tensors"""
     # Note: Relying on fact that vdot flattens arrays
@@ -154,7 +163,7 @@ def getitem(tensor: BKTensor, key: typing.Any) -> BKTensor:
 
 def productdiag(tensor: BKTensor) -> BKTensor:
     """Returns the matrix diagonal of the product tensor"""  # DOCME: Explain
-    N = rank(tensor)
+    N = ndim(tensor)
     tensor = reshape(tensor, [2**(N//2), 2**(N//2)])
     tensor = np.diag(tensor)
     tensor = reshape(tensor, [2]*(N//2))
@@ -162,7 +171,7 @@ def productdiag(tensor: BKTensor) -> BKTensor:
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int],
+              indices: typing.Tuple[int, ...],
               diagonal: bool = False) -> BKTensor:
     r"""
     Generalization of matrix multiplication to product tensors.
@@ -207,11 +216,11 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
-                      indices: typing.List[int],
+                      indices: typing.Tuple[int, ...],
                       diagonal: bool = False) -> BKTensor:
     # About the same speed as tensordot
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     gate = reshape(tensor0, [2**K, 2**K])
@@ -237,17 +246,17 @@ def _tensormul_matmul(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def _tensormul_cirq(tensor0: BKTensor, tensor1: BKTensor,
-                    indices: typing.List[int]) -> BKTensor:
+                    indices: typing.Tuple[int, ...]) -> BKTensor:
     from cirq import targeted_left_multiply
     tensor = targeted_left_multiply(tensor0, tensor1, indices)
     return tensor
 
 
 def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
-                         indices: typing.List[int]) -> BKTensor:
+                         indices: typing.Tuple[int, ...]) -> BKTensor:
     # Significantly faster than using einsum.
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
     perm = list(indices) + [n for n in range(N) if n not in indices]
@@ -260,18 +269,18 @@ def _tensormul_tensordot(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def _tensormul_contract(tensor0: BKTensor, tensor1: BKTensor,
-                        indices: typing.List[int]) -> BKTensor:
+                        indices: typing.Tuple[int, ...]) -> BKTensor:
 
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
-    left_out = indices
+    left_out = list(indices)
     left_in = list(range(N, N+K))
     right = list(range(0, N))
     for idx, s in zip(indices, left_in):
         right[idx] = s
 
-    tensor = contract(tensor0, left_out+left_in, tensor1, right)
+    tensor = contract(tensor0, tuple(left_out+left_in), tensor1, tuple(right))
 
     return tensor

@@ -147,7 +147,7 @@ class Instruction(Operation):
 
     def evolve(self, rho: Density) -> Density:
         # For purely classical Instructions the action of run() and evolve()
-        # is the same
+        # are the same
         res = self.run(rho)
         assert isinstance(res, Density)
         return res
@@ -291,8 +291,7 @@ class DefCircuit(Program):
         else:
             fqubits = ''
 
-        result = '{} {}{}{}:\n'.format(self.name, self.progname,
-                                       fparams, fqubits)
+        result = f'{self.name} {self.progname}{fparams}{fqubits}:\n'
 
         for instr in self.instructions:
             result += "    "
@@ -332,8 +331,7 @@ class Load(Instruction):
         self.right = right
 
     def quil(self) -> str:
-        return '{} {} {} {}'.format(self.name, self.target,
-                                    self.left, self.right)
+        return f'{self.name} {self.target} {self.left} {self.right}'
 
     def run(self, ket: State) -> State:
         raise NotImplementedError()
@@ -351,8 +349,7 @@ class Store(Instruction):
         self.right = right
 
     def quil(self) -> str:
-        return '{} {} {} {}'.format(self.name, self.target,
-                                    self.left, self.right)
+        return f'{self.name} {self.target} {self.left} {self.right}'
 
     def run(self, ket: State) -> State:
         raise NotImplementedError()
@@ -365,7 +362,7 @@ class Label(Instruction):
         self.target = target
 
     def quil(self) -> str:
-        return '{} @{}'.format(self.name, self.target)
+        return f'{self.name} @{self.target}'
 
     def run(self, ket: State) -> State:
         return ket
@@ -378,7 +375,7 @@ class Jump(Instruction):
         self.target = target
 
     def quil(self) -> str:
-        return '{} @{}'.format(self.name, self.target)
+        return f'{self.name} @{self.target}'
 
     def run(self, ket: State) -> State:
         dest = ket.memory[TARGETS][self.target]
@@ -393,7 +390,7 @@ class JumpWhen(Instruction):
         self.condition = condition
 
     def quil(self) -> str:
-        return '{} @{} {}'.format(self.name, self.target, self.condition)
+        return f'{self.name} @{self.target} {self.condition}'
 
     def run(self, ket: State) -> State:
         if ket.memory[self.condition]:
@@ -414,7 +411,7 @@ class JumpUnless(Instruction):
         self.condition = condition
 
     def quil(self) -> str:
-        return '{} @{} {}'.format(self.name, self.target, self.condition)
+        return f'{self.name} @{self.target} {self.condition}'
 
     def run(self, ket: State) -> State:
         if not ket.memory[self.condition]:  # pragma: no cover  # FIXME
@@ -444,11 +441,11 @@ class Pragma(Instruction):
         self.freeform = freeform
 
     def quil(self) -> str:
-        ret = ["PRAGMA {}".format(self.command)]
+        ret = [f'PRAGMA {self.command}']
         if self.args:
             ret.extend(str(a) for a in self.args)
         if self.freeform:
-            ret.append('"{}"'.format(self.freeform))
+            ret.append(f'"{self.freeform}"')
         return ' '.join(ret)
 
     def run(self, ket: State) -> State:
@@ -467,7 +464,7 @@ class Include(Instruction):
         self.program = program
 
     def quil(self) -> str:
-        return '{} "{}"'.format(self.name, self.filename)
+        return f'{self.name} "{self.filename}"'
 
     def run(self, ket: State) -> State:
         raise NotImplementedError()
@@ -494,7 +491,7 @@ class Call(Instruction):
                 + ")"
         else:
             fparams = ""
-        return "{}{}{}".format(self.gatename, fparams, fqubits)
+        return f"{self.gatename}{fparams}{fqubits}"
 
     def run(self, ket: State) -> State:
         namedgates = ket.memory[NAMEDGATES]
@@ -507,58 +504,6 @@ class Call(Instruction):
 
         ket = gate.run(ket)
         return ket
-
-# FIXME
-# class DefGate(Instruction):
-#     """Define a new quantum gate."""
-#     def __init__(self,
-#                  gatename: str,
-#                  matrix: TensorLike,
-#                  params: List[Parameter] = None) -> None:
-#         self.gatename = gatename
-#         self.matrix = matrix
-#         self.params = params
-
-#     def quil(self) -> str:
-#         if self.params:
-#             fparams = '(' + ','.join(map(str, self.params)) + ')'
-#         else:
-#             fparams = ''
-
-#         result = '{} {}{}:\n'.format(self.name, self.gatename, fparams)
-
-#         for row in self.matrix:
-#             result += "    "
-#             # FIXME: Hack to format complex numbers as quil expects
-#             result += ", ".join(str(col).replace('*I', 'i')
-#                                         .replace('j', 'i')
-#                                         .replace('1.0i', 'i') for col in row)
-#             result += "\n"
-
-#         return result
-
-#     def _create_gate(self, *gateparams: float) -> Gate:
-#         if not self.params:
-#             matrix = np.asarray(self.matrix)
-#             gate = Gate(matrix, name=self.gatename)
-#         else:
-#             params = {str(p): complex(g) for p, g
-#                       in zip(self.params, gateparams)}
-#             K = len(self.matrix)
-#             matrix = np.zeros(shape=(K, K), dtype=np.complex)
-#             for i in range(K):
-#                 for j in range(K):
-#                     value = eval_parameter(self.matrix[i][j], params)
-#                     matrix[i, j] = value
-#             matrix = np.asarray(matrix)
-#             gate = Gate(matrix, name=self.gatename)
-#         return gate
-
-#     def run(self, ket: State) -> State:
-#         namedgates = ket.memory[NAMEDGATES].copy()
-#         namedgates[self.gatename] = self._create_gate
-#         ket = ket.store({NAMEDGATES: namedgates})
-#         return ket
 
 
 class Declare(Instruction):
@@ -580,7 +525,7 @@ class Declare(Instruction):
         ql += [self.memory_name]
         ql += [self.memory_type]
         if self.memory_size != 1:
-            ql += ['[{}]'.format(self.memory_size)]
+            ql += [f'[{self.memory_size}]']
 
         if self.shared_region is not None:
             ql += ['SHARING']
@@ -609,7 +554,7 @@ class Neg(Operation):
         return ket.store({self.target: - ket.memory[self.target]})
 
     def __str__(self) -> str:
-        return '{} {}'.format(self.name.upper(), self.target)
+        return f'{self.name.upper()} {self.target}'
 
 
 class Not(Operation):
@@ -623,7 +568,7 @@ class Not(Operation):
         return ket.store({self.target: res})
 
     def __str__(self) -> str:
-        return '{} {}'.format(self.name.upper(), self.target)
+        return f'{self.name.upper()} {self.target}'
 
 
 # Binary classical operations
@@ -643,7 +588,7 @@ class BinaryOP(Operation, metaclass=ABCMeta):
         return self.source
 
     def __str__(self) -> str:
-        return '{} {} {}'.format(self.name.upper(), self.target, self.source)
+        return f'{self.name.upper()} {self.target} {self.source}'
 
     def run(self, ket: State) -> State:
         target = ket.memory[self.target]
@@ -733,8 +678,7 @@ class Comparison(Operation, metaclass=ABCMeta):
         self.right = right
 
     def __str__(self) -> str:
-        return '{} {} {} {}'.format(self.name, self.target,
-                                    self.left, self.right)
+        return f'{self.name} {self.target} {self.left} {self.right}'
 
     def run(self, ket: State) -> State:
         res = self._op(ket.memory[self.left], ket.memory[self.right])
@@ -770,38 +714,3 @@ class LE(Comparison):
 class NE(Comparison):
     """Set target to boolean (left!=right)"""
     _op = operator.ne
-
-
-# ==== UTILITIES ====
-
-# def _param_format(obj: Any) -> str:
-#     """Format an object as a latex string."""
-#     if isinstance(obj, float):
-#         try:
-#             return str(symbolize(obj))
-#         except ValueError:
-#             return "{}".format(obj)
-
-#     return str(obj)
-
-
-# def quil_parameter(symbol: str) -> Parameter:
-#     """Create a quil parameter.
-
-#     Args:
-#         symbol: The variable name. If the first character is not '%' then a
-#             percent sign will be prepended.
-
-#     Returns:
-#         A sympy symbol object representing the quil variable.
-#     """
-#     if symbol[0] != '%':
-#         symbol = '%' + symbol
-#     return sympy.symbols(symbol)
-
-
-# def eval_parameter(param: Any, params: Dict[str, Any]) -> complex:
-#     """Evaluate a quil parameter (a sympy Symbol). Ordinary
-#     python numbers will be passed through unchanged.
-#     """
-#     return sympy.N(param, subs=params)

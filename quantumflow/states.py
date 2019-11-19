@@ -73,7 +73,7 @@ class State:
         """
         if qubits is None:
             tensor = bk.astensorproduct(tensor)
-            bits = bk.rank(tensor)
+            bits = bk.ndim(tensor)
             qubits = range(bits)
 
         self.vec = QubitVector(tensor, qubits)
@@ -181,10 +181,15 @@ class State:
         res = indices[res]
         return res
 
-    def asdensity(self) -> 'Density':
-        """Convert a pure state to a density matrix"""
-        matrix = bk.outer(self.tensor, bk.conj(self.tensor))
-        return Density(matrix, self.qubits, self.memory)
+    def asdensity(self, qubits: Qubits = None) -> 'Density':
+        """Convert a pure state to a density matrix.
+
+        args:
+            qubits: The qubit subspace. If not given return the density
+                    matrix for all the qubits (which can take a lot of memory!)
+        """
+        vec = self.vec.promote_to_operator(qubits)
+        return Density(vec.tensor, vec.qubits, self.memory)
 
     def __str__(self) -> str:
         state = self.vec.asarray()
@@ -194,8 +199,8 @@ class State:
         for index, amplitude in np.ndenumerate(state):
             if not np.isclose(amplitude, 0.0):
                 ket = '|' + ''.join([str(n) for n in index]) + '>'
-                s.append('({c.real:0.04g}{c.imag:+0.04g}i) {k}'
-                         .format(c=amplitude, k=ket))
+                s.append(f'({amplitude.real:0.04g}'
+                         f'{amplitude.imag:+0.04g}i) {ket}')
                 count += 1
                 if count > MAX_ELEMENTS:
                     s.append('...')
@@ -253,6 +258,8 @@ def join_states(*states: State) -> State:
 
 # = Output =
 
+# FIXME: clean up. Move to visulization?
+
 def print_state(state: State, file: TextIO = None) -> None:
     """Print a state vector"""
     state = state.vec.asarray()
@@ -291,7 +298,7 @@ class Density(State):
                  memory: Mapping = None) -> None:
         if qubits is None:
             tensor = bk.astensorproduct(tensor)
-            bits = bk.rank(tensor) // 2
+            bits = bk.ndim(tensor) // 2
             qubits = range(bits)
 
         super().__init__(tensor, qubits, memory)
@@ -299,12 +306,6 @@ class Density(State):
     def trace(self) -> bk.BKTensor:
         """Return the trace of this density operator"""
         return self.vec.trace()
-
-    # TESTME
-    def partial_trace(self, qubits: Qubits) -> 'Density':
-        """Return the partial trace over the specified qubits"""
-        vec = self.vec.partial_trace(qubits)
-        return Density(vec.tensor, vec.qubits, self.memory)
 
     def relabel(self, qubits: Qubits) -> 'Density':
         """Return a copy of this state with new qubits"""
@@ -332,9 +333,12 @@ class Density(State):
         """Return the density matrix as a square array"""
         return self.vec.flatten()
 
-    def asdensity(self) -> 'Density':
-        """Returns self"""
-        return self
+    # TESTME, DOCME
+    def asdensity(self, qubits: Qubits = None) -> 'Density':
+        if qubits is None:
+            return self
+        vec = self.vec.partial_trace(qubits)
+        return Density(vec.tensor, vec.qubits, self.memory)
 
     # DOCME TESTME
     def store(self, *args: Any, **kwargs: Any) -> 'Density':

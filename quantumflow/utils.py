@@ -10,7 +10,7 @@ QuantumFlow: utilities
 Useful routines not necessarily intended to be part of the public API.
 """
 
-from typing import Any, Sequence, Callable, Set, Tuple, Hashable, Iterator
+from typing import Any, Sequence, Callable, Set, Tuple, Iterator, Dict
 from typing import Optional, Mapping, TypeVar, List
 import warnings
 import functools
@@ -31,6 +31,7 @@ __all__ = ['multi_slice',
            'bitlist_to_int',
            'int_to_bitlist',
            'deprecated',
+           'cached_property',
            'from_graph6',
            'to_graph6',
            'spanning_tree_count',
@@ -88,13 +89,13 @@ class FrozenDict(Mapping[KT, VT]):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._dict = dict(*args, **kwargs)
-        self._hash = None  # type: Optional[int]
+        self._dict: Dict[KT, VT] = dict(*args, **kwargs)
+        self._hash: Optional[int] = None
 
-    def __getitem__(self, key: Hashable) -> VT:
+    def __getitem__(self, key: KT) -> VT:
         return self._dict[key]
 
-    def __contains__(self, key: Hashable) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self._dict
 
     def copy(self, *args: Any, **kwargs: Any) -> 'FrozenDict':
@@ -103,7 +104,7 @@ class FrozenDict(Mapping[KT, VT]):
         return self.__class__(d)
 
     def __iter__(self) -> Iterator[KT]:
-        return iter(self._dict)
+        yield from self._dict
 
     def __len__(self) -> int:
         return len(self._dict)
@@ -145,6 +146,8 @@ def int_to_bitlist(x: int, pad: int = None) -> Sequence[int]:
     return [int(b) for b in form.format(x)]
 
 
+# -- Function decorators --
+
 def deprecated(func: Callable) -> Callable:
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -152,12 +155,62 @@ def deprecated(func: Callable) -> Callable:
     @functools.wraps(func)
     def _new_func(*args: Any, **kwargs: Any) -> Any:
         warnings.simplefilter('always', DeprecationWarning)  # turn off filter
-        warnings.warn("Call to deprecated function {}.".format(func.__name__),
+        warnings.warn(f'Call to deprecated function {func.__name__}.',
                       category=DeprecationWarning,
                       stacklevel=2)
         warnings.simplefilter('default', DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
     return _new_func
+
+
+try:
+    # Python >3.8
+    from functools import cached_property   # type: ignore
+except ImportError:
+
+    def cached_property(func):  # type: ignore
+        """
+         Method decorator for immutable properties.
+         The result is cached on the first call.
+        """
+        def wrapper(instance):  # type: ignore
+            attr = '_cached_property_'+func.__name__
+            if hasattr(instance, attr):
+                return getattr(instance, attr)
+            result = func(instance)
+            setattr(instance, attr, result)
+            return result
+        return property(wrapper)
+
+
+# Note: I can't get mypy to like this decorator
+# class cached_property:
+#     """
+#     Method decorator for immutable properties.
+#     The result is cached on the first call.
+#     """
+#     # Kudos: Adapted from django's cached_property. Simpler
+#     # implementation because we don't try to support Python < 3.6
+#     # Essentailly same idea added to Python 3.8
+
+#     # This class uses the descriptor protocol
+#     # https://docs.python.org/3.6/howto/descriptor.html
+
+#     def __init__(self, func) -> None:
+#         self.func = func
+#         self.__doc__ = func.__doc__
+
+#     def __set_name__(self, owner, name: str) -> None:
+#         self.name = name
+#         print(name)
+#         sys.exit()
+
+#     def __get__(self, instance, owner=None) -> Any:
+#         if instance is None:
+#             return self
+#         result = self.func(instance)
+#         instance.__dict__[self.name] = result
+#         return result
 
 
 # -- Graphs --
@@ -188,9 +241,10 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
     """Return the octagonal tiling graph (4.8.8, truncated square tiling,
     truncated quadrille) of MxNx8 nodes
 
-    The 'positions' node attribute gives node coordinates for the octagonal
-    tiling. (Nodes are located on a square lattice, and edge lengths are
-    uneven)
+    To visualize with networkx and matplot lib:
+    > import matplotlib.pyplot as plt
+    > nx.draw(G, pos={node: node for node in G.nodes})
+    >plt.show()
     """
 
     grp = nx.Graph()
@@ -215,11 +269,28 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
 
             for (x0, y0), (x1, y1) in edges:
                 grp.add_edge((m*4+x0, n*4+y0), (m*4+x1, n*4+y1))
-
-    positions = {node: node for node in grp}
-    nx.set_node_attributes(grp, positions, 'positions')
-
     return grp
+
+
+def truncated_grid_2d_graph(m: int, n: int, t: int = None) -> nx.Graph:
+    """Generate a rectangular grid graph (of width `m` and height `n`),
+    with corners removed. It the truncation `t` is not given, then it
+    is set to half the shortest side (rounded down)
+
+    truncated_grid_graph(12, 11) returns the topology of Google's
+    bristlecone chip.
+    """
+    G = nx.grid_2d_graph(m, n)
+    if t is None:
+        t = min(m, n) // 2
+
+    for mm in range(t):
+        for nn in range(t-mm):
+            G.remove_node((mm, nn))
+            G.remove_node((m-mm-1, nn))
+            G.remove_node((mm, n-nn-1))
+            G.remove_node((m-mm-1, n-nn-1))
+    return G
 
 
 # -- More Math --

@@ -1,3 +1,4 @@
+
 # Copyright 2016-2018, Rigetti Computing
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
@@ -17,7 +18,8 @@ from quantumflow.utils import (
     invert_map, FrozenDict, bitlist_to_int, int_to_bitlist,
     to_graph6, from_graph6,
     spanning_tree_count, octagonal_tiling_graph, deprecated,
-    rationalize, symbolize)
+    cached_property,
+    rationalize, symbolize, truncated_grid_2d_graph)
 
 
 def test_invert_dict():
@@ -72,6 +74,36 @@ def test_deprecated():
         obj.some_thing()
 
 
+def test_cached_property():
+
+    class thing():
+        def __init__(self, value):
+            self.value = value
+
+        @cached_property
+        def plus1(self):
+            return self.value+1
+
+        @cached_property
+        def plus2(self):
+            return self.value+2
+
+    two = thing(2)
+    assert two.plus1 == 2+1
+    assert two.plus1 == 2+1
+    assert two.plus2 == 2+2
+    assert two.plus1 == 2+1
+
+    ten = thing(10)
+    assert ten.plus1 == 10+1
+    assert ten.plus1 == 10+1
+    assert ten.plus2 == 10+2
+    assert ten.plus2 == 10+2
+
+    assert two.plus1 == 2+1
+    assert two.plus2 == 2+2
+
+
 def test_bitlist_to_int():
     assert bitlist_to_int([1, 0, 0]) == 4
 
@@ -99,6 +131,14 @@ def test_spanning_tree_count():
 def test_octagonal_tiling_graph():
     grp = octagonal_tiling_graph(4, 4)
     assert len(grp) == 128
+
+
+def test_truncated_grid_2d_graph():
+    G = truncated_grid_2d_graph(12, 11)
+    assert len(G) == 72
+
+    G = truncated_grid_2d_graph(8, 8, 2)
+    assert len(G) == 8*8 - 4*3
 
 
 def test_rationalize():

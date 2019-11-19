@@ -13,32 +13,41 @@ import typing
 import string
 import numpy as np
 
+
 import tensorflow as tf
-from tensorflow import (  # noqa: F401
-    transpose,
-    minimum,
-    exp, cos, sin,
-    conj, real, imag, sqrt, matmul, trace,
-    einsum, reshape, reduce_sum,
-    roll,
-    tensordot)
+from tensorflow import transpose, minimum, exp, cos, sin        # noqa: F401
 
+
+from tensorflow import matmul                                   # noqa: F401
 from tensorflow import abs as absolute                          # noqa: F401
-from tensorflow import diag_part as diag                        # noqa: F401
+from tensorflow import einsum, reshape                          # noqa: F401
 from tensorflow.python.client import device_lib
+from tensorflow import reduce_sum                               # noqa: F401
+from tensorflow import roll, tensordot                          # noqa: F401
+from tensorflow import identity as copy                         # noqa: F401
 
-from .numpybk import rank
 from .numpybk import set_random_seed as np_set_random_seed
-from .numpybk import TensorLike, BKTensor
+from .numpybk import TensorLike, BKTensor, __all__              # noqa: F401
 
 from opt_einsum import contract                                 # noqa: F401
+
+# Tensorflow 2.0 is doing something weird with imports so that
+# we can't use 'from tensorflow import real, imag, sqrt' any more.
+real = tf.math.real
+imag = tf.math.imag
+sqrt = tf.math.sqrt
+conj = tf.math.conj
+diag = tf.linalg.diag_part
+trace = tf.linalg.trace
+
 
 TL = tf
 name = TL.__name__
 version = TL.__version__
 
 
-tf.InteractiveSession()             # TESTME: Is this safe to do?
+# FIXME: Remove?
+tf.compat.v1.InteractiveSession()             # TESTME: Is this safe to do?
 
 CTYPE = tf.complex128
 FTYPE = tf.float64
@@ -49,6 +58,7 @@ TENSOR = tf.Tensor
 MAX_QUBITS = 32
 
 
+# FIXME
 def gpu_available() -> bool:
     local_device_protos = device_lib.list_local_devices()
     gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
@@ -60,6 +70,11 @@ DEVICE = 'gpu' if gpu_available() else 'cpu'
 
 EINSUM_SUBSCRIPTS = string.ascii_lowercase
 # Tensorflow's einsum only allows 26 indices alas
+
+
+def ndim(tensor: BKTensor) -> int:
+    """Return the number of dimensions of a tensor"""
+    return len(tensor.shape)
 
 
 def ccast(value: complex) -> TensorLike:
@@ -77,7 +92,9 @@ def size(tensor: BKTensor) -> int:
 
 def astensor(array: TensorLike) -> BKTensor:
     """Covert numpy array to tensorflow tensor"""
-    tensor = tf.convert_to_tensor(array, dtype=CTYPE)
+    if type(array) == TENSOR:
+        return array
+    tensor = tf.convert_to_tensor(value=array, dtype=CTYPE)
     return tensor
 
 
@@ -90,15 +107,15 @@ def astensorproduct(array: TensorLike) -> BKTensor:
 
 def evaluate(tensor: BKTensor) -> TensorLike:
     """Return the value of a tensor"""
-    return tensor.eval()    # Requires a tensorflow session to be running.
+    return tensor.numpy()
 
 
 def inner(tensor0: BKTensor, tensor1: BKTensor) -> BKTensor:
     """Return the inner product between two states"""
     # Note: Relying on fact that vdot flattens arrays
-    N = rank(tensor0)
+    N = ndim(tensor0)
     axes = list(range(N))
-    return tf.tensordot(tf.conj(tensor0), tensor1, axes=(axes, axes))
+    return tf.tensordot(tf.math.conj(tensor0), tensor1, axes=(axes, axes))
 
 
 def outer(tensor0: BKTensor, tensor1: BKTensor) -> BKTensor:
@@ -118,12 +135,12 @@ def arccos(theta: float) -> BKTensor:
 # def sum(tensor: BKTensor,
 #         axis: typing.Union[int, typing.Tuple[int]] = None,
 #         keepdims: bool = None) -> BKTensor:
-#     return tf.reduce_sum(tensor, axis, keepdims)
+#     return tf.reduce_sum(input_tensor=tensor, axis=axis, keepdims=keepdims)
 
 
 def set_random_seed(seed: int) -> None:
     np_set_random_seed(seed)
-    tf.set_random_seed(seed)
+    tf.compat.v1.set_random_seed(seed)
 
 
 def getitem(tensor: BKTensor, key: typing.Any) -> BKTensor:
@@ -131,30 +148,29 @@ def getitem(tensor: BKTensor, key: typing.Any) -> BKTensor:
 
 
 def productdiag(tensor: BKTensor) -> BKTensor:
-    N = rank(tensor)
+    N = ndim(tensor)
     tensor = reshape(tensor, [2**(N//2), 2**(N//2)])
-    tensor = tf.diag_part(tensor)
+    tensor = tf.linalg.tensor_diag_part(tensor)
     tensor = reshape(tensor, [2]*(N//2))
     return tensor
 
 
 def tensormul(tensor0: BKTensor, tensor1: BKTensor,
-              indices: typing.List[int],
+              indices: typing.Tuple[int, ...],
               diagonal: bool = False) -> BKTensor:
-    N = rank(tensor1)
-    K = rank(tensor0) // 2
+    N = ndim(tensor1)
+    K = ndim(tensor0) // 2
     assert K == len(indices)
 
-    gate = reshape(tensor0, [2**K, 2**K])
+    out = list(EINSUM_SUBSCRIPTS[0:N])
+    left_in = list(EINSUM_SUBSCRIPTS[N:N+K])
+    left_out = [out[idx] for idx in indices]
+    right = list(EINSUM_SUBSCRIPTS[0:N])
+    for idx, s in zip(indices, left_in):
+        right[idx] = s
 
-    perm = list(indices) + [n for n in range(N) if n not in indices]
-    inv_perm = np.argsort(perm)
+    subscripts = ''.join(left_out + left_in + [','] + right + ['->'] + out)
+    # print('>>>', K, N, subscripts)
 
-    tensor = tensor1
-    tensor = transpose(tensor, perm)
-    tensor = reshape(tensor, [2**K, 2**(N-K)])
-    tensor = matmul(gate, tensor)
-    tensor = reshape(tensor, [2]*N)
-    tensor = transpose(tensor, inv_perm)
-
+    tensor = einsum(subscripts, tensor0, tensor1)
     return tensor

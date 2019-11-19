@@ -104,11 +104,6 @@ numpy's arccos())
 Note that numpy's sum() is imported as reduce_sum, to avoid conflicts with
 python's builtin sum() function.
 
-In addition each backend implements the following methods and variables.
-
-
-.. automodule:: quantumflow.backend.numpybk
-   :members:
 """
 
 
@@ -118,22 +113,20 @@ from ..config import ENV_PREFIX, SEED
 from .numpybk import set_random_seed as np_set_random_seed
 
 DEFAULT_BACKEND = 'numpy'
-BACKENDS = ('tensorflow', 'tensorflow2', 'eager', 'torch', 'ctf', 'numpy')
+BACKENDS = ('tensorflow', 'ctf', 'numpy64', 'numpy')
 
 # Environment variable override
 _BACKEND_EV = ENV_PREFIX + 'BACKEND'
 BACKEND = os.getenv(_BACKEND_EV, DEFAULT_BACKEND)
 if BACKEND not in BACKENDS:  # pragma: no cover
-    raise ValueError('Unknown backend: {}={}'.format(_BACKEND_EV, BACKEND))
+    raise ValueError(f'Unknown backend: {_BACKEND_EV}={BACKEND}')
 
 if BACKEND == 'tensorflow':                          # pragma: no cover
     from quantumflow.backend.tensorflowbk import *   # noqa: F403
-elif BACKEND == 'eager':                             # pragma: no cover
-    from quantumflow.backend.eagerbk import *        # noqa: F403
-elif BACKEND == 'tensorflow2':                       # pragma: no cover
-    from quantumflow.backend.tensorflow2bk import *  # noqa: F403
-elif BACKEND == 'ctf':                             # pragma: no cover
-    from quantumflow.backend.ctfbk import *        # noqa: F403
+elif BACKEND == 'ctf':                               # pragma: no cover
+    from quantumflow.backend.ctfbk import *          # noqa: F403
+elif BACKEND == 'numpy64':                           # pragma: no cover
+    from quantumflow.backend.numpy64bk import *      # noqa: F403
 else:                                                # pragma: no cover
     from quantumflow.backend.numpybk import *        # noqa: F403
 

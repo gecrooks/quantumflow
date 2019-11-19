@@ -1,18 +1,22 @@
 
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+# Copyright 2016-2018, Rigetti Computing
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 QuantumFlow: Three qubit gates
 """
 
-import numpy as np
-
 from .. import backend as bk
 from ..qubits import Qubit
-from ..states import State, Density
+from ..states import State
 from ..ops import Gate
-from ..utils import multi_slice
+from ..utils import multi_slice, cached_property
 
 
-__all__ = ['CCNOT', 'CSWAP', 'CCZ', 'IDEN']
+__all__ = ['CCNOT', 'CSWAP', 'CCZ']
 
 
 class CCNOT(Gate):
@@ -40,7 +44,7 @@ class CCNOT(Gate):
                  q2: Qubit = 2) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
@@ -95,7 +99,7 @@ class CSWAP(Gate):
                  q2: Qubit = 2) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
@@ -153,7 +157,7 @@ class CCZ(Gate):
                  q2: Qubit = 2) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
@@ -180,33 +184,3 @@ class CCZ(Gate):
             return State(tensor, ket.qubits, ket.memory)
 
         return super().run(ket)  # pragma: no cover
-
-
-class IDEN(Gate):                                      # noqa: E742
-    r"""
-    The multi-qubit identity gate.
-    """
-    interchangeable = True
-    diagonal = True
-
-    def __init__(self, *qubits: Qubit) -> None:
-        if not qubits:
-            qubits = (0,)
-        super().__init__(qubits=qubits)
-
-    @property
-    def tensor(self) -> bk.BKTensor:
-        return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
-
-    @property
-    def H(self) -> 'IDEN':
-        return self  # Hermitian
-
-    def __pow__(self, t: float) -> 'IDEN':
-        return self
-
-    def run(self, ket: State) -> State:
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        return rho

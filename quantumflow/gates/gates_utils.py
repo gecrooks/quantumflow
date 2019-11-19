@@ -1,4 +1,11 @@
 
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+# Copyright 2016-2018, Rigetti Computing
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
+
 from typing import TextIO, Union
 from functools import reduce
 import numpy as np
@@ -9,7 +16,7 @@ from ..qubits import Qubit, Qubits, qubits_count_tuple, asarray
 from ..qubits import outer_product
 from ..ops import Gate
 from .. import utils
-from .gates_three import IDEN
+from .gates_one import IDEN
 
 __all__ = ['identity_gate',
            'random_gate',
@@ -98,7 +105,7 @@ def print_gate(gate: Gate, ndigits: int = 2,
         ket = "".join([str(n) for n in index[0:N]])
         bra = "".join([str(index[n]) for n in range(N, 2*N)])
         if round(abs(amplitude)**2, ndigits) > 0.0:
-            lines.append('{} -> {} : {}'.format(bra, ket, amplitude))
+            lines.append(f'{bra} -> {ket} : {amplitude}')
     lines.sort(key=lambda x: int(x[0:N]))
     print('\n'.join(lines), file=file)
 
@@ -142,4 +149,4 @@ def random_gate(qubits: Union[int, Qubits]) -> Gate:
     """
     N, qubits = qubits_count_tuple(qubits)
     unitary = utils.unitary_ensemble(2**N)
-    return Gate(unitary, qubits=qubits, name='RAND{}'.format(N))
+    return Gate(unitary, qubits=qubits, name=f'RAND{N}')

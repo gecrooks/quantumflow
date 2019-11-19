@@ -49,7 +49,7 @@ from sympy import Symbol
 
 import quantumflow.backend as bk
 
-from .qubits import Qubits, QubitVector, qubits_count_tuple, asarray
+from .qubits import Qubit, Qubits, QubitVector, qubits_count_tuple, asarray
 from .states import State, Density
 
 from .utils import symbolize
@@ -97,7 +97,7 @@ class Operation(ABC):
     @property
     def name(self) -> str:
         """Return the name of this operation"""
-        return self.__class__.__name__.upper()
+        return self.__class__.__name__
 
     @property
     def params(self) -> Dict[str, Parameter]:
@@ -152,6 +152,14 @@ class Operation(ABC):
     def __lt__(self, other: Any) -> bool:
         return id(self) < id(other)
 
+    def specialize(self) -> 'Operation':
+        """For parameterized operations, return appropriate special cases
+        for particular parameters. Else return the original Operation.
+
+              e.g. RX(0).specialize() -> I()
+        """
+        return self
+
 # End class Operation
 
 
@@ -187,7 +195,7 @@ class Gate(Operation):
 
         if tensor is not None:
             tensor = bk.astensorproduct(tensor)
-            N = bk.rank(tensor) // 2
+            N = bk.ndim(tensor) // 2
             if qubits is None:
                 qubits = range(N)
             elif len(qubits) != N:
@@ -216,10 +224,14 @@ class Gate(Operation):
     def qubit_nb(self) -> int:
         return len(self.qubits)
 
-    def relabel(self, qubits: Qubits) -> 'Gate':
+    def relabel(self, labels: Union[Qubits, Dict[Qubit, Qubit]]) -> 'Gate':
         """Return a copy of this Gate with new qubits"""
-        qubits = tuple(qubits)
-        assert len(qubits) == self.qubit_nb     # FIXME: raise exception
+        if isinstance(labels, dict):
+            qubits = tuple(labels[q] for q in self.qubits)
+        else:
+            qubits = tuple(labels)
+            if len(qubits) != self.qubit_nb:
+                raise ValueError("Wrong number of qubits")
         gate = copy(self)
         gate._qubits = qubits
         return gate
@@ -236,13 +248,13 @@ class Gate(Operation):
 
     def asoperator(self) -> bk.BKTensor:
         """Return the gate tensor as a square array"""
-        return self.vec.flatten()
+        return bk.copy(self.vec.flatten())
 
     def run(self, ket: State) -> State:
         """Apply the action of this gate upon a state"""
         qubits = self.qubits
         indices = [ket.qubits.index(q) for q in qubits]
-        tensor = bk.tensormul(self.tensor, ket.tensor, indices,
+        tensor = bk.tensormul(self.tensor, ket.tensor, tuple(indices),
                               diagonal=self.diagonal)
         return State(tensor, ket.qubits, ket.memory)
 
@@ -278,8 +290,8 @@ class Gate(Operation):
             raise NotImplementedError()
         gate0 = self
         gate1 = other
-        indices = [gate1.qubits.index(q) for q in gate0.qubits]
-        tensor = bk.tensormul(gate0.tensor, gate1.tensor, indices)
+        indices = (gate1.qubits.index(q) for q in gate0.qubits)
+        tensor = bk.tensormul(gate0.tensor, gate1.tensor, tuple(indices))
         return Gate(tensor=tensor, qubits=gate1.qubits)
 
     def __str__(self) -> str:
@@ -290,7 +302,7 @@ class Gate(Operation):
                 try:
                     return str(symbolize(obj))
                 except ValueError:
-                    return "{}".format(obj)
+                    return f'{obj}'
             return str(obj)
 
         if self.name == 'Gate':
@@ -304,7 +316,7 @@ class Gate(Operation):
         else:
             fparams = ""
 
-        return "{}{}{}".format(self.name, fparams, fqubits)
+        return f'{self.name}{fparams}{fqubits}'
 
     def asgate(self) -> 'Gate':
         return self
@@ -326,6 +338,7 @@ class Gate(Operation):
         U = asarray(self.asoperator())
         U /= np.linalg.det(U) ** (1/rank)
         return Gate(tensor=U, qubits=self.qubits)
+
 
 # End class Gate
 
@@ -437,7 +450,7 @@ class Channel(Operation):
         indices = list([qubits.index(q) for q in self.qubits]) + \
             list([qubits.index(q) + N for q in self.qubits])
 
-        tensor = bk.tensormul(self.tensor, rho.tensor, indices)
+        tensor = bk.tensormul(self.tensor, rho.tensor, tuple(indices))
         return Density(tensor, qubits, rho.memory)
 
     def asgate(self) -> 'Gate':
@@ -472,7 +485,7 @@ class Channel(Operation):
         indices = list([chan1.qubits.index(q) for q in chan0.qubits]) + \
             list([chan1.qubits.index(q) + N for q in chan0.qubits])
 
-        tensor = bk.tensormul(chan0.tensor, chan1.tensor, indices)
+        tensor = bk.tensormul(chan0.tensor, chan1.tensor, tuple(indices))
 
         return Channel(tensor, qubits)
 

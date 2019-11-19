@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import scipy
 import numpy as np
@@ -6,6 +7,8 @@ import quantumflow as qf
 """
 QuantumFlow Examples:
     Validate canonical decomposition of cross resonance gate.
+
+    Ref: http://arxiv.org/abs/1905.13311
 """
 
 
@@ -29,7 +32,7 @@ def main():
     gate2 = circ.asgate()
 
     print()
-    print('Cross Resonance equivelent circuit')
+    print('Cross Resonance equivalent circuit')
     print(circ)
 
     print()

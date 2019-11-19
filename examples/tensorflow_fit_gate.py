@@ -6,48 +6,51 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow examples
+QuantumFlow Examples: Fit a 1-qubit gate using gradient descent,
+using tensorflow 2.0
 """
 
-import sys
 import os
+import tensorflow as tf
 
 os.environ['QUANTUMFLOW_BACKEND'] = 'tensorflow'
-import quantumflow as qf                                # noqa: E402
-import quantumflow.backend as bk                        # noqa: E402
+import quantumflow as qf                    # noqa: E402
+import quantumflow.backend as bk            # noqa: E402
 
 
 def fit_zyz(target_gate):
     """
-    Tensorflow example. Given an arbitrary one-qubit gate, use gradient
-    descent to find corresponding parameters of a universal ZYZ gate.
+    Tensorflow 2.0 example. Given an arbitrary one-qubit gate, use
+    gradient descent to find corresponding parameters of a universal ZYZ
+    gate.
     """
 
-    assert bk.BACKEND == 'tensorflow'
+    steps = 1000
 
-    tf = bk.TL
-    steps = 4000
+    dev = '/gpu:0' if bk.DEVICE == 'gpu' else '/cpu:0'
 
-    t = tf.get_variable('t', [3])
-    gate = qf.ZYZ(t[0], t[1], t[2])
+    with tf.device(dev):
+        t = tf.Variable(tf.random.normal([3]))
 
-    ang = qf.fubini_study_angle(target_gate.vec, gate.vec)
-    opt = tf.train.AdamOptimizer(learning_rate=0.001)
-    train = opt.minimize(ang, var_list=[t])
+        def loss_fn():
+            """Loss"""
+            gate = qf.ZYZ(t[0], t[1], t[2])
+            ang = qf.fubini_study_angle(target_gate.vec, gate.vec)
+            return ang
 
-    with tf.Session() as sess:
-        init_op = tf.global_variables_initializer()
-        sess.run(init_op)
+        opt = tf.optimizers.Adam(learning_rate=0.001)
+        opt.minimize(loss_fn, var_list=[t])
 
         for step in range(steps):
-            sess.run(train)
-            loss = sess.run(ang)
-            sys.stdout.write('\r')
-            sys.stdout.write("step: {} gate_angle: {}".format(step, loss))
-            if loss < 0.0001:
+            opt.minimize(loss_fn, var_list=[t])
+            loss = loss_fn()
+            print(step, loss.numpy())
+            if loss < 0.01:
                 break
-        print()
-        return sess.run(t)
+        else:
+            print("Failed to coverge")
+
+    return bk.evaluate(t)
 
 
 if __name__ == "__main__":
@@ -56,7 +59,8 @@ if __name__ == "__main__":
         print(fit_zyz.__doc__)
 
         print('Fitting randomly selected 1-qubit gate...')
-        target_gate = qf.random_gate(1)
-        t = fit_zyz(target_gate)
-        print('Fitted parameters:', t)
+        target = qf.random_gate(1)
+        params = fit_zyz(target)
+        print('Fitted parameters:', params)
+
     main()

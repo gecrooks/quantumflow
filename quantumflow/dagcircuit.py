@@ -9,6 +9,7 @@ QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 
 from typing import List, Dict, Iterable, Iterator, Generator, Any, Tuple
 import itertools
+import textwrap
 
 import numpy as np
 import networkx as nx
@@ -17,8 +18,9 @@ from . import backend as bk
 from .qubits import Qubit, Qubits
 from .states import State, Density
 from .ops import Operation, Gate, Channel
+from .stdops import Moment
 from .circuits import Circuit
-from .utils import invert_map
+from .utils import deprecated
 
 
 __all__ = 'DAGCircuit',
@@ -113,7 +115,7 @@ class DAGCircuit(Operation):
 
     def asgate(self) -> Gate:
         # Note: Experimental
-        # Contract entrie tensor network graph using einsum
+        # Contract entire tensor network graph using einsum
         # TODO: Do same for run() and evolve() and aschannel()
         tensors = []
         sublists = []
@@ -172,29 +174,48 @@ class DAGCircuit(Operation):
                  for c in nx.weakly_connected_components(G))
         return [DAGCircuit(comp) for comp in comps]
 
-    def layers(self) -> Circuit:
-        """Split DAGCircuit into layers, where the operations within each
-        layer operate on different qubits (and therefore commute).
+    def moments(self) -> Circuit:
+        """Split DAGCircuit into Moments, where the operations within each
+        moment operate on different qubits (and therefore commute).
 
-        Returns: A Circuit of Circuits, one Circuit per layer
+        Returns: A Circuit of Moments
         """
-        node_depth: Dict[Qubit, int] = {}
+        D = self.depth()
         G = self.graph
+
+        node_depth: Dict[Qubit, int] = {}
+        node_height: Dict[Qubit, int] = {}
 
         for elem in self:
             depth = np.max(list(node_depth.get(prev, -1) + 1
                            for prev in G.predecessors(elem)))
             node_depth[elem] = depth
 
-        depth_nodes = invert_map(node_depth, one_to_one=False)
+        for elem in reversed(list(self)):
+            height = np.min(list(node_height.get(next, D) - 1
+                                 for next in G.successors(elem)))
+            node_height[elem] = height
 
-        layers = []
-        for nd in range(0, self.depth()):
-            elements = depth_nodes[nd]
-            circ = Circuit(list(elements))
-            layers.append(circ)
+        # Place operations in Moment closest to
+        # beginning or end of circuit.
+        moments = [Circuit() for _ in range(D)]
 
-        return Circuit(layers)
+        # Iterate nodes in reverse seems to preserve original circuit ordering
+        for elem in reversed(list(self)):
+            depth = node_depth[elem]
+            height = node_height[elem]
+            if depth <= D-height-1:
+                moments[depth] += elem
+            else:
+                moments[height] += elem
+
+        circ = Circuit(Moment(moment) for moment in moments)
+
+        return circ
+
+    @deprecated
+    def layers(self) -> Circuit:
+        return self.moments()
 
     def __iter__(self) -> Iterator[Operation]:
         for elem in nx.topological_sort(self.graph):
@@ -233,6 +254,11 @@ class DAGCircuit(Operation):
             edges[qubits.index(edge[2])] = edge
 
         return list(edges)  # type: ignore
+
+    def __str__(self) -> str:
+        circ_str = '\n'.join([str(elem) for elem in self])
+        circ_str = textwrap.indent(circ_str, '    ')
+        return '\n'.join([self.name, circ_str])
 
 
 # End class DAGCircuit

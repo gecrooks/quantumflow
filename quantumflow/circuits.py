@@ -42,10 +42,12 @@ Visualizations
 """
 
 from typing import Sequence, Iterator, Iterable, Dict, Type, Any, Union
+from typing import List, overload
 from math import pi
 from itertools import chain
 from collections import defaultdict
 from collections.abc import MutableSequence
+import textwrap
 
 import numpy as np
 import networkx as nx
@@ -77,42 +79,49 @@ class Circuit(MutableSequence, Operation):
     These can be any quantum Operation, including other circuits.
 
     QuantumFlow's circuit can only contain Operations. They do not contain
-    control flow of other classical computations(similar to pyquil's
+    control flow of other classical computations (similar to pyquil's
     protoquil). For hybrid algorithms involving control flow and other
     classical processing use QuantumFlow's Program class.
     """
     def __init__(self, elements: Iterable[Operation] = None) -> None:
         if elements is None:
             elements = []
-        # TODO: Make elements private
-        self.elements = list(elements)
+        self._elements: List[Operation] = list(elements)
 
     # Methods for MutableSequence
-    def __getitem__(self, key: Union[int, slice]) -> Any:
-        return self.elements[key]
+    @overload
+    def __getitem__(self, key: int) -> Operation: ...
+
+    @overload       # noqa: F811
+    def __getitem__(self, key: slice) -> 'Circuit': ...
+
+    def __getitem__(self, key: Union[int, slice]) -> Operation:   # noqa: F811s
+        if isinstance(key, slice):
+            return Circuit(self._elements[key])
+        return self._elements[key]
 
     def __delitem__(self, key: Union[int, slice]) -> None:
-        del self.elements[key]
+        del self._elements[key]
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-        self.elements[key] = value
+        self._elements[key] = value
 
     def __len__(self) -> int:
-        return self.elements.__len__()
+        return self._elements.__len__()
 
     def insert(self, idx: int, value: Any) -> None:
-        self.elements.insert(idx, value)
+        self._elements.insert(idx, value)
 
     def extend(self, other: Iterable[Any]) -> None:
         """Append gates from circuit to the end of this circuit"""
         if other is self:
             # We can go into infinite regress otherwise.
-            other = list(self.elements)
-        self.elements.extend(other)
+            other = list(self._elements)
+        self._elements.extend(other)
 
     def add(self, other: 'Circuit') -> 'Circuit':
         """Concatenate gates and return new circuit"""
-        return Circuit(self.elements + other.elements)
+        return Circuit(chain(self, other))
 
     def __add__(self, other: 'Circuit') -> 'Circuit':
         return self.add(other)
@@ -122,12 +131,23 @@ class Circuit(MutableSequence, Operation):
         return self
 
     def __iter__(self) -> Iterator[Operation]:
-        return self.elements.__iter__()
+        yield from self._elements
 
-    # TESTME
+    # End methods for MutableSequence
+
+    def flat(self) -> Iterator[Operation]:
+        """Iterate over all elementary elements of Circuit,
+        recursively flattening composite elements such as
+        sub-Circuit's, DAGCircuit's, and Moment's"""
+        for elem in self:
+            if hasattr(elem, 'flat'):
+                yield from elem.flat()  # type: ignore
+            else:
+                yield from elem
+
     def size(self) -> int:
         """Return the number of operations in this circuit"""
-        return len(self.elements)
+        return len(self._elements)
 
     @property
     def qubits(self) -> Qubits:
@@ -136,7 +156,7 @@ class Circuit(MutableSequence, Operation):
         Raises:
             TypeError: If qubits cannot be sorted into unique order.
         """
-        qbs = [q for elem in self.elements for q in elem.qubits]    # gather
+        qbs = [q for elem in self for q in elem.qubits]    # gather
         qbs = list(set(qbs))                                        # unique
         qbs = sorted(qbs)                                           # sort
         return tuple(qbs)
@@ -151,7 +171,7 @@ class Circuit(MutableSequence, Operation):
             qubits = self.qubits
             ket = zero_state(qubits=qubits)
 
-        for elem in self.elements:
+        for elem in self:
             ket = elem.run(ket)
         return ket
 
@@ -161,16 +181,17 @@ class Circuit(MutableSequence, Operation):
             qubits = self.qubits
             rho = zero_state(qubits=qubits).asdensity()
 
-        for elem in self.elements:
+        for elem in self:
             rho = elem.evolve(rho)
         return rho
 
+    # DOCME: What gets raised if we can't construct a gate?
     def asgate(self) -> Gate:
         """
-        Return the action of this circuit as a gate
+        Return the action of this circuit as a gate (If possible)
         """
         gate = identity_gate(self.qubits)
-        for elem in self.elements:
+        for elem in self:
             gate = elem.asgate() @ gate
         return gate
 
@@ -178,7 +199,7 @@ class Circuit(MutableSequence, Operation):
     # DOCME
     def aschannel(self) -> Channel:
         chan = identity_gate(self.qubits).aschannel()
-        for elem in self.elements:
+        for elem in self:
             chan = elem.aschannel() @ chan
         return chan
 
@@ -187,10 +208,13 @@ class Circuit(MutableSequence, Operation):
         """Returns the Hermitian conjugate of this circuit.
         If all the subsidiary gates are unitary, returns the circuit inverse.
         """
-        return Circuit([elem.H for elem in self.elements[::-1]])
+        return Circuit([elem.H for elem in reversed(self)])
 
+    # TESTME
     def __str__(self) -> str:
-        return '\n'.join([str(elem) for elem in self.elements])
+        circ_str = '\n'.join([str(elem) for elem in self])
+        circ_str = textwrap.indent(circ_str, '    ')
+        return '\n'.join([self.name, circ_str])
 
     # TESTME DOCME
     def resolve(self, resolver: Dict[Symbol, float]) -> 'Circuit':
@@ -198,6 +222,11 @@ class Circuit(MutableSequence, Operation):
         return Circuit(op.resolve(resolver) for op in self)
 
     # TODO: overide params, so that fails, or returns all paramerters?
+
+    # DOCME
+    # TESTME
+    def specialize(self) -> 'Circuit':
+        return Circuit([elem.specialize() for elem in self])
 
 # End class Circuit
 
@@ -214,13 +243,14 @@ def count_operations(elements: Iterable[Operation]) \
 
 
 def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
-    """Applies the same gate all input qubits in the argument list.
+    """Applies the same gate to all input qubits in the argument list.
 
     >>> circ = qf.map_gate(qf.H(), [[0], [1], [2]])
     >>> print(circ)
-    H(0)
-    H(1)
-    H(2)
+    Circuit
+        H(0)
+        H(1)
+        H(2)
 
     """
     circ = Circuit()
@@ -230,6 +260,8 @@ def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
 
     return circ
 
+
+# TODO: Move standard circuits to stdcircuits module?
 
 # FIXME: Use ZZ gates, not CPHASE
 # TODO: Add circuit diagram

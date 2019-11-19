@@ -1,4 +1,9 @@
 
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 QuantumFlow: Translate, transform, and compile circuits.
 """
@@ -125,27 +130,11 @@ def translate(circ: Circuit,
             if recurse:
                 gates.extend(reversed(list(trans)))
             else:
-                translated.elements.extend(trans)
+                translated.extend(trans)
         else:
             translated += gate
 
     return translated
-
-
-def simplify_tz(gate: TZ) -> Iterator[Gate]:
-    """
-    Simplify TZ gates to T, S, Z, S_H, T_H gates where possible,
-    and drop identities.
-    """
-    qbs = gate.qubits
-    t = gate.params['t'] % 2
-    idx = int(t*4)
-    if np.isclose(t*4, idx):    # FIXME: Tolerance parameter
-        if idx != 0:  # Skip Identity
-            gatetype = (I, T, S, Z, S_H, T_H)[idx]
-            yield gatetype(*qbs)
-    else:
-        yield gate
 
 
 def translate_x_to_tx(gate: X) -> Iterator[TX]:
@@ -937,7 +926,6 @@ TRANSLATORS = {name: func for name, func in globals().items()
 # Note: Translators automagically added
 __all__ = (
     'translate',
-    'simplify_tz',
     'select_translators',
     'TRANSLATORS') + tuple(TRANSLATORS.keys())
 

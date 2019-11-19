@@ -48,6 +48,7 @@ Gate distances
 
 .. autofunction:: gate_angle
 .. autofunction:: gates_close
+.. autofunction:: gates_commute
 
 
 Channel distances
@@ -78,7 +79,8 @@ from .gates import I
 __all__ = ['state_fidelity', 'state_angle', 'states_close',
            'purity', 'fidelity', 'bures_distance', 'bures_angle',
            'density_angle', 'densities_close', 'entropy', 'mutual_info',
-           'gate_angle', 'channel_angle', 'gates_close', 'channels_close',
+           'gate_angle', 'channel_angle', 'gates_close', 'gates_commute',
+           'channels_close',
            'circuits_close', 'diamond_norm',  'trace_distance',
            'average_gate_fidelity']
 
@@ -231,8 +233,8 @@ def mutual_info(rho: Density,
     if qubits1 is None:
         qubits1 = tuple(set(rho.qubits) - set(qubits0))
 
-    rho0 = rho.partial_trace(qubits1)
-    rho1 = rho.partial_trace(qubits0)
+    rho0 = rho.asdensity(qubits0)
+    rho1 = rho.asdensity(qubits1)
 
     ent = entropy(rho, base)
     ent0 = entropy(rho0, base)
@@ -268,6 +270,16 @@ def gates_close(gate0: Gate, gate1: Gate,
     Closeness is measured with the gate angle.
     """
     return vectors_close(gate0.vec, gate1.vec, tolerance)
+
+
+# TESTME
+def gates_commute(gate0: Gate, gate1: Gate,
+                  tolerance: float = TOLERANCE) -> bool:
+    """Returns: True if gates (almost) commute.
+    """
+    gate01 = Circuit([gate0, gate1]).asgate()
+    gate10 = Circuit([gate1, gate0]).asgate()
+    return gates_close(gate01, gate10, tolerance)
 
 
 # Measures on circuits

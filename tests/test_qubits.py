@@ -21,10 +21,10 @@ from . import ALMOST_ZERO, ALMOST_ONE
 REPS = 4
 
 
-def test_getitem():
-    ket = qf.ghz_state(6)
-    assert qf.asarray(ket.vec[0, 1, 0, 0, 0, 0]) == ALMOST_ZERO
-    assert qf.asarray(ket.vec[1, 1, 1, 1, 1, 1]) != 0.0
+# def test_getitem():
+#     ket = qf.ghz_state(6)
+#     assert qf.asarray(ket.vec[0, 1, 0, 0, 0, 0]) == ALMOST_ZERO
+#     assert qf.asarray(ket.vec[1, 1, 1, 1, 1, 1]) != 0.0
 
 
 def test_rank():
@@ -60,30 +60,27 @@ def test_partial_trace():
     r2 = qf.QubitVector(data, range(8))
 
     tr2 = r2.partial_trace([1])
-    assert tr2.qubits == (0, 2, 3, 4, 5, 6, 7)
+    assert tr2.qubits == (1,)
     assert tr2.rank == 2
 
     tr2 = r2.partial_trace([2, 3])
-    assert tr2.qubits == (0, 1, 4, 5, 6, 7)
+    assert tr2.qubits == (2, 3)
     assert tr2.rank == 2
 
-    tr4 = r4.partial_trace([0])
-    assert tr4.qubits == (1, 2, 3)
+    tr4 = r4.partial_trace([0, 1])
+    assert tr4.qubits == (0, 1)
     assert tr4.rank == 4
 
     tr8 = r8.partial_trace([1])
-    assert tr8.qubits == (0, )
+    assert tr8.qubits == (1, )
     assert tr8.rank == 8
-
-    with pytest.raises(ValueError):
-        r2.partial_trace(range(8))
 
     chan012 = qf.identity_gate(3).aschannel()
     assert np.isclose(qf.asarray(chan012.trace()), 64)   # 2**(2**3)
 
-    chan02 = chan012.partial_trace([1])
+    chan02 = chan012.partial_trace([0, 2])
     assert np.isclose(qf.asarray(chan02.trace()), 32)    # TODO: Checkme
-    chan2 = chan012.partial_trace([0, 1])
+    chan2 = chan012.partial_trace([2])
 
     assert np.isclose(qf.asarray(chan2.trace()), 16)     # TODO: checkme
 
@@ -91,8 +88,21 @@ def test_partial_trace():
     assert qf.channels_close(chan2, qf.I(2).aschannel())
     # TODO: Channel.normalize()
 
+    # cannot take trace of vector
     with pytest.raises(ValueError):
         qf.zero_state(4).vec.partial_trace([1, 2])
+
+    # Can't trace over all qubits
+    with pytest.raises(ValueError):
+        r4.partial_trace([])
+
+
+def test_outer_partial_trace_on_states():
+    ket = qf.random_state([0, 1, 2, 3])
+    rho0 = ket.asdensity([1, 2])
+    rho1 = ket.asdensity().asdensity([1, 2])
+    assert rho0.qubits == rho1.qubits
+    assert qf.densities_close(rho0, rho1)
 
 
 def test_inner_product():
@@ -102,20 +112,20 @@ def test_inner_product():
         theta = random.uniform(-4*pi, +4*pi)
 
         hs = qf.asarray(qf.inner_product(qf.RX(theta).vec, qf.RX(theta).vec))
-        print('RX({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'RX({theta}), hilbert_schmidt = {hs}')
         assert hs/2 == ALMOST_ONE
 
         hs = qf.asarray(qf.inner_product(qf.RZ(theta).vec, qf.RZ(theta).vec))
-        print('RZ({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'RZ({theta}), hilbert_schmidt = {hs}')
         assert hs/2 == ALMOST_ONE
 
         hs = qf.asarray(qf.inner_product(qf.RY(theta).vec, qf.RY(theta).vec))
-        print('RY({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'RY({theta}), hilbert_schmidt = {hs}')
         assert hs/2 == ALMOST_ONE
 
         hs = qf.asarray(qf.inner_product(qf.PSWAP(theta).vec,
                                          qf.PSWAP(theta).vec))
-        print('PSWAP({}), hilbert_schmidt = {}'.format(theta, hs))
+        print(f'PSWAP({theta}), hilbert_schmidt = {hs}')
         assert hs/4 == ALMOST_ONE
 
     with pytest.raises(ValueError):
@@ -131,7 +141,7 @@ def test_fubini_study_angle():
         theta = random.uniform(-pi, +pi)
 
         ang = qf.asarray(qf.fubini_study_angle(qf.I().vec,
-                                               qf.RX(theta).vec))
+                                               qf.RX(theta).su().vec))
         assert 2 * ang / abs(theta) == ALMOST_ONE
 
         ang = qf.asarray(qf.fubini_study_angle(qf.I().vec,

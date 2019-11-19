@@ -1,3 +1,9 @@
+
+# Copyright 2016-2018, Rigetti Computing
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 QuantumFlow pyQuil imports
 
@@ -9,10 +15,40 @@ Importation should be simplified in pyQuil 2.0
 (https://github.com/rigetti/pyquil/issues/302)
 """
 
-# FIXME: star imports are not working as expected.
-# TODO: Add all relevant objects from pyquil
-
 from pyquil import *                                        # noqa: F401,F403
+
+
+from pyquil.quilbase import (                               # noqa: F401
+    Halt,
+    ClassicalEqual,
+    ClassicalLessThan,
+    ClassicalLessEqual,
+    ClassicalGreaterThan,
+    ClassicalGreaterEqual,
+    ClassicalAdd,
+    ClassicalMul,
+    ClassicalDiv,
+    ClassicalSub,
+    ClassicalAnd,
+    ClassicalExchange,
+    ClassicalInclusiveOr,
+    ClassicalMove,
+    ClassicalNeg,
+    ClassicalNot,
+    ClassicalExclusiveOr,
+    Jump,
+    JumpTarget,
+    JumpWhen,
+    JumpUnless,
+    Pragma,
+    Measurement,
+    Nop,
+    Wait,
+    Reset,
+    ResetQubit,
+    ClassicalStore,
+    ClassicalLoad,)
+
 
 from pyquil.gates import (                                  # noqa: F401
     CCNOT, CNOT, CPHASE, CPHASE00, CPHASE01, CPHASE10, CSWAP, CZ, H, I, ISWAP,
@@ -39,4 +75,4 @@ from pyquil.api import local_qvm                            # noqa: F401
 
 from pyquil.noise import decoherence_noise_with_asymmetric_ro  # noqa: F401
 
-import pyquil.parser as parser								# noqa: F401
+import pyquil.parser as parser                              # noqa: F401

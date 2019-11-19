@@ -1,5 +1,14 @@
 
-# QuantumFlow: Gates specific to QASM
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+# Copyright 2016-2018, Rigetti Computing
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
+"""
+QuantumFlow: Gates specific to QASM
+"""
+
 
 from numpy import pi
 
@@ -7,6 +16,7 @@ from .. import backend as bk
 from ..ops import Gate
 from ..qubits import Qubit
 from ..circuits import Circuit
+from ..utils import cached_property
 
 from .gates_utils import control_gate
 from .gates_one import RZ, PHASE
@@ -55,7 +65,7 @@ class U3(Gate):
         super().__init__(params=dict(theta=theta, phi=phi, lam=lam),
                          qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta, phi, lam = self.params.values()
 
@@ -89,7 +99,7 @@ class U2(Gate):
         super().__init__(params=dict(phi=phi, lam=lam),
                          qubits=[q0])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         phi, lam = self.params.values()
         return U3(pi/2, phi, lam).tensor
@@ -117,7 +127,7 @@ class CU3(Gate):
         super().__init__(params=dict(theta=theta, phi=phi, lam=lam),
                          qubits=[q0, q1])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         q0, q1 = self.qubits
         theta, phi, lam = self.params.values()
@@ -153,7 +163,7 @@ class CRZ(Gate):
                  q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta, = self.params.values()
         q0, q1 = self.qubits
@@ -182,7 +192,7 @@ class RZZ(Gate):
                  q1: Qubit = 1) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
-    @property
+    @cached_property
     def tensor(self) -> bk.BKTensor:
         theta, = self.params.values()
         q0, q1 = self.qubits

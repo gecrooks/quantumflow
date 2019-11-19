@@ -24,28 +24,28 @@ def test_bloch_decomposition():
     theta = 1.23
 
     gate0 = qf.RN(theta, 1, 0, 0)
-    gate1 = qf.bloch_decomposition(gate0).elements[0]
+    gate1 = qf.bloch_decomposition(gate0)[0]
     assert qf.gates_close(gate0, gate1)
 
     gate0 = qf.RN(theta, 0, 1, 0)
-    gate1 = qf.bloch_decomposition(gate0).elements[0]
+    gate1 = qf.bloch_decomposition(gate0)[0]
     assert qf.gates_close(gate0, gate1)
 
     gate0 = qf.RN(theta, 0, 0, 1)
-    gate1 = qf.bloch_decomposition(gate0).elements[0]
+    gate1 = qf.bloch_decomposition(gate0)[0]
     assert qf.gates_close(gate0, gate1)
 
     gate0 = qf.RN(pi, np.sqrt(2), 0, np.sqrt(2))
-    gate1 = qf.bloch_decomposition(gate0).elements[0]
+    gate1 = qf.bloch_decomposition(gate0)[0]
     assert qf.gates_close(gate0, gate1)
 
     for _ in range(REPS):
         gate0 = qf.random_gate(qubits=[0])
-        gate1 = qf.bloch_decomposition(gate0).elements[0]
+        gate1 = qf.bloch_decomposition(gate0)[0]
         assert qf.gates_close(gate0, gate1)
 
     gate0 = qf.I(0)
-    gate1 = qf.bloch_decomposition(gate0).elements[0]
+    gate1 = qf.bloch_decomposition(gate0)[0]
     assert qf.gates_close(gate0, gate1)
 
 
@@ -136,7 +136,7 @@ def test_canonical_decomposition():
                 print('d')
 
                 print(circ1)
-                canon = circ1.elements[6]
+                canon = circ1[6]
                 new_coords = np.asarray([canon.params[n] for n in
                                          ['tx', 'ty', 'tz']])
                 assert np.allclose(coords, np.asarray(new_coords))

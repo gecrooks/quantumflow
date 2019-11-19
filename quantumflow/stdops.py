@@ -1,3 +1,9 @@
+
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 """
 ========================
 Miscellaneous Operations
@@ -6,23 +12,31 @@ Miscellaneous Operations
 
 .. currentmodule:: quantumflow
 
-Various standard operations on quantum states, which arn't gates
-or channels.
+Various standard operations on quantum states, which arn't gates,
+channels, circuits, or DAGCircuit's.
 
 .. autofunction :: dagger
+.. autoclass :: Moment
+
 .. autoclass :: Measure
 .. autoclass :: Reset
+.. autoclass :: Initialize
 .. autoclass :: Barrier
 .. autoclass :: Projection
-.. autoclass :: QubitPermutation
+.. autoclass :: PermuteQubits
+.. autoclass :: ReverseQubits
+.. autoclass :: RotateQubits
 .. autoclass :: Store
 .. autoclass :: If
 .. autoclass :: Display
-.. autoclass :: StoreState
+.. autoclass :: StateDisplay
+.. autoclass :: ProbabilityDisplay
+.. autoclass :: DensityDisplay
+
 """
 
-
-from typing import Sequence, Hashable, Callable, Any
+from typing import Sequence, Hashable, Any, Callable, Iterable, Union
+import textwrap
 
 import numpy as np
 
@@ -37,13 +51,60 @@ from .circuits import Circuit
 from . import backend as bk
 
 
-__all__ = ['dagger', 'Measure', 'Reset', 'Barrier', 'Store',
-           'If', 'Projection', 'QubitPermutation', 'Display', 'StoreState']
+__all__ = ['dagger', 'Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
+           'Store',
+           'If', 'Projection',
+           'PermuteQubits',  'ReverseQubits', 'RotateQubits',
+           'Display', 'StateDisplay', 'ProbabilityDisplay', 'DensityDisplay']
 
 
 def dagger(elem: Operation) -> Operation:
     """Return the complex conjugate of the Operation"""
     return elem.H
+
+
+class Moment(Sequence, Operation):
+    """
+    Represents a collection of Operations that operate on disjoint qubits,
+    so that they may be applied at the same moment of time.
+    """
+    def __init__(self, elements: Iterable[Operation]) -> None:
+        circ = Circuit(Circuit(elements).flat())
+        qbs = list(q for elem in circ for q in elem.qubits)
+        if len(qbs) != len(set(qbs)):
+            raise ValueError('Qubits of operations within Moments '
+                             'must be disjoint.')
+
+        self._qubits = tuple(qbs)
+        self._circ = circ
+
+    def __getitem__(self, key: Union[int, slice]) -> Any:
+        return self._circ[key]
+
+    def __len__(self) -> int:
+        return self._circ.__len__()
+
+    def run(self, ket: State = None) -> State:
+        return self._circ.run(ket)
+
+    def evolve(self, rho: Density = None) -> Density:
+        return self._circ.evolve(rho)
+
+    def asgate(self) -> 'Gate':
+        return self._circ.asgate()
+
+    def aschannel(self) -> 'Channel':
+        return self._circ.aschannel()
+
+    @property
+    def H(self) -> 'Moment':
+        return Moment(self._circ.H)
+
+    # TESTME
+    def __str__(self) -> str:
+        circ_str = '\n'.join([str(elem) for elem in self])
+        circ_str = textwrap.indent(circ_str, '    ')
+        return '\n'.join([self.name, circ_str])
 
 
 class Measure(Operation):
@@ -54,8 +115,8 @@ class Measure(Operation):
 
     def __str__(self) -> str:
         if self.cbit is not None:
-            return '{} {} {}'.format(self.name.upper(), self.qubit, self.cbit)
-        return '{} {}'.format(self.name.upper(), self.qubit)
+            return f'{self.name.upper()} {self.qubit} {self.cbit}'
+        return f'{self.name.upper()} {self.qubit}'
 
     @property
     def qubits(self) -> Qubits:
@@ -135,6 +196,25 @@ class Reset(Operation):
         return 'RESET'
 
 
+class Initialize(Operation):
+    """ An operation that initilizes the quantum state"""
+    def __init__(self, ket: State):
+        self._ket = ket
+        self._qubits = ket.qubits
+
+    @property
+    def tensor(self) -> bk.BKTensor:
+        return self._ket.tensor
+
+    def run(self, ket: State) -> State:
+        return self._ket.permute(ket.qubits)
+
+    def evolve(self, rho: Density) -> Density:
+        return self._ket.permute(rho.qubits).asdensity()
+
+    # TODO: aschannel? __str___?
+
+
 class Barrier(Operation):
     """An operation that prevents reordering of operations across the barrier.
     Has no effect on the quantum state."""
@@ -185,7 +265,7 @@ class Projection(Operation):
         return self
 
 
-class QubitPermutation(Operation):
+class PermuteQubits(Operation):
     """A permutation of qubits. A generalized multi-qubit SWAP."""
     def __init__(self, qubits_in: Qubits, qubits_out: Qubits) -> None:
         if set(qubits_in) != set(qubits_out):
@@ -195,7 +275,7 @@ class QubitPermutation(Operation):
         self.qubits_in = tuple(qubits_in)
 
     @classmethod
-    def from_circuit(cls, circ: Circuit) -> 'QubitPermutation':
+    def from_circuit(cls, circ: Circuit) -> 'PermuteQubits':
         """Create a qubit pertumtation from a circuit of swap gates"""
         qubits_in = circ.qubits
         N = circ.qubit_nb
@@ -203,12 +283,12 @@ class QubitPermutation(Operation):
         for elem in circ:
             if isinstance(elem, I) or isinstance(elem, IDEN):
                 continue
-            assert isinstance(elem, SWAP)
+            assert isinstance(elem, SWAP)  # FIXME
             q0, q1 = elem.qubits
             i0 = qubits_in.index(q0)
             i1 = qubits_in.index(q1)
             perm[i1], perm[i0] = perm[i0], perm[i1]
-            # TODO: Should also accept QubitPermutations
+            # TODO: Should also accept PermuteQubits
 
         qubits_out = [qubits_in[p] for p in perm]
         return cls(qubits_in, qubits_out)
@@ -219,7 +299,7 @@ class QubitPermutation(Operation):
 
     @property
     def H(self) -> Operation:
-        return QubitPermutation(self.qubits_out, self.qubits_in)
+        return PermuteQubits(self.qubits_out, self.qubits_in)
 
     def run(self, ket: State) -> State:
         qubits = ket.qubits
@@ -278,13 +358,38 @@ class QubitPermutation(Operation):
         return circ
 
 
-# TESTME
+class ReverseQubits(PermuteQubits):
+    """A qubit permutation that reverses the order of qubits"""
+    def __init__(self, qubits: Qubits) -> None:
+        super().__init__(qubits, tuple(reversed(qubits)))
+
+    def ascircuit(self) -> Circuit:
+        circ = Circuit()
+        qubits = self.qubits
+        for idx in range(self.qubit_nb//2):
+            circ += SWAP(qubits[idx], qubits[-idx-1])
+        return circ
+
+
+class RotateQubits(PermuteQubits):
+    def __init__(self, qubits: Qubits, shift: int = 1) -> None:
+        qubits_in = tuple(qubits)
+        nshift = shift % len(qubits)
+        qubits_out = qubits_in[nshift:] + qubits_in[:nshift]
+
+        super().__init__(qubits_in, qubits_out)
+        self.shift = shift
+
+
+# FIXME: Conflicts with Store in xforest?
 class Store(Operation):
-    """Store a value in the classical memory of the state"""
+    """Store a value in the classical memory of the state.
+    """
     def __init__(self,
                  key: Hashable,
-                 value: bool = True) -> None:
-        super().__init__()
+                 value: Any,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(qubits=qubits)
         self.key = key
         self.value = value
 
@@ -298,12 +403,12 @@ class Store(Operation):
 class If(Operation):
     """
     Look up key in classical memory, and apply the given
-    quantum operation only if the truth value is the same as value.
+    quantum operation only if the truth value matches.
     """
     def __init__(self, elem: Operation,
                  key: Hashable,
                  value: bool = True) -> None:
-        super().__init__()
+        super().__init__(qubits=elem.qubits)
         self.element = elem
         self.key = key
         self.value = value
@@ -323,21 +428,22 @@ class If(Operation):
         return rho
 
 
-# TESTME
 class Display(Operation):
     """A Display is an operation that extracts information from the
     quantum state and stores it in classical memory, without performing
     any effect on the qubits.
     """
-    # Terminology comes from cirq: cirq/ops/display.py
+    # Terminology 'Display' used by Quirk and cirq (cirq/ops/display.py).
     def __init__(self,
                  key: Hashable,
-                 action: Callable[[State], Any]) -> None:
-        super().__init__()
+                 action: Callable,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(qubits=qubits)
         self.key = key
         self.action = action
 
     def run(self, ket: State) -> State:
+        print('runnin')
         return ket.store({self.key: self.action(ket)})
 
     def evolve(self, rho: Density) -> Density:
@@ -345,15 +451,39 @@ class Display(Operation):
 
 
 # TESTME
-# RENAME? StateDisplay?
-class StoreState(Display):
+class StateDisplay(Display):
     """
     Store a copy of the state in the classical memory. (This operation
-    can be memoty intensive, since it stores the entire quantum state.)
+    can be memory intensive, since it stores the entire quantum state.)
     """
 
     def __init__(self,
-                 key: Hashable) -> None:
-        super().__init__(key, lambda x: x)
+                 key: Hashable,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(key, lambda x: x, qubits=qubits)
+
+
+# TESTME DOCME
+# FIXME: Act on qubit subspace
+class ProbabilityDisplay(Display):
+    """
+    Store the state probabilities in classical memory.
+    """
+
+    def __init__(self,
+                 key: Hashable,
+                 qubits: Qubits = ()) -> None:
+        super().__init__(key, lambda state: state.probabilities(),
+                         qubits=qubits)
+
+
+# TESTME DOCME
+class DensityDisplay(Display):
+    def __init__(self,
+                 key: Hashable,
+                 qubits: Qubits) -> None:
+        super().__init__(key,
+                         lambda state: state.asdensity(self.qubits),
+                         qubits=qubits)
 
 # fin

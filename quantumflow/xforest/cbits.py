@@ -61,7 +61,7 @@ class Addr:
         return self.register.dtype
 
     def __str__(self) -> str:
-        return '{}[{}]'.format(self.register.name, self.key)
+        return f'{self.register.name}[{self.key}]'
 
     def __repr__(self) -> str:
         return repr(self.register)+'['+repr(self.key)+']'

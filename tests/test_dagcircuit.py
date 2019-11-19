@@ -14,6 +14,8 @@ import quantumflow as qf
 
 from quantumflow.dagcircuit import In, Out
 
+import pytest
+
 
 # TODO Refactor in test_circuit
 def _test_circ():
@@ -67,6 +69,19 @@ def test_ascircuit():
     assert dag.qubit_nb == 5
 
 
+def test_str():
+    circ0 = qf.ghz_circuit(range(5))
+    dag = qf.DAGCircuit(circ0)
+    string = str(dag)
+    assert string == """DAGCircuit
+    H 0
+    CNOT 0 1
+    CNOT 1 2
+    CNOT 2 3
+    CNOT 3 4\
+"""
+
+
 def test_asgate():
     gate0 = qf.ZYZ(0.1, 2.2, 0.5)
     circ0 = qf.zyz_circuit(0.1, 2.2, 0.5, 0)
@@ -108,11 +123,32 @@ def test_depth():
     assert dag.depth(local=False) == 4
 
 
-def test_layers():
+def test_moments():
     circ0 = qf.ghz_circuit(range(5))
     dag = qf.DAGCircuit(circ0)
-    layers = dag.layers()
-    assert len(layers.elements) == dag.depth()
+    circ = dag.moments()
+    assert circ.size() == dag.depth()
+
+    circ1 = qf.Circuit([
+        qf.Z(0),
+        qf.Z(1),
+        qf.Z(2),
+        qf.CNOT(0, 1),
+        qf.Measure(0, 0),
+        qf.Measure(1, 1),
+        qf.Measure(2, 2),
+        ])
+    moments = qf.DAGCircuit(circ1).moments()
+    print()
+    print(moments)
+
+    assert len(moments) == 3
+    assert len(moments[0]) == 3
+    assert len(moments[1]) == 1
+    assert len(moments[2]) == 3
+
+    with pytest.warns(DeprecationWarning):
+        circ = dag.layers()
 
 
 def test_components():
@@ -149,11 +185,11 @@ def test_components():
 
 def test_next_prev():
     circ = qf.ghz_circuit([0, 2, 4, 6, 8])
-    elem = circ.elements[3]
+    elem = circ[3]
     dag = qf.DAGCircuit(circ)
 
-    assert dag.next_element(elem, elem.qubits[1]) == circ.elements[4]
-    assert dag.prev_element(elem, elem.qubits[0]) == circ.elements[2]
+    assert dag.next_element(elem, elem.qubits[1]) == circ[4]
+    assert dag.prev_element(elem, elem.qubits[0]) == circ[2]
 
     assert dag.next_element(elem, elem.qubits[0]) == Out(4)
     assert dag.prev_element(elem, elem.qubits[1]) == In(6)
