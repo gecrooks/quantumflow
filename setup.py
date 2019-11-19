@@ -18,7 +18,8 @@ setup(
         'networkx',
         'pillow',
         'cvxpy',    # FIXME: Make optional?
-        'sympy'
+        'sympy',
+        'opt_einsum',
     ],
     use_scm_version={'write_to': 'quantumflow/version.py'},
     setup_requires=['setuptools_scm'],
