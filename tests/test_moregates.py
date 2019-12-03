@@ -1,7 +1,9 @@
 
 from numpy import pi, random
+import numpy as np
 
 import quantumflow as qf
+from quantumflow.visualization import kwarg_to_symbol
 
 import pytest
 
@@ -10,9 +12,15 @@ from . import REPS, ALMOST_ZERO
 # TODO: Refactor to match split of gates in gates subpackage.
 
 
+def test_XY():
+    gate = qf.XY(-0.1)
+    assert qf.gates_close(gate, qf.ISWAP()**0.2)
+
+
+# TODO: more tests
 def test_BARENCO():
-    gate = qf.BARENCO(0.1, 0.2, 0.3, 0, 1)
-    print('BARENCO gate')
+    gate = qf.Barenco(0.1, 0.2, 0.3, 0, 1)
+    print('Barenco gate')
     qf.print_gate(gate)
     print(gate.qubits)
 
@@ -56,8 +64,8 @@ def test_CH():
 
     # I picked up this circuit for a CH gate from qiskit
     # qiskit/extensions/standard/ch.py
-    # But it clearly far too long. CH is locally equivelent to CNOT,
-    # so should require only one CNOT gate.
+    # But it clearly far too long. CH is locally equivalent to CNOT,
+    # so requires only one CNOT gate.
     circ2 = qf.Circuit([
         qf.H(1),
         qf.S_H(1),
@@ -73,7 +81,7 @@ def test_CH():
         ])
     assert qf.gates_close(gate1, circ2.asgate())
 
-    # Here's a better  decomposition
+    # Here's a better decomposition
     circ1 = qf.Circuit([
         qf.TY(+0.25, 1),
         qf.CNOT(0, 1),
@@ -170,11 +178,11 @@ def test_RZZ():
     assert qf.gates_close(gate0 ** 0.12, gate1 ** 0.12)
 
 
-def test_FSIM():
+def test_FSim():
     for _ in range(REPS):
         theta = random.uniform(-pi, +pi)
         phi = random.uniform(-pi, +pi)
-        gate0 = qf.FSIM(theta, phi)
+        gate0 = qf.FSim(theta, phi)
 
         # Test with decomposition from Cirq.
         circ = qf.Circuit()
@@ -187,14 +195,14 @@ def test_FSIM():
         assert qf.gates_close(gate1.H, gate0.H)
 
 
-def test_W_TW():
+def test_PhasedX():
     q0 = '4'
     for _ in range(REPS):
         t = random.uniform(0, 1)
         p = random.uniform(-2, +2)
 
-        gate0 = qf.W(p, q0)
-        gate1 = qf.TW(p, t, q0)
+        gate0 = qf.PhasedX(p, q0)
+        gate1 = qf.PhasedXPow(p, t, q0)
         assert qf.gates_close(gate0 ** t, gate1)
         assert (gate0 ** t).qubits == (q0,)
 
@@ -204,6 +212,10 @@ def test_W_TW():
         p2, t2 = gate2.params.values()
         assert p2 == p
         assert t2 == t ** 2
+
+        assert qf.gates_close(gate0, gate0.specialize())
+
+    assert qf.gates_close(qf.PhasedX(-2.0, q0).specialize(), qf.X(q0))
 
 
 def test_IDEN():
@@ -222,22 +234,24 @@ def test_IDEN():
     assert gate0.evolve(rho) == rho
 
 
-opt_gates = [qf.I(), qf.X(), qf.Z(), qf.Y(), qf.H(), qf.T(), qf.S(), qf.T_H(),
-             qf.S_H(), qf.TX(0.1), qf.TY(0.2), qf.TZ(0.2),
-             qf.CNOT(), qf.CZ(), qf.SWAP(), qf.CCNOT(),
-             qf.CSWAP(), qf.CCZ(), qf.IDEN(0, 1, 2), qf.PHASE(0.2), qf.ISWAP()]
+optimized_run_gates = [
+    qf.I(), qf.X(), qf.Z(), qf.Y(), qf.H(), qf.T(), qf.S(), qf.T_H(),
+    qf.S_H(), qf.TX(0.1), qf.TY(0.2), qf.TZ(0.2),
+    qf.CNOT(), qf.CZ(), qf.SWAP(), qf.CCNOT(),
+    qf.CSWAP(), qf.CCZ(), qf.IDEN(0, 1, 2), qf.PhaseShift(0.2),
+    qf.ISWAP()]
 
 
-@pytest.mark.parametrize("gate", opt_gates)
+@pytest.mark.parametrize("gate", optimized_run_gates)
 def test_optimized_run(gate):
-    # Some gates have speccially optimized run() methods for faster simulation.
+    # Some gates have specially optimized run() methods for faster simulation.
     # Here, make sure optimizations produces same result as direct application
     # of gate tensor.
 
     ket = qf.random_state([0, 1, 2])
 
     gate0 = gate
-    gate1 = qf.Gate(gate0.tensor)
+    gate1 = qf.Unitary(gate0.tensor)
 
     ket0 = gate0.run(ket)
     ket1 = gate1.run(ket)
@@ -249,6 +263,63 @@ def test_optimized_run(gate):
     print()
 
     assert qf.states_close(ket0, ket1)
+
+
+def test_gates_unitary():
+    for _ in range(REPS):
+        param_values = {name: np.random.uniform(-4*pi, 4*pi)
+                        for name in kwarg_to_symbol}
+        for gatet in qf.STD_GATESET:
+            args = [param_values[a] for a in gatet.args()]
+            gate = gatet(*args)
+
+            print(gate)
+            assert qf.almost_unitary(gate)
+
+
+def test_gate_hamiltonians():
+    total_tested = 0
+
+    param_values = {name: np.random.uniform(-4, 4) for name in kwarg_to_symbol}
+    print(param_values)
+    qubits = [5, 3, 4, 2, 8]
+    for gatet in qf.STD_GATESET:
+        if not hasattr(gatet, 'hamiltonian'):
+            continue
+
+        args = [param_values[a] for a in gatet.args()]
+        gate0 = gatet(*args)
+        gate0 = gate0.on(*qubits[:gate0.qubit_nb])
+
+        print(gate0)
+
+        qbs = gate0.qubits
+        ham = gate0.hamiltonian
+        gate1 = qf.unitary_from_hamiltonian(ham, *qbs)
+
+        assert qf.gates_close(gate0, gate1)
+
+        # Check that gates that gates have same phase
+        # FIXME!
+        # Currently Gate.hamiltonian is broken here, so only check
+        # subclasses that override hamiltonian
+        if gatet.hamiltonian is not qf.Gate.hamiltonian:
+            print('Checking gates phase close...')
+            assert qf.gates_phase_close(gate0, gate1)
+
+        total_tested += 1
+
+    print()
+    print("Total Hamiltonians tested: {}/{}".format(total_tested,
+                                                    len(qf.STD_GATESET)))
+
+
+def test_tz_specialize():
+    for t in [-0.25, 0, 0.25, 0.5, 1.0, 1.5, 1.75, 2.0]:
+        gate0 = qf.TZ(t)
+        gate1 = gate0.specialize()
+        assert qf.gates_close(gate0, gate1)
+        assert not isinstance(gate1, qf.TZ)
 
 
 # fin

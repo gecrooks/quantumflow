@@ -133,7 +133,7 @@ else:                                                # pragma: no cover
 __all__ = [  # noqa: F405
            'BKTensor', 'CTYPE', 'DEVICE', 'FTYPE', 'MAX_QUBITS', 'TENSOR',
            'TL', 'TensorLike', 'absolute', 'arccos', 'astensor',
-           'ccast', 'cis', 'conj', 'cos', 'diag', 'evaluate', 'exp', 'fcast',
+           'ccast', 'conj', 'cos', 'diag', 'evaluate', 'exp', 'fcast',
            'gpu_available', 'imag', 'inner', 'minimum',
            'outer', 'matmul',
            'rank', 'real', 'reshape', 'set_random_seed', 'sin',

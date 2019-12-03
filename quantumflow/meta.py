@@ -61,12 +61,6 @@ def print_versions(file: typing.TextIO = None) -> None:
     except ImportError:
         pass
 
-    try:
-        from mypy.version import __version__ as mypy_version
-        print('mypy        \t', mypy_version, ' \t(Dev.)', file=file)
-    except ImportError:
-        pass
-
     print()
     print()
 

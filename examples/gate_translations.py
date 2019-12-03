@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-"""QuntumFlow: Validate and display variosu gate translations."""
+"""QuantumFlow: Validate and display various gate translations."""
 
 # Note: Used not only as an illustrative example, but as part of
 # the testing suite, and as a source for circuit diagrams in docstrings.
@@ -9,35 +9,40 @@
 from itertools import zip_longest
 
 import numpy as np
-from sympy import Symbol
+# from sympy import Symbol
 
 import quantumflow as qf
 from quantumflow.translate import translation_source_gate
 
+from quantumflow.visualization import kwarg_to_symbol as syms
+# TODO: Redundant with  visualizations.kwarg_to_symbol
 # Pretty print gate arguments
-syms = {
-    'alpha':    Symbol('α'),
-    'lam':      Symbol('λ'),
-    'nx':       Symbol('nx'),
-    'ny':       Symbol('ny'),
-    'nz':       Symbol('nz'),
-    'p':        Symbol('p'),
-    'phi':      Symbol('φ'),
-    't':        Symbol('t'),
-    't0':       Symbol('t0'),
-    't1':       Symbol('t1'),
-    't2':       Symbol('t2'),
-    'theta':    Symbol('θ'),
-    'tx':       Symbol('tx'),
-    'ty':       Symbol('ty'),
-    'tz':       Symbol('tz'),
-    }
+# syms = {
+#     'alpha':    Symbol('α'),
+#     'lam':      Symbol('λ'),
+#     'nx':       Symbol('nx'),
+#     'ny':       Symbol('ny'),
+#     'nz':       Symbol('nz'),
+#     'p':        Symbol('p'),
+#     'phi':      Symbol('φ'),
+#     't':        Symbol('t'),
+#     't0':       Symbol('t0'),
+#     't1':       Symbol('t1'),
+#     't2':       Symbol('t2'),
+#     'theta':    Symbol('θ'),
+#     'tx':       Symbol('tx'),
+#     'ty':       Symbol('ty'),
+#     'tz':       Symbol('tz'),
+#     's':        Symbol('s'),
+#     'b':        Symbol('b'),
+#     'c':        Symbol('c'),
+#     }
 
 
 def _check_circuit_translations():
     # Concrete values with which to test that circuits are
     # functionally identical.
-    concrete = {name: np.random.uniform() for name in syms.values()}
+    concrete = {name: np.random.uniform(-4, 4) for name in syms.values()}
 
     for name, trans in qf.TRANSLATORS.items():
         gatet = translation_source_gate(trans)
@@ -47,6 +52,7 @@ def _check_circuit_translations():
         circ0 = qf.Circuit([gate])
         circ1 = qf.Circuit(trans(gate))
 
+        # FIXME: Fails if no doc string
         annote = trans.__doc__.splitlines()[0]
 
         _print_circuit_identity(annote, circ0, circ1)
@@ -56,7 +62,7 @@ def _check_circuit_translations():
         assert qf.gates_close(circ0f.asgate(), circ1f.asgate())
 
 
-# TODO: Fixup and move to visulization
+# TODO: Fixup and move to visualization?
 def _print_circuit_identity(name, circ0, circ1,
                             min_col_width=0,
                             col_sep=5,

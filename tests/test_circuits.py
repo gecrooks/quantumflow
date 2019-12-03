@@ -25,12 +25,6 @@ def true_ket():
     return qf.State(wf_true.reshape((2, 2)))
 
 
-def test_asgate():
-    circ = qf.zyz_circuit(0.1, 2.2, 0.5, 0)
-    print(">>>>", circ, len(circ))
-    assert qf.gates_close(circ.asgate(), qf.ZYZ(0.1, 2.2, 0.5))
-
-
 def test_str():
     circ = qf.zyz_circuit(0.1, 2.2, 0.5, [0])
     print(circ)
@@ -349,13 +343,6 @@ def test_ghz_circuit():
     circ.run()
 
 
-def test_zyz_circuit():
-    gate0 = qf.zyz_circuit(0.1, 0.3, 0.2, 0).asgate()
-    gate1 = qf.ZYZ(0.1, 0.3, 0.2, q0=0)
-
-    assert qf.gates_close(gate0, gate1)
-
-
 def test_map_gate():
     circ = qf.map_gate(qf.X(), [[0], [1], [2]])
     assert circ[1].qubits[0] == 1
@@ -423,3 +410,12 @@ def test_circuit_flat():
     assert len(flat) == 6
     assert flat[2].name == 'Y'
     # print(flat)
+
+
+def test_circuit_parameters():
+    circ = qf.Circuit()
+    circ += qf.X(0) ** 0.3
+    circ += qf.SWAP(1, 2)
+
+    params = list(circ.parameters())
+    assert len(params) == 1

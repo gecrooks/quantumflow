@@ -15,6 +15,9 @@ test:		## Run unittests with current backend
 testall:	## Run full tox build and test
 	tox
 
+viztest:		## Run full visulization unittests
+	QUANTUMFLOW_VIZTEST=True pytest --disable-pytest-warnings -s tests/test_visualization.py
+
 coverage:	## Report test coverage using current backend
 	@echo
 	pytest --disable-pytest-warnings --cov=quantumflow --cov-report term-missing tests/
@@ -49,14 +52,14 @@ pragmas:	## Report all pragmas in code
 	@echo "** Code that needs something done **"
 	@grep 'TODO' --color -r -n $(FILES) || echo "No TODO pragmas"
 	@echo
-	@echo "** Code that needs fixing **" || echo "No FIXME pragmas"
-	@grep 'FIXME' --color -r -n $(FILES)
+	@echo "** Code that needs fixing **"
+	@grep 'FIXME' --color -r -n $(FILES) || echo "No FIXME pragmas"
 	@echo
-	@echo "** Code that needs documentation **" || echo "No DOCME pragmas"
-	@grep 'DOCME' --color -r -n $(FILES)
+	@echo "** Code that needs documentation **"
+	@grep 'DOCME' --color -r -n $(FILES) || echo "No DOCME pragmas"
 	@echo
-	@echo "** Code that needs more tests **" || echo "No TESTME pragmas"
-	@grep 'TESTME' --color -r -n $(FILES)
+	@echo "** Code that needs more tests **"
+	@grep 'TESTME' --color -r -n $(FILES) || echo "No TESTME pragmas"
 	@echo
 	@echo "** Acknowledgments **"
 	@grep 'kudos:' --color -r -n -i $(FILES) || echo "No kudos"
@@ -70,6 +73,9 @@ pragmas:	## Report all pragmas in code
 	@echo
 	@echo "** Typecheck pragmas **"
 	@grep '# type:' --color -r -n $(FILES) || echo "No Typecheck Pragmas"
+	@echo
+	@echo "** Implementation notes **"
+	@grep '# Implementation note:' --color -r -n $(FILES)  || echo "No Implementation Notes Pragmas"
 
 meta:	## Report versions of dependent packages
 	@echo

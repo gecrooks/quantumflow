@@ -15,9 +15,10 @@ import numpy as np
 import networkx as nx
 
 from . import backend as bk
+from .config import CIRCUIT_INDENT
 from .qubits import Qubit, Qubits
 from .states import State, Density
-from .ops import Operation, Gate, Channel
+from .ops import Operation, Gate, Channel, Unitary
 from .stdops import Moment
 from .circuits import Circuit
 from .utils import deprecated
@@ -26,6 +27,7 @@ from .utils import deprecated
 __all__ = 'DAGCircuit',
 
 
+# DOCME
 class In(Operation):
     def __init__(self, q0: Qubit):
         super().__init__([q0])
@@ -37,6 +39,7 @@ class In(Operation):
         return(hash(self.qubits))
 
 
+# DOCME
 class Out(Operation):
     def __init__(self, q0: Qubit):
         super().__init__([q0])
@@ -46,6 +49,14 @@ class Out(Operation):
 
     def __hash__(self) -> int:
         return(hash(self.qubits))
+
+# FIXME: Design flaw!
+# DAGCircuit fails if we try to add multi instances of the same gate
+# The problem is that we use gates as nodes in the graph, so they have to be
+# unique.
+# Either wrap all Operations in some QFNode class before adding to circuit,
+# Or make sure all Operations occur only once in circuit.
+# Clone copies as necessary.
 
 
 class DAGCircuit(Operation):
@@ -93,11 +104,19 @@ class DAGCircuit(Operation):
 
     @property
     def qubits(self) -> Qubits:
-        return tuple(self._qubits_in.keys())
+        qbs = list(self._qubits_in.keys())
+        qbs = sorted(qbs)
+        return tuple(qbs)
 
     @property
     def qubit_nb(self) -> int:
         return len(self.qubits)
+
+    def on(self, *qubits: Qubit) -> 'DAGCircuit':
+        return DAGCircuit(Circuit(self).on(*qubits))
+
+    def relabel(self, labels: Dict[Qubit, Qubit]) -> 'DAGCircuit':
+        return DAGCircuit(Circuit(self).relabel(labels))
 
     @property
     def H(self) -> 'DAGCircuit':
@@ -136,7 +155,7 @@ class DAGCircuit(Operation):
 
         tensor = bk.contract(*tensors_sublists)
 
-        return Gate(tensor, self.qubits)
+        return Unitary(tensor, *self.qubits)
 
     def aschannel(self) -> Channel:
         return Circuit(self).aschannel()
@@ -258,7 +277,7 @@ class DAGCircuit(Operation):
 
     def __str__(self) -> str:
         circ_str = '\n'.join([str(elem) for elem in self])
-        circ_str = textwrap.indent(circ_str, '    ')
+        circ_str = textwrap.indent(circ_str, ' '*CIRCUIT_INDENT)
         return '\n'.join([self.name, circ_str])
 
 

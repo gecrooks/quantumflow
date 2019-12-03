@@ -121,7 +121,7 @@ def expectation_gradients(ket0: State,
         if gate_type not in shift_constant:
             raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
         r = shift_constant[gate_type]
-        gen = gate_generator[gate_type].relabel(elem.qubits)
+        gen = gate_generator[gate_type].on(*elem.qubits)
 
         f0 = gen.run(forward)
         g = - 2 * r * bk.imag(bk.inner(f0.tensor, back.tensor))
@@ -168,7 +168,7 @@ def state_fidelity_gradients(ket0: State,
         if gate_type not in shift_constant:
             raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
         r = shift_constant[gate_type]
-        gen = gate_generator[gate_type].relabel(elem.qubits)
+        gen = gate_generator[gate_type].on(*elem.qubits)
 
         f0 = gen.run(forward)
         g = - r * 2 * bk.imag(bk.inner(f0.tensor, back.tensor) * bk.conj(ol))
@@ -183,11 +183,11 @@ def state_angle_gradients(ket0: State,
                           circ: Circuit) -> Sequence[float]:
     """
     Calculate the gradients of state angle for a parameterized quantum
-    circuit, using the middle-out algprithm.
+    circuit, using the middle-out algorithm.
 
     Args:
         ket0: An initial state.
-        ket1: A target state. We caclucate the fidelity between this state and
+        ket1: A target state. We calculate the fidelity between this state and
             the resultant of the circuit.
         circ: A circuit that acts on ket0.
     Returns:
@@ -208,7 +208,7 @@ def parameter_shift_circuits(circ: Circuit,
     circuit, using the parameter-shift rule.
 
     Returns the gate shift-constant, and two circuits, circ0, circ1.
-    Gradients are proportional to the difference in expectation beween the two
+    Gradients are proportional to the difference in expectation between the two
     circuits.
 
     .. code-block:: python

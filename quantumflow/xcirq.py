@@ -23,21 +23,20 @@ Interface between Google's Cirq and QuantumFlow
 """
 
 # Conventions
-# We import cirq as cq
-# ('cirq' is too close to our common abbrevation of 'circ' for 'circuit'.)
 # cqc: Abbreviation for Cirq circuit
 
-from typing import Iterable, cast
+from typing import Iterable, cast, List, Type
 
 import numpy as np
 
 from .qubits import Qubit, Qubits, asarray
-from .ops import Operation
+from .ops import Operation, Unitary, Gate
 from .states import State, zero_state
 from .circuits import Circuit
-from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
+from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ,
                     CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
-                    CCNOT, CSWAP, CCZ, FSIM)
+                    CCNOT, CSWAP, CCZ, FSim, IDEN)
+from .translate import select_translators, circuit_translate
 
 import cirq
 
@@ -47,22 +46,20 @@ __all__ = ('from_cirq_qubit', 'to_cirq_qubit',
            'CirqSimulator')
 
 # DOCME TESTME
-# TODO: FSIM
-CIRQ_GATESET = frozenset([I, X, Y, Z, S, T, H, TX, TY, TZ, S_H, T_H,
-                          CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
-                          CCNOT, CSWAP, CCZ, FSIM])
-"""Set of QuantumFlow gates that we know how to convert to Cirq"""
+CIRQ_GATES: List[Type[Gate]] = [
+    I, X, Y, Z, S, T, H, TX, TY, TZ,
+    CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
+    CCNOT, CSWAP, CCZ, FSim, IDEN]
+"""List of QuantumFlow gates that we know how to convert to Cirq"""
 
 
-# TODO
 class CirqSimulator(Operation):
-    """Interface to Cirq's quantum simulator. Adapts a QF Circuit (or
+    """Interface to the Cirq quantum simulator. Adapts a QF Circuit (or
     other sequence of Operations). Can itself be included in Circuits,
     like any other Operation.
 
-    Note that Cirq uses 64 bit complex floats (QF uses 128 bist), so
+    Note that Cirq uses 64 bit complex floats (QF uses 128 bits), so
     results will not be as accurate.
-
     """
 
     def __init__(self, elements: Iterable[Operation] = None) -> None:
@@ -87,7 +84,7 @@ class CirqSimulator(Operation):
                            initial_state=tensor)
         res = cast(cirq.WaveFunctionTrialResult, res)
         tensor = res.state_vector()
-        return State(tensor, self._circuit.qubits, ket.memory)
+        return State(tensor, ket.qubits, ket.memory)
 
     # TODO: evolve, ...
 
@@ -96,7 +93,7 @@ def from_cirq_qubit(qb: cirq.Qid) -> Qubit:
     """
     Convert a cirq qubit (a subtype of Qid) into regular python type.
     A ``LineQubit`` becomes an int, a ``GridQubit`` becomes a tuple of two
-    ints, and ``NamedQubit`` (and anything else) becomes a string
+    integers, and ``NamedQubit`` (and anything else) becomes a string
     """
     if isinstance(qb, cirq.LineQubit):
         return qb.x
@@ -110,7 +107,7 @@ def from_cirq_qubit(qb: cirq.Qid) -> Qubit:
 def to_cirq_qubit(qubit: Qubit) -> cirq.Qid:
     """Convert qubit names (any python object) into
     cirq qubits (subtypes of Qid). Returns either
-    a LineQubit (for ints), GridQubit (for tuples of row and column),
+    a LineQubit (for integers), GridQubit (for tuples of row and column),
     or a NamedQubit for all other objects.
     """
     if isinstance(qubit, int):
@@ -121,13 +118,12 @@ def to_cirq_qubit(qubit: Qubit) -> cirq.Qid:
     return cirq.NamedQubit(str(qubit))
 
 
-# TODO: ops.FSimGate
 def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
     """Convert a Cirq circuit to a QuantumFlow circuit"""
 
     simple_gates = {
         cirq.CSwapGate: CSWAP,
-        cirq.IdentityGate: I,
+        cirq.IdentityGate: IDEN,
     }
 
     exponent_gates = {
@@ -152,6 +148,8 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         cirq.ZZPowGate: ZZ
     }
 
+    decomposable_gates = {'PhasedISwapPowGate', 'PhasedXZGate'}
+
     circ = Circuit()
     qubit_map = {q: from_cirq_qubit(q) for q in cqc.all_qubits()}
     for op in cqc.all_operations():
@@ -173,6 +171,14 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
             circ += gate
         elif gatetype in parity_gates:
             circ += parity_gates[gatetype](t, *qbs)   # type: ignore
+        elif gatetype.__name__ in decomposable_gates:
+            subcqc = cirq.Circuit(op._decompose_())   # type: ignore
+            circ.extend(cirq_to_circuit(subcqc))
+        elif gatetype.__name__ == 'FSimGate':
+            circ += FSim(op.gate.theta, op.gate.phi, *qbs)  # type: ignore
+        elif gatetype.__name__ == 'MatrixGate':
+            matrix = op.gate._matrix        # type: ignore
+            circ += Unitary(matrix, *qbs)
         else:
             raise NotImplementedError(str(op.gate))  # pragma: no cover
 
@@ -181,8 +187,13 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
     return circ
 
 
-def circuit_to_cirq(circ: Circuit) -> cirq.Circuit:
+def circuit_to_cirq(circ: Circuit,
+                    translate: bool = False) -> cirq.Circuit:
     """Convert a QuantumFlow circuit to a Cirq circuit."""
+
+    if translate:
+        circ = translate_to_cirq(circ)
+
     qubit_map = {q: to_cirq_qubit(q) for q in circ.qubits}
 
     cqc = cirq.Circuit()
@@ -222,7 +233,26 @@ def circuit_to_cirq(circ: Circuit) -> cirq.Circuit:
         elif type(op) in turn_gates:
             t = op.params['t']
             cqc.append(turn_gates[type(op)](*qbs) ** t)
+        elif isinstance(op, IDEN):
+            gate = cirq.IdentityGate(op.qubit_nb).on(*qbs)
+            cqc.append(gate)
+        elif isinstance(op, FSim):
+            theta, phi = op.params.values()
+            gate = cirq.FSimGate(theta=theta, phi=phi).on(*qbs)
+            cqc.append(gate)
+        elif isinstance(op, Unitary):
+            matrix = op.asoperator()
+            gate = cirq.MatrixGate(matrix).on(*qbs)
+            cqc.append(gate)
         else:
             raise NotImplementedError(str(op))
 
     return cqc
+
+
+def translate_to_cirq(circ: Circuit) -> Circuit:
+    """Convert QF gates to gates understood by cirq"""
+    target_gates = CIRQ_GATES
+    trans = select_translators(target_gates)
+    circ = circuit_translate(circ, trans)
+    return circ

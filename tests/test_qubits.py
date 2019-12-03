@@ -157,7 +157,7 @@ def test_fubini_study_angle():
         assert 2 * ang / abs(theta) == ALMOST_ONE
 
         ang = qf.asarray(qf.fubini_study_angle(qf.I().vec,
-                                               qf.PHASE(theta).vec))
+                                               qf.PhaseShift(theta).vec))
         assert 2 * ang / abs(theta) == ALMOST_ONE
 
     for n in range(1, 6):

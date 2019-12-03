@@ -10,13 +10,55 @@ QuantumFlow: One qubit gates
 """
 
 from math import sqrt, pi
+from typing import Dict, List, Type, Iterator
 import numpy as np
 
+from numpy import pi as PI
+# from sympy import pi as PI
+
+from ..config import CONJ, SQRT
 from .. import backend as bk
+# from ..variables import variable_is_symbolic
 from ..qubits import Qubit
 from ..states import State, Density
 from ..ops import Gate
 from ..utils import multi_slice, cached_property
+from ..variables import Variable
+from ..paulialgebra import Pauli, sX, sY, sZ, sI
+
+__all__ = (
+    'IDEN', 'I', 'Ph',
+    'X', 'Y', 'Z', 'H', 'S', 'T', 'PhaseShift',
+    'RX', 'RY', 'RZ', 'RN', 'TX', 'TY', 'TZ', 'TH', 'S_H', 'T_H',
+    'V', 'V_H', 'SqrtY', 'SqrtY_H')
+
+
+def _specialize_gate(gate: Gate,
+                     periods: List[float],
+                     opts: Dict[float, Type[Gate]]) -> Gate:
+    """Return a specialized instance of a given general gate. Used
+    by the specialize code of various gates.
+
+    args:
+        gate:       The gate instance to specialize
+        periods:    The periods of the gate's parameters. Gate parameters
+                    are wrapped to range[0,period]
+        opts:       A map from particular gate parameters to a special case
+                    of the original gate type
+    """
+    params = list(gate.params.values())
+
+    # for p in params:
+    #     if variable_is_symbolic(p):
+    #         return gate
+
+    params = [p % pd for p, pd in zip(params, periods)]
+
+    for values, gatetype in opts.items():
+        if np.isclose(params, values):
+            return gatetype(*gate.qubits)       # type: ignore
+
+    return type(gate)(*params, *gate.qubits)    # type: ignore
 
 
 # Standard 1 qubit gates
@@ -33,6 +75,10 @@ class I(Gate):                                      # noqa: E742
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        return Pauli.zero()
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
         return bk.astensorproduct(np.eye(2))
@@ -41,7 +87,7 @@ class I(Gate):                                      # noqa: E742
     def H(self) -> 'I':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> 'I':
+    def __pow__(self, t: Variable) -> 'I':
         return self
 
     def run(self, ket: State) -> State:
@@ -51,18 +97,24 @@ class I(Gate):                                      # noqa: E742
         return rho
 
 
-# TODO: Move to gate_utils?
+# TODO: Move to gate_utils? Or gates_three?
 class IDEN(Gate):
     r"""
     The multi-qubit identity gate.
     """
     interchangeable = True
     diagonal = True
+    _diagram_labels = ['I']
+    _diagram_noline = True
 
     def __init__(self, *qubits: Qubit) -> None:
         if not qubits:
             qubits = (0,)
         super().__init__(qubits=qubits)
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        return Pauli.zero()
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
@@ -72,7 +124,7 @@ class IDEN(Gate):
     def H(self) -> 'IDEN':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> 'IDEN':
+    def __pow__(self, t: Variable) -> 'IDEN':
         return self
 
     def run(self, ket: State) -> State:
@@ -89,6 +141,64 @@ class IDEN(Gate):
 # end class IDEN
 
 
+class Ph(Gate):
+    r"""
+    Apply a global phase shift of exp(i phi).
+
+    Since this gate applies a global phase it technically doesn't need to
+    specify qubits at all. But we instead anchor the gate to 1 specific
+    qubit so that we can keep track of the phase as when manipulate gates,
+    circuits, and DAGCircuits.
+
+    We generally don't actually care about the global phase, since it has no
+    physical meaning. It does matter when constructing controlled gates.
+    GlobalPhase and the identity differ only by the phase, but a
+    controlled-identity is the identity, but a controlled-Global-Phase gate
+    will be some instance of the CPHASE (controlled-phase) gate.
+
+    .. math::
+        \operatorname{Ph}(\phi) \equiv \begin{pmatrix} e^{i \phi}& 0 \\
+                              0 & e^{i \phi} \end{pmatrix}
+    """
+    # Ref: Explorations in Quantum Computing, Williams, p77
+
+    _diagram_labels = ['Ph({phi})']
+    diagonal = True
+
+    def __init__(self, phi: float, q0: Qubit = 0) -> None:
+        super().__init__(params=dict(phi=phi), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        phi, = self.parameters()
+        return - phi * sI(q0)
+
+    @cached_property
+    def tensor(self) -> bk.BKTensor:
+        phi, = self.parameters()
+        return bk.astensorproduct(np.eye(2) * np.exp(1j*phi))
+
+    @property
+    def H(self) -> 'Ph':
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> 'Ph':
+        phi, = self.parameters()
+        return Ph(e * phi, *self.qubits)
+
+    # FIXME, shortcut doesn't work as written
+    # def run(self, ket: State) -> State:
+    #     phi, = self.parameters()
+    #     return ket * bk.exp(1j*phi)
+
+    def evolve(self, rho: Density) -> Density:
+        """Global phase shifts have no effect on density matrices. Returns argument
+        unchanged."""
+        return rho
+# End class Ph
+
+
 class X(Gate):
     r"""
     A 1-qubit Pauli-X gate.
@@ -99,6 +209,11 @@ class X(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return - (PI/2) * (1 - sX(q0))
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = [[0, 1], [1, 0]]
@@ -108,7 +223,7 @@ class X(Gate):
     def H(self) -> 'X':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> 'TX':
+    def __pow__(self, t: Variable) -> 'TX':
         return TX(t, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -141,6 +256,11 @@ class Y(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return - (PI/2) * (1 - sY(q0))
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[0, -1.0j], [1.0j, 0]])
@@ -150,7 +270,7 @@ class Y(Gate):
     def H(self) -> 'Y':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> 'TY':
+    def __pow__(self, t: Variable) -> 'TY':
         return TY(t, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -175,6 +295,11 @@ class Z(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return - (PI/2) * (1 - sZ(q0))
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 0], [0, -1.0]])
@@ -184,7 +309,7 @@ class Z(Gate):
     def H(self) -> 'Z':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> 'TZ':
+    def __pow__(self, t: Variable) -> 'TZ':
         return TZ(t, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -204,6 +329,11 @@ class H(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return (PI/2) * ((sX(q0) + sZ(q0)) / sqrt(2) - 1)
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1, 1], [1, -1]]) / sqrt(2)
@@ -213,7 +343,7 @@ class H(Gate):
     def H(self) -> '_H':
         return self  # Hermitian
 
-    def __pow__(self, t: float) -> 'TH':
+    def __pow__(self, t: Variable) -> 'TH':
         return TH(t, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -240,8 +370,8 @@ _H = H
 
 class S(Gate):
     r"""
-    A 1-qubit phase S gate, equivalent to ``PHASE(pi/2)``. The square root
-    of the Z gate (up to global phase). Also commonly denoted as the P gate.
+    A 1-qubit phase S gate, equivalent to ``Z ** (1/2)``. The square root
+    of the Z gate. Also sometimes denoted as the P gate.
 
     .. math::
         S() \equiv \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}
@@ -252,6 +382,11 @@ class S(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return (PI/2) * (sZ(q0)-1) / 2
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, 1.0j]])
@@ -261,7 +396,7 @@ class S(Gate):
     def H(self) -> 'S_H':
         return S_H(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TZ':
+    def __pow__(self, t: Variable) -> 'TZ':
         return TZ(t/2, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -272,7 +407,7 @@ class S(Gate):
 
 class T(Gate):
     r"""
-    A 1-qubit T (pi/8) gate, equivalent to ``PHASE(pi/4)``. The forth root
+    A 1-qubit T (pi/8) gate, equivalent to ``X ** (1/4)``. The forth root
     of the Z gate (up to global phase).
 
     .. math::
@@ -283,16 +418,21 @@ class T(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return (PI/2) * (sZ(q0)-1) / 4
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.cis(pi / 4.0))]]
+        unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.exp(1j*pi / 4.0))]]
         return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> 'T_H':
         return T_H(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TZ':
+    def __pow__(self, t: Variable) -> 'TZ':
         return TZ(t/4, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -301,50 +441,55 @@ class T(Gate):
 # end class T
 
 
-class PHASE(Gate):
+class PhaseShift(Gate):
     r"""
     A 1-qubit parametric phase shift gate.
-    Equivalent to RZ upto a global phase.
+    Equivalent to RZ up to a global phase.
 
     .. math::
-        \text{PHASE}(\theta) \equiv \begin{pmatrix}
+        \text{PhaseShift}(\theta) \equiv \begin{pmatrix}
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
     diagonal = True
 
-    def __init__(self, theta: float, q0: Qubit = 0) -> None:
+    def __init__(self, theta: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        theta, = self.parameters()
+        q0, = self.qubits
+        return theta * (sZ(q0)-1)/2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        theta = self.params['theta']
+        theta, = self.parameters()
         ctheta = bk.ccast(theta)
-        unitary = [[1.0, 0.0], [0.0, bk.cis(ctheta)]]
+        unitary = [[1.0, 0.0], [0.0, bk.exp(1j*ctheta)]]
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> 'PHASE':
+    def H(self) -> 'PhaseShift':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'PHASE':
-        theta = self.params['theta']
-        return PHASE(theta * t, *self.qubits)
+    def __pow__(self, t: Variable) -> 'PhaseShift':
+        theta, = self.parameters()
+        return PhaseShift(theta * t, *self.qubits)
 
     # TODO: CHECKME
     def run(self, ket: State) -> State:
-        theta, = self.params.values()
+        theta, = self.parameters()
         return TZ(theta/pi, *self.qubits).run(ket)
 
     def specialize(self) -> Gate:
         qbs = self.qubits
-        t = self.params['theta']/pi
+        theta, = self.parameters()
+        t = theta/pi
         gate0 = TZ(t, *qbs)
         gate1 = gate0.specialize()
-        if gate0 is gate1:
-            return self
         return gate1
 
-# end class PHASE
+# end class PhaseShift
 
 
 class RX(Gate):
@@ -359,12 +504,20 @@ class RX(Gate):
     Args:
         theta: Angle of rotation in Bloch sphere
     """
-    def __init__(self, theta: float, q0: Qubit = 0) -> None:
+    _diagram_labels = ['Rx({theta})']
+
+    def __init__(self, theta: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        theta, = self.parameters()
+        q0, = self.qubits
+        return theta * sX(q0) / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        theta = self.params['theta']
+        theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[bk.cos(ctheta / 2), -1.0j * bk.sin(ctheta / 2)],
                    [-1.0j * bk.sin(ctheta / 2), bk.cos(ctheta / 2)]]
@@ -374,17 +527,16 @@ class RX(Gate):
     def H(self) -> 'RX':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'RX':
-        theta = self.params['theta']
+    def __pow__(self, t: Variable) -> 'RX':
+        theta, = self.parameters()
         return RX(theta * t, *self.qubits)
 
     def specialize(self) -> Gate:
         qbs = self.qubits
-        t = self.params['theta']/pi
+        theta, = self.parameters()
+        t = theta/pi
         gate0 = TX(t, *qbs)
         gate1 = gate0.specialize()
-        if gate0 is gate1:
-            return self
         return gate1
 
 # end class RX
@@ -401,12 +553,20 @@ class RY(Gate):
     Args:
         theta: Angle of rotation in Bloch sphere
     """
-    def __init__(self, theta: float, q0: Qubit = 0) -> None:
+    _diagram_labels = ['Ry({theta})']
+
+    def __init__(self, theta: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        theta, = self.parameters()
+        q0, = self.qubits
+        return theta * sY(q0) / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        theta = self.params['theta']
+        theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[bk.cos(ctheta / 2.0), -bk.sin(ctheta / 2.0)],
                    [bk.sin(ctheta / 2.0), bk.cos(ctheta / 2.0)]]
@@ -416,17 +576,16 @@ class RY(Gate):
     def H(self) -> 'RY':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'RY':
-        theta = self.params['theta']
+    def __pow__(self, t: Variable) -> 'RY':
+        theta, = self.parameters()
         return RY(theta * t, *self.qubits)
 
     def specialize(self) -> Gate:
         qbs = self.qubits
-        t = self.params['theta']/pi
+        theta, = self.parameters()
+        t = theta/pi
         gate0 = TY(t, *qbs)
         gate1 = gate0.specialize()
-        if gate0 is gate1:
-            return self
         return gate1
 
 # end class RY
@@ -445,13 +604,20 @@ class RZ(Gate):
         theta: Angle of rotation in Bloch sphere
     """
     diagonal = True
+    _diagram_labels = ['Rz({theta})']
 
-    def __init__(self, theta: float, q0: Qubit = 0) -> None:
+    def __init__(self, theta: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(theta=theta), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        theta, = self.parameters()
+        q0, = self.qubits
+        return theta * sZ(q0) / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        theta = self.params['theta']
+        theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[bk.exp(-ctheta * 0.5j), 0],
                    [0, bk.exp(ctheta * 0.5j)]]
@@ -461,22 +627,20 @@ class RZ(Gate):
     def H(self) -> 'RZ':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'RZ':
-        theta = self.params['theta']
+    def __pow__(self, t: Variable) -> 'RZ':
+        theta, = self.parameters()
         return RZ(theta * t, *self.qubits)
 
-    # TODO: CHECKME
     def run(self, ket: State) -> State:
-        theta, = self.params.values()
+        theta, = self.parameters()
         return TZ(theta/pi, *self.qubits).run(ket)
 
     def specialize(self) -> Gate:
         qbs = self.qubits
-        t = self.params['theta']/pi
+        theta, = self.parameters()
+        t = theta/pi
         gate0 = TZ(t, *qbs)
         gate1 = gate0.specialize()
-        if gate0 is gate1:
-            return self
         return gate1
 
 # end class RZ
@@ -486,16 +650,23 @@ class RZ(Gate):
 
 class S_H(Gate):
     r"""
-    The inverse of the 1-qubit phase S gate, equivalent to ``PHASE(-pi/2)``.
+    The inverse of the 1-qubit phase S gate, equivalent to
+    ``Z ** -1/2``.
 
     .. math::
         \begin{pmatrix} 1 & 0 \\ 0 & -i \end{pmatrix}
 
     """
     diagonal = True
+    _diagram_labels = ['S' + CONJ]
 
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return -PI*(sZ(q0)-1) / 4
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
@@ -506,7 +677,7 @@ class S_H(Gate):
     def H(self) -> 'S':
         return S(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TZ':
+    def __pow__(self, t: Variable) -> 'TZ':
         return TZ(-t/2, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -518,26 +689,32 @@ class S_H(Gate):
 class T_H(Gate):
     r"""
     The inverse (complex conjugate) of the 1-qubit T (pi/8) gate, equivalent
-    to ``PHASE(-pi/4)``.
+    to ``Z ** -1/4``.
 
     .. math::
         \begin{pmatrix} 1 & 0 \\ 0 & e^{-i \pi / 4} \end{pmatrix}
     """
     diagonal = True
+    _diagram_labels = ['T' + CONJ]
 
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return - PI * (sZ(q0)-1) / 8
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.cis(-pi / 4.0))]]
+        unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.exp(-1j*pi / 4.0))]]
         return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> 'T':
         return T(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TZ':
+    def __pow__(self, t: Variable) -> 'TZ':
         return TZ(-t/4, *self.qubits)
 
     def run(self, ket: State) -> State:
@@ -550,26 +727,41 @@ class RN(Gate):
     r"""A 1-qubit rotation of angle theta about axis (nx, ny, nz)
 
     .. math::
-        R_n(\theta) = \cos \frac{theta}{2} I - i \sin\frac{theta}{2}
+        R_n(\theta) = \cos \frac{\theta}{2} I - i \sin\frac{\theta}{2}
             (n_x X+ n_y Y + n_z Z)
 
     Args:
         theta: Angle of rotation on Block sphere
         (nx, ny, nz): A three-dimensional real unit vector
     """
+    _diagram_labels = ['Rn({theta}, {nx}, {ny}, {nz})']
 
     def __init__(self,
-                 theta: float,
-                 nx: float,
-                 ny: float,
-                 nz: float,
+                 theta: Variable,
+                 nx: Variable,
+                 ny: Variable,
+                 nz: Variable,
                  q0: Qubit = 0) -> None:
+
+        norm = np.sqrt(np.real(nx**2 + ny**2 + nz**2))
+        nx /= norm
+        ny /= norm
+        nz /= norm
+        theta *= norm
+
         params = dict(theta=theta, nx=nx, ny=ny, nz=nz)
         super().__init__(params=params, qubits=[q0])
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        theta, nx, ny, nz = self.parameters()
+        q0, = self.qubits
+        return theta*(nx*sX(q0) + ny*sY(q0) + nz*sZ(q0))/2
+
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        theta, nx, ny, nz = self.params.values()
+        theta, nx, ny, nz = self.parameters()
+
         ctheta = bk.ccast(theta)
         cost = bk.cos(ctheta / 2)
         sint = bk.sin(ctheta / 2)
@@ -582,9 +774,14 @@ class RN(Gate):
     def H(self) -> 'RN':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'RN':
-        theta, nx, ny, nz = self.params.values()
+    def __pow__(self, t: Variable) -> 'RN':
+        theta, nx, ny, nz = self.parameters()
         return RN(t * theta, nx, ny, nz, *self.qubits)
+
+    # TODO:     def specialize(self) -> Gate:
+
+
+# end class RN
 
 
 class TX(Gate):
@@ -596,15 +793,21 @@ class TX(Gate):
     Args:
         t: Number of half turns (quarter cycles) on Block sphere
     """
-    def __init__(self, t: float, q0: Qubit = 0) -> None:
-        t = t % 2
+
+    def __init__(self, t: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        t, = self.parameters()
+        q0, = self.qubits
+        return t * (sX(q0) - 1) * PI / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        t = self.params['t']
+        t, = self.parameters()
         ctheta = bk.ccast(pi * t)
-        phase = bk.cis(0.5 * ctheta)
+        phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2),
                     phase * -1.0j * bk.sin(ctheta / 2)],
                    [phase * -1.0j * bk.sin(ctheta / 2),
@@ -615,17 +818,14 @@ class TX(Gate):
     def H(self) -> 'TX':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'TX':
-        t = self.params['t'] * t
-        return TX(t, *self.qubits)
+    def __pow__(self, e: Variable) -> 'TX':
+        t, = self.parameters()
+        return TX(e * t, *self.qubits)
 
     def specialize(self) -> Gate:
-        t = self.params['t'] % 2
         opts = {0.0: I, 0.5: V, 1.0: X, 1.5: V_H, 2.0: I}
-        for key, gatetype in opts.items():
-            if np.isclose(t, key):
-                return gatetype(*self.qubits)
-        return self
+        return _specialize_gate(self, [2], opts)
+# end class TX
 
 
 class TY(Gate):
@@ -640,13 +840,20 @@ class TY(Gate):
         t: Number of half turns (quarter cycles) on Block sphere
 
     """
-    def __init__(self, t: float, q0: Qubit = 0) -> None:
-        # t = t % 2
+    _diagram_labels = ['Y^{t}']
+
+    def __init__(self, t: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        t, = self.parameters()
+        q0, = self.qubits
+        return t * (sY(q0) - 1) * pi / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        t = self.params['t']
+        t, = self.parameters()
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.cos(ctheta / 2.0),
@@ -659,17 +866,15 @@ class TY(Gate):
     def H(self) -> 'TY':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'TY':
-        t = self.params['t'] * t
-        return TY(t, *self.qubits)
+    def __pow__(self, e: Variable) -> 'TY':
+        t, = self.parameters()
+        return TY(e*t, *self.qubits)
 
     def specialize(self) -> Gate:
-        t = self.params['t'] % 2
         opts = {0.0: I, 1.0: Y, 2.0: I}
-        for key, gatetype in opts.items():
-            if np.isclose(t, key):
-                return gatetype(*self.qubits)
-        return self
+        return _specialize_gate(self, [2], opts)
+
+# end class TY
 
 
 class TZ(Gate):
@@ -682,14 +887,20 @@ class TZ(Gate):
         t: Number of half turns (quarter cycles) on Block sphere
     """
     diagonal = True
+    _diagram_labels = ['Z^{t}']
 
-    def __init__(self, t: float, q0: Qubit = 0) -> None:
-        # t = t % 2
+    def __init__(self, t: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        t, = self.parameters()
+        q0, = self.qubits
+        return t * (sZ(q0) - 1) * pi / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        t = self.params['t']
+        t, = self.parameters()
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
         unitary = [[phase * bk.exp(-ctheta * 0.5j), 0],
@@ -701,13 +912,13 @@ class TZ(Gate):
         t = - self.params['t']
         return TZ(t, *self.qubits)
 
-    def __pow__(self, t: float) -> 'TZ':
-        t = self.params['t'] * t
-        return TZ(t, *self.qubits)
+    def __pow__(self, e: Variable) -> 'TZ':
+        t, = self.parameters()
+        return TZ(e*t, *self.qubits)
 
     def run(self, ket: State) -> State:
         if bk.BACKEND == 'numpy':
-            t = self.params['t']
+            t, = self.parameters()
             axes = ket.qubit_indices(self.qubits)
             s1 = multi_slice(axes, [1])
             tensor = ket.tensor.copy()
@@ -716,14 +927,12 @@ class TZ(Gate):
 
         return super().run(ket)  # pragma: no cover
 
-    # TESTME
     def specialize(self) -> Gate:
-        t = self.params['t'] % 2
         opts = {0.0: I, 0.25: T, 0.5: S, 1.0: Z, 1.5: S_H, 1.75: T_H, 2.0: I}
-        for key, gatetype in opts.items():
-            if np.isclose(t, key):
-                return gatetype(*self.qubits)
-        return self
+        return _specialize_gate(self, [2], opts)
+
+
+# end class TZ
 
 
 class TH(Gate):
@@ -739,12 +948,20 @@ class TH(Gate):
             \cos(\tfrac{t}{2}) -\tfrac{i}{\sqrt{2}} \sin(\frac{t}{2})
         \end{pmatrix}
     """
-    def __init__(self, t: float, q0: Qubit = 0) -> None:
+    _diagram_labels = ['H^{t}']
+
+    def __init__(self, t: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(t=t), qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        t, = self.parameters()
+        return t * ((sX(q0) + sZ(q0)) / sqrt(2) - 1) * pi / 2
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        t = self.params['t']
+        t, = self.parameters()
         theta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * theta)
         unitary = [[phase * bk.cos(theta / 2)
@@ -759,72 +976,29 @@ class TH(Gate):
     def H(self) -> 'TH':
         return self ** -1
 
-    def __pow__(self, t: float) -> 'TH':
-        t = self.params['t'] * t
-        return TH(t, *self.qubits)
+    def __pow__(self, e: Variable) -> 'TH':
+        t, = self.parameters()
+        return TH(e*t, *self.qubits)
 
     def specialize(self) -> Gate:
-        t = self.params['t'] % 2
         opts = {0.0: I, 1.0: H, 2.0: I}
-        for key, gatetype in opts.items():
-            if np.isclose(t, key):
-                return gatetype(*self.qubits)
-        return self
+        return _specialize_gate(self, [2], opts)
+
+# end class TH
 
 
-# FIXME: Replace with euler_circuit?
-class ZYZ(Gate):
-    r"""A Z-Y-Z decomposition of one-qubit rotations in the Bloch sphere
-
-    The ZYZ decomposition of one-qubit rotations is
-
-    .. math::
-        \text{ZYZ}(t_0, t_1, t_2)
-            = Z^{t_2} Y^{t_1} Z^{t_0}
-
-    This is the unitary group on a 2-dimensional complex vector space, SU(2).
-
-    Ref: See Barenco et al (1995) section 4 (Warning: gates are defined as
-    conjugate of what we now use?), or Eq 4.11 of Nielsen and Chuang.
-
-    Args:
-        t0: Parameter of first parametric Z gate.
-            Number of half turns on Block sphere.
-        t1: Parameter of parametric Y gate.
-        t2: Parameter of second parametric Z gate.
-    """
-    def __init__(self, t0: float, t1: float,
-                 t2: float, q0: Qubit = 0) -> None:
-        super().__init__(params=dict(t0=t0, t1=t1, t2=t2), qubits=[q0])
-
-    @cached_property
-    def tensor(self) -> bk.BKTensor:
-        t0, t1, t2 = self.params.values()
-        ct0 = bk.ccast(pi * t0)
-        ct1 = bk.ccast(pi * t1)
-        ct2 = bk.ccast(pi * t2)
-        ct3 = 0
-
-        unitary = [[bk.cis(ct3 - 0.5 * ct2 - 0.5 * ct0) * bk.cos(0.5 * ct1),
-                    -bk.cis(ct3 - 0.5 * ct2 + 0.5 * ct0) * bk.sin(0.5 * ct1)],
-                   [bk.cis(ct3 + 0.5 * ct2 - 0.5 * ct0) * bk.sin(0.5 * ct1),
-                    bk.cis(ct3 + 0.5 * ct2 + 0.5 * ct0) * bk.cos(0.5 * ct1)]]
-
-        return bk.astensorproduct(unitary)
-
-    @property
-    def H(self) -> Gate:
-        t0, t1, t2 = self.params.values()
-        return ZYZ(-t2, -t1, -t0, *self.qubits)
-
-
-# TODO: Rename to SX (sqrt-X)? Add SY gate, (SZ is S)?
 class V(Gate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
     """
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return (sX(q0) - 1) * pi / 4
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
@@ -834,16 +1008,24 @@ class V(Gate):
     def H(self) -> 'V_H':
         return V_H(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TX':
+    def __pow__(self, t: Variable) -> 'TX':
         return TX(0.5*t, *self.qubits)
+
+# end class V
 
 
 class V_H(Gate):
     r"""
     Complex conjugate of the V gate, X-MINUS-90 gate.
     """
+
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return -(sX(q0) - 1) * pi / 4
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
@@ -853,108 +1035,74 @@ class V_H(Gate):
     def H(self) -> 'V':
         return V(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TX':
+    def __pow__(self, t: Variable) -> 'TX':
         return TX(-0.5*t, *self.qubits)
 
+# end class V_H
 
-# Kudos: W (Phased X), and TW (PhasedXPow) gates adapted from Cirq
 
-class W(Gate):
-    r""" A phased X gate, equivalent to the circuit
-    ───Z^-p───X───Z^p───
+class SqrtY(Gate):
+    r"""
+    Principal square root of the Y gate.
     """
-    def __init__(self, p: float, q0: Qubit = 0) -> None:
-        super().__init__(params=dict(p=p), qubits=[q0])
+    _diagram_labels = [SQRT+'Y']
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return (sY(q0) - 1) * pi / 4
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        p = self.params['p']
-        gate = TZ(p) @ X() @ TZ(-p)
-        return gate.tensor
+        return TY(0.5).tensor
 
-    # TESTME
     @property
-    def H(self) -> 'W':
-        return self
+    def H(self) -> 'SqrtY_H':
+        return SqrtY_H(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TW':
-        p = self.params['p']
-        return TW(p, t, *self.qubits)
+    def __pow__(self, t: Variable) -> 'TY':
+        return TY(0.5*t, *self.qubits)
 
-    def specialize(self) -> Gate:
-        qbs = self.qubits
-        p = self.params['p'] % 2
-        if np.isclose(p, 0.0) or np.isclose(p, 2.0):
-            return X(*qbs)
-        return self
+    # TODO: Experiment. Maybe makes more sense to have main decompositions in
+    # gate classes, rather than separate in translate?
+    def decompose(self) -> Iterator[TY]:
+        """Translate  gate to TY"""
+        q0, = self.qubits
+        yield TY(0.5, q0)
+
+# end class SqrtY
 
 
-class TW(Gate):
-    """A phased X gate raise to a power.
-
-    Equivalent to the circuit ───Z^-p───X^t───Z^p───
-
+class SqrtY_H(Gate):
+    r"""
+    Complex conjugate of the SqrtY gate.
     """
-    def __init__(self, p: float, t: float, q0: Qubit = 0) -> None:
-        super().__init__(params=dict(p=p, t=t), qubits=[q0])
+    _diagram_labels = [SQRT+'Y'+CONJ]
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, = self.qubits
+        return -(sY(q0) - 1) * pi / 4
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        p, t = self.params.values()
-        gate = TZ(p) @ TX(t) @ TZ(-p)
-        return gate.tensor
+        return TY(-0.5).tensor
 
     @property
-    def H(self) -> 'TW':
-        return self ** -1
+    def H(self) -> 'SqrtY':
+        return SqrtY(*self.qubits)
 
-    def __pow__(self, t: float) -> 'TW':
-        p, s = self.params.values()
-        return TW(p, s * t, *self.qubits)
+    def __pow__(self, t: Variable) -> 'TY':
+        return TY(-0.5*t, *self.qubits)
 
-    def specialize(self) -> Gate:
-        qbs = self.qubits
-        p = self.params['p'] % 2
-        t = self.params['t'] % 2
-        if np.isclose(t, 0.0) or np.isclose(t, 2.0):
-            return I(*qbs)
-        if np.isclose(p, 0.0):
-            return TX(t, *qbs).specialize()
-        return self
-
-# end class TW
-
-
-cliffords = (
-    I(),
-
-    RN(0.5 * pi, 1, 0, 0),
-    RN(0.5 * pi, 0, 1, 0),
-    RN(0.5 * pi, 0, 0, 1),
-    RN(pi, 1, 0, 0),
-    RN(pi, 0, 1, 0),
-    RN(pi, 0, 0, 1),
-    RN(-0.5 * pi, 1, 0, 0),
-    RN(-0.5 * pi, 0, 1, 0),
-    RN(-0.5 * pi, 0, 0, 1),
-
-    RN(pi, 1/sqrt(2), 1/sqrt(2), 0),
-    RN(pi, 1/sqrt(2), 0, 1/sqrt(2)),
-    RN(pi, 0, 1/sqrt(2), 1/sqrt(2)),
-    RN(pi, -1/sqrt(2), 1/sqrt(2), 0),
-    RN(pi, 1/sqrt(2), 0, -1/sqrt(2)),
-    RN(pi, 0, -1/sqrt(2), 1/sqrt(2)),
-
-    RN(+2*pi/3, 1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
-    RN(-2*pi/3, 1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
-    RN(+2*pi/3, -1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
-    RN(-2*pi/3, -1/sqrt(3), 1/sqrt(3), 1/sqrt(3)),
-    RN(+2*pi/3, 1/sqrt(3), -1/sqrt(3), 1/sqrt(3)),
-    RN(-2*pi/3, 1/sqrt(3), -1/sqrt(3), 1/sqrt(3)),
-    RN(+2*pi/3, 1/sqrt(3), 1/sqrt(3), -1/sqrt(3)),
-    RN(-2*pi/3, 1/sqrt(3), 1/sqrt(3), -1/sqrt(3)),
-    )
-"""
-List of all 24 1-qubit Clifford gates. The first gate is the identity.
-The rest are given as instances of the generic rotation gate RN
-"""
+    def decompose(self) -> Iterator[TY]:
+        """Translate  gate to TY"""
+        q0, = self.qubits
+        yield TY(-0.5, q0)
+# end class SqrtY_H

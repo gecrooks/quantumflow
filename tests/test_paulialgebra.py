@@ -5,7 +5,10 @@ Unit tests for quantumflow.paulialgebra
 from itertools import product
 
 from numpy import pi
+import numpy as np
+
 import networkx as nx
+import scipy.linalg
 
 import pytest
 
@@ -28,8 +31,8 @@ def test_term():
 
 def test_pauli_str():
     x = qf.Pauli.term([2], 'X', -1)
-    assert str(x) == '+ (-1+0j) X(2)'
-    assert repr(x) == "Pauli(((((2, 'X'),), (-1+0j)),))"
+    assert str(x) == '+ -1 X(2)'
+    assert repr(x) == "Pauli(((((2, 'X'),), -1),))"
 
 
 def test_pauli_sigma():
@@ -77,7 +80,7 @@ def test_sub():
     assert ((((1, 'X'),), (1+0j)), (((2, 'Y'),), (-2+0j))) == s.terms
 
     s = 2 - y
-    assert str(s) == '+ (+2+0j) + (-2+0j) Y(2)'
+    assert str(s) == '+ (2+0j) + (-2+0j) Y(2)'
 
 
 def test_cmp():
@@ -330,6 +333,62 @@ def test_pauli_exp_circuit():
     with pytest.raises(ValueError):
         pauli4 = 0.5j * pi * sX(1) * sX(2)
         _ = qf.pauli_exp_circuit(pauli4, alpha, top3)
+
+    top4 = nx.DiGraph()
+    nx.add_path(top4, [3, 2, 1, 0])
+    circ3 = qf.pauli_exp_circuit(pauli3, alpha, top4)
+
+
+def test_pauli_exp_circuit_more():
+
+    alphas = [0.1, 2., -3.14, -0.4]
+    paulis = [qf.sZ(0) + 1,
+              qf.sY(0),
+              qf.sX(0),
+              0.5 * pi * qf.sZ(0) * sZ(1),
+              0.5 * pi * qf.sX(0) * sZ(1)]
+
+    for alpha in alphas:
+        for pauli in paulis:
+            print(alpha, pauli)
+            circ = qf.pauli_exp_circuit(pauli, alpha)
+            qbs = circ.qubits
+
+            U = scipy.linalg.expm(-1.0j * alpha * pauli.asoperator(qbs))
+            gate = qf.Unitary(U, *qbs)
+            assert qf.gates_close(gate, circ.asgate())
+
+    pauli = qf.sX(0) + qf.sZ(0)
+    with pytest.raises(ValueError):
+        qf.pauli_exp_circuit(pauli, 0.2)
+
+
+def test_pauli_decompose_hermitian():
+    gate = qf.X()
+    op = gate.asoperator()
+    H = -scipy.linalg.logm(op) / 1.0j
+    pl = qf.pauli_decompose_hermitian(H)
+    assert np.allclose(pl.asoperator(), H)
+
+    N = 4
+    gate = qf.random_gate(N)
+    op = gate.asoperator()
+    H = -scipy.linalg.logm(op) / 1.0j
+    pl = qf.pauli_decompose_hermitian(H)
+    assert np.allclose(pl.asoperator(), H)
+
+    op = np.ones(shape=[2, 2, 2])
+    with pytest.raises(ValueError):
+        qf.pauli_decompose_hermitian(op)
+
+    op = np.ones(shape=[4, 4])
+    op[0, 1] = 10000
+    with pytest.raises(ValueError):
+        qf.pauli_decompose_hermitian(op)
+
+    op = np.ones(shape=[3, 3])
+    with pytest.raises(ValueError):
+        qf.pauli_decompose_hermitian(op)
 
 
 # fin

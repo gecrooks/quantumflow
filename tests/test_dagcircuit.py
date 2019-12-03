@@ -86,8 +86,8 @@ def test_str():
 
 @skip_ctf
 def test_asgate():
-    gate0 = qf.ZYZ(0.1, 2.2, 0.5)
     circ0 = qf.zyz_circuit(0.1, 2.2, 0.5, 0)
+    gate0 = circ0.asgate()
     dag0 = qf.DAGCircuit(circ0)
     gate1 = dag0.asgate()
     assert qf.gates_close(gate0, gate1)
@@ -196,3 +196,21 @@ def test_next_prev():
 
     assert dag.next_element(elem, elem.qubits[0]) == Out(4)
     assert dag.prev_element(elem, elem.qubits[1]) == In(6)
+
+
+def test_on():
+    circ = qf.Circuit()
+    circ += qf.H(0)
+    circ += qf.H(1)
+    dag = qf.DAGCircuit(circ)
+
+    dag = dag.on(2, 3)
+    assert dag.qubits == (2, 3)
+
+    dag = dag.relabel({2: 4, 3: 6})
+    assert dag.qubits == (4, 6)
+
+    with pytest.raises(ValueError):
+        dag.on(2, 3, 5)
+
+# fin

@@ -7,17 +7,19 @@
 QuantumFlow: Visualizations of quantum circuits,
 """
 
-from typing import Any, List
+from typing import Any, List, Dict
 import os
 import subprocess
 import tempfile
+import re
 
 from PIL import Image
 import sympy
+from sympy import Symbol
 
 from .qubits import Qubits
 from .gates import P0, P1
-from .gates import (I, SWAP, CNOT, CZ, CCNOT, CSWAP, IDEN)
+from .gates import (SWAP, CNOT, CZ, CCNOT, CSWAP, IDEN, CH)
 
 from .ops import Gate
 from .stdops import Reset, Measure
@@ -30,8 +32,9 @@ __all__ = ('LATEX_GATESET',
            'circuit_to_latex',
            'latex_to_image',
            'circuit_to_image',
-           'circuit_diagram',
-           'circuit_to_diagram')
+           'circuit_to_diagram',
+           'circuit_diagram'
+           )
 
 
 # TODO: Should be set of types to match GATESET in stdgates?
@@ -40,19 +43,45 @@ LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
                            'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'Reset'])
 
-# TODO: DIAGRAM_GATESET gateset
+
+# TODO: Add default
+# TODO Move to utils?
+kwarg_to_symbol = {
+    'alpha':    Symbol('α'),
+    'lam':      Symbol('λ'),
+    'nx':       Symbol('n_x'),
+    'ny':       Symbol('n_y'),
+    'nz':       Symbol('n_z'),
+    'p':        Symbol('p'),
+    'phi':      Symbol('φ'),
+    't':        Symbol('t'),
+    't0':       Symbol('t_0'),
+    't1':       Symbol('t_1'),
+    't2':       Symbol('t_2'),
+    'theta':    Symbol('θ'),
+    'tx':       Symbol('t_x'),
+    'ty':       Symbol('t_y'),
+    'tz':       Symbol('t_z'),
+    's':        Symbol('s'),
+    'b':        Symbol('b'),
+    'c':        Symbol('c'),
+    }
+"""Mapping of standard gate arguments to sympy Symbols"""
 
 
 class NoWire(IDEN):
     """Dummy gate used to draw a gap in a circuit"""
-    pass
+    _diagram_labels = ['  ']
+
+    # TODO: Override run()?
+    # DO I need this!?
 
 
 def circuit_to_latex(
         circ: Circuit,
         qubits: Qubits = None,
         document: bool = True,
-        package: str = 'qcircuit',
+        package: str = 'quantikz',
         options: str = None) -> str:
     """
     Create an image of a quantum circuit in LaTeX.
@@ -68,7 +97,7 @@ def circuit_to_latex(
                     circuit image is wrapped in a standalone LaTeX document
                     ready for typesetting.
         package:    The LaTeX package used for rendering. Either 'qcircuit'
-                    (default), or 'quantikz'
+                    or 'quantikz' (default)
     Returns:
         A LaTeX string representation of the circuit.
 
@@ -82,22 +111,28 @@ def circuit_to_latex(
             (https://arxiv.org/abs/1809.03842).
     """
 
-    assert package in ['qcircuit', 'quantikz']   # FIXME. Exception
+    assert package in ['qcircuit', 'quantikz']   # FIXME. Throw Exception
 
-    labels = {
-        'S_H': r'S^\dagger',
-        'T_H': r'T^\dagger',
-        'RX': r'R_x(%s)',
-        'RY': r'R_y(%s)',
-        'RZ': r'R_z(%s)',
-        'TX': r'X^{%s}',
-        'TY': r'Y^{%s}',
-        'TZ': r'Z^{%s}',
-        'TH': r'H^{%s}',
-        'XX': r'X\!X^{%s}',
-        'YY': r'Y\!Y^{%s}',
-        'ZZ': r'Z\!Z^{%s}',
-        'ISWAP': r'\text{iSWAP}',
+    # TODO: I would be good to move much of the gate dependent details
+    # into the gate classes, as has been done for circuit_to_diagram.
+    # But there seems to be too many exceptions to be practical. (??)
+
+    latex_labels = {
+        'S_H': [r'S^\dagger'],
+        'T_H': [r'T^\dagger'],
+        'RX': [r'R_x({theta})'],
+        'RY': [r'R_y({theta})'],
+        'RZ': [r'R_z({theta})'],
+        'TX': [r'X^{{{t}}}'],
+        'TY': [r'Y^{{{t}}}'],
+        'TZ': [r'Z^{{{t}}}'],
+        'TH': [r'H^{{{t}}}'],
+        'XX': [r'X\!X^{{{t}}}'],
+        'YY': [r'Y\!Y^{{{t}}}'],
+        'ZZ': [r'Z\!Z^{{{t}}}'],
+        'ISWAP': [r'\text{{iSwap}}'],
+        'SqrtISwap': [r'\sqrt{{\text{{iSwap}}}}'],
+        'SqrtISwap_H': [r'\sqrt{{\text{{iSwap}}}}^\dagger'],
         }
 
     if qubits is None:
@@ -110,25 +145,40 @@ def circuit_to_latex(
 
     for layer in layers:
         code = [r'\qw'] * N
-        assert isinstance(layer, Circuit)
+
         for gate in layer:
+            elem = gate  # FIXME: elem not gate
             idx = [qubit_idx[q] for q in gate.qubits]
 
             name = gate.name
-            params = ''
-            if isinstance(gate, Gate) and gate.params:
-                params = ','.join(_pretty(p, format='latex')
-                                  for p in gate.params.values())
 
-            if name in labels:
-                label = labels[name]
+            pretty_params: Dict[str, str] = {}
+            # FIXME: Do I need gate isinstance (Also below)
+            if isinstance(elem, Gate) and elem.params:
+                pretty_params = {key: _pretty(value, format='latex')
+                                 for key, value in gate.params.items()}
+
+            # Construct text labels
+            name = elem.name
+
+            if name in latex_labels:
+                text_labels = latex_labels[name]
+                if len(idx) != 1 and len(text_labels) == 1:
+                    text_labels = text_labels * len(idx)
+                text_labels = [t.format(**pretty_params) for t in text_labels]
             else:
-                label = r'\text{%s}' % name
-                if params:
-                    label += '(%s)'
+                if len(name) > 1:
+                    name = r'\text{'+name+'}'
+                if pretty_params:
+                    params_text = ','.join(pretty_params.values())
 
-            if params:
-                label = label % params
+                    text_labels = [name+'(%s)' % params_text] * len(idx)
+                else:
+                    text_labels = [name] * len(idx)
+                if len(idx) != 1 and not elem.interchangeable:
+                    # If not interchangeable, we have to label connections
+                    for i in range(elem.qubit_nb):
+                        text_labels[i] = text_labels[i] + '_{%s}' % i
 
             # Special 1-qubit gates
             if isinstance(gate, NoWire):
@@ -143,7 +193,7 @@ def circuit_to_latex(
             elif isinstance(gate, P1):
                 code[idx[0]] = r'\push{\ket{1}\!\!\bra{1}} \qw'
             elif isinstance(gate, Measure):
-                code[idx[0]] = r'\meter{}'
+                code[idx[0]] = r'\meter{}'  # TODO: Add cbit label
 
             # Special two-qubit gates
             elif isinstance(gate, CNOT):
@@ -152,6 +202,9 @@ def circuit_to_latex(
             elif isinstance(gate, CZ):
                 code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
                 code[idx[1]] = r'\ctrl{' + str(idx[0] - idx[1]) + '}'
+            elif isinstance(gate, CH):
+                code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
+                code[idx[1]] = r'\gate{H}'
             elif isinstance(gate, SWAP):
                 if package == 'qcircuit':
                     code[idx[0]] = r'\qswap \qwx[' + str(idx[1] - idx[0]) + ']'
@@ -177,38 +230,37 @@ def circuit_to_latex(
                     code[idx[2]] = r'\targX{}'
 
             # Special multi-qubit gates
-            elif isinstance(gate, I):
-                pass
             elif isinstance(gate, Reset):
                 for i in idx:
                     code[i] = r'\push{\rule{0.1em}{0.5em}\, \ket{0}\,} \qw'
 
             # Generic 1-qubit gate
             elif(gate.qubit_nb == 1):
-                code[idx[0]] = r'\gate{' + label + '}'
+                code[idx[0]] = r'\gate{' + text_labels[0] + '}'
 
             # Generic 2-qubit gate
             elif(gate.qubit_nb == 2 and gate.interchangeable):
                 top = min(idx)
                 bot = max(idx)
 
-                # TODO: either qubits neigbours, in order,
+                # TODO: either qubits neighbors, in order,
                 # or bit symmetric gate
                 if package == 'qcircuit':
                     if bot-top == 1:
-                        code[top] = r'\multigate{1}{%s}' % label
-                        code[bot] = r'\ghost{%s}' % label
+                        code[top] = r'\multigate{1}{%s}' % text_labels[0]
+                        code[bot] = r'\ghost{%s}' % text_labels[0]
                     else:
-                        code[top] = r'\sgate{%s}{%s}' % (label, str(bot - top))
-                        code[bot] = r'\gate{%s}' % (label)
+                        code[top] = r'\sgate{%s}{%s}' \
+                                        % (text_labels[0], str(bot - top))
+                        code[bot] = r'\gate{%s}' % (text_labels[1])
                 else:  # quantikz
                     if bot-top == 1:
-                        code[top] = r'\gate[2]{%s}' % label
+                        code[top] = r'\gate[2]{%s}' % text_labels[0]
                         code[bot] = r''
                     else:
-                        code[top] = r'\gate{%s}\vqw{%s}' % (label,
+                        code[top] = r'\gate{%s}\vqw{%s}' % (text_labels[0],
                                                             str(bot - top))
-                        code[bot] = r'\gate{%s}' % (label)
+                        code[bot] = r'\gate{%s}' % (text_labels[1])
             else:
                 raise NotImplementedError(str(gate))
 
@@ -342,7 +394,7 @@ def circuit_to_image(circ: Circuit,
     return img
 
 
-def circuit_diagram(
+def circuit_to_diagram(
         circ: Circuit,
         qubits: Qubits = None,
         use_unicode: bool = True,
@@ -351,80 +403,19 @@ def circuit_diagram(
     """
     Draw a text diagram of a quantum circuit.
 
-    Can currently draw X, Y, Z, H, T, S, T_H, S_H, RX, RY, RZ, TX, TY, TZ,
-    TH, CNOT, CZ, SWAP, ISWAP, CCNOT, CSWAP, XX, YY, ZZ, CAN, P0 and P1 gates,
-    and the RESET operation.
-
     Args:
         circ:           A quantum Circuit
         qubits:         Optional qubit list to specify qubit order
-        use_unicode:    If false, use only ASCII characters
+        use_unicode:    If false, return ascii
         qubit_labels:   If false, do not display qubit names
 
     Returns:
         A string representation of the circuit.
-
-    Raises:
-        NotImplementedError: For unsupported gates.
     """
     # Kudos: Inspired by the circuit diagram drawer from cirq
     # https://github.com/quantumlib/Cirq/blob/master/cirq/circuits/circuit.py#L1435
 
-    if use_unicode:
-        TARGET = 'X'
-        CTRL = '●'  # ○ ■
-        NCTRL = '○'
-        CONJ = '⁺'
-        BOX_CHARS = STD_BOX_CHARS
-        SWAP_TARG = 'x'
-    else:
-        TARGET = 'X'
-        CTRL = '@'
-        NCTRL = 'O'
-        CONJ = '^-1'
-        BOX_CHARS = ASCII_BOX_CHARS
-        SWAP_TARG = 'x'
-
-    labels = {
-        'NoWire': '  ',
-        'P0': '|0><0|',
-        'P1': '|1><1|',
-        'S_H': 'S' + CONJ,
-        'T_H': 'T' + CONJ,
-        'V_H': 'V' + CONJ,
-        'RX': 'Rx(%s)',
-        'RY': 'Ry(%s)',
-        'RZ': 'Rz(%s)',
-        'TX': 'X^%s',
-        'TY': 'Y^%s',
-        'TZ': 'Z^%s',
-        'TH': 'H^%s',
-        'XX': 'XX^%s',
-        'YY': 'YY^%s',
-        'ZZ': 'ZZ^%s',
-        'ISWAP': 'iSWAP',
-        'Reset': BOX_CHARS[LEFT+BOT+TOP] + ' <0|',
-        }
-
-    multi_labels = {
-        'CNOT':  [CTRL, TARGET],
-        'CZ':    [CTRL, CTRL],
-        'CY':    [CTRL, 'Y'],
-        'CV':    [CTRL, 'V'],
-        'CV_H':  [CTRL, 'V' + CONJ],
-        'CH':    [CTRL, 'H'],
-        'SWAP':  [SWAP_TARG, SWAP_TARG],
-        'CCNOT': [CTRL, CTRL, TARGET],
-        'CSWAP': [CTRL, SWAP_TARG, SWAP_TARG],
-        'CCZ':   [CTRL, CTRL, CTRL],
-        'CPHASE00': [NCTRL+'(%s)', NCTRL+'(%s)'],
-        'CPHASE10': [CTRL+'(%s)', NCTRL+'(%s)'],
-        'CPHASE01': [NCTRL+'(%s)', CTRL+'(%s)'],
-        'CPHASE': [CTRL+'(%s)', CTRL+'(%s)'],
-        'CTX': [CTRL, 'X^%s'],
-        'CU3': [CTRL, 'U3(%s)'],
-        'CRZ': [CTRL, 'Rz(%s)'],
-        }
+    BOX_CHARS = STD_BOX_CHARS
 
     def qpad(lines: List[str]) -> List[str]:
         max_length = max(len(l) for l in lines)
@@ -459,60 +450,49 @@ def circuit_diagram(
         qubit_layer = [line.ljust(max_length) for line in qubit_layer]
     layer_text.append(qpad(qubit_layer))
 
-    # Gate layers
     for layer in layers:
         code = [''] * (2*N-1)
 
-        assert isinstance(layer, Circuit)
-        for gate in layer:
-            idx = [qubit_idx[q] for q in gate.qubits]
+        for elem in layer:
+            idx = [qubit_idx[q] for q in elem.qubits]
 
-            name = gate.name
-            params = ''
-            if isinstance(gate, Gate) and gate.params:
-                params = ','.join(_pretty(p, format='text')
-                                  for p in gate.params.values())
+            # Pretty print parameters
+            pretty_params: Dict[str, str] = {}
+            if elem.params:
+                pretty_params = {key: _pretty(value, format='text')
+                                 for key, value in elem.params.items()}
 
-            if name in labels:
-                label = labels[name]
+            # Construct text labels
+            name = elem.name
+            if elem._diagram_labels:
+                text_labels = elem._diagram_labels
+                if len(idx) != 1 and len(text_labels) == 1:
+                    text_labels = text_labels * len(idx)
+                text_labels = [t.format(**pretty_params) for t in text_labels]
             else:
-                label = name
-                if params:
-                    label += '(%s)'
+                if pretty_params:
+                    params_text = ','.join(pretty_params.values())
+                    text_labels = [name+'(%s)' % params_text] * len(idx)
+                else:
+                    text_labels = [name] * len(idx)
+                if len(idx) != 1 and not elem.interchangeable:
+                    # If not interchangeable, we have to label connections
+                    for i in range(elem.qubit_nb):
+                        text_labels[i] = text_labels[i] + '_%s' % i
 
-            if params:
-                label = label % params
+            if not use_unicode:
+                text_labels = [_unicode_to_ascii(tl) for tl in text_labels]
 
-            # TODO: Are we sure about not showing identity gates?
-            if name == 'I':
-                pass
+            if elem.qubit_nb != 1 and not elem._diagram_noline:
+                pad = len(re.split(r'[_^(]+', text_labels[0])[0])//2
+                draw_line(code, min(idx), max(idx), left_pad=pad)
 
-            elif name == 'Reset' or name == 'NoWire':
-                for i in idx:
-                    code[i] = label
-
-            # Special multi-qubit gates
-            elif name in multi_labels:
-                draw_line(code, min(idx), max(idx))
-                for n, mlabel in enumerate(multi_labels[name]):
-                    if params and '%' in mlabel:
-                        mlabel = mlabel % params
-                    code[idx[n]] = mlabel
-
-            # Generic 1-qubit gate
-            elif(gate.qubit_nb == 1):
-                code[idx[0]] = label
-
-            # Generic 2-qubit gate
-            elif(gate.qubit_nb == 2 and gate.interchangeable):
-                draw_line(code, min(idx), max(idx), left_pad=len(name)//2)
-                code[idx[0]] = label
-                code[idx[1]] = label
-
-            else:
-                raise NotImplementedError(str(gate))
+            for i in range(elem.qubit_nb):
+                code[idx[i]] = text_labels[i]
+        # end loop over elements
 
         layer_text.append(qpad(code))
+    # end loop over layers
 
     circ_text = '\n'.join(''.join(line) for line in zip(*layer_text))
 
@@ -522,22 +502,31 @@ def circuit_diagram(
         lines = [list(line) for line in circ_text.splitlines()]
         circ_text = '\n'.join(''.join(c) for c in zip(*lines))
 
-    return circ_text
+    if not use_unicode:
+        circ_text = _unicode_to_ascii(circ_text)
+
+    return circ_text+'\n'
 
 
-circuit_to_diagram = circuit_diagram
+# FIXME: Remove
+circuit_diagram = circuit_to_diagram
 
 
 # ==== UTILITIES ====
 
 def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     """Separate a circuit into groups of gates that do not visually overlap"""
+
     N = len(qubits)
     qubit_idx = dict(zip(qubits, range(N)))
+
+    # Split circuit into Moments, where the elements in each
+    # moment operate on non-overlapping qubits
     gate_layers = DAGCircuit(circ).moments()
 
+    # Now split each moment into visual layers where the
+    # control lines do not visually overlap.
     layers = []
-
     for gl in gate_layers:
         lcirc = Circuit()
         layers.append(lcirc)
@@ -554,6 +543,17 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
             unused[min(indices):max(indices)+1] = \
                 [False] * (max(indices) - min(indices) + 1)
             lcirc += gate
+
+    # Sometimes the last layer from one moment can be merged with
+    # the first layer of the next moment.
+    # FIXME
+    # for i in range(len(layers)-1, 1, -1):
+    #     qbs0 = set(layers[i-1].qubits)
+    #     qbs1 = set(layers[i].qubits)
+    #     if qbs0.isdisjoint(qbs1):
+    #         print(">>>>>>>>")
+    #         layers[i-1].extend(layers[i])
+    #         del layers[i]
 
     return Circuit(layers)
 
@@ -594,5 +594,19 @@ def _box_char_transpose(chars: str) -> str:
     return ''.join(chars[bitlist_to_int(list(reversed(int_to_bitlist(n, 4))))]
                    for n in range(16))
 
+
+# FIXME: move to config or utils
+# FIXME: pi, alpha, ect...
+unicode_ascii = {
+    '●': '@',
+    '○': 'O',
+    '⁺': '^-1',
+    '√': 'Sqrt',
+    }
+unicode_ascii.update(dict(zip(STD_BOX_CHARS, ASCII_BOX_CHARS)))
+
+
+def _unicode_to_ascii(text: str) -> str:
+    return ''.join(unicode_ascii.get(c, c) for c in text)
 
 # fin

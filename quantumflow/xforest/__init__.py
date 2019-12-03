@@ -32,7 +32,7 @@ import PIL
 
 # from ..qubits import Qubit
 from ..states import State
-from ..gates import NAMED_GATES, QUIL_GATES
+from ..gates import NAMED_GATES
 from ..ops import Gate
 from ..stdops import Measure
 from ..circuits import Circuit
@@ -62,10 +62,10 @@ __all__ = [
            # 'qvm_run_and_measure',
            'wavefunction_to_state',
            'state_to_wavefunction',
-           'QUIL_GATES',
            'QUIL_RESERVED_WORDS',
            'QuantumFlowQVM',
-           'pyquil_to_image']
+           'pyquil_to_image',
+           'QUIL_GATES']
 
 """Names of Quil compatible gates"""
 
@@ -75,8 +75,16 @@ QUIL_RESERVED_WORDS = ['DEFGATE', 'DEFCIRCUIT', 'MEASURE', 'LABEL', 'HALT',
                        'AND', 'IOR', 'XOR', 'MOVE', 'EXCHANGE', 'CONVERT',
                        'ADD', 'SUB', 'MUL', 'DIV', 'EQ', 'GT', 'GE', 'LT',
                        'LE', 'LOAD', 'STORE', 'TRUE', 'FALSE', 'OR']
-
 """Quil keywords"""
+
+
+# Quil has XY but with different parameterization
+# DOCME
+# TODO: Should be gate classes instead of names?
+QUIL_GATES = {'I', 'X', 'Y', 'Z', 'H', 'S', 'T', 'PhaseShift',
+              'RX', 'RY', 'RZ', 'CZ', 'CNOT', 'SWAP',
+              'ISWAP', 'CPHASE00', 'CPHASE01', 'CPHASE10',
+              'CPHASE', 'PSWAP', 'CCNOT', 'CSWAP'}
 
 
 class NullCompiler(pyquil.AbstractCompiler):

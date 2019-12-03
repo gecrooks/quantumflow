@@ -7,8 +7,9 @@
 Unit tests for quantumflow.visualization
 """
 
+import os
 from math import pi
-from sympy import Symbol
+# from sympy import Symbol
 
 import pytest
 
@@ -25,12 +26,6 @@ def test_circuit_to_latex_error():
     circ = qf.Circuit([qf.random_gate([0, 1, 2])])
     with pytest.raises(NotImplementedError):
         qf.circuit_to_latex(circ)
-
-
-def test_circuit_to_text_error():
-    circ = qf.Circuit([qf.random_gate([0, 1, 2])])
-    with pytest.raises(NotImplementedError):
-        qf.circuit_to_diagram(circ)
 
 
 def test_visualize_circuit():
@@ -58,18 +53,18 @@ def test_visualize_circuit():
     circ += qf.TZ(0.47276, 1)
 
     # Gate with symbolic parameter
-    gate = qf.RZ(Symbol('\\theta'), 1)
-    circ += gate
+    #  gate = qf.RZ(Symbol('\\theta'), 1)
+    # circ += gate
 
     circ += qf.CNOT(1, 2)
     circ += qf.CNOT(2, 1)
-#    circ += qf.I(*range(8))
+    # circ += qf.IDEN(*range(8))
     circ += qf.ISWAP(4, 2)
     circ += qf.ISWAP(6, 5)
     circ += qf.CZ(1, 3)
     circ += qf.SWAP(1, 5)
 
-    # circ += qf.Barrier(0, 1, 2, 3, 4, 5, 6)  # Not yet supported
+    # circ += qf.Barrier(0, 1, 2, 3, 4, 5, 6)  # Not yet supported in latex
 
     circ += qf.CCNOT(1, 2, 3)
     circ += qf.CSWAP(4, 5, 6)
@@ -81,7 +76,6 @@ def test_visualize_circuit():
     circ += qf.Reset(4, 5, 6)
 
     circ += qf.H(4)
-    # circ += qf.Reset()    # FIXME. Should fail with clear error message
 
     circ += qf.XX(0.25, 1, 4)
     circ += qf.XX(0.25, 1, 2)
@@ -94,13 +88,24 @@ def test_visualize_circuit():
     circ += qf.CAN(1/3, 1/2, 1/2, 0, 1)
     circ += qf.CAN(1/3, 1/2, 1/2, 2, 4)
     circ += qf.CAN(1/3, 1/2, 1/2, 6, 5)
+
     circ += qf.Measure(0)
+    circ += qf.Measure(1, 1)
 
     circ += qf.PSWAP(pi/2, 6, 7)
 
+    circ += qf.Ph(1/4, 7)
+
+    circ += qf.CH(1, 6)
+
     circ += qf.visualization.NoWire(0, 1, 2)
-    circ += qf.visualization.NoWire(0, 1, 2)
-    circ += qf.visualization.NoWire(0, 1, 2)
+    # circ += qf.visualization.NoWire(4, 1, 2)
+
+    if os.environ.get('QUANTUMFLOW_VIZTEST'):
+        print()
+        print(qf.circuit_to_diagram(circ))
+
+    qf.circuit_to_diagram(circ)
 
     qf.circuit_to_latex(circ)
     qf.circuit_to_latex(circ, package='qcircuit')
@@ -109,15 +114,16 @@ def test_visualize_circuit():
     qf.circuit_to_diagram(circ)
     qf.circuit_to_diagram(circ, use_unicode=False)
 
-    # print(qf.circuit_to_text(circ))
+    latex = qf.circuit_to_latex(circ, package='qcircuit')
+    print(latex)
+    if os.environ.get('QUANTUMFLOW_VIZTEST'):
+        qf.latex_to_image(latex).show()
 
-    # latex = qf.circuit_to_latex(circ, package='qcircuit')
-    # print(latex)
-    # qf.latex_to_image(latex).show()
+    latex = qf.circuit_to_latex(circ, package='quantikz')
+    print(latex)
 
-    # latex = qf.circuit_to_latex(circ, package='quantikz')
-    # print(latex)
-    # qf.latex_to_image(latex).show()
+    if os.environ.get('QUANTUMFLOW_VIZTEST'):
+        qf.latex_to_image(latex).show()
 
 
 @skip_unless_pdflatex
@@ -133,7 +139,8 @@ def test_latex_to_image():
     latex = qf.circuit_to_latex(circ, order)
 
     qf.latex_to_image(latex)
-    qf.latex_to_image(latex).show()
+    if os.environ.get('QUANTUMFLOW_VIZTEST'):
+        qf.latex_to_image(latex).show()
 
 
 def test_circuit_to_diagram():
@@ -165,7 +172,7 @@ a[3]: ───●───●───X───X───●──────
          │       │                           │                                       │       │   
 b[3]: ───X───────●───────────────────────────┼───────────────────────────────────────●───────X───
                                              │                                                   
-cout: ───────────────────────────────────────X───────────────────────────────────────────────────\
+cout: ───────────────────────────────────────X───────────────────────────────────────────────────
 """     # noqa: W291, E501
 
     print()
@@ -193,7 +200,7 @@ a[3]: ---@---@---X---X---@-------------------+---------------------------@---X--
          |       |                           |                                       |       |   
 b[3]: ---X-------@---------------------------+---------------------------------------@-------X---
                                              |                                                   
-cout: ---------------------------------------X---------------------------------------------------\
+cout: ---------------------------------------X---------------------------------------------------
 """     # noqa: W291, E501
 
     print()
@@ -291,7 +298,7 @@ X─┼─┼─┼─┼─┼─┼─● │ │
 ●─┼─┼─┼─┼─┼─┼─┼─X │
 │ │ │ │ │ │ │ │ │ │
 │ │ │ │ │ │ │ │ │ │
-│ │ │ │ │ │ │ │ │ │\
+│ │ │ │ │ │ │ │ │ │
 """     # noqa
 
     text = qf.circuit_to_diagram(circ, order,

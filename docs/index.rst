@@ -45,6 +45,7 @@ using (stochastic) gradient descent.
 
       devnotes
 
+      zreferences
 * :ref:`devnotes`
 * :ref:`genindex`
 

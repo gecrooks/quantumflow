@@ -18,7 +18,7 @@ def test_gradients():
     layers = 2
     params = qf.graph_circuit_params(graph, layers)
     circ = qf.graph_circuit(graph, layers, params)
-    circ += qf.H((1, 1))  # add a non-parameteried gate. Should be ignored
+    circ += qf.H((1, 1))  # add a non-parameterized gate. Should be ignored
 
     qubits = circ.qubits
     ket0 = qf.zero_state(qubits)
@@ -107,7 +107,7 @@ def test_parameter_shift_circuits():
 
 @tensorflow_only
 def test_fidelity_gradients_tf():
-    # Compare gradients cacluated using middle_out versus tensorflow
+    # Compare gradients calculated using middle_out versus tensorflow
     import tensorflow as tf
     N = 2
     graph = nx.grid_graph([N, 1])

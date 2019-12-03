@@ -37,6 +37,11 @@ def test_prepare_w16_main():
     assert rval == 0
 
 
+def test_prepare_cswap_decomposition():
+    rval = subprocess.call(['examples/cswap_decomposition.py'])
+    assert rval == 0
+
+
 def test_swap_test():
     import examples.swaptest as ex
     ket0 = qf.zero_state([0])
@@ -62,7 +67,7 @@ def test_circuit_identities_main():
     assert rval == 0
 
 
-def test_gate_translate_identitie_main():
+def test_gate_translate_identities_main():
     rval = subprocess.call(['examples/gate_translations.py'])
     assert rval == 0
 

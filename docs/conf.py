@@ -52,6 +52,7 @@ extensions = [
     'sphinx.ext.doctest',
     #  'sphinx_autodoc_typehints',
     'sphinx.ext.inheritance_diagram',
+    'sphinxcontrib.bibtex',
     ]
 
 extensions.append("guzzle_sphinx_theme")

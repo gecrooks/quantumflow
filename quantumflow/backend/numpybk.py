@@ -57,12 +57,12 @@ DEVICE = 'cpu'
 
 
 CTYPE = np.complex128
-"""The complex datatype used by the backend
+"""The complex data type used by the backend
 """
 
 
 FTYPE = np.float64
-"""Floating point datatype used by the backend
+"""Floating point data type used by the backend
 """
 
 

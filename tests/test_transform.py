@@ -16,3 +16,16 @@ def test_compile():
     assert counts[qf.TZ] == 27
     assert counts[qf.TX] == 32
     assert counts[qf.CZ] == 17
+
+
+def test_merge():
+    circ0 = qf.Circuit([qf.TX(0.4, 0), qf.TX(0.2, 0),
+                        qf.TY(0.1, 1), qf.TY(0.1, 1),
+                        qf.TZ(0.1, 1), qf.TZ(0.1, 1)])
+    dagc = qf.DAGCircuit(circ0)
+
+    qf.merge_tx(dagc)
+    qf.merge_tz(dagc)
+    qf.merge_ty(dagc)
+    circ1 = qf.Circuit(dagc)
+    assert len(circ1) == 3

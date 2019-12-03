@@ -24,19 +24,19 @@ from sympy import Symbol, pi
 syms = {
     'alpha':    Symbol('α'),
     'lam':      Symbol('λ'),
-    'nx':       Symbol('nx'),
-    'ny':       Symbol('ny'),
-    'nz':       Symbol('nz'),
+    'nx':       Symbol('n_x'),
+    'ny':       Symbol('n_y'),
+    'nz':       Symbol('n_z'),
     'p':        Symbol('p'),
     'phi':      Symbol('φ'),
     't':        Symbol('t'),
-    't0':       Symbol('t0'),
-    't1':       Symbol('t1'),
-    't2':       Symbol('t2'),
+    't0':       Symbol('t_0'),
+    't1':       Symbol('t_1'),
+    't2':       Symbol('t_2'),
     'theta':    Symbol('θ'),
-    'tx':       Symbol('tx'),
-    'ty':       Symbol('ty'),
-    'tz':       Symbol('tz'),
+    'tx':       Symbol('t_x'),
+    'ty':       Symbol('t_y'),
+    'tz':       Symbol('t_z'),
     }
 
 
@@ -295,12 +295,17 @@ def identities():
 
     name = "ISWAP to Canonical"
     circ0 = Circuit([ISWAP(0, 1)])
-    circ1 = Circuit([CAN(0.5, 0.5, 1.0, 0, 1)])
+    circ1 = Circuit([CAN(-0.5, -0.5, 0.0, 0, 1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "ISWAP to Canonical in Weyl chamber"
     circ0 = Circuit([ISWAP(0, 1)])
     circ1 = Circuit([X(0), CAN(0.5, 0.5, 0.0, 0, 1), X(1)])
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "ISWAP conjugate to ISWAP"
+    circ0 = Circuit([ISWAP(0, 1).H])
+    circ1 = Circuit([X(0), ISWAP(0, 1), X(1)])
     circuit_identities.append([name, circ0, circ1])
 
     name = "DCNOT to Canonical"
@@ -493,16 +498,29 @@ def identities():
     circuit_identities.append([name, circ0, circ1])
 
     # from sympy import Symbol, pi
-    name = "CTX to ZZ"
-    gate = qf.CTX(t, 0, 1)
+    name = "CNotPow to ZZ"
+    gate = qf.CNotPow(t, 0, 1)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_ctx_to_zz(gate))
+    circ1 = Circuit(qf.translate_cnotpow_to_zz(gate))
     circuit_identities.append([name, circ0, circ1])
 
-    name = "PISWAP to Canonical"
-    gate = qf.PISWAP(theta, 0, 1)
+    # name = "PISWAP to XY"
+    # gate = qf.PISWAP(theta, 0, 1)
+    # circ0 = Circuit([gate])
+    # circ1 = Circuit(qf.translate_piswap_to_xy(gate))
+    # circuit_identities.append([name, circ0, circ1])
+
+    name = "Powers of iSWAP to CNOT sandwich"
+    gate = qf.ISWAP(0, 1) ** t
+    trans = [qf.translate_xy_to_can, qf.translate_can_to_cnot]
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_piswap_to_can(gate))
+    circ1 = qf.circuit_translate(circ0, trans)
+    circuit_identities.append([name, circ0, circ1])
+
+    name = "Commute TZ past multiple CNOTs"
+    gate = qf.TZ(t, 1)
+    circ0 = Circuit([gate, qf.CNOT(0, 1), qf.CNOT(1, 2), qf.CNOT(0, 1)])
+    circ1 = Circuit([qf.CNOT(0, 1), qf.CNOT(1, 2), qf.CNOT(0, 1), gate])
     circuit_identities.append([name, circ0, circ1])
 
     return circuit_identities

@@ -29,6 +29,30 @@ def test_moment():
     assert moment.asgate()
     assert moment.aschannel()
 
+    circ1 = qf.Circuit(moment)
+    assert len(circ1) == 2
+
+    assert isinstance(moment[1], qf.SWAP)
+
+    moment1 = moment.on('a', 'b', 'c')
+
+    assert str(moment1) == """Moment
+    X a
+    SWAP b c"""
+
+    moment2 = moment1.relabel({'a': 0, 'b': 1, 'c': 2})
+    assert str(moment) == str(moment2)
+
+
+def test_moment_parameters():
+    circ = qf.Circuit()
+    circ += qf.X(0) ** 0.3
+    circ += qf.SWAP(1, 2)
+    moment = qf.Moment(circ)
+
+    params = list(moment.parameters())
+    assert len(params) == 1
+
 
 def test_measure():
     prog = qf.Circuit()
