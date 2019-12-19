@@ -120,10 +120,10 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
         args = [float(param) for param in instruction.params] + qubits
         gate = named_ops[qf_name](*args)
 
-        if instruction.control is None:
+        if instruction.condition is None:
             circ += gate
         else:
-            classical, value = instruction.control
+            classical, value = instruction.condition
             circ += If(gate, classical, value)
 
     return circ
