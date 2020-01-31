@@ -159,7 +159,7 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
 
         # Extra check needed for cirq 0.6, but not 0.7?
         if isinstance(op, cirq.ops.identity.IdentityOperation):
-            gatetype = cirq.IdentityGate             # pragma: nocover
+            gatetype = cirq.IdentityGate             # pragma: no cover
 
         qbs = [qubit_map[qb] for qb in op.qubits]
         t = getattr(op.gate, 'exponent', 1)
@@ -174,7 +174,7 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         elif gatetype in parity_gates:
             circ += parity_gates[gatetype](t, *qbs)   # type: ignore
         else:
-            raise NotImplementedError(str(op.gate))  # pragma: nocover
+            raise NotImplementedError(str(op.gate))  # pragma: no cover
 
     circ = circ.specialize()
 
