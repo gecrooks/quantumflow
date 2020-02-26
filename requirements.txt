@@ -8,7 +8,7 @@ matplotlib
 cvxpy               >= 1.0.24
 sympy
 opt_einsum
-tensorflow          >= 2.0.0
+tensorflow          == 2.0
 
 
 ## Development
