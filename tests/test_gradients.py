@@ -1,10 +1,10 @@
 
 import pytest
 
-import numpy as np
 import networkx as nx
 
 import quantumflow as qf
+from quantumflow import backend as bk
 
 from . import ALMOST_ZERO, tensorflow_only
 # from .import skip_ctf
@@ -56,7 +56,7 @@ def test_gradients_func():
     proj = qf.Projection([ket1])
     grads3 = qf.expectation_gradients(ket0, circ, hermitian=proj,
                                       dfunc=lambda fid:
-                                      - 1 / (2 * np.sqrt((1-fid) * fid)))
+                                      - 1 / (2 * bk.sqrt((1-fid) * fid)))
     # print(grads3)
 
     for g0, g1 in zip(grads1, grads3):
