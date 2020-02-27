@@ -16,6 +16,8 @@ from quantumflow.dagcircuit import In, Out
 
 import pytest
 
+from . import skip_ctf
+
 
 # TODO Refactor in test_circuit
 def _test_circ():
@@ -82,6 +84,7 @@ def test_str():
 """
 
 
+@skip_ctf
 def test_asgate():
     gate0 = qf.ZYZ(0.1, 2.2, 0.5)
     circ0 = qf.zyz_circuit(0.1, 2.2, 0.5, 0)

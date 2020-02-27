@@ -6,8 +6,9 @@ import networkx as nx
 
 import quantumflow as qf
 
+
 from . import ALMOST_ZERO, tensorflow_only
-# from .import skip_ctf
+from .import skip_ctf
 
 
 def test_gradients():
@@ -40,7 +41,7 @@ def test_gradients():
         print(g0, g1)
 
 
-# @skip_ctf    # FIXME
+@skip_ctf    # FIXME
 def test_gradients_func():
     graph = nx.grid_graph([2, 1])
     layers = 2

@@ -41,6 +41,7 @@ from ctf import (  # noqa: F401
     einsum,
     # outer,
     tensordot,
+    copy,
     )
 
 
@@ -89,6 +90,10 @@ MAX_QUBITS = 32
 
 EINSUM_SUBSCRIPTS = string.ascii_lowercase + string.ascii_uppercase
 # ctf allows more subscripts than this, but not clear what the full set is.
+
+
+def roll(array: TensorLike, shift: Any, axis: Any = None) -> BKTensor:
+    raise NotImplementedError()
 
 
 def gpu_available() -> bool:
@@ -210,4 +215,4 @@ def tensormul(tensor0: BKTensor, tensor1: BKTensor,
 
 
 def contract(*args: Any) -> BKTensor:
-    return opt_einsum.contract(*args,  backend='ctf')
+    return opt_einsum.contract(*args)

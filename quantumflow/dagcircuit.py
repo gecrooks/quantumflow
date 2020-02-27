@@ -117,6 +117,7 @@ class DAGCircuit(Operation):
         # Note: Experimental
         # Contract entire tensor network graph using einsum
         # TODO: Do same for run() and evolve() and aschannel()
+        # Note: Does not work with CTF backend
         tensors = []
         sublists = []
 
