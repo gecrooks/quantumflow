@@ -126,6 +126,15 @@ def test_visualize_circuit():
         qf.latex_to_image(latex).show()
 
 
+def test_circuit_diagram():
+    circ = qf.Circuit()
+    circ += qf.Givens(pi, 1, 0)  # Not yet supported in latex
+    diag = qf.circuit_to_diagram(circ)
+    print()
+    print(diag)
+    print()
+
+
 @skip_unless_pdflatex
 def test_latex_to_image():
     # TODO: Double check this circuit is correct
