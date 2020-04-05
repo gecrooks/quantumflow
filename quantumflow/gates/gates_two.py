@@ -378,11 +378,6 @@ class CrossResonance(Gate):
         U = unitary_from_hamiltonian(self.hamiltonian, *self.qubits)
         return bk.astensorproduct(U.tensor)
 
-        gen = self.hamiltonian.asoperator(self.qubits)
-        gen = bk.evaluate(gen)
-        U = scipy.linalg.expm(-1j * gen)
-        return bk.astensorproduct(U)
-
     @property
     def H(self) -> 'CrossResonance':
         return self ** -1
