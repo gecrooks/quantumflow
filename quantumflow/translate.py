@@ -17,7 +17,10 @@ import numpy as np
 
 import sympy
 from sympy import Symbol
-from sympy import pi as PI
+
+from . import backend as bk
+from .backend import PI
+
 
 from .ops import Gate
 from .circuits import Circuit
@@ -667,8 +670,8 @@ def translate_cross_resonance_to_xx(gate: CrossResonance) \
                    / np.cos(t7*PI/2))/PI
 
     a = np.sin(PI * np.sqrt(1 + b**2) * s / 2)
-    t7 *= sympy.sign(a) * sympy.sign(b)
-    t1 *= sympy.sign(a)
+    t7 *= bk.sign(a) * bk.sign(b)
+    t1 *= bk.sign(a)
 
     yield TX(t1, q0)
     yield TY(1.5, q0)

@@ -223,6 +223,7 @@ class FSwapPow(Gate):
     @cached_property
     def tensor(self) -> bk.BKTensor:
         t, = self.parameters()
+        t = bk.ccast(t)
         c = bk.cos(np.pi*t/2)
         s = bk.sin(np.pi*t/2)
         g = bk.exp(0.5j * np.pi * t)
@@ -243,8 +244,9 @@ class FSwapPow(Gate):
     def H(self) -> 'FSwapPow':
         return self ** -1
 
-    def __pow__(self, t: Variable) -> 'FSwapPow':
-        return FSwapPow(t * next(self.parameters()), *self.qubits)
+    def __pow__(self, e: Variable) -> 'FSwapPow':
+        t, = self.parameters()
+        return FSwapPow(e * t, *self.qubits)
 
 # End class FSwapPow
 

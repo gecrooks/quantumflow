@@ -8,9 +8,7 @@
 """
 QuantumFlow: Three qubit gates
 """
-from numpy import pi
-from sympy import pi as PI
-
+import numpy as np
 from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State
@@ -62,18 +60,19 @@ class CCiX(Gate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1, q2 = self.qubits
-        return -sX(q2) * (1 - sZ(q1)) * (1-sZ(q0)) * PI/8
+        return -sX(q2) * (1 - sZ(q1)) * (1-sZ(q0)) * bk.PI/8
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
-        unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
-                   [0, 1, 0, 0, 0, 0, 0, 0],
-                   [0, 0, 1, 0, 0, 0, 0, 0],
-                   [0, 0, 0, 1, 0, 0, 0, 0],
-                   [0, 0, 0, 0, 1, 0, 0, 0],
-                   [0, 0, 0, 0, 0, 1, 0, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 1j],
-                   [0, 0, 0, 0, 0, 0, 1j, 0]]
+        unitary = np.asarray(
+                   [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                   [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                   [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                   [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                   [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                   [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                   [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0j],
+                   [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0j, 0.0]])
         return bk.astensorproduct(unitary)
 
 # end class CCiX
@@ -173,7 +172,7 @@ class CCXPow(Gate):
     @cached_property
     def tensor(self) -> bk.BKTensor:
         t, = self.parameters()
-        ctheta = bk.ccast(pi * t)
+        ctheta = bk.ccast(bk.pi * t)
         phase = bk.exp(0.5j * ctheta)
         cht = bk.cos(ctheta / 2)
         sht = bk.sin(ctheta / 2)

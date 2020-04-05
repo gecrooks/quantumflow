@@ -21,7 +21,6 @@ from tensorflow import transpose, minimum, exp, cos, sin        # noqa: F401
 from tensorflow import matmul                                   # noqa: F401
 from tensorflow import abs as absolute                          # noqa: F401
 from tensorflow import einsum, reshape                          # noqa: F401
-from tensorflow.python.client import device_lib
 from tensorflow import reduce_sum                               # noqa: F401
 from tensorflow import roll, tensordot                          # noqa: F401
 from tensorflow import identity as copy                         # noqa: F401
@@ -31,6 +30,11 @@ from .numpybk import TensorLike, BKTensor, __all__              # noqa: F401
 
 from opt_einsum import contract                                 # noqa: F401
 
+import sympy
+
+from numpy import pi                                            # noqa: F401
+from numpy import pi as PI                                      # noqa: F401
+
 # Tensorflow 2.0 is doing something weird with imports so that
 # we can't use 'from tensorflow import real, imag, sqrt' any more.
 real = tf.math.real
@@ -39,7 +43,7 @@ sqrt = tf.math.sqrt
 conj = tf.math.conj
 diag = tf.linalg.diag_part
 trace = tf.linalg.trace
-
+# sign = tf.math.sign
 
 TL = tf
 name = TL.__name__
@@ -58,14 +62,22 @@ TENSOR = tf.Tensor
 MAX_QUBITS = 32
 
 
-# FIXME
+
+def sign(var) -> bool:
+    if isinstance(var, sympy.Expr):
+        return sympy.N(var)
+    return tf.math.sign(var)
+
+
+# # FIXME
 def gpu_available() -> bool:
-    local_device_protos = device_lib.list_local_devices()
-    gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
-    return len(gpus) != 0
+    return False
+#     local_device_protos = device_lib.list_local_devices()
+#     gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
+#     return len(gpus) != 0
 
 
-DEVICE = 'gpu' if gpu_available() else 'cpu'
+DEVICE = 'cpu'
 
 
 EINSUM_SUBSCRIPTS = string.ascii_lowercase
@@ -94,6 +106,7 @@ def astensor(array: TensorLike) -> BKTensor:
     """Covert numpy array to tensorflow tensor"""
     if type(array) == TENSOR:
         return array
+
     tensor = tf.convert_to_tensor(value=array, dtype=CTYPE)
     return tensor
 
@@ -107,6 +120,8 @@ def astensorproduct(array: TensorLike) -> BKTensor:
 
 def evaluate(tensor: BKTensor) -> TensorLike:
     """Return the value of a tensor"""
+    if type(tensor) == np.ndarray:
+        return tensor
     return tensor.numpy()
 
 

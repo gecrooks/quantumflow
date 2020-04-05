@@ -29,6 +29,7 @@ from typing import Iterable, cast, List, Type
 
 import numpy as np
 
+from . import backend as bk
 from .qubits import Qubit, Qubits, asarray
 from .ops import Operation, Unitary, Gate
 from .states import State, zero_state
@@ -241,7 +242,7 @@ def circuit_to_cirq(circ: Circuit,
             gate = cirq.FSimGate(theta=theta, phi=phi).on(*qbs)
             cqc.append(gate)
         elif isinstance(op, Unitary):
-            matrix = op.asoperator()
+            matrix = bk.evaluate(op.asoperator())
             gate = cirq.MatrixGate(matrix).on(*qbs)
             cqc.append(gate)
         else:

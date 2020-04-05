@@ -17,6 +17,8 @@ from quantumflow.paulialgebra import PAULI_OPS, sI, sX, sY, sZ
 
 from . import ALMOST_ZERO
 
+from quantumflow import backend as bk
+
 
 def test_term():
     x = qf.Pauli.term([0], 'X', -1)
@@ -354,7 +356,8 @@ def test_pauli_exp_circuit_more():
             circ = qf.pauli_exp_circuit(pauli, alpha)
             qbs = circ.qubits
 
-            U = scipy.linalg.expm(-1.0j * alpha * pauli.asoperator(qbs))
+            op = bk.evaluate(pauli.asoperator(qbs))
+            U = scipy.linalg.expm(-1.0j * alpha * op)
             gate = qf.Unitary(U, *qbs)
             assert qf.gates_close(gate, circ.asgate())
 

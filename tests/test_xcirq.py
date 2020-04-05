@@ -299,7 +299,7 @@ def test_cirq_simulator():
     assert qf.states_close(circ0.run(), sim.run())
 
 
-def test_circuit_to_circ_unitary():
+def test_circuit_to_cirq_unitary():
     gate0 = qf.random_gate([4, 5])
     circ0 = qf.Circuit([gate0])
     cqc = circuit_to_cirq(circ0)

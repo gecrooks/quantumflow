@@ -149,5 +149,6 @@ def unitary_from_hamiltonian(
     # Note: Can't be a classmethod constructor on Unitary due to circular
     # imports.
     op = hamiltonian.asoperator(qubits)
+    op = bk.evaluate(op)
     U = scipy.linalg.expm(-1j * op)
     return Unitary(U, *qubits, name=name)

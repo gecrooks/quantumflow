@@ -13,8 +13,11 @@ from math import sqrt, pi
 from typing import Dict, List, Type, Iterator
 import numpy as np
 
-from numpy import pi as PI
-# from sympy import pi as PI
+# from numpy import pi as PI
+# # from sympy import pi as PI
+
+from ..backend import pi, PI
+
 
 from ..config import CONJ, SQRT
 from .. import backend as bk
@@ -177,7 +180,10 @@ class Ph(Gate):
     @cached_property
     def tensor(self) -> bk.BKTensor:
         phi, = self.parameters()
-        return bk.astensorproduct(np.eye(2) * np.exp(1j*phi))
+        cphi = bk.ccast(phi)
+        unitary = [[bk.exp(1j*cphi), 0.0],
+                   [0.0,  bk.exp(1j*cphi)]]
+        return bk.astensorproduct(unitary)
 
     @property
     def H(self) -> 'Ph':

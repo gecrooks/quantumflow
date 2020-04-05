@@ -11,13 +11,12 @@ QuantumFlow: One qubit gates
 # Replacing numpy pi with sympi pi makes tests x3 slower!?
 # So we use symbolic PI sparingly
 
-from numpy import pi
-from sympy import pi as PI
-# from numpy import pi as PI
 
 import numpy as np
 import scipy
 from typing import Iterator, Union
+
+from ..backend import pi, PI
 
 from .. import backend as bk
 from ..qubits import Qubit
@@ -30,7 +29,7 @@ from ..config import CTRL, TARGET, SWAP_TARGET, SQRT, CONJ
 from ..paulialgebra import Pauli, sX, sY, sZ
 
 from .gates_one import IDEN, V, V_H, H, X, Z, Y, S, S_H
-from .gates_utils import control_gate
+from .gates_utils import control_gate, unitary_from_hamiltonian
 
 
 # 2 qubit gates, alphabetic order
@@ -376,7 +375,11 @@ class CrossResonance(Gate):
 
     @cached_property
     def tensor(self) -> bk.BKTensor:
+        U = unitary_from_hamiltonian(self.hamiltonian, *self.qubits)
+        return bk.astensorproduct(U.tensor)
+
         gen = self.hamiltonian.asoperator(self.qubits)
+        gen = bk.evaluate(gen)
         U = scipy.linalg.expm(-1j * gen)
         return bk.astensorproduct(U)
 
