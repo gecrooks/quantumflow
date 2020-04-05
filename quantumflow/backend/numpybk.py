@@ -161,8 +161,6 @@ def sign(var) -> bool:
     return np.sign(var)
 
 
-
-
 def set_random_seed(seed: int) -> None:
     """Reinitialize the random number generator"""
     np.random.seed(seed)

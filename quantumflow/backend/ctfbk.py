@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 from numpy import pi, cos, sin, arccos, exp                # noqa: F401
 
-from sympy import pi as PI
+from sympy import pi as PI                                 # noqa: F401
 
 import ctf
 from ctf import (  # noqa: F401

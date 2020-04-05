@@ -15,7 +15,6 @@ from typing import (
     Sequence, Iterator, Union, Callable, Tuple, Dict, Type, List, Iterable)
 import numpy as np
 
-import sympy
 from sympy import Symbol
 
 from . import backend as bk

@@ -58,7 +58,6 @@ class ZYZ(qf.Gate):
         return ZYZ(-t2, -t1, -t0, *self.qubits)
 
 
-
 def fit_zyz(target_gate):
     """
     Tensorflow 2.0 example. Given an arbitrary one-qubit gate, use

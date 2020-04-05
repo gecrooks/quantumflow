@@ -9,7 +9,7 @@
 QuantumFlow: One qubit gates
 """
 
-from math import sqrt, pi
+from math import sqrt
 from typing import Dict, List, Type, Iterator
 import numpy as np
 

@@ -66,6 +66,7 @@ def test_circuit_identities_main():
     rval = subprocess.call(['examples/circuit_identities.py'])
     assert rval == 0
 
+
 @skip_tensorflow
 def test_gate_translate_identities_main():
     rval = subprocess.call(['examples/gate_translations.py'])
