@@ -94,6 +94,13 @@ EINSUM_SUBSCRIPTS = string.ascii_lowercase + string.ascii_uppercase
 # ctf allows more subscripts than this, but not clear what the full set is.
 
 
+def sign(var) -> bool:
+    import sympy
+    if isinstance(var, sympy.Expr):
+        return sympy.N(var)
+    return ctf.math.sign(var)
+
+
 def roll(array: TensorLike, shift: Any, axis: Any = None) -> BKTensor:
     raise NotImplementedError()
 
