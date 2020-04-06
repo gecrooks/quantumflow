@@ -62,7 +62,7 @@ TENSOR = tf.Tensor
 MAX_QUBITS = 32
 
 
-def sign(var) -> bool:
+def sign(var: BKTensor) -> bool:
     if isinstance(var, sympy.Expr):
         return sympy.N(var)
     return tf.math.sign(var)

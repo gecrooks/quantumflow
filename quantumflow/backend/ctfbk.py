@@ -94,7 +94,7 @@ EINSUM_SUBSCRIPTS = string.ascii_lowercase + string.ascii_uppercase
 # ctf allows more subscripts than this, but not clear what the full set is.
 
 
-def sign(var) -> bool:
+def sign(var: BKTensor) -> bool:
     import sympy
     if isinstance(var, sympy.Expr):
         return sympy.N(var)

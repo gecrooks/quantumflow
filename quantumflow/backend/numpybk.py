@@ -155,7 +155,7 @@ def cis(theta: float) -> BKTensor:
     return np.exp(theta*1.0j)
 
 
-def sign(var) -> bool:
+def sign(var: BKTensor) -> bool:
     if isinstance(var, sympy.Expr):
         return sympy.sign(var)
     return np.sign(var)
