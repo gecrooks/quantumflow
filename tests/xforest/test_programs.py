@@ -228,50 +228,6 @@ RX(-5.49947501158) 1
 """
 
 
-# HADAMARD = """
-# DEFGATE HADAMARD:
-#     1/sqrt(2), 1/sqrt(2)
-#     1/sqrt(2), -1/sqrt(2)
-# HADAMARD 0
-# """
-
-
-# def test_defgate():
-#     prog = qf.forest.quil_to_program(HADAMARD)
-#     ket = prog.run()
-#     qf.print_state(ket)
-#     assert qf.states_close(ket, qf.ghz_state(1))
-
-
-# CP = """
-# DEFGATE CP(%theta):
-#     1, 0, 0, 0
-#     0, 1, 0, 0
-#     0, 0, 1, 0
-#     0, 0, 0, cis(pi+%theta)
-
-# X 0
-# X 1
-# CP(1.0) 0 1
-# """
-
-
-# def test_defgate_param():
-#     prog = qf.forest.quil_to_program(CP)
-#     # ket0 = prog.compile()
-#     # qf.print_state(ket0)
-#     ket1 = prog.run()
-#     qf.print_state(ket1)
-
-#     ket = qf.zero_state(2)
-#     ket = qf.X(0).run(ket)
-#     ket = qf.X(1).run(ket)
-#     ket = qf.CPHASE(1.0, 0, 1).run(ket)
-#     qf.print_state(ket)
-
-#     assert qf.states_close(ket1, ket)
-
-
 CIRC0 = """DEFCIRCUIT CIRCX:
     X 0
 

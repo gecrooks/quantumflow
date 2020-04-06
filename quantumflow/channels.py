@@ -62,9 +62,9 @@ import numpy as np
 from scipy import linalg
 
 from .qubits import Qubit, Qubits, outer_product, asarray, qubits_count_tuple
-from .ops import Operation, Gate, Channel
+from .ops import Operation, Gate, Channel, Unitary
 from .states import State, Density
-from .gates import almost_identity
+# from .gates import almost_identity
 from .gates import I, X, Y, Z
 from .utils import complex_ginibre_ensemble
 
@@ -107,7 +107,7 @@ class Kraus(Operation):
         """Returns: Action of Kraus operators as a superoperator Channel"""
         qubits = self.qubits
         N = len(qubits)
-        ident = Gate(np.eye(2**N), qubits=qubits).aschannel()
+        ident = Unitary(np.eye(2**N), *qubits).aschannel()
 
         channels = [op.aschannel() @ ident for op in self.operators]
         if self.weights is not None:
@@ -196,8 +196,8 @@ class Damping(Kraus):
     """
 
     def __init__(self, prob: float, q0: Qubit) -> None:
-        kraus0 = Gate([[1.0, 0.0], [0.0, np.sqrt(1 - prob)]], qubits=[q0])
-        kraus1 = Gate([[0.0, np.sqrt(prob)], [0.0, 0.0]], qubits=[q0])
+        kraus0 = Unitary([[1.0, 0.0], [0.0, np.sqrt(1 - prob)]], q0)
+        kraus1 = Unitary([[0.0, np.sqrt(prob)], [0.0, 0.0]], q0)
         super().__init__([kraus0, kraus1])
 
 
@@ -245,10 +245,16 @@ def channel_to_kraus(chan: Channel) -> 'Kraus':
     for i in range(2**(2*N)):
         if not np.isclose(values[i], 0.0):
             mat = np.reshape(evecs[i], (2**N, 2**N))*values[i]
-            g = Gate(mat, qubits)
+            g = Unitary(mat, *qubits)
             ops.append(g)
 
     return Kraus(ops)
+
+
+def _almost_identity(gate: Gate) -> bool:
+    """Return true if gate tensor is (almost) the identity"""
+    N = gate.qubit_nb
+    return np.allclose(asarray(gate.asoperator()), np.eye(2**N))
 
 
 # TESTME DOCME
@@ -259,15 +265,16 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
     qubits = kraus.qubits
     N = kraus.qubit_nb
 
-    ident = Gate(np.eye(2**N), qubits)  # FIXME
+    ident = Unitary(np.eye(2**N), *qubits)  # FIXME
 
     tensors = [(op.H @ op @ ident).asoperator() for op in kraus.operators]
     tensors = [t*w for t, w in zip(tensors, kraus.weights)]
 
     tensor = reduce(np.add, tensors)
-    res = Gate(tensor, qubits)
+    res = Unitary(tensor, *qubits)
 
-    return almost_identity(res)
+    # from .gates import almost_identity  # FIXME: Circular import workaround
+    return _almost_identity(res)
 
 
 # TESTME

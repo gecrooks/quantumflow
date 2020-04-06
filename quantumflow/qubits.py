@@ -14,7 +14,7 @@ States, gates, and various other methods accept a list of qubits labels upon
 which the given State or Gate acts. A Qubit label can be any hashable python
 object, but typically an integer or string. e.g. `[0, 1, 2]`, or
 `['a', 'b', 'c']`. Note that some operations expect the qubits to be sortable,
-so don't mix different uncomparable data types.
+so don't mix different incomparable data types.
 
 
 .. autoclass:: QubitVector
@@ -23,7 +23,7 @@ so don't mix different uncomparable data types.
 """
 
 from typing import Hashable, Sequence, Union, Tuple, List
-from copy import copy
+# from copy import copy
 
 import numpy as np
 
@@ -150,13 +150,14 @@ class QubitVector:
         R = self.rank
         return bk.reshape(self.tensor, [2**N]*R)
 
-    def relabel(self, qubits: Qubits) -> 'QubitVector':
-        """Return a copy of this vector with new qubits"""
-        qubits = tuple(qubits)
-        assert len(qubits) == self.qubit_nb
-        vec = copy(self)
-        vec.qubits = qubits
-        return vec
+    # # TODO: Rename rewire?
+    # def relabel(self, qubits: Qubits) -> 'QubitVector':
+    #     """Return a copy of this vector with new qubits"""
+    #     qubits = tuple(qubits)
+    #     assert len(qubits) == self.qubit_nb
+    #     vec = copy(self)
+    #     vec.qubits = qubits
+    #     return vec
 
     def permute(self, qubits: Qubits) -> 'QubitVector':
         """Permute the order of the qubits"""
@@ -375,7 +376,7 @@ def fubini_study_fidelity(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
     """
     Cosine of the Fubini–Study metric.
     """
-    # Suffers from less floating poitn errors compared to fubini_study_angle
+    # Suffers from less floating point errors compared to fubini_study_angle
     if vec0.rank != vec1.rank or vec0.qubit_nb != vec1.qubit_nb:
         raise ValueError('Incompatibly vectors. Qubits and rank must match')
 

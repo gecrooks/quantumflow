@@ -25,12 +25,13 @@ Standard circuits
 .. autofunction:: reversal_circuit
 .. autofunction:: control_circuit
 .. autofunction:: zyz_circuit
+.. autofunction:: euler_circuit
 .. autofunction:: phase_estimation_circuit
 .. autofunction:: addition_circuit
 .. autofunction:: ghz_circuit
 .. autofunction:: graph_circuit
 .. autofunction:: graph_circuit_params
-
+.. autofunction:: pauli_exp_circuit
 
 Visualizations
 ##############
@@ -48,16 +49,21 @@ from itertools import chain
 from collections import defaultdict
 from collections.abc import MutableSequence
 import textwrap
+from cmath import isclose  # type: ignore
 
 import numpy as np
 import networkx as nx
+from networkx.algorithms.approximation.steinertree import steiner_tree
 from sympy import Symbol
 
+from .config import CIRCUIT_INDENT
+from .variables import Variable
 from .qubits import Qubit, Qubits
 from .states import State, Density, zero_state
 from .ops import Operation, Gate, Channel
 from .gates import control_gate, identity_gate
-from .gates import H, CPHASE, SWAP, CNOT, X, TX, TY, TZ, CCNOT, ZZ, CZ
+from .gates import H, SWAP, CNOT, X, TX, TY, TZ, CCNOT, ZZ, CZ, Y, Z
+from .paulialgebra import Pauli, pauli_commuting_sets
 
 __all__ = ['Circuit',
            'count_operations',
@@ -65,21 +71,26 @@ __all__ = ['Circuit',
            'qft_circuit',
            'reversal_circuit',
            'control_circuit',
+           'euler_circuit',
            'zyz_circuit',
            'phase_estimation_circuit',
            'addition_circuit',
            'ghz_circuit',
            'graph_circuit',
            'graph_circuit_params',
-           'graph_state_circuit']
+           'graph_state_circuit',
+           'pauli_exp_circuit',
+           ]
 
 
+# TODO: Move Circuit to Operations
+# TODO: CompositiOperation superclass?
 class Circuit(MutableSequence, Operation):
     """A quantum Circuit contains a sequences of circuit elements.
     These can be any quantum Operation, including other circuits.
 
     QuantumFlow's circuit can only contain Operations. They do not contain
-    control flow of other classical computations (similar to pyquil's
+    control flow of other classical computations (similar to pyQuil's
     protoquil). For hybrid algorithms involving control flow and other
     classical processing use QuantumFlow's Program class.
     """
@@ -156,10 +167,20 @@ class Circuit(MutableSequence, Operation):
         Raises:
             TypeError: If qubits cannot be sorted into unique order.
         """
-        qbs = [q for elem in self for q in elem.qubits]    # gather
-        qbs = list(set(qbs))                                        # unique
-        qbs = sorted(qbs)                                           # sort
+        qbs = [q for elem in self for q in elem.qubits]     # gather
+        qbs = list(set(qbs))                                # unique
+        qbs = sorted(qbs)                                   # sort
         return tuple(qbs)
+
+    def on(self, *qubits: Qubit) -> 'Circuit':
+        if len(qubits) != self.qubit_nb:
+            raise ValueError("Wrong number of qubits")
+        labels = dict(zip(self.qubits, qubits))
+
+        return self.relabel(labels)
+
+    def relabel(self, labels: Dict[Qubit, Qubit]) -> 'Circuit':
+        return Circuit([elem.relabel(labels) for elem in self])
 
     def run(self, ket: State = None) -> State:
         """
@@ -197,6 +218,7 @@ class Circuit(MutableSequence, Operation):
 
     # TESTME
     # DOCME
+    # DOCME: What gets raised if we can't construct a channel?
     def aschannel(self) -> Channel:
         chan = identity_gate(self.qubits).aschannel()
         for elem in self:
@@ -210,10 +232,9 @@ class Circuit(MutableSequence, Operation):
         """
         return Circuit([elem.H for elem in reversed(self)])
 
-    # TESTME
     def __str__(self) -> str:
         circ_str = '\n'.join([str(elem) for elem in self])
-        circ_str = textwrap.indent(circ_str, '    ')
+        circ_str = textwrap.indent(circ_str, ' '*CIRCUIT_INDENT)
         return '\n'.join([self.name, circ_str])
 
     # TESTME DOCME
@@ -221,10 +242,14 @@ class Circuit(MutableSequence, Operation):
         """Resolve symbolic parameters"""
         return Circuit(op.resolve(resolver) for op in self)
 
-    # TODO: overide params, so that fails, or returns all paramerters?
+    def parameters(self) -> Iterator[Variable]:
+        """Iterate over all parameters of the elements of this circuit"""
+        for elem in self:
+            yield from elem.parameters()
 
     # DOCME
     # TESTME
+    # TODO: Rename something easier to spell
     def specialize(self) -> 'Circuit':
         return Circuit([elem.specialize() for elem in self])
 
@@ -242,6 +267,7 @@ def count_operations(elements: Iterable[Operation]) \
     return dict(op_count)
 
 
+# TODO: Rename like cirq?
 def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
     """Applies the same gate to all input qubits in the argument list.
 
@@ -256,19 +282,25 @@ def map_gate(gate: Gate, args: Sequence[Qubits]) -> Circuit:
     circ = Circuit()
 
     for qubits in args:
-        circ += gate.relabel(qubits)
+        circ += gate.on(*qubits)
 
     return circ
 
 
 # TODO: Move standard circuits to stdcircuits module?
 
-# FIXME: Use ZZ gates, not CPHASE
-# TODO: Add circuit diagram
-def qft_circuit(qubits: Qubits) -> Circuit:
-    """Returns the Quantum Fourier Transform circuit"""
-    # Kudos: Adapted from Rigetti Grove, grove/qft/fourier.py
 
+def qft_circuit(qubits: Qubits) -> Circuit:
+    """Returns the Quantum Fourier Transform circuit.
+
+    For 3-qubits
+    ::
+        0: ───H───Z^1/2───Z^1/4───────────────────x───
+                  │       │                       │
+        1: ───────●───────┼───────H───Z^1/2───────┼───
+                          │           │           │
+        2: ───────────────●───────────●───────H───x───
+    """
     N = len(qubits)
     circ = Circuit()
     for n0 in range(N):
@@ -276,8 +308,7 @@ def qft_circuit(qubits: Qubits) -> Circuit:
         circ += H(q0)
         for n1 in range(n0+1, N):
             q1 = qubits[n1]
-            angle = pi / 2 ** (n1-n0)
-            circ += CPHASE(angle, q1, q0)
+            circ += CZ(q1, q0) ** (1/2 ** (n1-n0))
     circ.extend(reversal_circuit(qubits))
     return circ
 
@@ -311,7 +342,6 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
         if isinstance(gate, X):
             circ += CNOT(q0, gate.qubits[0])
         else:
-            # FIXME: would be better to return circuit
             cgate = control_gate(q0, gate)
             circ += cgate
     else:
@@ -324,7 +354,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
 
 
 def zyz_circuit(t0: float, t1: float, t2: float, q0: Qubit = 0) -> Circuit:
-    """Circuit equivalent of 1-qubit ZYZ gate"""
+    """A circuit of TZ, TX, TZ gates on the same qubit"""
     return euler_circuit(t0, t1, t2, q0, 'ZYZ')
 
 
@@ -332,7 +362,7 @@ def euler_circuit(t0: float, t1: float, t2: float,
                   q0: Qubit = 0,
                   euler: str = 'ZYZ',) -> Circuit:
     """
-    DOCME
+    A Euler decomposition of a 1-qubit gate.
 
     The 'euler' argument can be used to specify any of the 6 Euler
     decompositions: 'XYX', 'XZX', 'YXY', 'YZY', 'ZXZ', 'ZYZ' (Default)
@@ -481,17 +511,17 @@ def graph_circuit(
     Create a multilayer parameterized circuit given a graph of connected
     qubits.
 
-    We alternate beween applying a sublayer of arbitary 1-qubit gates to all
+    We alternate between applying a sublayer of arbitrary 1-qubit gates to all
     qubits, and a sublayer of ZZ gates between all connected qubits.
 
-    In practive the pattern is TZ, TX, TZ, (ZZ, TX, TZ )*, where TZ are
+    In practice the pattern is TZ, TX, TZ, (ZZ, TX, TZ )*, where TZ are
     1-qubit Z rotations, and TX and 1-qubits X rotations. Since a Z rotation
-    commutes accross a ZZ, we only need one Z sublayer per layer.
+    commutes across a ZZ, we only need one Z sublayer per layer.
 
-    Our fundametnal 2-qubit interaction is the Ising like ZZ gate. We could
+    Our fundamental 2-qubit interaction is the Ising like ZZ gate. We could
     apply a more general gate, such as the universal Canonical gate. But ZZ
     gates commute with each other, whereas other choice of gate would not,
-    which would necessitate specifing the order of all 2-qubit gates within
+    which would necessitate specifying the order of all 2-qubit gates within
     the layer.
     """
     def tx_layer(topology: nx.Graph, layer_params: Sequence[float]) -> Circuit:
@@ -554,5 +584,83 @@ def graph_state_circuit(topology: nx.Graph) -> Circuit:
 
     return circ
 
+
+# Adapted from pyquil. The topological CNOT network is novel.
+# GEC (2019)
+def pauli_exp_circuit(
+        element: Pauli,
+        alpha: float,
+        topology: nx.Graph = None
+        ) -> 'Circuit':
+    """
+    Returns a Circuit corresponding to the exponential of
+    the Pauli algebra element object, i.e. exp[-1.0j * alpha * element]
+
+    If a qubit topology is provided then the returned circuit will
+    respect the qubit connectivity, adding swaps as necessary.
+    """
+
+    circ = Circuit()
+
+    if element.is_identity() or element.is_zero():
+        return circ
+
+    # Check that all terms commute
+    groups = pauli_commuting_sets(element)
+    if len(groups) != 1:
+        raise ValueError("Pauli terms do not all commute")
+
+    for term, coeff in element:
+        if not term:
+            # scalar
+            # TODO: Add phase gate? But Z gate below does not respect phase
+            continue
+
+        if not isclose(complex(coeff).imag, 0.0):
+            raise ValueError("Pauli term coefficients must be real")
+        theta = complex(coeff).real * alpha
+
+        # TODO: 1-qubit terms special case
+
+        active_qubits = set()
+        change_to_z_basis = Circuit()
+        for qubit, op in term:
+            active_qubits.add(qubit)
+            if op == 'X':
+                change_to_z_basis += Y(qubit)**-0.5
+            elif op == 'Y':
+                change_to_z_basis += X(qubit)**0.5
+
+        if topology is not None:
+            if (not nx.is_directed(topology)
+                    or not nx.is_arborescence(topology)):
+                # An 'arborescence' is a directed tree
+                active_topology = steiner_tree(topology, active_qubits)
+                center = nx.center(active_topology)[0]
+                active_topology = nx.dfs_tree(active_topology, center)
+            else:
+                active_topology = topology
+        else:
+            active_topology = nx.DiGraph()
+            nx.add_path(active_topology, reversed(list(active_qubits)))
+
+        cnot_seq = Circuit()
+        order = list(reversed(list(nx.topological_sort(active_topology))))
+        for q0 in order[:-1]:
+            q1 = list(active_topology.pred[q0])[0]
+            if q1 not in active_qubits:
+                cnot_seq += SWAP(q0, q1)
+                active_qubits.add(q1)
+            else:
+                cnot_seq += CNOT(q0, q1)
+
+        circ += change_to_z_basis
+        circ += cnot_seq
+        circ += Z(order[-1]) ** (2*theta/pi)
+        circ += cnot_seq.H
+        circ += change_to_z_basis.H
+    # end term loop
+
+    return circ
 
 # Fin

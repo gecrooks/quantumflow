@@ -3,6 +3,7 @@ Unit tests for quantumflow.xqiskit
 """
 
 import pytest
+
 pytest.importorskip("qiskit")      # noqa: 402
 
 
@@ -74,7 +75,7 @@ def test_qiskit_to_circuit():
     SWAP 0 1
     T 1
     T_H 1
-    PHASE(1/5) 2
+    PhaseShift(1/5) 2
     U2(1/10, 1/5) 2
     U3(1/10, 1/5, 3/10) 2
     X 0
@@ -107,6 +108,7 @@ def test_circuit_to_qiskit():
     circ += qf.CAN(0.1, 0.2, 0.2, 0, 1)
 
     circ1 = translate_gates_to_qiskit(circ)
+    print()
     print(qf.circuit_diagram(circ1))
 
     qc = circuit_to_qiskit(circ, translate=True)

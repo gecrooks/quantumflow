@@ -24,15 +24,16 @@ from .ops import Operation
 from .stdops import If, Initialize
 from .gates import NAMED_GATES
 from .utils import invert_map
-from .translate import select_translators, translate
+from .translate import select_translators, circuit_translate
+
 import qiskit
 
 # This module imports qiskit, so we do not include it at top level.
-# Must be imorted explicitly. e.g.
+# Must be imported explicitly. e.g.
 # > from quantumflow.xqiskit import qiskit_to_circuit, circuit_to_qiskit
 #
 # Note that QASM specific gates are defined in quantumflow/gates/gates_qasm.py
-# Concevable you might want to use those gates in QuantumFlow without loading
+# Conceivable you might want to use those gates in QuantumFlow without loading
 # qiskit
 
 __all__ = ['QiskitSimulator',
@@ -61,7 +62,7 @@ QASM_TO_QF = {
     'swap': 'SWAP',
     't': 'T',
     'tdg': 'T_H',
-    'u1': 'PHASE',
+    'u1': 'PhaseShift',
     'u2': 'U2',
     'u3': 'U3',
     'x': 'X',
@@ -129,8 +130,10 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
     return circ
 
 
+# TODO: Default translate to false?
+# TODO: QISKIT_GATES
 def circuit_to_qiskit(circ: Circuit,
-                      translate: bool = False) -> qiskit.QuantumCircuit:
+                      translate: bool = True) -> qiskit.QuantumCircuit:
     """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
@@ -159,7 +162,7 @@ def circuit_to_qiskit(circ: Circuit,
             getattr(qkcircuit, name)(params, qbs)
         else:
             name = QF_TO_QASM[op.name]
-            params = op.params.values()
+            params = [float(p) for p in op.parameters()]
             qbs = [qubit_map[qb] for qb in op.qubits]
             getattr(qkcircuit, name)(*params, *qbs)
 
@@ -168,10 +171,10 @@ def circuit_to_qiskit(circ: Circuit,
     return qkcircuit
 
 
-# DOCME TESTME
 def translate_gates_to_qiskit(circ: Circuit) -> Circuit:
+    """Convert QF gates to gates understood by qiskit"""
     target_gates = list([NAMED_GATES[n] for n in QASM_TO_QF.values()])
     trans = select_translators(target_gates)  # type: ignore
 
-    circ = translate(circ, trans)
+    circ = circuit_translate(circ, trans)
     return circ

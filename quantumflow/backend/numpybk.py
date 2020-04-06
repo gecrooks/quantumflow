@@ -15,7 +15,7 @@ import string
 
 import numpy as np
 from numpy import (  # noqa: F401
-    sqrt, pi, conj, minimum,
+    sqrt, conj, minimum,
     arccos, exp, cos, sin, reshape, size,
     real, imag, matmul, absolute, trace, diag,
     outer, tensordot, einsum, transpose, roll, ndim, copy)
@@ -26,6 +26,9 @@ from opt_einsum import contract
 
 from ..utils import multi_slice
 
+import sympy
+from numpy import pi
+from sympy import pi as PI
 
 __all__ = [  # noqa: F405
            'BKTensor', 'CTYPE', 'DEVICE', 'FTYPE', 'MAX_QUBITS', 'TENSOR',
@@ -37,7 +40,8 @@ __all__ = [  # noqa: F405
            'sqrt', 'reduce_sum', 'tensormul', 'trace', 'transpose',
            'getitem', 'astensorproduct', 'productdiag',
            'EINSUM_SUBSCRIPTS', 'einsum',
-           'version', 'name', 'size', 'contract', 'tensordot', 'roll', 'copy']
+           'version', 'name', 'size', 'contract', 'tensordot', 'roll', 'copy',
+           'pi', 'PI', 'sign']
 
 
 TL = np
@@ -57,12 +61,12 @@ DEVICE = 'cpu'
 
 
 CTYPE = np.complex128
-"""The complex datatype used by the backend
+"""The complex data type used by the backend
 """
 
 
 FTYPE = np.float64
-"""Floating point datatype used by the backend
+"""Floating point data type used by the backend
 """
 
 
@@ -149,6 +153,12 @@ def cis(theta: float) -> BKTensor:
         \text{cis}(\theta) = \cos(\theta)+ i \sin(\theta) = \exp(i \theta)
     """
     return np.exp(theta*1.0j)
+
+
+def sign(var: BKTensor) -> bool:
+    if isinstance(var, sympy.Expr):
+        return sympy.sign(var)
+    return np.sign(var)
 
 
 def set_random_seed(seed: int) -> None:

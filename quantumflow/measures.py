@@ -48,6 +48,7 @@ Gate distances
 
 .. autofunction:: gate_angle
 .. autofunction:: gates_close
+.. autofunction:: gates_phase_close
 .. autofunction:: gates_commute
 
 
@@ -64,25 +65,29 @@ import numpy as np
 
 from scipy.linalg import sqrtm  # matrix square root
 import scipy.stats
-import cvxpy as cvx             # FIXME add to requirements, meta
+
 
 from . import backend as bk
 from .config import TOLERANCE
 from .qubits import Qubits, asarray
-from .qubits import vectors_close, fubini_study_angle
+from .qubits import vectors_close, fubini_study_angle  # TODO: Move to here
 from .states import State, Density, random_state
 from .ops import Gate, Channel
 from .channels import Kraus
 from .circuits import Circuit
-from .gates import I
+from .gates import I, IDEN
 
 __all__ = ['state_fidelity', 'state_angle', 'states_close',
            'purity', 'fidelity', 'bures_distance', 'bures_angle',
            'density_angle', 'densities_close', 'entropy', 'mutual_info',
-           'gate_angle', 'channel_angle', 'gates_close', 'gates_commute',
-           'channels_close',
+           'gate_angle', 'channel_angle', 'gates_close', 'gates_phase_close',
+           'gates_commute',  'channels_close',
            'circuits_close', 'diamond_norm',  'trace_distance',
-           'average_gate_fidelity']
+           'average_gate_fidelity',
+           'almost_unitary',
+           'almost_identity',
+           'almost_hermitian',
+           ]
 
 
 # -- Measures on pure states ---
@@ -194,7 +199,6 @@ def densities_close(rho0: Density, rho1: Density,
     return vectors_close(rho0.vec, rho1.vec, tolerance)
 
 
-# TESTME
 def entropy(rho: Density, base: float = None) -> float:
     """
     Returns the von-Neumann entropy of a mixed quantum state.
@@ -265,11 +269,26 @@ def gate_angle(gate0: Gate, gate1: Gate) -> bk.BKTensor:
 
 def gates_close(gate0: Gate, gate1: Gate,
                 tolerance: float = TOLERANCE) -> bool:
-    """Returns: True if gates are almost identical.
+    """Returns: True if gates are almost identical, up to
+    a phase factor.
 
     Closeness is measured with the gate angle.
     """
+    # FIXME: We don't use gate angle! Round off error too large
     return vectors_close(gate0.vec, gate1.vec, tolerance)
+
+
+# TESTME
+def gates_phase_close(gate0: Gate, gate1: Gate,
+                      tolerance: float = TOLERANCE) -> bool:
+    """Returns: True if gates are almost identical and
+    have almost the same phase.
+    """
+    if not gates_close(gate0, gate1):
+        return False
+    N = gate0.qubit_nb
+    phase = np.trace((gate1 @ gate0.H).asoperator()) / 2**N
+    return np.isclose(phase, 1.0)
 
 
 # TESTME
@@ -283,13 +302,15 @@ def gates_commute(gate0: Gate, gate1: Gate,
 
 
 # Measures on circuits
+
+# DOCME
 def circuits_close(circ0: Circuit, circ1: Circuit,
                    tolerance: float = TOLERANCE,
                    reps: int = 16) -> bool:
     """Returns: True if circuits are (probably) almost identical.
 
-    We check closeness by running multiple ranomd initial states
-    through both circuits and checking hteat the resultant states are close.
+    We check closeness by running multiple random initial states
+    through both circuits and checking that the resultant states are close.
     """
     qubits = circ0.qubits
     if qubits != circ1.qubits:
@@ -329,6 +350,7 @@ def diamond_norm(chan0: Channel, chan1: Channel) -> float:
     """
     # Kudos: Based on MatLab code written by Marcus P. da Silva
     # (https://github.com/BBN-Q/matlab-diamond-norm/)
+    import cvxpy as cvx
 
     if set(chan0.qubits) != set(chan1.qubits):
         raise ValueError('Channels must operate on same qubits')
@@ -376,10 +398,10 @@ def diamond_norm(chan0: Channel, chan1: Channel) -> float:
 
 # TESTME
 def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> bk.BKTensor:
-    """Return the average gate fielity between a noisy gate (specified by a
+    """Return the average gate fidelity between a noisy gate (specified by a
     Kraus representation of a superoperator), and a purely unitary target gate.
 
-    If the target gate is not specified, default to identiy gate.
+    If the target gate is not specified, default to identity gate.
     """
 
     if target is None:
@@ -398,5 +420,19 @@ def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> bk.BKTensor:
 
     return (d + summand)/(d + d**2)
 
+
+def almost_unitary(gate: Gate) -> bool:
+    """Return true if gate is (almost) unitary"""
+    return gates_close(gate @ gate.H, IDEN(*gate.qubits))
+
+
+def almost_identity(gate: Gate) -> bool:
+    """Return true if gate tensor is (almost) the identity"""
+    return gates_close(gate, IDEN(*gate.qubits))
+
+
+def almost_hermitian(gate: Gate) -> bool:
+    """Return true if gate tensor is (almost) Hermitian"""
+    return gates_close(gate, gate.H)
 
 # fin

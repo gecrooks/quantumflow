@@ -12,20 +12,23 @@ Useful routines not necessarily intended to be part of the public API.
 
 from typing import Any, Sequence, Callable, Set, Tuple, Iterator, Dict
 from typing import Optional, Mapping, TypeVar, List
+
 import warnings
 import functools
 from fractions import Fraction
+# from collections import deque
 
 import numpy as np
 import networkx as nx
 
 import sympy
-import scipy
+
 
 # from scipy.linalg import fractional_matrix_power as matpow # Matrix power
 # from scipy.linalg import sqrtm as matsqrt   # Matrix square root
 
-__all__ = ['multi_slice',
+__all__ = [
+           'multi_slice',
            'invert_map',
            'FrozenDict',
            'bitlist_to_int',
@@ -36,8 +39,11 @@ __all__ = ['multi_slice',
            'to_graph6',
            'spanning_tree_count',
            'octagonal_tiling_graph',
-           'cis',
-           'rationalize']
+           'rationalize',
+           'symbolize',
+           'complex_ginibre_ensemble',
+           'unitary_ensemble',
+           ]
 
 
 def multi_slice(axes: Sequence, items: Sequence,
@@ -191,7 +197,7 @@ except ImportError:
 #     """
 #     # Kudos: Adapted from django's cached_property. Simpler
 #     # implementation because we don't try to support Python < 3.6
-#     # Essentailly same idea added to Python 3.8
+#     # Essentially same idea added to Python 3.8
 
 #     # This class uses the descriptor protocol
 #     # https://docs.python.org/3.6/howto/descriptor.html
@@ -295,13 +301,6 @@ def truncated_grid_2d_graph(m: int, n: int, t: int = None) -> nx.Graph:
 
 # -- More Math --
 
-def cis(x: float) -> complex:
-    r"""
-    Implements Euler's formula
-    :math:`\text{cis}(x) = e^{i x} = \cos(x) + i \sin(x)`
-    """
-    return np.cos(x) + 1.0j * np.sin(x)
-
 
 _DENOMINATORS = set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 32, 64,
                      128, 256, 512, 1024, 2048, 4096, 8192])
@@ -371,6 +370,30 @@ def unitary_ensemble(dim: int) -> np.ndarray:
          Francesco Mezzadri, Notices Am. Math. Soc. 54, 592 (2007).
          arXiv:math-ph/0609050
     """
+    import scipy
     return scipy.stats.unitary_group.rvs(dim)
+
+
+# itertools
+
+# DOCME
+# # TESTME
+# def last(seq: Iterator) -> Any:
+#     return deque(seq, 1)
+
+
+# Unicode and ASCII characters for drawing boxes.
+#                  t 0000000011111111
+#                  r 0000111100001111
+#                  b 0011001100110011
+#                  l 0101010101010101
+BOX_CHARS         = " ╴╷┐╶─┌┬╵┘│┤└┴├┼"   # noqa: E221
+BOLD_BOX_CHARS    = " ╸╻┓╺━┏┳╹┛┃┫┗┻┣╋"   # noqa: E221
+DOUBLE_BOX_CHARS  = " ═║╗══╔╦║╝║╣╚╩╠╬"   # noqa: E221  # No half widths
+ASCII_BOX_CHARS  = r"   \ -/+ /|+\+++"   # noqa: E221
+
+BOX_TOP, BOX_RIGHT, BOX_BOT, BOX_LEFT = 8, 4, 2, 1
+BOX_CROSS = BOX_TOP+BOX_RIGHT+BOX_BOT+BOX_LEFT
+
 
 # fin

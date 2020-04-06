@@ -82,7 +82,7 @@ def test_kronecker_decomposition():
         left = qf.random_gate(1).vec.asarray()
         right = qf.random_gate(1).vec.asarray()
         both = np.kron(left, right)
-        gate0 = qf.Gate(both, qubits=[0, 1])
+        gate0 = qf.Unitary(both, 0, 1)
         circ = qf.kronecker_decomposition(gate0)
         gate1 = circ.asgate()
 
@@ -123,11 +123,11 @@ def test_canonical_decomposition():
 
                 print('b')
                 circ0 = qf.Circuit()
-                circ0 += qf.ZYZ(0.2, 0.2, 0.2, q0=0)
-                circ0 += qf.ZYZ(0.3, 0.3, 0.3, q0=1)
+                circ0 += qf.random_gate([0])
+                circ0 += qf.random_gate([1])
                 circ0 += qf.CAN(t1, t2, t3, 0, 1)
-                circ0 += qf.ZYZ(0.15, 0.2, 0.3, q0=0)
-                circ0 += qf.ZYZ(0.15, 0.22, 0.3, q0=1)
+                circ0 += qf.random_gate([0])
+                circ0 += qf.random_gate([1])
                 gate0 = circ0.asgate()
                 print('c')
 
@@ -136,7 +136,7 @@ def test_canonical_decomposition():
                 print('d')
 
                 print(circ1)
-                canon = circ1[6]
+                canon = circ1[1]
                 new_coords = np.asarray([canon.params[n] for n in
                                          ['tx', 'ty', 'tz']])
                 assert np.allclose(coords, np.asarray(new_coords))
@@ -246,5 +246,32 @@ def test_eigcs_errors():
     with pytest.raises(np.linalg.LinAlgError):
         _eig_complex_symmetric(np.random.normal(size=(4, 4)))
 
+
+def test_b_decomposition():
+    for _ in range(REPS):
+        gate0 = qf.random_gate([4, 8])
+        circ = qf.b_decomposition(gate0)
+        gate1 = circ.asgate()
+        assert(qf.gates_close(gate0, gate1))
+
+
+def test_cnot_decomposition():
+    for _ in range(REPS):
+        gate0 = qf.random_gate([4, 8])
+        circ = qf.cnot_decomposition(gate0)
+        gate1 = circ.asgate()
+        assert(qf.gates_close(gate0, gate1))
+
+
+def test_convert_can_to_weyl():
+    for r in range(1000):
+        tx = np.random.uniform(-10, +10)
+        ty = np.random.uniform(-10, +10)
+        tz = np.random.uniform(-10, +10)
+
+        gate0 = qf.CAN(tx, ty, tz, 1, 2)
+        circ = qf.convert_can_to_weyl(gate0, euler='XYX')
+
+        assert qf.gates_close(gate0, circ.asgate())
 
 # Fin

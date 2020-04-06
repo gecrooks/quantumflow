@@ -12,7 +12,7 @@ import subprocess
 
 import quantumflow as qf
 
-from . import ALMOST_ONE, tensorflow_only
+from . import ALMOST_ONE, tensorflow_only, skip_tensorflow
 
 
 def test_prepare_w4():
@@ -34,6 +34,11 @@ def test_prepare_w16():
 
 def test_prepare_w16_main():
     rval = subprocess.call(['examples/state_prep_w16.py'])
+    assert rval == 0
+
+
+def test_prepare_cswap_decomposition():
+    rval = subprocess.call(['examples/cswap_decomposition.py'])
     assert rval == 0
 
 
@@ -62,7 +67,8 @@ def test_circuit_identities_main():
     assert rval == 0
 
 
-def test_gate_translate_identitie_main():
+@skip_tensorflow
+def test_gate_translate_identities_main():
     rval = subprocess.call(['examples/gate_translations.py'])
     assert rval == 0
 

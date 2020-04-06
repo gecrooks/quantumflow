@@ -1,5 +1,6 @@
 
 import quantumflow as qf
+import numpy as np
 
 from . import ALMOST_ONE
 
@@ -47,3 +48,11 @@ def test_ccz():
 
     gate0 = qf.CCZ()
     assert gate0.H is gate0
+
+
+def test_deutsch():
+    gate0 = qf.Deutsch(5*np.pi/2, 0, 1, 2)
+
+    gate1 = qf.CCNOT(0, 1, 2)
+    assert qf.gates_close(gate0, gate1)
+    assert qf.gates_close(gate0, gate1.H)

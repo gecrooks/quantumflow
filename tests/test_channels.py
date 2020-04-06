@@ -28,10 +28,10 @@ def test_transpose_map():
     # density matrix. Not physical.
     # quant-ph/0202124
 
-    ops = [qf.Gate(np.asarray([[1, 0], [0, 0]])),
-           qf.Gate(np.asarray([[0, 0], [0, 1]])),
-           qf.Gate(np.asarray([[0, 1], [1, 0]]) / np.sqrt(2)),
-           qf.Gate(np.asarray([[0, 1], [-1, 0]]) / np.sqrt(2))]
+    ops = [qf.Unitary(np.asarray([[1, 0], [0, 0]])),
+           qf.Unitary(np.asarray([[0, 0], [0, 1]])),
+           qf.Unitary(np.asarray([[0, 1], [1, 0]]) / np.sqrt(2)),
+           qf.Unitary(np.asarray([[0, 1], [-1, 0]]) / np.sqrt(2))]
 
     kraus = qf.Kraus(ops, weights=(1, 1, 1, -1))
     rho0 = qf.random_density(1)
@@ -334,7 +334,8 @@ def test_chan_permute():
     assert chan2.qubits == (0, 1)
     assert qf.channels_close(chan1, chan2)
 
-    chan3 = chan1.relabel([0, 1])
+    chan3 = chan1.on(0, 1)
+    print(chan0.qubits, chan3.qubits)
     assert qf.channels_close(chan0, chan3)
 
 
@@ -350,6 +351,9 @@ def test_channel_errors():
 
     with pytest.raises(NotImplementedError):
         chan @ 123
+
+    with pytest.raises(ValueError):
+        qf.Channel(chan.tensor, qubits=[0, 1, 2])
 
 
 def test_kraus_errors():

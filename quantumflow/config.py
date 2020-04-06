@@ -21,6 +21,7 @@ except ImportError:                           # pragma: no cover
     # package is not installed
     version = "?.?.?"
 
+versioninfo = tuple(int(c) if c.isdigit() else c for c in version.split('.'))
 
 # ==== TOLERANCE ====
 TOLERANCE = 1e-6
@@ -32,3 +33,25 @@ _ENVSEED = os.getenv(ENV_PREFIX + 'SEED', None)
 SEED = int(_ENVSEED) if _ENVSEED is not None else None
 if SEED is not None:
     random.seed(SEED)  # pragma: no cover
+
+
+CIRCUIT_INDENT = 4
+"""Number of spaces to indent when converting circuits to s string"""
+
+# Defaults for gate visualization as unicode text
+# Used by visualizations.circuit_to_diagram()
+
+TARGET = 'X'
+# TARGET = '⨁'              # "n-ary circled plus", U+2A01
+SWAP_TARGET = 'x'
+# SWAP_TARGET = '×'			# Multiplication sign
+CTRL = '●'
+NCTRL = '○'
+CONJ = '⁺'                   # Unicode "superscript plus sign"
+SQRT = '√'
+
+# Not currently used
+# ⊖ 'circled minus'
+# ⊗ 'circled times'
+# ⊕ 'circled plus'
+# ⊘ 'circled division slash'

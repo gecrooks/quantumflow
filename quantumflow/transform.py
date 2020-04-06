@@ -9,15 +9,14 @@
 QuantumFlow: Translate, transform, and compile circuits.
 """
 
-# FIXME: Rename to transform?
-
+# Note: Beta Prototype
 
 from typing import Generator, Tuple, Set, Callable
 from .ops import Operation, Gate
 from .circuits import Circuit
-from .gates import (TX, TZ, ZZ, CZ, H)
+from .gates import (TX, TZ, ZZ, CZ, H, TY)
 from .dagcircuit import DAGCircuit
-from .gates import almost_identity
+from .measures import almost_identity
 from .translate import (
     translate_cswap_to_ccnot,
     translate_ccnot_to_cnot,
@@ -30,15 +29,15 @@ from .translate import (
     translate_tx_to_zxzxz,
     translate_v_to_tx,
     translate_invv_to_tx,
-    translate)
+    circuit_translate)
 
 
 # FIXME: transpile instead of compile?
 def compile_circuit(circ: Circuit) -> Circuit:
     """Compile a circuit to standard gate set (CZ, X^0.5, TZ),
-    simplifing circuit where possible.
+    simplifying circuit where possible.
     """
-
+    # FIXME: Should be automagic translations
     # Convert multi-qubit gates to CZ gates
     trans = [translate_cswap_to_ccnot,
              translate_ccnot_to_cnot,
@@ -50,7 +49,7 @@ def compile_circuit(circ: Circuit) -> Circuit:
              translate_v_to_tx,
              translate_invv_to_tx,
              ]
-    circ = translate(circ, trans)
+    circ = circuit_translate(circ, trans)
 
     dagc = DAGCircuit(circ)
     remove_identites(dagc)
@@ -59,8 +58,8 @@ def compile_circuit(circ: Circuit) -> Circuit:
 
     # Standardize 1-qubit gates
     circ = Circuit(dagc)
-    circ = translate(circ, [translate_hadamard_to_zxz])
-    circ = translate(circ, [translate_tx_to_zxzxz], recurse=False)
+    circ = circuit_translate(circ, [translate_hadamard_to_zxz])
+    circ = circuit_translate(circ, [translate_tx_to_zxzxz], recurse=False)
 
     # Gather and merge TZ gates
     dagc = DAGCircuit(circ)
@@ -101,32 +100,32 @@ def remove_element(dagc: DAGCircuit, elem: Operation) -> None:
 
 
 def remove_identites(dagc: DAGCircuit) -> None:
-    """Remove identites from a DAGCircuit"""
+    """Remove identities from a DAGCircuit"""
     for elem in dagc:
         if isinstance(elem, Gate) and almost_identity(elem):
             remove_element(dagc, elem)
 
 
 def merge_hadamards(dagc: DAGCircuit) -> None:
-    """Merge and remove neighbouring Hadamard gates"""
+    """Merge and remove neighboring Hadamard gates"""
     for elem1, elem2 in find_pattern(dagc, {H}, {H}):
         remove_element(dagc, elem1)
         remove_element(dagc, elem2)
 
 
+def merge_tx(dagc: DAGCircuit) -> None:
+    """Merge neighboring TZ gates"""
+    _merge_turns(dagc, TX)
+
+
+def merge_ty(dagc: DAGCircuit) -> None:
+    """Merge neighboring TZ gates"""
+    _merge_turns(dagc, TY)
+
+
 def merge_tz(dagc: DAGCircuit) -> None:
-    """Merge neighbouring TZ gates"""
+    """Merge neighboring TZ gates"""
     _merge_turns(dagc, TZ)
-
-
-# def merge_tx(dagc: DAGCircuit) -> None:
-#     """Merge neighbouring TZ gates"""
-#     _merge_turns(dagc, TX)
-
-
-# def merge_ty(dagc: DAGCircuit) -> None:
-#     """Merge neighbouring TZ gates"""
-#     _merge_turns(dagc, TY)
 
 
 def _merge_turns(dagc: DAGCircuit, gate_class: Callable) -> None:
@@ -165,6 +164,8 @@ def retrogress_tz(dagc: DAGCircuit) -> None:
             again = True
 
 
+# TODO: Rename? merge_hzh
+# TODO: larger pattern, simplifying sequences of 1-qubit Clifford gates
 def convert_HZH(dagc: DAGCircuit) -> None:
     """Convert a sequence of H-TZ-H gates to a TX gate"""
     for elem2, elem3 in find_pattern(dagc, {TZ}, {H}):

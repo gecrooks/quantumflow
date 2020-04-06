@@ -30,3 +30,4 @@ qiskit								# Not installable via conda
 
 ## Needed for document generation
 guzzle_sphinx_theme					# Not installable via conda
+sphinxcontrib-bibtex				# Not installable via conda

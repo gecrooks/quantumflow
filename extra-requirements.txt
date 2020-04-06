@@ -4,8 +4,10 @@
 pyquil	        >= 2.0.0b1
 cirq								# Not installable via conda
 qiskit								# Not installable via conda
+qsimcirq							# Not installable via conda
 
 
 ## Needed for document generation
 
 guzzle_sphinx_theme					# Not installable via conda
+sphinxcontrib-bibtex				# Not installable via conda

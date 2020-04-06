@@ -42,7 +42,6 @@ def test_import():
     assert bk.cos
     assert bk.sin
     assert bk.real
-    assert bk.cis
 
     # Tensor
     assert bk.diag

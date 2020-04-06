@@ -23,10 +23,11 @@ Two-qubit gate decompositions
 .. autofunction:: kronecker_decomposition
 .. autofunction:: canonical_decomposition
 .. autofunction:: canonical_coords
-
+.. autofunction:: cnot_decomposition
+.. autofunction:: b_decomposition
 """
 
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, cast
 import itertools
 
 import numpy as np
@@ -34,17 +35,22 @@ from numpy import pi
 
 from .qubits import asarray
 from .config import TOLERANCE
-from .ops import Gate
+from .ops import Gate, Unitary
 from .measures import gates_close
-from .gates import RN, CAN, TY, TZ, Y, S_H, I
+from .gates import RN, CAN, TY, TZ, Y, S_H, I, B
+from .gates import X, Z, V, S
 from .circuits import Circuit, euler_circuit
+from .translate import translate_can_to_cnot
 
 __all__ = ['bloch_decomposition',
            'zyz_decomposition',
            'euler_decomposition',
            'kronecker_decomposition',
            'canonical_decomposition',
-           'canonical_coords']
+           'canonical_coords',
+           'cnot_decomposition',
+           'b_decomposition',
+           'convert_can_to_weyl']
 
 
 def bloch_decomposition(gate: Gate) -> Circuit:
@@ -80,7 +86,6 @@ def bloch_decomposition(gate: Gate) -> Circuit:
     return Circuit([RN(theta, nx, ny, nz, *gate.qubits)])
 
 
-# DOCME TESTME
 def zyz_decomposition(gate: Gate) -> Circuit:
     """
     Returns the Euler Z-Y-Z decomposition of a local 1-qubit gate.
@@ -152,13 +157,14 @@ def euler_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     }
 
     q0 = gate.qubits[0]
-    trans = euler_trans[euler].relabel([q0])
+    trans = euler_trans[euler].on(q0)
     gate = Circuit([trans, gate, trans.H]).asgate()
     zyz = zyz_decomposition(gate)
     params = [elem.params['t'] for elem in zyz]    # type: ignore
     return euler_circuit(params[0], params[1], params[2], q0, euler)
 
 
+# FIXME: Return 2 sub circuits?
 def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     """
     Decompose a 2-qubit unitary composed of two 1-qubit local gates.
@@ -186,8 +192,8 @@ def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     B = (np.sqrt(s[0]) * v[:, 0]).reshape(2, 2)
 
     q0, q1 = gate.qubits
-    g0 = Gate(A, qubits=[q0])
-    g1 = Gate(B, qubits=[q1])
+    g0 = Unitary(A, q0)
+    g1 = Unitary(B, q1)
 
     if not gates_close(gate, Circuit([g0, g1]).asgate()):
         raise ValueError("Gate cannot be decomposed into two 1-qubit gates")
@@ -204,17 +210,20 @@ def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
 def canonical_coords(gate: Gate) -> Sequence[float]:
     """Returns the canonical coordinates of a 2-qubit gate"""
     circ = canonical_decomposition(gate)
-    gate = circ[6]  # type: ignore
+    gate = circ[1]  # type: ignore
     params = [gate.params[key] for key in ('tx', 'ty', 'tz')]
     return params
 
 
+# FIXME: Does not return a circuit of 5 gates.
+# Instead return locals_before, canonical, locals_after
 def canonical_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     """Decompose a 2-qubit gate by removing local 1-qubit gates to leave
     the non-local canonical two-qubit gate. [1]_ [2]_ [3]_ [4]_
 
-    Returns: A Circuit of 5 gates: two initial 1-qubit gates; a canonical
-    gate, with coordinates in the Weyl chamber; two final 1-qubit gates
+    Returns: A Circuit of 3 operations: a circuit of initial 1-qubit gates;
+    a canonical gate, with coordinates in the Weyl chamber; and a final
+    circuit contains the final 1-qubits gates.
 
     The canonical coordinates can be found in circ.elements[2].params
 
@@ -245,6 +254,8 @@ def canonical_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
 
     if gate.qubit_nb != 2:
         raise ValueError('Expected 2-qubit gate')
+
+    q0, q1 = gate.qubits
 
     U = asarray(gate.asoperator())
     rank = 2**gate.qubit_nb
@@ -286,26 +297,28 @@ def canonical_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     A = Q @ F @ Q_H
     K2 = Q @ O2 @ Q_H
 
-    assert gates_close(Gate(U), Gate(K1 @ A @ K2))  # Sanity check
-    canon = CAN(coords[0], coords[1], coords[2], 0, 1)
+    assert gates_close(Unitary(U), Unitary(K1 @ A @ K2))  # Sanity check
+    canon = CAN(coords[0], coords[1], coords[2], q0, q1)
 
     # Sanity check
-    assert gates_close(Gate(A, qubits=gate.qubits), canon, tolerance=1e-4)
+    assert gates_close(Unitary(A, *gate.qubits), canon, tolerance=1e-4)
 
     # Decompose local gates into the two component 1-qubit gates
-    gateK1 = Gate(K1, qubits=gate.qubits)
+    gateK1 = Unitary(K1, *gate.qubits)
     circK1 = kronecker_decomposition(gateK1, euler)
     assert gates_close(gateK1, circK1.asgate())  # Sanity check
 
-    gateK2 = Gate(K2, qubits=gate.qubits)
+    gateK2 = Unitary(K2, *gate.qubits)
     circK2 = kronecker_decomposition(gateK2, euler)
     assert gates_close(gateK2, circK2.asgate())  # Sanity check
 
     # Build and return circuit
-    circ = Circuit()
-    circ += circK2
-    circ += canon
-    circ += circK1
+    # circ = Circuit()
+    # circ += circK2
+    # circ += canon
+    # circ += circK1
+
+    circ = Circuit([circK2, canon, circK1])
 
     return circ
 
@@ -402,9 +415,9 @@ def _constrain_to_weyl(lambdas: Sequence[float]) \
                       [-1, 1, -1, 1], [1, -1, -1, 1]):
             signed_lambdas = lambdas * np.asarray(signs)
             perm = list(permutation)
-            lambas_perm = signed_lambdas[perm]
+            lambdas_perm = signed_lambdas[perm]
 
-            coords = _lambdas_to_coords(lambas_perm)
+            coords = _lambdas_to_coords(lambdas_perm)
 
             if _in_weyl(*coords):
                 return coords, np.asarray(signs), perm
@@ -418,3 +431,249 @@ def _in_weyl(tx: float, ty: float, tz: float) -> bool:
     # Note 'tz>0' in second term. This takes care of symmetry across base
     # when tz==0
     return (1/2 >= tx >= ty >= tz >= 0) or (1/2 >= (1-tx) >= ty >= tz > 0)
+
+
+def cnot_decomposition(gate: Gate) -> Circuit:
+    """Decompose any 2-qubit gate into a circuit of three CNOT gates.
+
+    Ref:
+        Optimal Quantum Circuits for General Two-Qubit Gates, Vatan & Williams
+        (2004) (quant-ph/0308006) Fig. 6
+    """
+    q0, q1 = gate.qubits
+
+    gate_dek = canonical_decomposition(gate)
+    gate_before = cast(Circuit, gate_dek[0])
+    gate_can = cast(CAN, gate_dek[1])
+    gate_after = cast(Circuit, gate_dek[2])
+
+    cnot_circ = Circuit(translate_can_to_cnot(gate_can))
+    assert gates_close(gate_can, cnot_circ.asgate())
+    circ = gate_before + cnot_circ + gate_after
+
+    return circ
+
+
+def b_decomposition(gate: Gate) -> Circuit:
+    """Decompose any 2-qubit gate into a sandwich of two B gates.
+
+    Refs:
+        Minimum construction of two-qubit quantum operations
+        https://arxiv.org/abs/quant-ph/0312193
+    """
+    # Implementation Note
+    # The analytic construction of a given canoncial gate, upto local gates, is
+    # given in quant-ph/0312193. But we don't know how to get the local
+    # gates analytically. (Although, it looks like it could be done...)
+    # Instead we follow the tactic used in cirq. We take a canonical
+    # decompositoin of the original gate, construct a B gate sandwich with the
+    # same canonical coordinates, then canonically decompose the B gate
+    # sandwich to figure out the appropriate local gates.
+    # Kudos: Cirq, @Strilanc
+    # Ref: https://github.com/quantumlib/Cirq/pull/2574/files
+
+    q0, q1 = gate.qubits
+
+    gate_dek = canonical_decomposition(gate)
+    gate_before = cast(Circuit, gate_dek[0])
+    gate_can = gate_dek[1]
+    gate_after = cast(Circuit, gate_dek[2])
+
+    tx, ty, tz = gate_can.params.values()
+    c0 = np.sin(0.5*ty*pi)**2 * np.cos(0.5*tz*pi)**2
+    c0 = max(0.0, min(0.5, c0))
+    c1 = (np.cos(ty*pi) * np.cos(tz*pi)) / (1 - 2 * c0)
+    c1 = max(0.0, min(1.0, c1))
+
+    sy = (1/pi) * np.arccos(1 - 4 * c0)
+    sz = - (1/pi) * np.arcsin(np.sqrt(c1))
+
+    bcirc = Circuit([
+        B(q0, q1),
+        TY(-tx, q0),
+        TZ(sz, q1),
+        TY(sy, q1),
+        TZ(sz, q1),
+        B(q0, q1),
+        ])
+
+    bcirc_dek = canonical_decomposition(bcirc.asgate())
+    bcirc_before = cast(Circuit, bcirc_dek[0])
+    bcirc_after = cast(Circuit, bcirc_dek[2])
+
+    circ = gate_before + bcirc_before.H + bcirc + bcirc_after.H + gate_after
+
+    return circ
+
+
+# TODO: Should be able to replace _lambdas_to_coords with this method,
+# which should be faster
+# TODO: Better name?
+# DOCME
+def convert_can_to_weyl(gate: CAN, euler: str = 'ZYZ') -> Circuit:
+    """Move a Canonical gate with arbitrary coordinates to a canonical gate
+    in the Weyl chamber, plus local 1-qubit gates.
+
+    Args:
+        gate:  A canonical (CAN) gate
+        euler: The Euler decomposition to use when simplifying the local gates
+                If None, do not simplify.
+    Returns:
+        A circuit of 5 elements --
+            circuit of gates acting on the first qubit
+            circuit of gates acting on the second qubit
+            canonical gate in the Weyl chamber
+            circuit of gates acting on the first qubit
+            circuit of gates acting on the second qubit
+    """
+
+    tx, ty, tz = gate.params.values()
+    q0, q1 = gate.qubits
+
+    # Local gates to put before the canonical Weyl gate
+    before_q0 = Circuit([I(q0)])
+    before_q1 = Circuit([I(q1)])
+
+    # Local gates that come after the canonical Weyl gate, in reverse
+    # (complex conjugate) order.
+    after_q0_H = Circuit([I(q0)])
+    after_q1_H = Circuit([I(q1)])
+
+    def tx_minus_1() -> None:
+        before_q0.append(Y(q0))
+        before_q1.append(Y(q1))
+        after_q0_H.append(Z(q0))
+        after_q1_H.append(Z(q1))
+
+    def ty_minus_1() -> None:
+        before_q0.append(X(q0))
+        before_q1.append(X(q1))
+        after_q0_H.append(Z(q0))
+        after_q1_H.append(Z(q1))
+
+    def tz_minus_1() -> None:
+        before_q0.append(X(q0))
+        before_q1.append(X(q1))
+        after_q0_H.append(Y(q0))
+        after_q1_H.append(Y(q1))
+
+    def flip_tx_ty() -> None:
+        before_q0.append(Z(q0))
+        after_q0_H.append(Z(q0))
+
+    def flip_tx_tz() -> None:
+        before_q0.append(Y(q0))
+        after_q0_H.append(Y(q0))
+
+    def flip_ty_tz() -> None:
+        before_q0.append(X(q0))
+        after_q0_H.append(X(q0))
+
+    def swap_tx_ty() -> None:
+        before_q0.append(S(q0))
+        before_q1.append(S(q1))
+        after_q0_H.append(S(q0))
+        after_q1_H.append(S(q1))
+
+    def swap_tx_tz() -> None:
+        before_q0.append(Y(q0) ** 0.5)
+        before_q1.append(Y(q1) ** 0.5)
+        after_q0_H.append(Y(q0) ** 0.5)
+        after_q1_H.append(Y(q1) ** 0.5)
+
+    def swap_ty_tz() -> None:
+        before_q0.append(V(q0))
+        before_q1.append(V(q1))
+        after_q0_H.append(V(q0))
+        after_q1_H.append(V(q1))
+
+    tx = tx % 2
+    ty = ty % 2
+    tz = tz % 2
+
+    if tx > 1.0:
+        tx -= 1
+        tx_minus_1()
+
+    if ty > 1.0:
+        ty -= 1
+        ty_minus_1()
+
+    if tz > 1.0:
+        tz -= 1
+        tz_minus_1()
+
+    if tx > 0.5 and ty > 0.5:
+        tx = 1 - tx
+        ty = 1 - ty
+        tx_minus_1()
+        ty_minus_1()
+        flip_tx_ty()
+
+    if tx > 0.5 and tz > 0.5:
+        tx = 1 - tx
+        tz = 1 - tz
+        tx_minus_1()
+        tz_minus_1()
+        flip_tx_tz()
+
+    if ty > 0.5 and tz > 0.5:
+        ty = 1 - ty
+        tz = 1 - tz
+        ty_minus_1()
+        tz_minus_1()
+        flip_ty_tz()
+
+    if ty > tx:
+        tx, ty = ty, tx
+        swap_tx_ty()
+
+    if tz > tx:
+        tx, tz = tz, tx
+        swap_tx_tz()
+
+    if tz > ty:
+        tz, ty = ty, tz
+        swap_ty_tz()
+
+    if tx > 0.5 and (1-tx) < ty:
+        tx, ty = ty, tx
+        swap_tx_ty()
+        tx = 1 - tx
+        ty = 1 - ty
+        tx_minus_1()
+        ty_minus_1()
+        flip_tx_ty()
+
+    if ty > tx:          # pragma: no cover   # Never happens?
+        tx, ty = ty, tx
+        swap_tx_ty()
+
+    if tz > tx:          # pragma: no cover   # Never happens?
+        tx, tz = tz, tx
+        swap_tx_tz()
+
+    if tz > ty:
+        tz, ty = ty, tz
+        swap_ty_tz()
+
+    # Insanity check
+    assert _in_weyl(tx, ty, tz)
+
+    if euler is not None:
+        before_q0 = euler_decomposition(before_q0.asgate(), euler=euler)
+        before_q1 = euler_decomposition(before_q1.asgate(), euler=euler)
+        after_q0_H = euler_decomposition(after_q0_H.asgate(), euler=euler)
+        after_q1_H = euler_decomposition(after_q1_H.asgate(), euler=euler)
+
+    circ = Circuit()
+
+    circ.append(before_q0)
+    circ.append(before_q1)
+    circ.append(CAN(tx, ty, tz, q0, q1))
+    circ.append(after_q0_H.H)
+    circ.append(after_q1_H.H)
+
+    return circ
+
+# fin

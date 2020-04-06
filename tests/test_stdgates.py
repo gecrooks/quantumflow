@@ -13,67 +13,22 @@ Unit tests for quantumflow.stdgates
 import random
 from math import pi
 import numpy as np
+import pytest
 
 import quantumflow as qf
 
 from . import REPS, ALMOST_ONE
 
 
+def test_parametric_gates1():
+    # assert qf.gates_close(qf.I(), qf.I())
+    assert qf.gates_close(qf.RX(pi), qf.X())
+    # assert qf.gates_close(qf.RY(pi), qf.Y())
+    # assert qf.gates_close(qf.RZ(pi), qf.Z())
+
+
 def test_I():
     assert np.allclose(qf.I().vec.asarray(), np.eye(2))
-
-
-def test_unitary_1qubit():
-    assert qf.almost_unitary(qf.X())
-    assert qf.almost_unitary(qf.Y())
-    assert qf.almost_unitary(qf.Z())
-    assert qf.almost_unitary(qf.H())
-    assert qf.almost_unitary(qf.S())
-    assert qf.almost_unitary(qf.T())
-
-
-def test_unitary_2qubit():
-    assert qf.almost_unitary(qf.CZ())
-    assert qf.almost_unitary(qf.CNOT())
-    assert qf.almost_unitary(qf.SWAP())
-    assert qf.almost_unitary(qf.ISWAP())
-
-
-def test_parametric_gates1():
-    for _ in range(REPS):
-        theta = random.uniform(-4*pi, +4*pi)
-        assert qf.almost_unitary(qf.RX(theta))
-        assert qf.almost_unitary(qf.RY(theta))
-        assert qf.almost_unitary(qf.RZ(theta))
-
-    for _ in range(REPS):
-        theta = random.uniform(-4*pi, +4*pi)
-        assert qf.almost_unitary(qf.TX(theta))
-        assert qf.almost_unitary(qf.TY(theta))
-        assert qf.almost_unitary(qf.TZ(theta))
-
-    for _ in range(REPS):
-        theta = random.uniform(-4*pi, +4*pi)
-        assert qf.almost_unitary(qf.CPHASE00(theta))
-        assert qf.almost_unitary(qf.CPHASE01(theta))
-        assert qf.almost_unitary(qf.CPHASE10(theta))
-        assert qf.almost_unitary(qf.CPHASE(theta))
-        assert qf.almost_unitary(qf.PSWAP(theta))
-
-    assert qf.gates_close(qf.I(), qf.I())
-    assert qf.gates_close(qf.RX(pi), qf.X())
-    assert qf.gates_close(qf.RY(pi), qf.Y())
-    assert qf.gates_close(qf.RZ(pi), qf.Z())
-
-
-def test_cnot():
-    # three cnots same as one swap
-    gate = qf.identity_gate(2)
-    gate = qf.CNOT(1, 0) @ gate
-    gate = qf.CNOT(0, 1) @ gate
-    gate = qf.CNOT(1, 0) @ gate
-    res = qf.asarray(qf.inner_product(gate.vec, qf.SWAP().vec))
-    assert abs(res)/4 == ALMOST_ONE
 
 
 def test_CZ():
@@ -111,17 +66,17 @@ def test_phase():
     assert qf.gates_close(gate, gate)
 
     assert qf.gates_close(gate, qf.S())
-    assert qf.gates_close(qf.S(), qf.PHASE(pi/2))
-    assert qf.gates_close(qf.T(), qf.PHASE(pi/4))
+    assert qf.gates_close(qf.S(), qf.PhaseShift(pi/2))
+    assert qf.gates_close(qf.T(), qf.PhaseShift(pi/4))
 
-    # PHASE and RZ are the same up to a global phase.
+    # PhaseShift and RZ are the same up to a global phase.
     for _ in range(REPS):
         theta = random.uniform(-4*pi, +4*pi)
-        assert qf.gates_close(qf.RZ(theta), qf.PHASE(theta))
+        assert qf.gates_close(qf.RZ(theta), qf.PhaseShift(theta))
 
     # Causes a rounding error that can result in NANs if not corrected for.
     theta = -2.5700302313621375
-    assert qf.gates_close(qf.RZ(theta), qf.PHASE(theta))
+    assert qf.gates_close(qf.RZ(theta), qf.PhaseShift(theta))
 
 
 def test_hadamard():
@@ -135,17 +90,14 @@ def test_hadamard():
     assert abs(res)/2 == ALMOST_ONE
 
 
-def test_piswap():
+def test_xy():
     for _ in range(REPS):
-        theta = random.uniform(-4*pi, +4*pi)
-        assert qf.almost_unitary(qf.PISWAP(theta))
+        t = random.uniform(-4, +4)
+        assert qf.almost_unitary(qf.XY(t))
 
-    for _ in range(REPS):
-        theta = random.uniform(0, + pi)
-
-    assert qf.gates_close(qf.PISWAP(0), qf.identity_gate(2))
-
-    assert qf.gates_close(qf.PISWAP(pi/4), qf.ISWAP())
+    assert qf.gates_close(qf.XY(0), qf.identity_gate(2))
+    assert qf.gates_close(qf.XY(-1/2), qf.ISWAP())
+    assert qf.gates_close(qf.XY(1/2), qf.ISWAP().H)
 
 
 def test_pswap():
@@ -162,10 +114,10 @@ def test_cphase_gates():
     for _ in range(REPS):
         theta = random.uniform(-4*pi, +4*pi)
 
-        gate11 = qf.control_gate(0, qf.PHASE(theta, 1))
+        gate11 = qf.control_gate(0, qf.PhaseShift(theta, 1))
         assert qf.gates_close(gate11, qf.CPHASE(theta, 0, 1))
 
-        gate01 = qf.conditional_gate(0, qf.PHASE(theta, 1), qf.I(1))
+        gate01 = qf.conditional_gate(0, qf.PhaseShift(theta, 1), qf.I(1))
         assert qf.gates_close(gate01, qf.CPHASE01(theta))
 
         gate00 = qf.identity_gate(2)
@@ -221,7 +173,7 @@ def test_inverse_self():
         inv = gate.H
         assert type(gate) == type(inv)
 
-        inv = qf.Gate(gate.tensor).H
+        inv = qf.Unitary(gate.tensor).H
         assert qf.gates_close(gate, inv)
 
 
@@ -240,7 +192,7 @@ def test_inverse_1qubit():
 
 
 def test_inverse_parametric_1qubit():
-    gates = [qf.PHASE, qf.RX, qf.RY, qf.RZ]
+    gates = [qf.PhaseShift, qf.RX, qf.RY, qf.RZ]
 
     for gate in gates:
         for _ in range(REPS):
@@ -276,7 +228,7 @@ def test_inverse_tgates_1qubit():
 
 
 def test_inverse_tgates_2qubit():
-    gates = [qf.PISWAP]
+    gates = [qf.XY]
 
     for gate in gates:
         for _ in range(REPS):
@@ -310,18 +262,6 @@ def test_EXCH():
     assert qf.gates_close(gate, gate1)
 
 
-def test_ZYZ():
-    t0 = random.uniform(-2, +2)
-    t1 = random.uniform(-2, +2)
-    t2 = random.uniform(-2, +2)
-
-    gate = qf.ZYZ(t0, t1, t2, 0)
-    assert qf.almost_unitary(gate)
-    inv = gate.H
-    assert type(gate) == type(inv)
-    assert qf.gates_close(qf.I(0), inv @ gate)
-
-
 def test_XX_YY_ZZ():
     gates = [qf.XX, qf.YY, qf.ZZ]
     for gate_class in gates:
@@ -331,34 +271,6 @@ def test_XX_YY_ZZ():
         inv = gate.H
         assert type(gate) == type(inv)
         assert qf.gates_close(qf.identity_gate(2), gate @ inv)
-
-
-def test_CH():
-    # Construct a controlled Hadamard gate
-    gate = qf.identity_gate(2)
-
-    gate = qf.S(1).H @ gate
-    gate = qf.H(1) @ gate
-    gate = qf.T(1).H @ gate
-    gate = qf.CNOT(0, 1) @ gate
-    gate = qf.T(1) @ gate
-    gate = qf.H(1) @ gate
-    gate = qf.S(1) @ gate
-
-    # Do nothing
-    ket = qf.zero_state(2)
-    ket = gate.run(ket)
-    assert qf.states_close(ket, qf.zero_state(2))
-
-    # Do nothing
-    ket = qf.zero_state(2)
-    ket = qf.X(0).run(ket)
-    ket = gate.run(ket)
-
-    ket = qf.H(1).run(ket)
-
-    ket = qf.X(0).run(ket)
-    assert qf.states_close(ket, qf.zero_state(2))
 
 
 def test_pseudo_hadamard():
@@ -399,7 +311,7 @@ def test_RN():
     gate = qf.RN(theta, 0, 0, 1)
     assert qf.gates_close(gate, qf.RZ(theta))
 
-    gate = qf.RN(pi, np.sqrt(2), 0, np.sqrt(2))
+    gate = qf.RN(pi, 1/np.sqrt(2), 0, 1/np.sqrt(2))
     assert qf.gates_close(gate, qf.H())
 
 
@@ -424,43 +336,6 @@ def test_qaoa_circuit():
     ket = qf.RX(-2*2.74973750579, 1).run(ket)
 
     assert qf.states_close(ket, ket_true)
-
-
-def test_gatepow():
-    gates = [qf.I(), qf.X(), qf.Y(), qf.Z(), qf.H(), qf.S(), qf.T(),
-             qf.PHASE(0.1), qf.RX(0.2), qf.RY(0.3), qf.RZ(0.4), qf.CZ(),
-             qf.CNOT(), qf.SWAP(), qf.ISWAP(), qf.CPHASE00(0.5),
-             qf.CPHASE01(0.6), qf.CPHASE10(0.6), qf.CPHASE(0.7),
-             qf.PSWAP(0.15), qf.CCNOT(), qf.CSWAP(), qf.TX(2.7), qf.TY(1.2),
-             qf.TZ(0.3), qf.ZYZ(3.5, 0.9, 2.1), qf.CAN(0.1, 0.2, 7.4),
-             qf.XX(1.8), qf.YY(0.9), qf.ZZ(0.45), qf.PISWAP(0.2),
-             qf.EXCH(0.1), qf.TH(0.3)
-             ]
-
-    for gate in gates:
-        assert qf.gates_close(gate.H, gate ** -1)
-
-    for gate in gates:
-        sqrt_gate = gate ** (1/2)
-        two_gate = sqrt_gate @ sqrt_gate
-        assert qf.gates_close(gate, two_gate)
-
-    for gate in gates:
-        gate0 = gate ** 0.3
-        gate1 = gate ** 0.7
-        gate2 = gate0 @ gate1
-        assert qf.gates_close(gate, gate2)
-
-    for K in range(1, 5):
-        gate = qf.random_gate(K)  # FIXME: Throw error on K=0
-        sqrt_gate = gate ** 0.5
-        two_gate = sqrt_gate @ sqrt_gate
-        assert qf.gates_close(gate, two_gate)
-
-    for gate in gates:
-        rgate = qf.Gate((gate**0.5).tensor)
-        tgate = rgate @ rgate
-        assert qf.gates_close(gate, tgate)
 
 
 def test_qubit_qaoa_circuit():
@@ -489,13 +364,96 @@ def test_qubit_qaoa_circuit():
 def test_CTX():
     for _ in range(REPS):
         t = random.uniform(-4, +4)
-        gate0 = qf.CTX(t, 2, 3)
+        gate0 = qf.CNotPow(t, 2, 3)
         gate1 = qf.control_gate(2, qf.TX(t, 3))
         gate2 = qf.CNOT(2, 3) ** t
-        gate3 = qf.CTX(1, 2, 3) ** t
+        gate3 = qf.CNotPow(1, 2, 3) ** t
 
         assert qf.gates_close(gate0, gate1)
         assert qf.gates_close(gate0, gate2)
         assert qf.gates_close(gate0, gate3)
+
+
+def test_cy():
+    gate0 = qf.CY(0, 1) ** 0.2
+    assert gate0.params['t'] == 0.2
+
+
+def test_cv():
+    gate0 = qf.CV(0, 1) ** 2
+    assert qf.gates_close(gate0, qf.CNOT(0, 1))
+
+    gate1 = qf.CV_H(0, 1) ** 2
+    assert qf.gates_close(gate1, qf.CNOT(0, 1).H)
+
+
+def _randomize_gate(gatetype):
+    """Given a gate class, return an instance with randomly initialized
+    parameters and qubits"""
+    params = [random.uniform(4, 4) for arg in gatetype.args()]
+
+    gate = gatetype(*params)
+
+    qubits = list(range(0, 100))
+    random.shuffle(qubits)
+    qubits = qubits[0: gate.qubit_nb]
+    gate = gate.on(*qubits)
+
+    return gate
+
+
+@pytest.mark.parametrize("gatetype", qf.STD_GATESET)
+def test_gate_power(gatetype):
+    gate0 = _randomize_gate(gatetype)
+
+    gate1 = gate0 ** 0.5
+    gate2 = gate1 ** 2
+
+    assert qf.gates_close(gate0, gate2)
+
+
+@pytest.mark.parametrize("gatetype", qf.STD_GATESET)
+def test_gate_run(gatetype):
+    gate0 = _randomize_gate(gatetype)
+
+    gate1 = qf.Unitary(gate0.tensor, *gate0.qubits)
+    ket = qf.random_state(gate0.qubits)
+
+    ket0 = gate0.run(ket)
+    ket1 = gate1.run(ket)
+    assert qf.states_close(ket0, ket1)
+
+
+@pytest.mark.parametrize("gatetype", qf.STD_GATESET)
+def test_gate_evolve(gatetype):
+    gate0 = _randomize_gate(gatetype)
+
+    gate1 = qf.Unitary(gate0.tensor, *gate0.qubits)
+    rho = qf.random_density(gate0.qubits)
+
+    rho0 = gate0.evolve(rho)
+    rho1 = gate1.evolve(rho)
+    assert qf.densities_close(rho0, rho1)
+
+
+@pytest.mark.parametrize("gatetype", qf.STD_GATESET)
+def test_gatepow(gatetype):
+    gate = _randomize_gate(gatetype)
+
+    assert qf.gates_close(gate.H, gate ** -1)
+
+    sqrt_gate = gate ** (1/2)
+    two_gate = sqrt_gate @ sqrt_gate
+    assert qf.gates_close(gate, two_gate)
+
+    gate0 = gate ** 0.3
+    gate1 = gate ** 0.7
+    gate2 = gate0 @ gate1
+    assert qf.gates_close(gate, gate2)
+
+    rgate = qf.Unitary((gate**0.5).tensor, *gate.qubits)
+    tgate = rgate @ rgate
+    assert qf.gates_close(gate, tgate)
+
 
 # fin

@@ -12,7 +12,7 @@ Miscellaneous Operations
 
 .. currentmodule:: quantumflow
 
-Various standard operations on quantum states, which arn't gates,
+Various standard operations on quantum states, which aren't gates,
 channels, circuits, or DAGCircuit's.
 
 .. autofunction :: dagger
@@ -35,21 +35,25 @@ channels, circuits, or DAGCircuit's.
 
 """
 
-from typing import Sequence, Hashable, Any, Callable, Iterable, Union
+from typing import (
+    Sequence, Hashable, Any, Callable, Iterable, Union, Dict, Iterator)
 import textwrap
 
 import numpy as np
 
 from sympy.combinatorics import Permutation
 
+from .config import CIRCUIT_INDENT
+from .variables import Variable
 from .qubits import Qubit, Qubits, asarray
 from .states import State, Density
-from .ops import Operation, Gate, Channel
+from .ops import Operation, Gate, Channel, Unitary
 from .gates import P0, P1
 from .gates import SWAP, I, IDEN
 from .circuits import Circuit
 from . import backend as bk
-
+from .utils import BOX_CHARS, BOX_LEFT, BOX_TOP, BOX_BOT
+from .utils import cached_property
 
 __all__ = ['dagger', 'Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
            'Store',
@@ -63,6 +67,7 @@ def dagger(elem: Operation) -> Operation:
     return elem.H
 
 
+# TODO: Move to ops? Superclass CompositeOperation?
 class Moment(Sequence, Operation):
     """
     Represents a collection of Operations that operate on disjoint qubits,
@@ -84,6 +89,9 @@ class Moment(Sequence, Operation):
     def __len__(self) -> int:
         return self._circ.__len__()
 
+    def __iter__(self) -> Iterator[Operation]:
+        yield from self._circ
+
     def run(self, ket: State = None) -> State:
         return self._circ.run(ket)
 
@@ -100,27 +108,42 @@ class Moment(Sequence, Operation):
     def H(self) -> 'Moment':
         return Moment(self._circ.H)
 
-    # TESTME
     def __str__(self) -> str:
         circ_str = '\n'.join([str(elem) for elem in self])
-        circ_str = textwrap.indent(circ_str, '    ')
+        circ_str = textwrap.indent(circ_str, ' '*CIRCUIT_INDENT)
         return '\n'.join([self.name, circ_str])
+
+    def on(self, *qubits: Qubit) -> 'Moment':
+        return Moment(Circuit(self).on(*qubits))
+
+    # TODO: Rename to rewire?
+    def relabel(self, labels: Dict[Qubit, Qubit]) -> 'Moment':
+        return Moment(Circuit(self).relabel(labels))
+
+    def parameters(self) -> Iterator[Variable]:
+        for elem in self:
+            yield from elem.parameters()
+
+# end class Moment
 
 
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
+
+    _diagram_labels = ['M({cbit})']
+
     def __init__(self, qubit: Qubit, cbit: Hashable = None) -> None:
-        self.qubit = qubit
-        self.cbit = cbit
+        self.qubit = qubit  # FIXME
+        if cbit is None:
+            cbit = qubit
+        self.cbit = cbit    # FIXME
+
+        super().__init__(qubits=[qubit], params=dict(cbit=cbit))
 
     def __str__(self) -> str:
-        if self.cbit is not None:
+        if self.cbit != self.qubit:
             return f'{self.name.upper()} {self.qubit} {self.cbit}'
         return f'{self.name.upper()} {self.qubit}'
-
-    @property
-    def qubits(self) -> Qubits:
-        return [self.qubit]
 
     def run(self, ket: State) -> State:
         prob_zero = asarray(P0(self.qubit).run(ket).norm())
@@ -128,12 +151,10 @@ class Measure(Operation):
         # generate random number to 'roll' for measurement
         if np.random.random() < prob_zero:
             ket = P0(self.qubit).run(ket).normalize()
-            if self.cbit is not None:
-                ket = ket.store({self.cbit: 0})
+            ket = ket.store({self.cbit: 0})
         else:  # measure one
             ket = P1(self.qubit).run(ket).normalize()
-            if self.cbit is not None:
-                ket = ket.store({self.cbit: 1})
+            ket = ket.store({self.cbit: 1})
         return ket
 
     def evolve(self, rho: Density) -> Density:
@@ -145,28 +166,29 @@ class Measure(Operation):
         # generate random number to 'roll' for measurement
         if np.random.random() < prob_zero:
             rho = p0.evolve(rho).normalize()
-            if self.cbit is not None:
-                rho = rho.store({self.cbit: 0})
+            rho = rho.store({self.cbit: 0})
         else:  # measure one
             rho = p1.evolve(rho).normalize()
-            if self.cbit is not None:
-                rho = rho.store({self.cbit: 1})
+            rho = rho.store({self.cbit: 1})
         return rho
 
 
-# TODO: Should perhaps be 1-qubit gate like P0 and P1?
+# FIXME: Can't have zero qubits
 # Having no qubits specified screws up visualization
 # and dagc
 class Reset(Operation):
     r"""An operation that resets qubits to zero irrespective of the
     initial state.
     """
+    _diagram_labels = [BOX_CHARS[BOX_LEFT+BOX_BOT+BOX_TOP] + ' <0|']
+    _diagram_noline = True
+
     def __init__(self, *qubits: Qubit) -> None:
         if not qubits:
             qubits = ()
-        self._qubits = tuple(qubits)
+        super().__init__(qubits)
 
-        self._gate = Gate(tensor=[[1, 1], [0, 0]])
+        self._gate = Unitary(tensor=[[1, 1], [0, 0]])
 
     def run(self, ket: State) -> State:
         if self.qubits:
@@ -175,7 +197,7 @@ class Reset(Operation):
             qubits = ket.qubits
 
         for q in qubits:
-            gate = self._gate.relabel([q])
+            gate = self._gate.on(q)
             ket = gate.run(ket)
         ket = ket.normalize()
         return ket
@@ -187,6 +209,7 @@ class Reset(Operation):
     def asgate(self) -> Gate:
         raise TypeError('Reset not convertible to Gate')
 
+    # FIXME?
     def aschannel(self) -> Channel:
         raise TypeError('Reset not convertible to Channel')
 
@@ -197,7 +220,7 @@ class Reset(Operation):
 
 
 class Initialize(Operation):
-    """ An operation that initilizes the quantum state"""
+    """ An operation that initializes the quantum state"""
     def __init__(self, ket: State):
         self._ket = ket
         self._qubits = ket.qubits
@@ -215,11 +238,16 @@ class Initialize(Operation):
     # TODO: aschannel? __str___?
 
 
+# TODO: Could be a Gate
 class Barrier(Operation):
     """An operation that prevents reordering of operations across the barrier.
     Has no effect on the quantum state."""
+    interchangable = True
+    _diagram_labels = ['┼']
+    _diagram_noline = True
+
     def __init__(self, *qubits: Qubit) -> None:
-        self._qubits = qubits
+        super().__init__(qubits=qubits)
 
     @property
     def H(self) -> 'Barrier':
@@ -236,7 +264,7 @@ class Barrier(Operation):
 
 
 class Projection(Operation):
-    """A projection operator, representated as a sequence of state vectors
+    """A projection operator, represented as a sequence of state vectors
     """
 
     # TODO: evolve(), asgate(), aschannel()
@@ -244,6 +272,7 @@ class Projection(Operation):
     def __init__(self,
                  states: Sequence[State]):
         self.states = states
+        super().__init__()
 
     @property
     def qubits(self) -> Qubits:
@@ -255,7 +284,6 @@ class Projection(Operation):
 
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
-
         tensor = sum(state.tensor * bk.inner(state.tensor, ket.tensor)
                      for state in self.states)
         return State(tensor, qubits=ket.qubits)
@@ -265,7 +293,11 @@ class Projection(Operation):
         return self
 
 
-class PermuteQubits(Operation):
+# FIXME: Should be Gate subclass because pure quantum operation?
+# Or treat as some sort of composite object?
+# But variable-qubit, and does not have same interface as other gate classes?
+# If moved to .gates we will get circular import errors due to Circuit import.
+class PermuteQubits(Gate):
     """A permutation of qubits. A generalized multi-qubit SWAP."""
     def __init__(self, qubits_in: Qubits, qubits_out: Qubits) -> None:
         if set(qubits_in) != set(qubits_out):
@@ -273,10 +305,12 @@ class PermuteQubits(Operation):
 
         self.qubits_out = tuple(qubits_out)
         self.qubits_in = tuple(qubits_in)
+        super().__init__(qubits=qubits_in)
 
+    # FIXME: Instead of circuit, take iterable of gates
     @classmethod
     def from_circuit(cls, circ: Circuit) -> 'PermuteQubits':
-        """Create a qubit pertumtation from a circuit of swap gates"""
+        """Create a qubit permutation from a circuit of swap gates"""
         qubits_in = circ.qubits
         N = circ.qubit_nb
         perm = list(range(N))
@@ -298,7 +332,7 @@ class PermuteQubits(Operation):
         return self.qubits_in
 
     @property
-    def H(self) -> Operation:
+    def H(self) -> 'PermuteQubits':
         return PermuteQubits(self.qubits_out, self.qubits_in)
 
     def run(self, ket: State) -> State:
@@ -326,7 +360,8 @@ class PermuteQubits(Operation):
 
         return Density(tensor, qubits, rho.memory)
 
-    def asgate(self) -> Gate:
+    @cached_property
+    def tensor(self) -> bk.BKTensor:
         N = self.qubit_nb
         qubits = self.qubits
 
@@ -337,15 +372,12 @@ class PermuteQubits(Operation):
         U = np.eye(2**N)
         U = np.reshape(U, [2]*2*N)
         U = np.transpose(U, perm)
+        return bk.astensorproduct(U)
 
-        return Gate(U, qubits=qubits)
-
-    def aschannel(self) -> 'Channel':
-        return self.asgate().aschannel()
-
+    # TODO: Rename to decomposition()?
     def ascircuit(self) -> Circuit:
         """
-        Returns a SWAP network for this permutation, assuming all-to-all
+        Returns a swap network for this permutation, assuming all-to-all
         connectivity.
         """
         circ = Circuit()
@@ -371,6 +403,7 @@ class ReverseQubits(PermuteQubits):
         return circ
 
 
+# DOCME
 class RotateQubits(PermuteQubits):
     def __init__(self, qubits: Qubits, shift: int = 1) -> None:
         qubits_in = tuple(qubits)
@@ -433,7 +466,8 @@ class Display(Operation):
     quantum state and stores it in classical memory, without performing
     any effect on the qubits.
     """
-    # Terminology 'Display' used by Quirk and cirq (cirq/ops/display.py).
+    # Terminology 'Display' used by Quirk (https://algassert.com/quirk)
+    # and cirq (cirq/ops/display.py).
     def __init__(self,
                  key: Hashable,
                  action: Callable,
@@ -443,7 +477,6 @@ class Display(Operation):
         self.action = action
 
     def run(self, ket: State) -> State:
-        print('runnin')
         return ket.store({self.key: self.action(ket)})
 
     def evolve(self, rho: Density) -> Density:
@@ -483,7 +516,7 @@ class DensityDisplay(Display):
                  key: Hashable,
                  qubits: Qubits) -> None:
         super().__init__(key,
-                         lambda state: state.asdensity(self.qubits),
+                         lambda state: state.asdensity(qubits),
                          qubits=qubits)
 
 # fin

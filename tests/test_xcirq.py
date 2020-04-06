@@ -43,16 +43,16 @@ def test_cirq_to_circuit():
     assert gate.qubits == (1, 0)
 
     gate = cirq_to_circuit(cq.Circuit(cq.CZ(q1, q0) ** 0.3))[0]
-    assert isinstance(gate, qf.CPHASE)
+    assert isinstance(gate, qf.CZPow)
     assert gate.qubits == (1, 0)
-    assert gate.params['theta'] == 0.3*pi
+    assert gate.params['t'] == 0.3
 
     gate = cirq_to_circuit(cq.Circuit(cq.CNOT(q0, q1)))[0]
     assert isinstance(gate, qf.CNOT)
     assert gate.qubits == (0, 1)
 
     gate = cirq_to_circuit(cq.Circuit(cq.CNOT(q0, q1) ** 0.25))[0]
-    assert isinstance(gate, qf.CTX)
+    assert isinstance(gate, qf.CNotPow)
     assert gate.qubits == (0, 1)
     assert gate.params['t'] == 0.25
 
@@ -70,18 +70,6 @@ def test_cirq_to_circuit():
 
     gate = cirq_to_circuit(cq.Circuit(cq.CCZ(q0, q1, q2)))[0]
     assert isinstance(gate, qf.CCZ)
-
-    gate = cirq_to_circuit(cq.Circuit(cq.Rx(0.5).on(q0)))[0]
-    assert isinstance(gate, qf.TX)
-    assert gate.params['t'] == 0.5/pi
-
-    gate = cirq_to_circuit(cq.Circuit(cq.Ry(0.5).on(q0)))[0]
-    assert isinstance(gate, qf.TY)
-    assert gate.params['t'] == 0.5/pi
-
-    gate = cirq_to_circuit(cq.Circuit(cq.Rz(0.5).on(q0)))[0]
-    assert isinstance(gate, qf.TZ)
-    assert gate.params['t'] == 0.5/pi
 
     gate = cirq_to_circuit(cq.Circuit(cq.I(q0)))[0]
     assert isinstance(gate, qf.I)
@@ -113,16 +101,68 @@ def test_cirq_to_circuit():
     # Check that cirq's parity gates are the same as QF's XX, YY, ZZ
     # upto parity
     U = (cq.XX(q0, q2) ** 0.8)._unitary_()
-    gate0 = qf.Gate(tensor=U)
+    gate0 = qf.Unitary(U)
     assert qf.gates_close(gate0, qf.XX(0.8))
 
     U = (cq.YY(q0, q2) ** 0.3)._unitary_()
-    gate0 = qf.Gate(tensor=U)
+    gate0 = qf.Unitary(U)
     assert qf.gates_close(gate0, qf.YY(0.3))
 
     U = (cq.ZZ(q0, q2) ** 0.2)._unitary_()
-    gate0 = qf.Gate(tensor=U)
+    gate0 = qf.Unitary(U)
     assert qf.gates_close(gate0, qf.ZZ(0.2))
+
+
+def version_to_versioninfo(version):
+    return tuple(int(c) if c.isdigit() else c for c in version.split('.'))
+
+
+@pytest.mark.skipif(version_to_versioninfo(cq.__version__) >= (0, 7),
+                    reason='Deprecated in 0.7.0')
+def test_cirq_to_circuit_0_6():
+    q0 = cq.LineQubit(0)
+    gate = cirq_to_circuit(cq.Circuit(cq.Rx(0.5).on(q0)))[0]
+    assert isinstance(gate, qf.TX)
+    assert gate.params['t'] == 0.5/pi
+
+    gate = cirq_to_circuit(cq.Circuit(cq.Ry(0.5).on(q0)))[0]
+    assert isinstance(gate, qf.TY)
+    assert gate.params['t'] == 0.5/pi
+
+    gate = cirq_to_circuit(cq.Circuit(cq.Rz(0.5).on(q0)))[0]
+    assert isinstance(gate, qf.TZ)
+    assert gate.params['t'] == 0.5/pi
+
+
+@pytest.mark.skipif(version_to_versioninfo(cq.__version__) < (0, 7),
+                    reason='New interface in 0.7.0')
+def test_cirq_to_circuit_0_7():
+    q0 = cq.LineQubit(0)
+    q1 = cq.LineQubit(1)
+    gate = cirq_to_circuit(cq.Circuit(cq.rx(0.5).on(q0)))[0]
+    assert isinstance(gate, qf.TX)
+    assert gate.params['t'] == 0.5/pi
+
+    gate = cirq_to_circuit(cq.Circuit(cq.ry(0.5).on(q0)))[0]
+    assert isinstance(gate, qf.TY)
+    assert gate.params['t'] == 0.5/pi
+
+    gate = cirq_to_circuit(cq.Circuit(cq.rz(0.5).on(q0)))[0]
+    assert isinstance(gate, qf.TZ)
+    assert gate.params['t'] == 0.5/pi
+
+    gate = cirq_to_circuit(cq.Circuit(cq.IdentityGate(2).on(q0, q1)))[0]
+    assert isinstance(gate, qf.IDEN)
+
+    op = (cq.PhasedISwapPowGate()**0.5).on(q0, q1)
+    circ = cirq_to_circuit(cq.Circuit(op))
+    assert qf.gates_close(circ.asgate(), qf.Givens(0.5 * pi/2))
+
+    op = cq.PhasedXZGate(x_exponent=0.125,
+                         z_exponent=0.25,
+                         axis_phase_exponent=0.375).on(q0)
+    circ = cirq_to_circuit(cq.Circuit(op))
+    assert len(circ) == 3
 
 
 def test_cirq_to_circuit2():
@@ -182,6 +222,8 @@ def test_circuit_to_circ():
     circ0 += qf.CCNOT(q0, q1, q2)
     circ0 += qf.CSWAP(q0, q1, q2)
 
+    circ0 += qf.FSim(1, 2, q0, q1)
+
     diag0 = qf.circuit_to_diagram(circ0)
     print()
     print(diag0)
@@ -200,6 +242,13 @@ def test_circuit_to_circ_exception():
     circ0 = qf.Circuit([qf.CAN(0.2, 0.3, 0.1)])
     with pytest.raises(NotImplementedError):
         circuit_to_cirq(circ0)
+
+
+def test_circuit_to_circ_translate():
+    circ0 = qf.Circuit([qf.CAN(0.2, 0.3, 0.1)])
+    cqc = circuit_to_cirq(circ0, translate=True)
+    circ2 = cirq_to_circuit(cqc)
+    assert qf.circuits_close(circ0, circ2)
 
 
 def test_cirq_simulator():
@@ -248,3 +297,11 @@ def test_cirq_simulator():
     assert qf.states_close(ket1, ket2)
 
     assert qf.states_close(circ0.run(), sim.run())
+
+
+def test_circuit_to_cirq_unitary():
+    gate0 = qf.random_gate([4, 5])
+    circ0 = qf.Circuit([gate0])
+    cqc = circuit_to_cirq(circ0)
+    circ1 = cirq_to_circuit(cqc)
+    assert qf.circuits_close(circ0, circ1)

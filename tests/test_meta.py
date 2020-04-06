@@ -8,7 +8,6 @@
 Unit tests for quantumflow.meta
 """
 
-
 import io
 import subprocess
 import glob

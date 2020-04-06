@@ -22,7 +22,6 @@ QuantumFlow module for working with the Pauli algebra.
 .. autofunction:: pauli_sum
 .. autofunction:: pauli_product
 .. autofunction:: pauli_pow
-.. autofunction:: pauli_exp_circuit
 .. autofunction:: paulis_commute
 .. autofunction:: pauli_commuting_sets
 .. autofunction:: paulis_close
@@ -30,7 +29,6 @@ QuantumFlow module for working with the Pauli algebra.
 """
 
 # Kudos: Adapted from PyQuil's paulis.py, original written by Nick Rubin
-
 
 from typing import Tuple, Any, Iterator, List
 from operator import itemgetter, mul
@@ -40,19 +38,22 @@ import heapq
 from cmath import isclose  # type: ignore
 from numbers import Complex
 
-import networkx as nx
-from networkx.algorithms.approximation.steinertree import steiner_tree
+import numpy as np
+# import sympy
 
+from . import backend as bk
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits
 from .ops import Operation
 from .states import State
-from .gates import NAMED_GATES, Y, X, RZ, SWAP, CNOT
-from .circuits import Circuit
+from .variables import (variable_almost_zero, variable_is_symbolic,
+                        variable_is_number)
 
 __all__ = ['PauliTerm', 'Pauli', 'sX', 'sY', 'sZ', 'sI',
            'pauli_sum', 'pauli_product', 'pauli_pow', 'paulis_commute',
-           'pauli_commuting_sets', 'paulis_close', 'pauli_exp_circuit']
+           'pauli_commuting_sets', 'paulis_close',
+           'pauli_decompose_hermitian']
+
 
 PauliTerm = Tuple[Tuple[Tuple[Qubit, str], ...], complex]
 
@@ -117,10 +118,10 @@ class Pauli(Operation):
         if not all(op in PAULI_OPS for op in ops):
             raise ValueError("Valid Pauli operators are I, X, Y, and Z")
 
-        coeff = complex(coefficient)
+        coeff = (coefficient)
 
         terms = ()  # type: Tuple[PauliTerm, ...]
-        if isclose(coeff, 0.0):
+        if isinstance(coeff, Complex) and isclose(coeff, 0.0):
             terms = ()
         else:
             qops = zip(qubits, ops)
@@ -189,13 +190,14 @@ class Pauli(Operation):
     def __str__(self) -> str:
         out = []
         for term in self.terms:
-            out.append(f'+ {term[1]:+}')
+            out.append(f'+ {term[1]}')
 
             for q, op in term[0]:
                 out.append(f'{op}({q})')
 
         return ' '.join(out)
 
+    # TODO: Should return Paulis?
     def __iter__(self) -> Iterator[PauliTerm]:
         return iter(self.terms)
 
@@ -211,18 +213,23 @@ class Pauli(Operation):
         return self.__add__(other)
 
     def __mul__(self, other: Any) -> 'Pauli':
-        if isinstance(other, Complex):
+        if variable_is_symbolic(other):
+            other = Pauli.scalar(other)
+        if variable_is_number(other):
             other = Pauli.scalar(complex(other))
         return pauli_product(self, other)
 
     def __rmul__(self, other: Any) -> 'Pauli':
         return self.__mul__(other)
 
+    def __truediv__(self, other: Any) -> 'Pauli':
+        return self * (1/other)
+
     def __sub__(self, other: Any) -> 'Pauli':
-        return self + -1. * other
+        return self + -1 * other
 
     def __rsub__(self, other: Any) -> 'Pauli':
-        return other + -1. * self
+        return other + -1 * self
 
     def __neg__(self) -> 'Pauli':
         return self * -1
@@ -246,8 +253,31 @@ class Pauli(Operation):
     def __hash__(self) -> int:
         return hash(self.terms)
 
+    def asoperator(self, qubits: Qubits = None) -> bk.TensorLike:
+        # DOCME: Use of qubits argument here.
+
+        # Late import to prevent circular imports
+        from .gates import NAMED_GATES, IDEN
+
+        qbs = self.qubits if qubits is None else qubits
+        if self.is_zero():
+            N = len(qbs)
+            return np.zeros(shape=(2**N, 2**N))
+
+        res = []
+        for term, coeff in self.terms:
+            if variable_is_symbolic(coeff):
+                coeff = complex(coeff)
+            gate = IDEN(*qbs)
+            for qubit, op in term:
+                gate = NAMED_GATES[op](qubit) @ gate
+            res.append(gate.asoperator() * coeff)
+        return (sum(res))
+
     # TESTME
     def run(self, ket: State) -> State:
+        from .gates import NAMED_GATES
+
         resultants = []
         for term, coeff in self.terms:
             res = State(ket.tensor * coeff, ket.qubits)
@@ -258,27 +288,28 @@ class Pauli(Operation):
         out = State(sum(resultants), ket.qubits)
         return out
 
+
 # End class Pauli
 
 
-def sX(qubit: Qubit, coefficient: complex = 1.0) -> Pauli:
+def sX(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_X operator acting on the given qubit"""
     return Pauli.sigma(qubit, 'X', coefficient)
 
 
-def sY(qubit: Qubit, coefficient: complex = 1.0) -> Pauli:
+def sY(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_Y operator acting on the given qubit"""
     return Pauli.sigma(qubit, 'Y', coefficient)
 
 
-def sZ(qubit: Qubit, coefficient: complex = 1.0) -> Pauli:
+def sZ(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_Z operator acting on the given qubit"""
     return Pauli.sigma(qubit, 'Z', coefficient)
 
 
-def sI(qubit: Qubit, coefficient: complex = 1.0) -> Pauli:
+def sI(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_I (identity) operator. The qubit is irrelevant,
-    but kept as an  argument for consistency"""
+    but kept as an argument for consistency"""
     return Pauli.sigma(qubit, 'I', coefficient)
 
 
@@ -289,7 +320,7 @@ def pauli_sum(*elements: Pauli) -> Pauli:
     key = itemgetter(0)
     for term, grp in groupby(heapq.merge(*elements, key=key), key=key):
         coeff = sum(g[1] for g in grp)
-        if not isclose(coeff, 0.0):
+        if not variable_almost_zero(coeff):
             terms.append((term, coeff))
 
     return Pauli(tuple(terms))
@@ -317,6 +348,19 @@ def pauli_product(*elements: Pauli) -> Pauli:
         result_terms.append(p)
 
     return pauli_sum(*result_terms)
+
+
+# # DOCME TESTME
+# def pauli_grad(pauli: Pauli, *x: Variable) -> Pauli:
+#     result_terms = []
+
+#     for term, coeff in pauli:
+#         d = sympy.diff(coeff, *x)
+#         p = Pauli(((term, d),))
+#         if not d.is_zero:
+#             # print(d, p)
+#             result_terms.append(p)
+#     return pauli_sum(*result_terms)
 
 
 def pauli_pow(pauli: Pauli, exponent: int) -> Pauli:
@@ -362,7 +406,7 @@ def paulis_commute(element0: Pauli, element1: Pauli) -> bool:
     i.e. if element0 * element1 == element1 * element0
 
     Derivation similar to arXiv:1405.5749v2 for the check_commutation step in
-    the Raesi, Wiebe, Sanders algorithm (arXiv:1108.4318, 2011).
+    the Raeisi, Wiebe, Sanders algorithm (arXiv:1108.4318, 2011).
     """
 
     def _coincident_parity(term0: PauliTerm, term1: PauliTerm) -> bool:
@@ -412,67 +456,42 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     return tuple(groups)
 
 
-# Adpated from pyquil. THe topoplogical CNOT network is new.
-# GEC (2019)
-def pauli_exp_circuit(
-        element: Pauli,
-        alpha: float,
-        topology: nx.Graph = None
-        ) -> Circuit:
+def pauli_decompose_hermitian(matrix: bk.TensorLike,
+                              qubits: Qubits = None) -> Pauli:
+    """Decompose a Hermitian matrix into an element of the Pauli algebra.
+
+    This works because tensor products of Pauli matrices form an orthonormal
+    basis in the linear space of all 2^N×2^N matrices under Hilbert-Schmidt
+    inner product.
     """
-    Returns a Circuit corresponding to the exponential of
-    the Pauli algebra element object, i.e. exp[-1.0j * param * element]
+    # TODO: This should work for any matrix, not just Hermitian?
+    # Generalize: remove hermitian check and coercing coefficients to real.
+    # FIXME: Gets phase wrong?
 
-    If a qubit topology is provided then the returned circuit will
-    respect the qubit connectivity, adding swaps as necessary.
-    """
-    circ = Circuit()
+    if not np.ndim(matrix) == 2:
+        raise ValueError("Must be square matrix")
 
-    if element.is_identity() or element.is_zero():
-        return circ
+    # Wait is this true?
+    if not np.allclose(matrix.conj().T, matrix):
+        raise ValueError("Matrix must be Hermitian")
 
-    for term, coeff in element:
-        if not isclose(complex(coeff).imag, 0.0):
-            raise ValueError("Pauli term coefficients must be real")
-        theta = complex(coeff).real * alpha
+    N = int(np.log2(np.size(matrix)))//2
+    if not 2**(2*N) == np.size(matrix):
+        raise ValueError('Matrix dimensions must be power of 2')
 
-        active_qubits = set()
+    if qubits is None:
+        qubits = list(range(N))
+    else:
+        assert len(qubits) == N
 
-        change_to_z_basis = Circuit()
-        for qubit, op in term:
-            active_qubits.add(qubit)
-            if op == 'X':
-                change_to_z_basis += Y(qubit)**0.5
-            elif op == 'Y':
-                change_to_z_basis += X(qubit)**0.5
+    terms = []
+    for ops in product('IXYZ', repeat=N):
+        P = Pauli.term(qubits, ''.join(ops)).asoperator(qubits=qubits)
+        coeff = np.real(np.trace(P @ matrix)/(2**N))
+        term = Pauli.term(qubits, ''.join(ops), coeff)
+        terms.append(term)
 
-        if topology is None:
-            topology = nx.DiGraph()
-            nx.add_path(topology, list(active_qubits))
-        elif not nx.is_directed(topology) or not nx.is_arborescence(topology):
-            # An 'arborescence' is a directed tree
-            topology = steiner_tree(topology, active_qubits)
-            center = nx.center(topology)[0]
-            topology = nx.dfs_tree(topology, center)
+    return pauli_sum(*terms)
 
-        order = list(reversed(list(nx.topological_sort(topology))))
-
-        cnot_seq = Circuit()
-        for q0 in order[:-1]:
-            q1 = list(topology.pred[q0])[0]
-
-            if q1 not in active_qubits:
-                cnot_seq += SWAP(q0, q1)
-                active_qubits.add(q1)
-            else:
-                cnot_seq += CNOT(q0, q1)
-
-        circ += change_to_z_basis
-        circ += cnot_seq
-        circ += RZ(2*theta, order[-1])
-        circ += cnot_seq.H
-        circ += change_to_z_basis.H
-        # end term loop
-    return circ
 
 # fin

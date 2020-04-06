@@ -19,6 +19,8 @@ from typing import Any
 import numpy as np
 from numpy import pi, cos, sin, arccos, exp                # noqa: F401
 
+from sympy import pi as PI                                 # noqa: F401
+
 import ctf
 from ctf import (  # noqa: F401
     # sqrt,
@@ -90,6 +92,13 @@ MAX_QUBITS = 32
 
 EINSUM_SUBSCRIPTS = string.ascii_lowercase + string.ascii_uppercase
 # ctf allows more subscripts than this, but not clear what the full set is.
+
+
+def sign(var: BKTensor) -> bool:
+    import sympy
+    if isinstance(var, sympy.Expr):
+        return sympy.N(var)
+    return ctf.math.sign(var)
 
 
 def roll(array: TensorLike, shift: Any, axis: Any = None) -> BKTensor:

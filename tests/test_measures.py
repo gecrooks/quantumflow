@@ -71,7 +71,6 @@ def test_fidelity():
     rho1 = qf.random_density(4)
 
     fid = qf.fidelity(rho0, rho1)
-    print('FID', fid)
     assert 0.0 <= fid <= 1.0
 
     rho2 = qf.random_density([3, 2, 1, 0])
@@ -79,7 +78,6 @@ def test_fidelity():
     assert 0.0 <= fid <= 1.0
 
     fid = qf.fidelity(rho0, rho0)
-    print('FID', fid)
     assert fid == ALMOST_ONE
 
     ket0 = qf.random_state(3)
@@ -107,7 +105,7 @@ def test_purity():
         assert purity >= 0.0
 
     rho = qf.Density(np.diag([0.9, 0.1]))
-    assert np.isclose(qf.asarray(qf.purity(rho)), 0.82)   # Kudos: Josh Combes
+    assert np.isclose(qf.asarray(qf.purity(rho)), 0.82)   # Kudos: Josh Combs
 
 
 def test_bures_distance():
@@ -251,3 +249,14 @@ def test_average_gate_fidelity():
 
     qf.average_gate_fidelity(kraus, qf.X())
     # TODO: Test actually get correct answer!
+
+
+def test_gates_phase_close():
+    gate0 = qf.TZ(0.5)
+    gate1 = qf.Circuit(qf.translate_tz_to_rz(gate0)).asgate()
+    assert qf.gates_close(gate0, gate1)
+    assert not qf.gates_phase_close(gate0, gate1)
+    assert qf.gates_phase_close(gate0, gate0)
+
+    gate2 = qf.TX(0.5)
+    assert not qf.gates_phase_close(gate0, gate2)

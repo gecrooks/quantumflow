@@ -2,7 +2,7 @@
 
 """
 QuantumFlow Examples:
-    Train a circuit to geenerate a state using gradient descent
+    Train a circuit to generate a state using gradient descent
 """
 
 import networkx as nx
