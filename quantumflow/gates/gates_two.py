@@ -13,7 +13,7 @@ QuantumFlow: One qubit gates
 
 
 import numpy as np
-import scipy
+
 from typing import Iterator, Union
 
 from ..backend import pi, PI

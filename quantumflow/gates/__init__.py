@@ -26,8 +26,8 @@ Actions on gates
 .. autofunction:: almost_unitary
 .. autofunction:: almost_identity
 .. autofunction:: almost_hermitian
-.. automember:: NAMED_GATES
-.. automember:: STD_GATESET
+.. autodata:: NAMED_GATES
+.. autodata:: STD_GATESET
 
 
 Standard gates
@@ -80,14 +80,10 @@ One-qubit gates
 .. autoclass:: TY
 .. autoclass:: TZ
 .. autoclass:: TH
-.. autoclass:: ZYZ
-.. autoclass:: P0
-.. autoclass:: P1
 .. autoclass:: V
 .. autoclass:: V_H
 .. autoclass:: PhasedX
-.. autoclass:: PhasedTX
-
+.. autoclass:: PhasedXPow
 
 
 Two-qubit gates
@@ -101,7 +97,7 @@ Two-qubit gates
 .. autoclass:: Barenco
 .. autoclass:: CY
 .. autoclass:: CH
-.. autoclass:: CTX
+.. autoclass:: CNotPow
 .. autoclass:: SqrtISwap
 .. autoclass:: SqrtISwap_H
 .. autoclass:: SqrtSwap
@@ -142,7 +138,7 @@ conventions. The following table maps gate names between these APIs.
 Description                 QF          Cirq            QASM/qsikit PyQuil      Pennylane
 ==========================  =========== =============== =========== =========== ===========
 Identity  (single qubit)    I           I               id or iden  I
-Identity  (multi-qubit)     Iden		IdentityGate
+Identity  (multi-qubit)     Iden        IdentityGate
 Pauli-X                     X           X               x           X           PauliX
 Pauli-Y                     Y           Y               y           Y           PauliY
 Pauli-Z                     Z           Z               z           Z           PauliZ
@@ -212,7 +208,7 @@ Sycamore                    Sycamore    Sycamore        .           .           
 Fermionic swap              FSwap       FSwap           .           .           .
 Powers of fermionic swap    FSwapPow    FSwapPow        .           .           .
 
-* QASM/qiskit specific gates
+* QASM/qiskit gates
 QASM's U3 gate              U3          .               u3          .           Rot
 QASM's U2 gate              U2          .               u2          .
 QASM's controlled-U3        CU3         .               cu3         .           .
@@ -256,7 +252,11 @@ _gates = (_gates_one + _gates_two + _gates_three + _gates_qasm
           + _gates_cirq + _gates_forest)
 
 NAMED_GATES = {name: globals()[name] for name in _gates}
-"""A mapping between gate names and gate classes"""
+"""
+A mapping between gate names and gate classes
+"""
 
 STD_GATESET = frozenset(NAMED_GATES.values())
-"""A set of all the standard gates classes."""
+"""
+A set of all the standard gates classes.
+"""

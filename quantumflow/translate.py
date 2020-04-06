@@ -1495,8 +1495,8 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
     """Translate a 3-qubit Deutsch gate to five 2-qubit Barenco gates.
 
     Ref:
-        A Universal Two–Bit Gate for Quantum Computation, A. Barenco (1996)
-        https://arxiv.org/pdf/quant-ph/9505016.pdf  :cite:`Barenco1996`
+        A Universal Two–Bit Gate for Quantum Computation, A. Barenco (1995)
+        https://arxiv.org/pdf/quant-ph/9505016.pdf  :cite:`Barenco1995a`
     """
     q0, q1, q2 = gate.qubits
     theta, = gate.parameters()
