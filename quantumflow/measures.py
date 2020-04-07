@@ -67,7 +67,7 @@ from scipy.linalg import sqrtm  # matrix square root
 import scipy.stats
 
 
-from . import backend as bk
+# from . import backend as bk
 from .config import TOLERANCE
 from .qubits import Qubits, asarray
 from .qubits import vectors_close, fubini_study_angle  # TODO: Move to here
@@ -76,6 +76,10 @@ from .ops import Gate, Channel
 from .channels import Kraus
 from .circuits import Circuit
 from .gates import I, IDEN
+
+from .backends import backend as bk
+from .backends import BKTensor
+
 
 __all__ = ['state_fidelity', 'state_angle', 'states_close',
            'purity', 'fidelity', 'bures_distance', 'bures_angle',
@@ -92,7 +96,7 @@ __all__ = ['state_fidelity', 'state_angle', 'states_close',
 
 # -- Measures on pure states ---
 
-def state_fidelity(state0: State, state1: State) -> bk.BKTensor:
+def state_fidelity(state0: State, state1: State) -> BKTensor:
     """Return the quantum fidelity between pure states."""
     assert state0.qubits == state1.qubits   # FIXME
 
@@ -107,7 +111,7 @@ def state_fidelity(state0: State, state1: State) -> bk.BKTensor:
     return tensor
 
 
-def state_angle(ket0: State, ket1: State) -> bk.BKTensor:
+def state_angle(ket0: State, ket1: State) -> BKTensor:
     """The Fubini-Study angle between states.
 
     Equal to the Burrs angle for pure states.
@@ -126,7 +130,7 @@ def states_close(state0: State, state1: State,
 
 # -- Measures on density matrices ---
 
-def purity(rho: Density) -> bk.BKTensor:
+def purity(rho: Density) -> BKTensor:
     """
     Calculate the purity of a mixed quantum state.
 
@@ -185,7 +189,7 @@ def bures_angle(rho0: Density, rho1: Density) -> float:
     return np.arccos(np.sqrt(fidelity(rho0, rho1)))
 
 
-def density_angle(rho0: Density, rho1: Density) -> bk.BKTensor:
+def density_angle(rho0: Density, rho1: Density) -> BKTensor:
     """The Fubini-Study angle between density matrices"""
     return fubini_study_angle(rho0.vec, rho1.vec)
 
@@ -262,7 +266,7 @@ def trace_distance(rho0: Density, rho1: Density) -> float:
 
 # Measures on gates
 
-def gate_angle(gate0: Gate, gate1: Gate) -> bk.BKTensor:
+def gate_angle(gate0: Gate, gate1: Gate) -> BKTensor:
     """The Fubini-Study angle between gates"""
     return fubini_study_angle(gate0.vec, gate1.vec)
 
@@ -325,7 +329,7 @@ def circuits_close(circ0: Circuit, circ1: Circuit,
 
 # Measures on channels
 
-def channel_angle(chan0: Channel, chan1: Channel) -> bk.BKTensor:
+def channel_angle(chan0: Channel, chan1: Channel) -> BKTensor:
     """The Fubini-Study angle between channels"""
     return fubini_study_angle(chan0.vec, chan1.vec)
 
@@ -397,7 +401,7 @@ def diamond_norm(chan0: Channel, chan1: Channel) -> float:
 
 
 # TESTME
-def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> bk.BKTensor:
+def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> BKTensor:
     """Return the average gate fidelity between a noisy gate (specified by a
     Kraus representation of a superoperator), and a purely unitary target gate.
 

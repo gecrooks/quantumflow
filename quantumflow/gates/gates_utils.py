@@ -11,7 +11,7 @@ from functools import reduce
 import numpy as np
 import scipy
 
-from .. import backend as bk
+
 from ..qubits import Qubit, Qubits, qubits_count_tuple
 from ..qubits import outer_product
 from ..ops import Gate, Unitary
@@ -19,6 +19,10 @@ from .. import utils
 from .gates_one import IDEN
 
 from ..paulialgebra import Pauli
+
+from ..backends import backend as bk
+from ..backends import BKTensor
+
 
 __all__ = ['identity_gate',
            'random_gate',
@@ -108,7 +112,7 @@ class P0(Gate):
         super().__init__(qubits=[q0])
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return bk.astensorproduct([[1, 0], [0, 0]])
 
 
@@ -124,7 +128,7 @@ class P1(Gate):
         super().__init__(qubits=[q0])
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return bk.astensorproduct([[0, 0], [0, 1]])
 
 

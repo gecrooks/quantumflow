@@ -36,21 +36,21 @@ __all__ = [
 # TESTME
 # TODO: What other functions should be patched?
 # TODO: Does this work with other backends? JAX?
-sympy.Expr.arccsc = lambda self: sympy.acsc(self)
-sympy.Expr.arccos = lambda self: sympy.acos(self)
-sympy.Expr.arccot = lambda self: sympy.acot(self)
-sympy.Expr.arccsc = lambda self: sympy.acsc(self)
-sympy.Expr.arcsec = lambda self, x: sympy.asec(self, x)
-sympy.Expr.arcsin = lambda self, x: sympy.asin(self, x)
-sympy.Expr.arctan = lambda self, x: sympy.atan(self, x)
-sympy.Expr.arctan2 = lambda self, x: sympy.atan2(self, x)
-sympy.Expr.cos = lambda self: sympy.cos(self)
-sympy.Expr.cot = lambda self: sympy.cot(self)
-sympy.Expr.exp = lambda self: sympy.exp(self)
-sympy.Expr.sec = lambda self: sympy.sec(self)
-sympy.Expr.sin = lambda self: sympy.sin(self)
-sympy.Expr.sqrt = lambda self: sympy.sqrt(self)
-sympy.Expr.tan = lambda self: sympy.tan(self)
+# sympy.Expr.arccsc = lambda self: sympy.acsc(self)
+# sympy.Expr.arccos = lambda self: sympy.acos(self)
+# sympy.Expr.arccot = lambda self: sympy.acot(self)
+# sympy.Expr.arccsc = lambda self: sympy.acsc(self)
+# sympy.Expr.arcsec = lambda self, x: sympy.asec(self, x)
+# sympy.Expr.arcsin = lambda self, x: sympy.asin(self, x)
+# sympy.Expr.arctan = lambda self, x: sympy.atan(self, x)
+# sympy.Expr.arctan2 = lambda self, x: sympy.atan2(self, x)
+# sympy.Expr.cos = lambda self: sympy.cos(self)
+# sympy.Expr.cot = lambda self: sympy.cot(self)
+# sympy.Expr.exp = lambda self: sympy.exp(self)
+# sympy.Expr.sec = lambda self: sympy.sec(self)
+# sympy.Expr.sin = lambda self: sympy.sin(self)
+# sympy.Expr.sqrt = lambda self: sympy.sqrt(self)
+# sympy.Expr.tan = lambda self: sympy.tan(self)
 
 
 Variable = Union[sympy.Expr, float]

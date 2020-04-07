@@ -9,7 +9,7 @@
 QuantumFlow: Three qubit gates
 """
 import numpy as np
-from .. import backend as bk
+# from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State
 from ..ops import Gate
@@ -19,6 +19,11 @@ from ..config import CTRL, TARGET, SWAP_TARGET
 from ..paulialgebra import Pauli, sZ, sX
 from .gates_two import SWAP, CNOT, CZ
 
+
+from ..backends import get_backend, BKTensor
+bk = get_backend()
+pi = bk.pi
+PI = bk.PI
 
 # 3-qubit gates, in alphabetic order
 
@@ -63,7 +68,7 @@ class CCiX(Gate):
         return -sX(q2) * (1 - sZ(q1)) * (1-sZ(q0)) * bk.PI/8
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = np.asarray(
                    [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                     [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -112,7 +117,7 @@ class CCNOT(Gate):
         return CNOT(q1, q2).hamiltonian * (1-sZ(q0))/2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
                    [0, 0, 1, 0, 0, 0, 0, 0],
@@ -170,7 +175,7 @@ class CCXPow(Gate):
         return CCNOT(*self.qubits).hamiltonian * t
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         t, = self.parameters()
         ctheta = bk.ccast(bk.pi * t)
         phase = bk.exp(0.5j * ctheta)
@@ -231,7 +236,7 @@ class CSWAP(Gate):
         return SWAP(q1, q2).hamiltonian * (1-sZ(q0))/2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
                    [0, 0, 1, 0, 0, 0, 0, 0],
@@ -297,7 +302,7 @@ class CCZ(Gate):
         return CZ(q1, q2).hamiltonian * (1-sZ(q0))/2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = [[1, 0, 0, 0, 0, 0, 0, 0],
                    [0, 1, 0, 0, 0, 0, 0, 0],
                    [0, 0, 1, 0, 0, 0, 0, 0],
@@ -361,7 +366,7 @@ class Deutsch(Gate):
         super().__init__(params=dict(theta=theta), qubits=[q0, q1, q2])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         ctheta = bk.ccast(theta)
 

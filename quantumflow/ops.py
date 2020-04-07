@@ -48,12 +48,15 @@ from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
 import sympy
 
-import quantumflow.backend as bk
+# import quantumflow.backend as bk
 
 from .qubits import Qubit, Qubits, QubitVector, qubits_count_tuple, asarray
 from .states import State, Density
 from .utils import symbolize
 from .variables import Variable
+
+from .backends import get_backend, BKTensor, TensorLike
+bk = get_backend()
 
 __all__ = ['Operation', 'Gate', 'Channel', 'Unitary']
 
@@ -166,7 +169,7 @@ class Operation(ABC):
         raise NotImplementedError()
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         """
         Returns the tensor representation of this operation (if possible)
         """
@@ -253,7 +256,7 @@ class Gate(Operation):
 
     # TODO: Not overriding tensor makes Gate an abstract class?
     # @property
-    # def tensor(self) -> bk.BKTensor:
+    # def tensor(self) -> BKTensor:
     #     """Returns the tensor representation of gate operator"""
     #     raise NotImplementedError()
 
@@ -280,7 +283,7 @@ class Gate(Operation):
         return QubitVector(self.tensor, self.qubits)
 
     # FIXME: Should copy before flatten?
-    def asoperator(self) -> bk.BKTensor:
+    def asoperator(self) -> BKTensor:
         """Return the gate tensor as a square array"""
         return bk.copy(self.vec.flatten())
 
@@ -391,7 +394,7 @@ class Unitary(Gate):
     """
 
     def __init__(self,
-                 tensor: bk.TensorLike,
+                 tensor: TensorLike,
                  *qubits: Qubit,
                  name: str = None) -> None:
 
@@ -409,7 +412,7 @@ class Unitary(Gate):
         self._name = type(self).__name__ if name is None else name
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         """Returns the tensor representation of gate operator"""
         return self._tensor
 
@@ -423,7 +426,7 @@ class Unitary(Gate):
 
 class Channel(Operation):
     """A quantum channel"""
-    def __init__(self, tensor: bk.TensorLike,
+    def __init__(self, tensor: TensorLike,
                  qubits: Union[int, Qubits],
                  params: Dict[str, Variable] = None,
                  name: str = None) -> None:
@@ -445,7 +448,7 @@ class Channel(Operation):
         return QubitVector(self.tensor, self.qubits)
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         """Return the tensor representation of the channel's superoperator"""
         return self._tensor
 
@@ -486,7 +489,7 @@ class Channel(Operation):
         tensor = bk.reshape(tensor, [2] * 4 * N)
         return Channel(tensor, self.qubits)
 
-    def choi(self) -> bk.BKTensor:
+    def choi(self) -> BKTensor:
         """Return the Choi matrix representation of this super
         operator"""
         # Put superop axes in the order [out_ket, in_bra, out_bra, in_ket]
@@ -496,14 +499,14 @@ class Channel(Operation):
 
     @classmethod
     def from_choi(cls,
-                  tensor: bk.TensorLike,
+                  tensor: TensorLike,
                   qubits: Union[int, Qubits]) -> 'Channel':
         """Return a Channel from a Choi matrix"""
         return cls(tensor, qubits).sharp
 
     # TESTME
     # FIXME: Can't be right, same as choi?
-    def chi(self) -> bk.BKTensor:
+    def chi(self) -> BKTensor:
         """Return the chi (or process) matrix representation of this
         superoperator"""
         N = self.qubit_nb
@@ -566,7 +569,7 @@ class Channel(Operation):
         return Channel(tensor, qubits)
 
     # TESTME
-    def trace(self) -> bk.BKTensor:
+    def trace(self) -> BKTensor:
         """Return the trace of this super operator"""
         return self.vec.trace()
 

@@ -11,15 +11,18 @@ QuantumFlow: Gates peculiar to Rigetti's Forest
 
 # TODO: Rename CPHASE to CPhase, PSWAP to PSwap
 
-from numpy import pi
-
-from .. import backend as bk
 from ..ops import Gate
 from ..qubits import Qubit
 from ..utils import cached_property
 from ..variables import Variable
 from ..config import CTRL, NCTRL
 from ..paulialgebra import Pauli, sZ
+
+from ..backends import backend as bk
+from ..backends import BKTensor
+
+pi = bk.pi
+PI = bk.PI
 
 
 __all__ = ('CPHASE', 'CPHASE00', 'CPHASE01', 'CPHASE10', 'PSWAP')
@@ -46,7 +49,7 @@ class CPHASE(Gate):
         return -theta*(1 + sZ(q0)*sZ(q1) - sZ(q0) - sZ(q1))/4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0, 0, 0],
@@ -86,7 +89,7 @@ class CPHASE00(Gate):
         return -theta*(1 + sZ(q0)*sZ(q1) + sZ(q0) + sZ(q1))/(4)
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[bk.exp(1j * ctheta), 0, 0, 0],
@@ -126,7 +129,7 @@ class CPHASE01(Gate):
         return -theta*(1 - sZ(q0)*sZ(q1) + sZ(q0) - sZ(q1))/(4)
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0, 0, 0],
@@ -166,7 +169,7 @@ class CPHASE10(Gate):
         return -theta*(1 - sZ(q0)*sZ(q1) - sZ(q0) + sZ(q1))/(4)
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0, 0, 0],
@@ -204,7 +207,7 @@ class PSWAP(Gate):
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta = self.params['theta']
         ctheta = bk.ccast(theta)
         unitary = [[[[1, 0], [0, 0]], [[0, 0], [bk.exp(ctheta * 1.0j), 0]]],

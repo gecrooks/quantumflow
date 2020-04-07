@@ -18,7 +18,7 @@ import pytest
 from sympy import Symbol
 
 import quantumflow as qf
-import quantumflow.backend as bk
+from quantumflow import backend as bk
 
 from . import ALMOST_ONE
 

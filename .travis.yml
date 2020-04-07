@@ -5,6 +5,7 @@ dist: xenial
 python:
   - "3.6"
   - "3.7"
+  - "3.8"
 
 install:
   - sudo apt-get update
@@ -31,4 +32,4 @@ script:
   - flake8 quantumflow examples tests tools setup.py
   - mypy -p quantumflow --ignore-missing-imports
   - sphinx-build -M html docs docs/_build
-  - sphinx-build -M doctest docs docs/_build
+

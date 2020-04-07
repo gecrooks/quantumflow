@@ -23,7 +23,7 @@ QuantumFlow: prototype simulator of gate-based quantum computers.
 # Modules should only import modules further up the list.
 
 from quantumflow.config import version as __version__       # noqa: F401
-from quantumflow import backend                             # noqa: F401
+from quantumflow.backends import backend                    # noqa: F401
 from quantumflow.variables import *                         # noqa: F401, F403
 from quantumflow.qubits import *                            # noqa: F401, F403
 from quantumflow.states import *                            # noqa: F401, F403

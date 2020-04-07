@@ -39,15 +39,17 @@ from cmath import isclose  # type: ignore
 from numbers import Complex
 
 import numpy as np
-# import sympy
 
-from . import backend as bk
+
 from .config import TOLERANCE
 from .qubits import Qubit, Qubits
 from .ops import Operation
 from .states import State
 from .variables import (variable_almost_zero, variable_is_symbolic,
                         variable_is_number)
+
+
+from .backends import TensorLike
 
 __all__ = ['PauliTerm', 'Pauli', 'sX', 'sY', 'sZ', 'sI',
            'pauli_sum', 'pauli_product', 'pauli_pow', 'paulis_commute',
@@ -253,7 +255,7 @@ class Pauli(Operation):
     def __hash__(self) -> int:
         return hash(self.terms)
 
-    def asoperator(self, qubits: Qubits = None) -> bk.TensorLike:
+    def asoperator(self, qubits: Qubits = None) -> TensorLike:
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
@@ -456,7 +458,7 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     return tuple(groups)
 
 
-def pauli_decompose_hermitian(matrix: bk.TensorLike,
+def pauli_decompose_hermitian(matrix: TensorLike,
                               qubits: Qubits = None) -> Pauli:
     """Decompose a Hermitian matrix into an element of the Pauli algebra.
 

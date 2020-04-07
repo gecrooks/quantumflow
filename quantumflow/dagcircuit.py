@@ -14,7 +14,7 @@ import textwrap
 import numpy as np
 import networkx as nx
 
-from . import backend as bk
+
 from .config import CIRCUIT_INDENT
 from .qubits import Qubit, Qubits
 from .states import State, Density
@@ -22,6 +22,7 @@ from .ops import Operation, Gate, Channel, Unitary
 from .stdops import Moment
 from .circuits import Circuit
 from .utils import deprecated
+from .backends import backend as bk
 
 
 __all__ = 'DAGCircuit',

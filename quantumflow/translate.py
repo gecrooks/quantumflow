@@ -5,7 +5,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Translate, transform, and comPIle circuits.
+QuantumFlow: Translate, transform, and compile circuits.
 """
 
 # TODO: Split into separate modules
@@ -17,9 +17,10 @@ import numpy as np
 
 from sympy import Symbol
 
-from . import backend as bk
-from .backend import PI
+# from . import backend as bk
+# from .backend import PI
 
+from .backends import backend as bk
 
 from .ops import Gate
 from .circuits import Circuit
@@ -215,7 +216,7 @@ def translate_rx_to_tx(gate: RX) -> Iterator[TX]:
     """Translate RX gate to TX"""
     q0, = gate.qubits
     theta, = gate.parameters()
-    t = theta/PI
+    t = theta/bk.PI
     yield TX(t, q0)
 
 
@@ -223,7 +224,7 @@ def translate_ry_to_ty(gate: RY) -> Iterator[TY]:
     """Translate RY gate to TY"""
     q0, = gate.qubits
     theta, = gate.parameters()
-    t = theta/PI
+    t = theta/bk.PI
     yield TY(t, q0)
 
 
@@ -231,7 +232,7 @@ def translate_rz_to_tz(gate: RZ) -> Iterator[TZ]:
     """Translate RZ gate to TZ"""
     q0, = gate.qubits
     theta, = gate.parameters()
-    t = theta/PI
+    t = theta/bk.PI
     yield TZ(t, q0)
 
 
@@ -244,8 +245,8 @@ def translate_rn_to_rz_ry(gate: RN) -> Iterator[Union[RZ, RY]]:
     q0, = gate.qubits
     theta, nx, ny, nz = gate.parameters()
 
-    ang_y = np.arccos(nz)
-    ang_z = np.arctan2(ny, nx)
+    ang_y = bk.arccos(nz)
+    ang_z = bk.arctan2(ny, nx)
 
     yield RZ(-ang_z, q0)
     yield RY(-ang_y, q0)
@@ -274,21 +275,21 @@ def translate_sqrty_h_to_ty(gate: SqrtY_H) -> Iterator[TY]:
 def translate_tx_to_rx(gate: TX) -> Iterator[RX]:
     """Translate TX gate to RX"""
     q0, = gate.qubits
-    theta = gate.params['t'] * PI
+    theta = gate.params['t'] * bk.PI
     yield RX(theta, q0)
 
 
 def translate_ty_to_ry(gate: TY) -> Iterator[RY]:
     """Translate TY gate to RY"""
     q0, = gate.qubits
-    theta = gate.params['t'] * PI
+    theta = gate.params['t'] * bk.PI
     yield RY(theta, q0)
 
 
 def translate_tz_to_rz(gate: TZ) -> Iterator[RZ]:
     """Translate TZ gate to RZ"""
     q0, = gate.qubits
-    theta = gate.params['t'] * PI
+    theta = gate.params['t'] * bk.PI
     yield RZ(theta, q0)
 
 
@@ -410,7 +411,7 @@ def translate_u2_to_zyz(gate: U2) -> Iterator[Union[RZ, RY]]:
     q0, = gate.qubits
     phi, lam = gate.parameters()
     yield RZ(lam, q0)
-    yield RY(PI/2, q0)
+    yield RY(bk.PI/2, q0)
     yield RZ(phi, q0)
 
 
@@ -440,9 +441,9 @@ def translate_barenco_to_xx(gate: Barenco) -> Iterator[Union[XX, TY, TZ]]:
     """Translate a Barenco gate to XX plus local gates"""
     phi, alpha, theta = gate.parameters()
 
-    ct = theta/PI
-    ca = alpha/PI
-    cp = phi/PI
+    ct = theta/bk.PI
+    ca = alpha/bk.PI
+    cp = phi/bk.PI
 
     q0, q1 = gate.qubits
 
@@ -613,7 +614,7 @@ def translate_cypow_to_cxpow(gate: CYPow) -> Iterator[Union[CNotPow, S, S_H]]:
 
 def translate_cphase_to_zz(gate: CPHASE) -> Iterator[Union[ZZ, TZ]]:
     """Convert a CPHASE gate to a ZZ based circuit."""
-    t = - gate.params['theta'] / (2 * PI)
+    t = - gate.params['theta'] / (2 * bk.PI)
     q0, q1 = gate.qubits
     yield ZZ(t, q0, q1)
     yield TZ(-t, q0)
@@ -622,7 +623,7 @@ def translate_cphase_to_zz(gate: CPHASE) -> Iterator[Union[ZZ, TZ]]:
 
 def translate_cphase00_to_zz(gate: CPHASE00) -> Iterator[Union[X, ZZ, TZ]]:
     """Convert a CPHASE00 gate to a ZZ based circuit."""
-    t = - gate.params['theta'] / (2 * PI)
+    t = - gate.params['theta'] / (2 * bk.PI)
     q0, q1 = gate.qubits
     yield X(q0)
     yield X(q1)
@@ -635,7 +636,7 @@ def translate_cphase00_to_zz(gate: CPHASE00) -> Iterator[Union[X, ZZ, TZ]]:
 
 def translate_cphase01_to_zz(gate: CPHASE01) -> Iterator[Union[X, ZZ, TZ]]:
     """Convert a CPHASE01 gate to a ZZ based circuit."""
-    t = - gate.params['theta'] / (2 * PI)
+    t = - gate.params['theta'] / (2 * bk.PI)
     q0, q1 = gate.qubits
     yield X(q0)
     yield ZZ(t, q0, q1)
@@ -646,7 +647,7 @@ def translate_cphase01_to_zz(gate: CPHASE01) -> Iterator[Union[X, ZZ, TZ]]:
 
 def translate_cphase10_to_zz(gate: CPHASE10) -> Iterator[Union[X, ZZ, TZ]]:
     """Convert a CPHASE10 gate to a ZZ based circuit."""
-    t = - gate.params['theta'] / (2 * PI)
+    t = - gate.params['theta'] / (2 * bk.PI)
     q0, q1 = gate.qubits
 
     yield X(q1)
@@ -662,13 +663,13 @@ def translate_cross_resonance_to_xx(gate: CrossResonance) \
     s, b, c = gate.parameters()
     q0, q1 = gate.qubits
 
-    t7 = np.arccos(((1 + b**2 * np.cos(PI * np.sqrt(1 + b**2) * s)))
-                   / (1 + b**2)) / PI
+    t7 = bk.arccos(((1 + b**2 * bk.cos(bk.PI * bk.sqrt(1 + b**2) * s)))
+                   / (1 + b**2)) / bk.PI
     t4 = c * s
-    t1 = np.arccos(np.cos(0.5*PI * np.sqrt(1 + b**2) * s)
-                   / np.cos(t7*PI/2))/PI
+    t1 = bk.arccos(bk.cos(0.5*bk.PI * bk.sqrt(1 + b**2) * s)
+                   / bk.cos(t7*bk.PI/2))/bk.PI
 
-    a = np.sin(PI * np.sqrt(1 + b**2) * s / 2)
+    a = bk.sin(bk.PI * bk.sqrt(1 + b**2) * s / 2)
     t7 *= bk.sign(a) * bk.sign(b)
     t1 *= bk.sign(a)
 
@@ -734,14 +735,14 @@ def translate_czpow_to_zz(gate: CZPow) -> Iterator[Union[ZZ, TZ]]:
 
 def translate_czpow_to_cphase(gate: CZPow) -> Iterator[CPHASE]:
     """Convert a CZPow gate to CPHASE."""
-    theta = gate.params['t'] * PI
+    theta = gate.params['t'] * bk.PI
     yield CPHASE(theta, * gate.qubits)
 
 
 def translate_cphase_to_czpow(gate: CPHASE) -> Iterator[CZPow]:
     """Convert a CPHASE gate to a CZPow."""
     theta, = gate.parameters()
-    t = theta/PI
+    t = theta/bk.PI
     yield CZPow(t, * gate.qubits)
 
 # TODO: cphase to fsim
@@ -849,8 +850,8 @@ def translate_fsim_to_xy_cz(gate: FSim) -> Iterator[Union[XY, CZ]]:
     q0, q1 = gate.qubits
     theta, phi = gate.parameters()
 
-    yield XY(theta / PI, q0, q1)
-    yield CZ(q0, q1) ** (-phi/PI)
+    yield XY(theta / bk.PI, q0, q1)
+    yield CZ(q0, q1) ** (-phi/bk.PI)
 
 
 def translate_fswap(gate: FSwap) -> Iterator[Union[SWAP, CZ]]:
@@ -870,7 +871,7 @@ def translate_givens_to_xy(gate: Givens) -> Iterator[Union[XY, T, T_H]]:
 
     yield T_H(q0)
     yield T(q1)
-    yield XY(theta / PI, q0, q1)
+    yield XY(theta / bk.PI, q0, q1)
     yield T(q0)
     yield T_H(q1)
 
@@ -910,7 +911,7 @@ def translate_pswap_to_canonical(gate: PSWAP) -> Iterator[Union[Can, Y]]:
 
     q0, q1 = gate.qubits
     theta, = gate.parameters()
-    t = 0.5 - theta / PI
+    t = 0.5 - theta / bk.PI
     yield Y(q0)
     yield Can(0.5, 0.5, t, q0, q1)
     yield Y(q1)
@@ -999,7 +1000,7 @@ def translate_swap_to_iswap_cz(gate: SWAP) -> Iterator[Union[ISWAP, CZ, S_H]]:
 
 def translate_sycamore_to_fsim(gate: Sycamore) -> Iterator[FSim]:
     """Convert a Sycamore gate to an FSim gate"""
-    yield FSim(PI/2, PI/6, *gate.qubits)
+    yield FSim(bk.PI/2, bk.PI/6, *gate.qubits)
 
 
 def translate_w_to_ecp(gate: W) -> Iterator[Union[ECP, H, S, S_H, T, T_H]]:
@@ -1500,11 +1501,11 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
     """
     q0, q1, q2 = gate.qubits
     theta, = gate.parameters()
-    yield Barenco(0, PI/4, theta/2,   q1, q2)
-    yield Barenco(0, PI/4, theta/2,   q0, q2)
-    yield Barenco(0, PI/2, PI/2,      q0, q1)
-    yield Barenco(PI, -PI/4, theta/2, q1, q2)
-    yield Barenco(0, PI/2, PI/2,      q0, q1)
+    yield Barenco(0, bk.PI/4, theta/2,   q1, q2)
+    yield Barenco(0, bk.PI/4, theta/2,   q0, q2)
+    yield Barenco(0, bk.PI/2, bk.PI/2,      q0, q1)
+    yield Barenco(bk.PI, -bk.PI/4, theta/2, q1, q2)
+    yield Barenco(0, bk.PI/2, bk.PI/2,      q0, q1)
 
 
 # Multi qubit gates
