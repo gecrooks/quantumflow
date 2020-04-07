@@ -511,7 +511,7 @@ class TensorflowBackend(QFBackend):
             lib=tf,
             name=tf.__name__,
             version=tf.__version__,
-            complex_type=np.complex128,
+            complex_type=tf.complex128,
             float_type=tf.float64,
             tensor_type=tf.Tensor,
             max_ndim=26,
@@ -525,9 +525,13 @@ class TensorflowBackend(QFBackend):
 
     def ccast(self, value: complex) -> TensorLike:
         """Cast to complex tensor"""
+        if self.is_symbolic(value):
+            value = complex(value)
         return self.tf.cast(value, self.complex_type)
 
     def fcast(self, value: float) -> TensorLike:
+        if self.is_symbolic(value):
+            value = float(value)
         return self.tf.cast(value, self.float_type)
 
     def size(self, tensor: BKTensor) -> int:
@@ -620,7 +624,7 @@ class TensorflowBackend(QFBackend):
 # End TensorflowBackend
 
 
-class CtfBackend(QFBackend):
+class CtfBackend(QFBackend):  # pragma: no cover
     """
     QuantumFlow: Experimental backend for Cyclops Tensor Framework
 
@@ -762,7 +766,7 @@ BACKEND = os.getenv(_BACKEND_EV, DEFAULT_BACKEND)
 
 def get_backend(backend_name: str = None) -> QFBackend:
     if backend_name is None:
-        backend_name = DEFAULT_BACKEND
+        backend_name = BACKEND
     if backend_name not in BACKENDS:  # pragma: no cover
         raise ValueError(f'Unknown backend: {backend_name}')
 
@@ -771,7 +775,6 @@ def get_backend(backend_name: str = None) -> QFBackend:
 
 backend = get_backend(BACKEND)
 
-# backend = TensorflowBackend()
 
 if SEED is not None:               # pragma: no cover
     NumpyBackend().seed(SEED)

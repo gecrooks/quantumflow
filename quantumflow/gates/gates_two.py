@@ -31,8 +31,9 @@ from ..paulialgebra import Pauli, sX, sY, sZ
 from .gates_one import IDEN, V, V_H, H, X, Z, Y, S, S_H
 from .gates_utils import control_gate, unitary_from_hamiltonian
 
-from ..backends import get_backend, BKTensor
-bk = get_backend()
+from ..backends import backend as bk
+from ..backends import BKTensor
+
 pi = bk.pi
 PI = bk.PI
 
@@ -625,6 +626,7 @@ class CZPow(Gate):
     @cached_property
     def tensor(self) -> BKTensor:
         t, = self.parameters()
+        t = bk.ccast(t)
         unitary = [[1, 0, 0, 0],
                    [0, 1, 0, 0],
                    [0, 0, 1, 0],

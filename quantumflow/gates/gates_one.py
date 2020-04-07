@@ -746,7 +746,14 @@ class RN(Gate):
                  nz: Variable,
                  q0: Qubit = 0) -> None:
 
-        norm = bk.sqrt(bk.real(nx**2 + ny**2 + nz**2))
+        c = nx**2 + ny**2 + nz**2
+        # FIXME: Bit of a hack
+        if bk.is_symbolic(c):
+            import sympy
+            norm = sympy.sqrt(sympy.re(nx**2 + ny**2 + nz**2))
+        else:
+            norm = np.sqrt(np.real(nx**2 + ny**2 + nz**2))
+
         nx /= norm
         ny /= norm
         nz /= norm
@@ -769,6 +776,7 @@ class RN(Gate):
         nx = bk.ccast(nx)
         ny = bk.ccast(ny)
         nz = bk.ccast(nz)
+
         cost = bk.cos(ctheta / 2)
         sint = bk.sin(ctheta / 2)
         unitary = [[cost - 1j * sint * nz, -1j * sint * nx - sint * ny],

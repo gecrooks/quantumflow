@@ -15,7 +15,7 @@ import tensorflow as tf
 
 os.environ['QUANTUMFLOW_BACKEND'] = 'tensorflow'
 import quantumflow as qf                    # noqa: E402
-import quantumflow.backend as bk            # noqa: E402
+from quantumflow import backend as bk            # noqa: E402
 
 
 class ZYZ(qf.Gate):

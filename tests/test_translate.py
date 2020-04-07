@@ -7,10 +7,7 @@ from quantumflow.translate import translation_source_gate
 from quantumflow.visualization import kwarg_to_symbol
 import pytest
 
-from . import skip_tensorflow
 
-
-@skip_tensorflow
 @pytest.mark.parametrize("trans", qf.TRANSLATORS.values())
 def test_translators(trans):
     gatet = translation_source_gate(trans)
@@ -30,7 +27,6 @@ def test_translators(trans):
 
 
 concrete = {n: np.random.uniform(-4, 4) for n in kwarg_to_symbol.values()}
-@skip_tensorflow
 @pytest.mark.parametrize("trans", qf.TRANSLATORS.values())
 def test_translators_symbolic(trans):
     """Check that translations can handle symbolic arguments"""

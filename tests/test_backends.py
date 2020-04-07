@@ -162,6 +162,10 @@ def test_cast(bk):
     c = bk.numpy(bk.ccast(1.0j))
     assert c - 1.0j == ALMOST_ZERO
 
+    c = bk.numpy(bk.ccast(bk.PI))
+    f = bk.numpy(bk.fcast(bk.PI))
+    assert f - c == ALMOST_ZERO
+
 
 @pytest.mark.parametrize('bk', backends)
 def test_math(bk):
@@ -291,5 +295,12 @@ def test_tensormul(bk):
     t1 = bk.astensorproduct(a0)
 
     bk.tensormul(t0, t1, [0, 1])
+
+
+@pytest.mark.parametrize('bk', backends)
+def test_name(bk):
+    print(bk.name)
+    print(bk.BACKEND)
+
 
 # fin

@@ -277,41 +277,31 @@ def test_gates_unitary():
             assert qf.almost_unitary(gate)
 
 
-def test_gate_hamiltonians():
-    total_tested = 0
+@pytest.mark.parametrize("gatet", qf.STD_GATESET)
+def test_gate_hamiltonians(gatet):
 
     param_values = {name: np.random.uniform(-4, 4) for name in kwarg_to_symbol}
-    print(param_values)
     qubits = [5, 3, 4, 2, 8]
-    for gatet in qf.STD_GATESET:
-        if not hasattr(gatet, 'hamiltonian'):
-            continue
 
-        args = [param_values[a] for a in gatet.args()]
-        gate0 = gatet(*args)
-        gate0 = gate0.on(*qubits[:gate0.qubit_nb])
+    args = [param_values[a] for a in gatet.args()]
+    gate0 = gatet(*args)
+    gate0 = gate0.on(*qubits[:gate0.qubit_nb])
 
-        print(gate0)
+    print(gate0)
 
-        qbs = gate0.qubits
-        ham = gate0.hamiltonian
-        gate1 = qf.unitary_from_hamiltonian(ham, *qbs)
+    qbs = gate0.qubits
+    ham = gate0.hamiltonian
+    gate1 = qf.unitary_from_hamiltonian(ham, *qbs)
 
-        assert qf.gates_close(gate0, gate1)
+    assert qf.gates_close(gate0, gate1)
 
-        # Check that gates that gates have same phase
-        # FIXME!
-        # Currently Gate.hamiltonian is broken here, so only check
-        # subclasses that override hamiltonian
-        if gatet.hamiltonian is not qf.Gate.hamiltonian:
-            print('Checking gates phase close...')
-            assert qf.gates_phase_close(gate0, gate1)
-
-        total_tested += 1
-
-    print()
-    print("Total Hamiltonians tested: {}/{}".format(total_tested,
-                                                    len(qf.STD_GATESET)))
+    # Check that gates that gates have same phase
+    # FIXME!
+    # Currently Gate.hamiltonian is broken here, so only check
+    # subclasses that override hamiltonian
+    if gatet.hamiltonian is not qf.Gate.hamiltonian:
+        print('Checking gates phase close...')
+        assert qf.gates_phase_close(gate0, gate1)
 
 
 def test_tz_specialize():
