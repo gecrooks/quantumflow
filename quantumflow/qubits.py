@@ -28,8 +28,14 @@ from typing import Hashable, Sequence, Union, Tuple, List
 import numpy as np
 
 from .config import TOLERANCE
-from . import backend as bk
-from .backend.numpybk import EINSUM_SUBSCRIPTS
+
+from .backends import backend as bk
+from .backends import BKTensor, TensorLike
+
+# FIXME
+EINSUM_SUBSCRIPTS = bk.einsum_subscripts
+pi = bk.pi
+PI = bk.PI
 
 __all__ = ['Qubit', 'Qubits', 'asarray', 'QubitVector',
            'inner_product', 'outer_product', 'fubini_study_angle',
@@ -45,7 +51,8 @@ Qubits = Sequence[Qubit]
 
 
 # TODO: DOCME
-def asarray(tensor: bk.BKTensor) -> bk.TensorLike:
+# FIXME, not needed
+def asarray(tensor: BKTensor) -> TensorLike:
     """Convert QuantumFlow backend tensor to numpy array"""
     return bk.evaluate(tensor)
 
@@ -110,7 +117,7 @@ class QubitVector:
     """
 
     def __init__(self,
-                 tensor: bk.TensorLike,
+                 tensor: TensorLike,
                  qubits: Qubits,
                  rank: int = None
                  ) -> None:
@@ -136,15 +143,11 @@ class QubitVector:
         # different uses of rank from tensor?
         self.rank = rank
 
-    # # FIXME: Does not respect qubits
-    # def __getitem__(self, key: Any) -> bk.BKTensor:
-    #     return bk.getitem(self.tensor, key)
-
     def asarray(self) -> np.ndarray:
         """Return the tensor as a numpy array"""
         return bk.evaluate(self.tensor)
 
-    def flatten(self) -> bk.BKTensor:
+    def flatten(self) -> BKTensor:
         """Return tensor with with qubit indices flattened"""
         N = self.qubit_nb
         R = self.rank
@@ -202,12 +205,12 @@ class QubitVector:
 
         return QubitVector(tensor, self.qubits)
 
-    def norm(self) -> bk.BKTensor:
+    def norm(self) -> BKTensor:
         """Return the norm of this vector"""
         return bk.absolute(bk.inner(self.tensor, self.tensor))
 
     # TESTME
-    def trace(self) -> bk.BKTensor:
+    def trace(self) -> BKTensor:
         """
         Return the trace, the sum of the diagonal elements of the (super)
         operator.
@@ -307,7 +310,7 @@ class QubitVector:
 # End QubitVector
 
 
-def inner_product(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
+def inner_product(vec0: QubitVector, vec1: QubitVector) -> BKTensor:
     """ Hilbert-Schmidt inner product between qubit vectors
 
     The tensor rank and qubits must match.
@@ -356,7 +359,7 @@ def outer_product(vec0: QubitVector, vec1: QubitVector) -> QubitVector:
 
 # TODO: move to measures.py ?
 # TESTME
-def fubini_study_angle(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
+def fubini_study_angle(vec0: QubitVector, vec1: QubitVector) -> BKTensor:
     """Calculate the Fubini–Study metric between elements of a Hilbert space.
 
     The Fubini–Study metric is a distance measure between vectors in a
@@ -372,7 +375,7 @@ def fubini_study_angle(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
     return bk.arccos(fs_fidelity)
 
 
-def fubini_study_fidelity(vec0: QubitVector, vec1: QubitVector) -> bk.BKTensor:
+def fubini_study_fidelity(vec0: QubitVector, vec1: QubitVector) -> BKTensor:
     """
     Cosine of the Fubini–Study metric.
     """

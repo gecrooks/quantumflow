@@ -10,9 +10,6 @@ QuantumFlow: Gates specific to QASM
 """
 
 
-from numpy import pi
-
-from .. import backend as bk
 from ..ops import Gate
 from ..qubits import Qubit
 
@@ -26,6 +23,10 @@ from .gates_one import RZ, PhaseShift
 from .gates_two import CNOT
 from .gates_forest import CPHASE
 
+from ..backends import get_backend, BKTensor
+bk = get_backend()
+pi = bk.pi
+PI = bk.PI
 
 __all__ = ('U3', 'U2', 'CU3', 'CRZ', 'RZZ')
 
@@ -72,7 +73,7 @@ class U3(Gate):
                          qubits=[q0])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, phi, lam = self.parameters()
 
         ctheta = bk.ccast(theta)
@@ -106,7 +107,7 @@ class U2(Gate):
                          qubits=[q0])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         phi, lam = self.parameters()
         return U3(pi/2, phi, lam).tensor
 
@@ -136,7 +137,7 @@ class CU3(Gate):
                          qubits=[q0, q1])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         q0, q1 = self.qubits
         theta, phi, lam = self.parameters()
         # Note: Gate is defined via this circuit in QASM
@@ -180,7 +181,7 @@ class CRZ(Gate):
         return RZ(theta, q1).hamiltonian * (1-sZ(q0))/2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         q0, q1 = self.qubits
         gate = RZ(theta, q1)
@@ -211,7 +212,7 @@ class RZZ(Gate):
         super().__init__(params=dict(theta=theta), qubits=[q0, q1])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         q0, q1 = self.qubits
         from ..circuits import Circuit

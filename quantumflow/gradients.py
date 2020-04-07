@@ -26,7 +26,7 @@ QuantumFlow: Gradients of parameterized gates, and gradient descent optimizers
 from typing import Tuple, Sequence, Callable
 
 from .circuits import Circuit
-from . import backend as bk
+# from . import backend as bk
 from .measures import state_fidelity
 from .qubits import asarray
 from .states import State
@@ -37,6 +37,8 @@ import numpy as np
 from numpy import pi
 
 from .gates import RX, RY, RZ, TX, TY, TZ, XX, YY, ZZ, X, Y, Z
+
+from .backends import backend as bk
 
 __all__ = ('GRADIENT_GATESET',
            'expectation_gradients',

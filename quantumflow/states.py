@@ -39,11 +39,16 @@ from collections import ChainMap
 
 import numpy as np
 
-from . import backend as bk
 from .qubits import Qubits, QubitVector, qubits_count_tuple
 from .qubits import outer_product
 from .utils import complex_ginibre_ensemble, unitary_ensemble
 from .utils import FrozenDict
+
+from .backends import backend as bk
+from .backends import BKTensor, TensorLike
+
+pi = bk.pi
+PI = bk.PI
 
 __all__ = ['State', 'ghz_state',
            'join_states', 'print_probabilities', 'print_state',
@@ -60,7 +65,7 @@ class State:
     """
 
     def __init__(self,
-                 tensor: bk.TensorLike,
+                 tensor: TensorLike,
                  qubits: Qubits = None,
                  memory: Mapping = None) -> None:
         """Create a new State from a tensor of qubit amplitudes
@@ -86,7 +91,7 @@ class State:
             self.memory = FrozenDict(memory)
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         """Returns the tensor representation of state vector"""
         return self.vec.tensor
 
@@ -104,7 +109,7 @@ class State:
         """Convert qubits to index positions."""
         return [self.qubits.index(q) for q in qubits]
 
-    def norm(self) -> bk.BKTensor:
+    def norm(self) -> BKTensor:
         """Return the state vector norm"""
         return self.vec.norm()
 
@@ -132,7 +137,7 @@ class State:
         tensor = self.tensor / bk.ccast(bk.sqrt(self.norm()))
         return State(tensor, self.qubits, self.memory)
 
-    def probabilities(self) -> bk.BKTensor:
+    def probabilities(self) -> BKTensor:
         """
         Returns:
             The state probabilities
@@ -150,8 +155,8 @@ class State:
         res = res.reshape(probs.shape)
         return res
 
-    def expectation(self, diag_hermitian: bk.TensorLike,
-                    trials: int = None) -> bk.BKTensor:
+    def expectation(self, diag_hermitian: TensorLike,
+                    trials: int = None) -> BKTensor:
         """Return the expectation of a measurement. Since we can only measure
         our computer in the computational basis, we only require the diagonal
         of the Hermitian in that basis.
@@ -293,7 +298,7 @@ def print_probabilities(state: State, ndigits: int = 4,
 class Density(State):
     """A density matrix representation of a mixed quantum state"""
     def __init__(self,
-                 tensor: bk.TensorLike,
+                 tensor: TensorLike,
                  qubits: Qubits = None,
                  memory: Mapping = None) -> None:
         if qubits is None:
@@ -303,7 +308,7 @@ class Density(State):
 
         super().__init__(tensor, qubits, memory)
 
-    def trace(self) -> bk.BKTensor:
+    def trace(self) -> BKTensor:
         """Return the trace of this density operator"""
         return self.vec.trace()
 
@@ -324,12 +329,12 @@ class Density(State):
         return Density(tensor, self.qubits, self.memory)
 
     # TESTME
-    def probabilities(self) -> bk.BKTensor:
+    def probabilities(self) -> BKTensor:
         """Returns: The state probabilities """
         prob = bk.productdiag(self.tensor)
         return prob
 
-    def asoperator(self) -> bk.BKTensor:
+    def asoperator(self) -> BKTensor:
         """Return the density matrix as a square array"""
         return self.vec.flatten()
 

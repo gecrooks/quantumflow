@@ -16,7 +16,8 @@ import cvxpy as cvx
 import sympy
 
 import quantumflow as qf
-import quantumflow.backend as bk
+
+from .backends import backend as bk
 
 
 def print_versions(file: typing.TextIO = None) -> None:

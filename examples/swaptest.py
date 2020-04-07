@@ -10,7 +10,7 @@ QauntumFlow Examples
 """
 
 import quantumflow as qf
-import quantumflow.backend as bk
+from quantumflow import backend as bk
 
 
 def swap_test(ket, q0: qf.Qubit, q1: qf.Qubit, q2: qf.Qubit) -> bk.BKTensor:

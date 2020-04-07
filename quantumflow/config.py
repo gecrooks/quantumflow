@@ -23,6 +23,7 @@ except ImportError:                           # pragma: no cover
 
 versioninfo = tuple(int(c) if c.isdigit() else c for c in version.split('.'))
 
+# FIXME: atol? Make same as numpy
 # ==== TOLERANCE ====
 TOLERANCE = 1e-6
 """Tolerance used in various floating point comparisons"""

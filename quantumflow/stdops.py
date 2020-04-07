@@ -51,9 +51,11 @@ from .ops import Operation, Gate, Channel, Unitary
 from .gates import P0, P1
 from .gates import SWAP, I, IDEN
 from .circuits import Circuit
-from . import backend as bk
 from .utils import BOX_CHARS, BOX_LEFT, BOX_TOP, BOX_BOT
 from .utils import cached_property
+
+from .backends import get_backend, BKTensor
+bk = get_backend()
 
 __all__ = ['dagger', 'Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
            'Store',
@@ -226,7 +228,7 @@ class Initialize(Operation):
         self._qubits = ket.qubits
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return self._ket.tensor
 
     def run(self, ket: State) -> State:
@@ -361,7 +363,7 @@ class PermuteQubits(Gate):
         return Density(tensor, qubits, rho.memory)
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         N = self.qubit_nb
         qubits = self.qubits
 

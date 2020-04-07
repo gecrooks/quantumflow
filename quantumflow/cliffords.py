@@ -12,7 +12,7 @@ QuantumFlow: Clifford gates
 import numpy as np
 from numpy import sqrt, pi
 
-from . import backend as bk
+# from . import backend as bk
 from .qubits import Qubit
 from .ops import Gate
 from .gates import S, S_H, V, X, Z, I
@@ -24,11 +24,13 @@ from .measures import gates_close
 # from .transform import find_pattern
 # from .dagcircuit import DAGCircuit
 
+# from .backends import backend as bk
+from .backends import BKTensor
 
 _clifford_gates = (
     I(),
 
-    RN(0.5 * pi, 1, 0, 0),
+    RN(0.5 * pi, 1., 0., 0.),
     RN(0.5 * pi, 0, 1, 0),
     RN(0.5 * pi, 0, 0, 1),
     RN(pi, 1, 0, 0),
@@ -127,7 +129,7 @@ class Clifford(Gate):
         return cls(index, *gate.qubits)
 
     @property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return _clifford_gates[self.index].tensor
 
     def __matmul__(self, other: 'Gate') -> 'Gate':  # noqa: F811

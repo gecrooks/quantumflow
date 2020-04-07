@@ -12,7 +12,6 @@ QuantumFlow: Gates peculiar to Cirq
 import numpy as np
 from typing import Iterator, Union
 
-from .. import backend as bk
 from ..config import SWAP_TARGET
 from ..ops import Gate
 from ..qubits import Qubit
@@ -21,6 +20,11 @@ from ..variables import Variable
 from .gates_one import TX, TZ, X, I
 from .gates_two import SWAP, CZ, EXCH, CZPow
 from ..paulialgebra import Pauli
+
+from ..backends import backend as bk
+from ..backends import BKTensor
+pi = bk.pi
+PI = bk.PI
 
 __all__ = ('PhasedX', 'PhasedXPow', 'FSim', 'FSwap', 'FSwapPow', 'Sycamore')
 
@@ -39,7 +43,7 @@ class PhasedX(Gate):
         super().__init__(params=dict(p=p), qubits=[q0])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         p = self.params['p']
         gate = TZ(p) @ X() @ TZ(-p)
         return gate.tensor
@@ -76,7 +80,7 @@ class PhasedXPow(Gate):
         super().__init__(params=dict(p=p, t=t), qubits=[q0])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         p, t = self.params.values()
         gate = TZ(p) @ TX(t) @ TZ(-p)
         return gate.tensor
@@ -133,7 +137,7 @@ class FSim(Gate):
         super().__init__(params=dict(theta=theta, phi=phi), qubits=[q0, q1])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, phi = list(self.params.values())
         theta = bk.ccast(theta)
         phi = bk.ccast(phi)
@@ -184,7 +188,7 @@ class FSwap(Gate):
         return SWAP(q0, q1).hamiltonian + CZ(q0, q1).hamiltonian
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return FSwapPow(1).tensor
 
     @property
@@ -221,7 +225,7 @@ class FSwapPow(Gate):
         return t * FSwap(q0, q1).hamiltonian
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         t, = self.parameters()
         t = bk.ccast(t)
         c = bk.cos(np.pi*t/2)
@@ -277,7 +281,7 @@ class Sycamore(Gate):
         super().__init__(qubits=[q0, q1])
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return FSim(np.pi/2, np.pi/6).tensor
 
     @property

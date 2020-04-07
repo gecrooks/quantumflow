@@ -13,21 +13,18 @@ from math import sqrt
 from typing import Dict, List, Type, Iterator
 import numpy as np
 
-# from numpy import pi as PI
-# # from sympy import pi as PI
-
-from ..backend import pi, PI
-
-
 from ..config import CONJ, SQRT
-from .. import backend as bk
-# from ..variables import variable_is_symbolic
 from ..qubits import Qubit
 from ..states import State, Density
 from ..ops import Gate
 from ..utils import multi_slice, cached_property
 from ..variables import Variable
 from ..paulialgebra import Pauli, sX, sY, sZ, sI
+
+from ..backends import backend as bk
+from ..backends import BKTensor
+pi = bk.pi
+PI = bk.PI
 
 __all__ = (
     'IDEN', 'I', 'Ph',
@@ -83,7 +80,7 @@ class I(Gate):                                      # noqa: E742
         return Pauli.zero()
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return bk.astensorproduct(np.eye(2))
 
     @property
@@ -120,7 +117,7 @@ class IDEN(Gate):
         return Pauli.zero()
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
 
     @property
@@ -178,7 +175,7 @@ class Ph(Gate):
         return - phi * sI(q0)
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         phi, = self.parameters()
         cphi = bk.ccast(phi)
         unitary = [[bk.exp(1j*cphi), 0.0],
@@ -221,7 +218,7 @@ class X(Gate):
         return - (PI/2) * (1 - sX(q0))
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = [[0, 1], [1, 0]]
         return bk.astensorproduct(unitary)
 
@@ -240,9 +237,9 @@ class X(Gate):
             take = multi_slice(axes=[idx], items=[[1, 0]])
             tensor = ket.tensor[take]
             return State(tensor, ket.qubits, ket.memory)
-        elif bk.BACKEND != 'ctf':                            # pragma: no cover
-            tensor = bk.roll(ket.tensor, axis=idx, shift=1)
-            return State(tensor, ket.qubits, ket.memory)
+        # elif bk.BACKEND != 'ctf':                       # pragma: no cover
+        #     tensor = bk.roll(ket.tensor, axis=idx, shift=1)
+        #     return State(tensor, ket.qubits, ket.memory)
         return super().run(ket)                              # pragma: no cover
 
     # TODO: Optimized evolve method
@@ -268,7 +265,7 @@ class Y(Gate):
         return - (PI/2) * (1 - sY(q0))
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = np.asarray([[0, -1.0j], [1.0j, 0]])
         return bk.astensorproduct(unitary)
 
@@ -307,7 +304,7 @@ class Z(Gate):
         return - (PI/2) * (1 - sZ(q0))
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = np.asarray([[1, 0], [0, -1.0]])
         return bk.astensorproduct(unitary)
 
@@ -341,7 +338,7 @@ class H(Gate):
         return (PI/2) * ((sX(q0) + sZ(q0)) / sqrt(2) - 1)
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = np.asarray([[1, 1], [1, -1]]) / sqrt(2)
         return bk.astensorproduct(unitary)
 
@@ -394,7 +391,7 @@ class S(Gate):
         return (PI/2) * (sZ(q0)-1) / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, 1.0j]])
         return bk.astensorproduct(unitary)
 
@@ -430,7 +427,7 @@ class T(Gate):
         return (PI/2) * (sZ(q0)-1) / 4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.exp(1j*pi / 4.0))]]
         return bk.astensorproduct(unitary)
 
@@ -468,7 +465,7 @@ class PhaseShift(Gate):
         return theta * (sZ(q0)-1)/2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[1.0, 0.0], [0.0, bk.exp(1j*ctheta)]]
@@ -522,7 +519,7 @@ class RX(Gate):
         return theta * sX(q0) / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[bk.cos(ctheta / 2), -1.0j * bk.sin(ctheta / 2)],
@@ -571,7 +568,7 @@ class RY(Gate):
         return theta * sY(q0) / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[bk.cos(ctheta / 2.0), -bk.sin(ctheta / 2.0)],
@@ -622,7 +619,7 @@ class RZ(Gate):
         return theta * sZ(q0) / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, = self.parameters()
         ctheta = bk.ccast(theta)
         unitary = [[bk.exp(-ctheta * 0.5j), 0],
@@ -675,7 +672,7 @@ class S_H(Gate):
         return -PI*(sZ(q0)-1) / 4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, -1.0j]])
         return bk.astensorproduct(unitary)
 
@@ -712,7 +709,7 @@ class T_H(Gate):
         return - PI * (sZ(q0)-1) / 8
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         unitary = [[1.0, 0.0], [0.0, bk.ccast(bk.exp(-1j*pi / 4.0))]]
         return bk.astensorproduct(unitary)
 
@@ -749,7 +746,7 @@ class RN(Gate):
                  nz: Variable,
                  q0: Qubit = 0) -> None:
 
-        norm = np.sqrt(np.real(nx**2 + ny**2 + nz**2))
+        norm = bk.sqrt(bk.real(nx**2 + ny**2 + nz**2))
         nx /= norm
         ny /= norm
         nz /= norm
@@ -765,10 +762,13 @@ class RN(Gate):
         return theta*(nx*sX(q0) + ny*sY(q0) + nz*sZ(q0))/2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         theta, nx, ny, nz = self.parameters()
 
         ctheta = bk.ccast(theta)
+        nx = bk.ccast(nx)
+        ny = bk.ccast(ny)
+        nz = bk.ccast(nz)
         cost = bk.cos(ctheta / 2)
         sint = bk.sin(ctheta / 2)
         unitary = [[cost - 1j * sint * nz, -1j * sint * nx - sint * ny],
@@ -810,7 +810,7 @@ class TX(Gate):
         return t * (sX(q0) - 1) * PI / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         t, = self.parameters()
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
@@ -858,7 +858,7 @@ class TY(Gate):
         return t * (sY(q0) - 1) * pi / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         t, = self.parameters()
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
@@ -905,7 +905,7 @@ class TZ(Gate):
         return t * (sZ(q0) - 1) * pi / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         t, = self.parameters()
         ctheta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * ctheta)
@@ -966,7 +966,7 @@ class TH(Gate):
         return t * ((sX(q0) + sZ(q0)) / sqrt(2) - 1) * pi / 2
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         t, = self.parameters()
         theta = bk.ccast(pi * t)
         phase = bk.exp(0.5j * theta)
@@ -1007,7 +1007,7 @@ class V(Gate):
         return (sX(q0) - 1) * pi / 4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return TX(0.5).tensor
 
     @property
@@ -1034,7 +1034,7 @@ class V_H(Gate):
         return -(sX(q0) - 1) * pi / 4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return TX(-0.5).tensor
 
     @property
@@ -1062,7 +1062,7 @@ class SqrtY(Gate):
         return (sY(q0) - 1) * pi / 4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return TY(0.5).tensor
 
     @property
@@ -1097,7 +1097,7 @@ class SqrtY_H(Gate):
         return -(sY(q0) - 1) * pi / 4
 
     @cached_property
-    def tensor(self) -> bk.BKTensor:
+    def tensor(self) -> BKTensor:
         return TY(-0.5).tensor
 
     @property

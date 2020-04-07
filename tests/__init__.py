@@ -12,7 +12,7 @@ import pytest
 import shutil
 
 from quantumflow.config import TOLERANCE
-import quantumflow.backend as bk
+from quantumflow.backends import backend as bk
 
 ALMOST_ZERO = pytest.approx(0.0, abs=TOLERANCE)
 ALMOST_ONE = pytest.approx(1.0)

@@ -29,7 +29,6 @@ from typing import Iterable, cast, List, Type
 
 import numpy as np
 
-from . import backend as bk
 from .qubits import Qubit, Qubits, asarray
 from .ops import Operation, Unitary, Gate
 from .states import State, zero_state
@@ -39,7 +38,12 @@ from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ,
                     CCNOT, CSWAP, CCZ, FSim, IDEN)
 from .translate import select_translators, circuit_translate
 
+from .backends import backend as bk
+
 import cirq
+
+pi = bk.pi
+PI = bk.PI
 
 
 __all__ = ('from_cirq_qubit', 'to_cirq_qubit',
