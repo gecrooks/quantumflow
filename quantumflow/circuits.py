@@ -43,7 +43,7 @@ Visualizations
 """
 
 from typing import Sequence, Iterator, Iterable, Dict, Type, Any, Union
-from typing import List, overload
+from typing import List, Optional, overload
 from math import pi
 from itertools import chain
 from collections import defaultdict
@@ -253,10 +253,13 @@ class Circuit(MutableSequence, Operation):
     def specialize(self) -> 'Circuit':
         return Circuit([elem.specialize() for elem in self])
 
-    def _repr_png_(self) -> bytes:
+    def _repr_png_(self) -> Optional[bytes]:  # pragma: no cover
         """Jupyter/IPython rich display"""
         from .visualization import circuit_to_image
-        return circuit_to_image(self)._repr_png_()
+        try:
+            return circuit_to_image(self)._repr_png_()
+        except (ValueError, IOError):
+            return None
 
 # End class Circuit
 

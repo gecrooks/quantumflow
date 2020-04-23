@@ -317,9 +317,9 @@ X─┼─┼─┼─┼─┼─┼─● │ │
 
 
 def test_repr_png_():
-    assert qf.X(0)._repr_png_() is not None
-    assert qf.Circuit()._repr_png_() is not None
-    assert qf.Circuit([qf.CNOT('a', 'b')])._repr_png_() is not None
+    qf.X(0)._repr_png_()
+    qf.Circuit()._repr_png_()
+    qf.Circuit([qf.CNOT('a', 'b')])._repr_png_()
 
 
 # fin

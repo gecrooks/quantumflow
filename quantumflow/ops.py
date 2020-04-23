@@ -192,7 +192,7 @@ class Operation(ABC):
         """
         return self
 
-    def _repr_png_(self) -> bytes:
+    def _repr_png_(self) -> Optional[bytes]:
         """Jupyter/IPython rich display"""
         from .circuits import Circuit
         return Circuit(self)._repr_png_()
