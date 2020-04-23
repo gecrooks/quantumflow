@@ -450,6 +450,10 @@ def circuit_to_diagram(
         for i in range(i0+2, i1, 2):
             code[i] = (BOX_CHARS[LEFT+RIGHT]*left_pad)+BOX_CHARS[CROSS]
 
+    if len(circ) == 0:
+        # Empty circuit
+        circ = Circuit(NoWire(0))
+
     if qubits is None:
         qubits = circ.qubits
     N = len(qubits)

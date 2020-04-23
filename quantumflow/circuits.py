@@ -261,6 +261,12 @@ class Circuit(MutableSequence, Operation):
         except (ValueError, IOError):
             return None
 
+    def _repr_html_(self) -> Optional[str]:  # pragma: no cover
+        """Jupyter/IPython rich display"""
+        from .visualization import circuit_to_diagram
+        diag = circuit_to_diagram(self)
+        return '<pre style="line-height: 90%">'+diag+'</pre>'
+
 # End class Circuit
 
 
