@@ -82,7 +82,9 @@ def circuit_to_latex(
         qubits: Qubits = None,
         document: bool = True,
         package: str = 'quantikz',
-        options: str = None) -> str:
+        options: str = None,
+        scale: float = 0.75,
+        qubit_labels: bool = True) -> str:
     """
     Create an image of a quantum circuit in LaTeX.
 
@@ -135,6 +137,10 @@ def circuit_to_latex(
         'SqrtISwap_H': [r'\sqrt{{\text{{iSwap}}}}^\dagger'],
         }
 
+    if len(circ) == 0:
+        # Empty circuit
+        circ = Circuit(NoWire(0))
+
     if qubits is None:
         qubits = circ.qubits
     N = len(qubits)
@@ -142,6 +148,10 @@ def circuit_to_latex(
     layers = _display_layers(circ, qubits)
 
     layer_code = []
+
+    if qubit_labels:
+        code = [r'\lstick{%s}' % q for q in qubits]
+        layer_code.append(code)
 
     for layer in layers:
         code = [r'\qw'] * N
@@ -285,11 +295,12 @@ def circuit_to_latex(
 
     else:  # quantikz
         if options is None:
-            options = 'thin lines'
+            options = _QUANTIKZ_OPTIONS
         latex_code = _QUANTIKZ % (options, '\n'.join(latex_lines))
+        latex_code = (r'\adjustbox{scale=%s}{' % scale) + latex_code + '}'
+
         if document:
             latex_code = _QUANTIKZ_HEADER + latex_code + QUANTIKZ_FOOTER_
-
     return latex_code
 
 
@@ -297,6 +308,7 @@ _QCIRCUIT_HEADER = r"""
 \documentclass[border={20pt 4pt 20pt 4pt}]{standalone}
 \usepackage[braket, qm]{qcircuit}
 \usepackage{amsmath}
+\usepackage{adjustbox}
 \begin{document}
 """
 
@@ -313,6 +325,7 @@ _QUANTIKZ_HEADER = r"""
 \usepackage{amsmath}
 \usepackage{tikz}
 \usetikzlibrary{quantikz}
+\usepackage{adjustbox}
 \begin{document}
 """
 
@@ -320,6 +333,9 @@ _QUANTIKZ = r"""\begin{quantikz}[%s]
 %s
 \end{quantikz}
 """
+
+_QUANTIKZ_OPTIONS = ("thin lines, column sep=0.75em,"
+                     "row sep={2.5em,between origins}")
 
 QUANTIKZ_FOOTER_ = r"""
 \end{document}

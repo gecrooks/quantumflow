@@ -315,4 +315,11 @@ X─┼─┼─┼─┼─┼─┼─● │ │
     print(text)
     assert text == transposed
 
+
+def test_repr_png_():
+    assert qf.X(0)._repr_png_() is not None
+    assert qf.Circuit()._repr_png_() is not None
+    assert qf.Circuit([qf.CNOT('a', 'b')])._repr_png_() is not None
+
+
 # fin

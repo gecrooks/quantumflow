@@ -253,6 +253,11 @@ class Circuit(MutableSequence, Operation):
     def specialize(self) -> 'Circuit':
         return Circuit([elem.specialize() for elem in self])
 
+    def _repr_png_(self) -> bytes:
+        """Jupyter/IPython rich display"""
+        from .visualization import circuit_to_image
+        return circuit_to_image(self)._repr_png_()
+
 # End class Circuit
 
 
