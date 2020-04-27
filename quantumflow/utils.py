@@ -89,9 +89,6 @@ class FrozenDict(Mapping[KT, VT]):
     An immutable frozen dictionary.
 
     The FrozenDict is hashable if all the keys and values are hashable.
-
-    The copy() method takes additional arguments with which to update the
-    dictionary before returning a new FrozenDict.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -105,9 +102,13 @@ class FrozenDict(Mapping[KT, VT]):
         return key in self._dict
 
     def copy(self, *args: Any, **kwargs: Any) -> 'FrozenDict':
+        return self.update()
+
+    def update(self, *args: Any, **kwargs: Any) -> 'FrozenDict':
+        """Update mappings, and return a new FrizenDict"""
         d = self._dict.copy()
         d.update(*args, **kwargs)
-        return self.__class__(d)
+        return type(self)(d)  # TODO: type(self)(d)??
 
     def __iter__(self) -> Iterator[KT]:
         yield from self._dict

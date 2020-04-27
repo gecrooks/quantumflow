@@ -81,7 +81,7 @@ from sympy import Symbol as Parameter
 
 from ..ops import Operation
 from ..qubits import Qubits
-from ..states import zero_state, State, Density
+from ..states import zero_state, State, Density, QuantumStateType
 from ..gates import NAMED_GATES
 from .cbits import Addr, Register
 
@@ -148,7 +148,7 @@ class Instruction(Operation):
     def evolve(self, rho: Density) -> Density:
         # For purely classical Instructions the action of run() and evolve()
         # are the same
-        res = self.run(rho)
+        res = self.run(rho)  # type: ignore
         assert isinstance(res, Density)
         return res
 
@@ -196,7 +196,7 @@ class Program(Instruction):
         for inst in self.instructions:
             yield inst
 
-    def _initilize(self, state: State) -> State:
+    def _initilize(self, state: QuantumStateType) -> QuantumStateType:
         """Initialize program state. Called by program.run() and .evolve()"""
 
         targets = {}
@@ -602,7 +602,7 @@ class BinaryOP(Operation, metaclass=ABCMeta):
         return ket
 
     def evolve(self, rho: Density) -> Density:
-        res = self.run(rho)
+        res = self.run(rho)              # type: ignore
         assert isinstance(res, Density)  # Make type checker happy
         return res
 

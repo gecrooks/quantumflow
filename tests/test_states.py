@@ -62,7 +62,7 @@ def test_state_labels():
     ket = qf.X(1).run(ket)
     assert ket.vec.asarray()[0, 0, 1, 1] == ALMOST_ONE
 
-    ket = ket.relabel([0, 1, 3, 4])
+    ket = ket.on(0, 1, 3, 4)
     assert ket.vec.asarray()[0, 0, 1, 1] == ALMOST_ONE
 
     ket = ket.permute([4, 3, 0, 1])

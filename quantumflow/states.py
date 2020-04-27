@@ -33,13 +33,14 @@ Actions on states
 """
 
 from math import sqrt
-from typing import Union, TextIO, Any, Mapping, List
+from typing import Union, TextIO, Any, Mapping, List, TypeVar
 from functools import reduce
 from collections import ChainMap
+from abc import ABC
 
 import numpy as np
 
-from .qubits import Qubits, QubitVector, qubits_count_tuple
+from .qubits import Qubit, Qubits, QubitVector, qubits_count_tuple
 from .qubits import outer_product
 from .utils import complex_ginibre_ensemble, unitary_ensemble
 from .utils import FrozenDict
@@ -56,19 +57,17 @@ __all__ = ['State', 'ghz_state',
            'Density', 'mixed_density', 'random_density', 'join_densities']
 
 
-class State:
-    """The quantum state of a collection of qubits.
+QuantumStateType = TypeVar('QuantumStateType', bound='QuantumState')
+"""TypeVar for quantum states"""
 
-    Note that memory usage grows exponentially with the number of qubits.
-    (16*2^N bytes for N qubits)
 
-    """
-
+class QuantumState(ABC):
     def __init__(self,
                  tensor: TensorLike,
-                 qubits: Qubits = None,
+                 qubits: Qubits,
                  memory: Mapping = None) -> None:
-        """Create a new State from a tensor of qubit amplitudes
+        """
+        Abstract base class for representations of a quantum state.
 
         Args:
             tensor: A vector or tensor of state amplitudes
@@ -76,11 +75,6 @@ class State:
                 (Defaults to integer indices, e.g. [0, 1, 2] for 3 qubits)
             memory: Classical data storage. Stored as an immutable dictionary.
         """
-        if qubits is None:
-            tensor = bk.astensorproduct(tensor)
-            bits = bk.ndim(tensor)
-            qubits = range(bits)
-
         self.vec = QubitVector(tensor, qubits)
 
         if memory is None:
@@ -105,32 +99,82 @@ class State:
         """Return the total number of qubits"""
         return self.vec.qubit_nb
 
+    def replace(self: QuantumStateType, *,
+                tensor: TensorLike = None,
+                qubits: Qubits = None,
+                memory: Mapping = None) -> QuantumStateType:
+        """
+        Creates a copy of this state, replacing the fields specified.
+        """
+        # Interface similar to dataclasses.replace
+        tensor = self.tensor if tensor is None else tensor
+        qubits = self.qubits if qubits is None else qubits
+        memory = self.memory if memory is None else memory
+        return type(self)(tensor, qubits, memory)
+
+    def store(self: QuantumStateType, *args: Any, **kwargs: Any) \
+            -> QuantumStateType:
+        """Update information in classical memory and return a new State."""
+        mem = self.memory.update(*args, **kwargs)
+        return self.replace(memory=mem)
+
+    # TESTME
+    def on(self: QuantumStateType, *qubits: Qubit) -> QuantumStateType:
+        """Return a copy of this State with new qubits"""
+        return self.replace(qubits=qubits)
+
+    # FIXME: Should have same signature as Operation.relabel
+    def relabel(self: QuantumStateType, qubits: Qubits) -> QuantumStateType:
+        """Return a copy of this state with new qubits"""
+        return self.replace(qubits=qubits)
+
+    def permute(self: QuantumStateType, qubits: Qubits = None) \
+            -> QuantumStateType:
+        """Return a copy of this state with state tensor transposed to
+        put qubits in the given order. If an explicit qubit
+        ordering isn't supplied, we put qubits in sorted order.
+        """
+        if qubits is None:
+            qubits = sorted(self.qubits)
+        vec = self.vec.permute(qubits)
+        return self.replace(tensor=vec.tensor, qubits=vec.qubits)
+
     def qubit_indices(self, qubits: Qubits) -> List[int]:
         """Convert qubits to index positions."""
+        # DOCME: Make docs clearer
         return [self.qubits.index(q) for q in qubits]
 
     def norm(self) -> BKTensor:
         """Return the state vector norm"""
         return self.vec.norm()
 
-    # DOCME TESTME
-    def store(self, *args: Any, **kwargs: Any) -> 'State':
-        mem = self.memory.copy(*args, **kwargs)
-        return State(self.tensor, self.qubits, mem)
 
-    def relabel(self, qubits: Qubits) -> 'State':
-        """Return a copy of this state with new qubits"""
-        return State(self.vec.tensor, qubits, self.memory)
+class State(QuantumState):
+    """The quantum state of a collection of qubits.
 
-    def permute(self, qubits: Qubits = None) -> 'State':
-        """Return a copy of this state with state tensor transposed to
-        put qubits in the given order. If an explicet qubit
-        ordering isn't supplied, we put qubits in sorted order.
+    Note that memory usage grows exponentially with the number of qubits.
+    (16*2^N bytes for N qubits)
+
+    """
+
+    def __init__(self,
+                 tensor: TensorLike,
+                 qubits: Qubits = None,
+                 memory: Mapping = None) -> None:
+        """Create a new State from a tensor of qubit amplitudes
+
+        Args:
+            tensor: A vector or tensor of state amplitudes
+            qubits: A sequence of qubit names.
+                (Defaults to integer indices, e.g. [0, 1, 2] for 3 qubits)
+            memory: Classical data storage. Stored as an immutable dictionary.
         """
         if qubits is None:
-            qubits = sorted(self.qubits)
-        vec = self.vec.permute(qubits)
-        return State(vec.tensor, vec.qubits, self.memory)
+            tensor = bk.astensorproduct(tensor)
+            bits = bk.ndim(tensor)
+            qubits = range(bits)
+
+        super().__init__(tensor, qubits, memory)
 
     def normalize(self) -> 'State':
         """Normalize the state"""
@@ -263,7 +307,7 @@ def join_states(*states: State) -> State:
 
 # = Output =
 
-# FIXME: clean up. Move to visulization?
+# FIXME: clean up. Move to visualization?
 
 def print_state(state: State, file: TextIO = None) -> None:
     """Print a state vector"""
@@ -295,7 +339,8 @@ def print_probabilities(state: State, ndigits: int = 4,
 
 # --  Mixed Quantum States --
 
-class Density(State):
+
+class Density(QuantumState):
     """A density matrix representation of a mixed quantum state"""
     def __init__(self,
                  tensor: TensorLike,
@@ -312,21 +357,10 @@ class Density(State):
         """Return the trace of this density operator"""
         return self.vec.trace()
 
-    def relabel(self, qubits: Qubits) -> 'Density':
-        """Return a copy of this state with new qubits"""
-        return Density(self.vec.tensor, qubits, self.memory)
-
-    def permute(self, qubits: Qubits = None) -> 'Density':
-        """Return a copy of this state with qubit labels permuted"""
-        if qubits is None:
-            qubits = sorted(self.qubits)
-        vec = self.vec.permute(qubits)
-        return Density(vec.tensor, vec.qubits, self.memory)
-
     def normalize(self) -> 'Density':
         """Normalize state"""
         tensor = self.tensor / self.trace()
-        return Density(tensor, self.qubits, self.memory)
+        return self.replace(tensor=tensor)
 
     # TESTME
     def probabilities(self) -> BKTensor:
@@ -344,11 +378,6 @@ class Density(State):
             return self
         vec = self.vec.partial_trace(qubits)
         return Density(vec.tensor, vec.qubits, self.memory)
-
-    # DOCME TESTME
-    def store(self, *args: Any, **kwargs: Any) -> 'Density':
-        mem = self.memory.copy(*args, **kwargs)
-        return Density(self.tensor, self.qubits, mem)
 
 
 def mixed_density(qubits: Union[int, Qubits]) -> Density:

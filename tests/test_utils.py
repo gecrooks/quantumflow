@@ -41,7 +41,7 @@ def test_frozen_dict():
     f1 = f0.copy()
     assert f0 == f1
 
-    f2 = f0.copy(a=0, c=3)
+    f2 = f0.update(a=0, c=3)
     assert f2['a'] == 0
 
     assert 'c' in f2
