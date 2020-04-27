@@ -126,7 +126,7 @@ def test_qiskitsimulator():
     circ += qf.Z(2)
     circ += qf.CAN(0.1, 0.2, 0.2, 0, 1)
 
-    sim = QiskitSimulator(circ)
+    sim = QiskitSimulator(*circ)
     assert qf.states_close(circ.run(), sim.run())
 
     ket0 = qf.random_state([0, 1, 2, 3])

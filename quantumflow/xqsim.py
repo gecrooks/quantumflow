@@ -5,7 +5,7 @@
 
 # DOCME
 
-from typing import Iterable, cast
+from typing import cast
 
 import cirq
 import qsimcirq
@@ -31,9 +31,9 @@ class QSimSimulator(Operation):
     Ref:
         https://github.com/quantumlib/qsim
     """
-    def __init__(self, elements: Iterable[Operation] = None,
+    def __init__(self, *elements: Operation,
                  translate: bool = False) -> None:
-        circ = Circuit(elements)
+        circ = Circuit(*elements)
         if translate:
             circ = translate_circuit_to_qsim(circ)
         self._circuit = circ

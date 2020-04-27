@@ -94,10 +94,14 @@ class Circuit(MutableSequence, Operation):
     protoquil). For hybrid algorithms involving control flow and other
     classical processing use QuantumFlow's Program class.
     """
-    def __init__(self, elements: Iterable[Operation] = None) -> None:
-        if elements is None:
-            elements = []
-        self._elements: List[Operation] = list(elements)
+    def __init__(self, *elements: Union[Iterable[Operation], Operation]) \
+            -> None:
+        # Deprecated legacy interface
+        # TODO: Throw deprecations warning
+        if len(elements) == 1 and isinstance(elements[0], Iterable):
+            elements = elements[0]  # type: ignore
+
+        self._elements: List[Operation] = list(elements)  # type: ignore
 
     # Methods for MutableSequence
     @overload

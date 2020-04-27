@@ -25,7 +25,7 @@ Interface between Google's Cirq and QuantumFlow
 # Conventions
 # cqc: Abbreviation for Cirq circuit
 
-from typing import Iterable, cast, List, Type
+from typing import cast, List, Type
 
 import numpy as np
 
@@ -67,8 +67,8 @@ class CirqSimulator(Operation):
     results will not be as accurate.
     """
 
-    def __init__(self, elements: Iterable[Operation] = None) -> None:
-        self._circuit = Circuit(elements)
+    def __init__(self, *elements: Operation) -> None:
+        self._circuit = Circuit(*elements)
         self._cirq = circuit_to_cirq(self._circuit)
 
         # TODO: Translate gates

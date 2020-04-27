@@ -15,8 +15,6 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_qiskit
 """
 
-from typing import Iterable
-
 from .qubits import Qubits, asarray
 from .states import State
 from .circuits import Circuit
@@ -78,8 +76,8 @@ QASM_TO_QF = {
 # TODO: 'multiplexer', 'snapshot', 'unitary'
 
 class QiskitSimulator(Operation):
-    def __init__(self, elements: Iterable[Operation] = None) -> None:
-        self._circuit = Circuit(elements)
+    def __init__(self, *elements: Operation) -> None:
+        self._circuit = Circuit(*elements)
 
     @property
     def qubits(self) -> Qubits:

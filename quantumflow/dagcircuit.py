@@ -7,7 +7,7 @@
 QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 """
 
-from typing import List, Dict, Iterable, Iterator, Generator, Any, Tuple
+from typing import List, Dict, Iterable, Iterator, Generator, Any, Tuple, Union
 import itertools
 import textwrap
 
@@ -79,13 +79,19 @@ class DAGCircuit(Operation):
 
     Note: Provisional API
     """
-    def __init__(self, elements: Iterable[Operation]) -> None:
+    def __init__(self, *elements: Union[Iterable[Operation], Operation]) \
+            -> None:
+        # Deprecated legacy interface
+        # TODO: Throw deprecations warning
+        if len(elements) == 1 and isinstance(elements[0], Iterable):
+            elements = elements[0]  # type: ignore
+
         self.graph = nx.MultiDiGraph()
         self._qubits_in: Dict[Qubit, In] = {}
         self._qubits_out: Dict[Qubit, Out] = {}
 
         for elem in elements:
-            self.append(elem)
+            self.append(elem)   # type: ignore
 
     def append(self, elem: Operation) -> None:
         G = self.graph

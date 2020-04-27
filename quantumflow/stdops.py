@@ -75,8 +75,14 @@ class Moment(Sequence, Operation):
     Represents a collection of Operations that operate on disjoint qubits,
     so that they may be applied at the same moment of time.
     """
-    def __init__(self, elements: Iterable[Operation]) -> None:
-        circ = Circuit(Circuit(elements).flat())
+    def __init__(self, *elements: Union[Iterable[Operation], Operation]) \
+            -> None:
+        # Deprecated legacy interface
+        # TODO: Throw deprecation warning
+        if len(elements) == 1 and isinstance(elements[0], Iterable):
+            elements = elements[0]  # type: ignore
+
+        circ = Circuit(Circuit(elements).flat())    # type: ignore
         qbs = list(q for elem in circ for q in elem.qubits)
         if len(qbs) != len(set(qbs)):
             raise ValueError('Qubits of operations within Moments '
