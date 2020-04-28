@@ -9,7 +9,7 @@
 
 A QuantumFlow Program is an implementation of the Quantum Abstract Machine from
 *A Practical Quantum Instruction Set Architecture*. [1]_ A Program can be built
-programatically by appending Instuctions, or can be parsed from code written
+programmatically by appending Instructions, or can be parsed from code written
 in Rigetti's Quantum Instruction Language (Quil). This Quantum Virtual Machine
 represents a hybrid device with quantum computation and classical control flow.
 
