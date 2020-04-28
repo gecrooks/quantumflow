@@ -328,4 +328,71 @@ def test_repr_html_():
     assert qf.Circuit([qf.CNOT('a', 'b')])._repr_html_() is not None
 
 
+def test_gate2_to_diagrams():
+    circ = qf.Circuit()
+
+    circ += qf.CNOT(0, 1)
+    circ += qf.CZ(0, 1)
+    circ += qf.CV(0, 1)
+    circ += qf.CV_H(0, 1)
+    circ += qf.CH(0, 1)
+    circ += qf.SWAP(0, 1)
+    circ += qf.ISWAP(0, 1)
+
+    circ += qf.CNOT(0, 2)
+    circ += qf.CZ(0, 2)
+    circ += qf.CV(0, 2)
+    circ += qf.CV_H(0, 2)
+    circ += qf.CH(0, 2)
+    circ += qf.SWAP(0, 2)
+    circ += qf.ISWAP(0, 2)
+
+    circ += qf.CNOT(2, 1)
+    circ += qf.CZ(2, 1)
+    circ += qf.CV(2, 1)
+    circ += qf.CV_H(2, 1)
+    circ += qf.CH(2, 1)
+    circ += qf.SWAP(2, 1)
+    circ += qf.ISWAP(2, 1)
+
+    print()
+
+    diag = qf.circuit_to_diagram(circ)
+    print(diag)
+
+    diag = qf.circuit_to_diagram(circ, use_unicode=False)
+    print(diag)
+
+    latex = qf.circuit_to_latex(circ)
+
+    if os.environ.get('QUANTUMFLOW_VIZTEST'):
+        qf.latex_to_image(latex).show()
+
+
+def test_gate3_to_diagrams():
+    circ = qf.Circuit()
+    circ += qf.CCNOT(0, 1, 2)
+    circ += qf.CCNOT(0, 2, 1)
+    circ += qf.CSWAP(0, 1, 2)
+    circ += qf.CSWAP(1, 0, 2)
+    circ += qf.CCZ(0, 1, 2)
+    circ += qf.CCiX(0, 1, 2)
+    circ += qf.CCNOT(0, 1, 2) ** 0.25
+    circ += qf.Deutsch(0.25, 0, 1, 2)
+
+    circ += qf.CV(1, 0)
+    circ += qf.CV_H(1, 0)
+
+    print()
+
+    diag = qf.circuit_to_diagram(circ)
+    print(diag)
+    diag = qf.circuit_to_diagram(circ, use_unicode=False)
+    print(diag)
+
+    latex = qf.circuit_to_latex(circ)
+
+    if os.environ.get('QUANTUMFLOW_VIZTEST'):
+        qf.latex_to_image(latex).show()
+
 # fin

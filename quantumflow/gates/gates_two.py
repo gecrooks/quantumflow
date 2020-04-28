@@ -195,8 +195,6 @@ class Can(Gate):
 
 CAN = Can
 # FIXME: Remove (Backwards compatibility)
-# def CAN(*args, **kwargs) -> Can:
-#     return Can(*args, **kwargs)
 
 
 class CH(Gate):
@@ -491,7 +489,6 @@ class CYPow(Gate):
 class CV(Gate):
     r"""A controlled V (sqrt of CNOT) gate."""
 
-    interchangeable = True
     _diagram_labels = [CTRL, 'V']
 
     def __init__(self,
@@ -521,7 +518,6 @@ class CV(Gate):
 class CV_H(Gate):
     r"""A controlled V (sqrt of CNOT) gate."""
 
-    interchangeable = True
     _diagram_labels = [CTRL, 'V' + CONJ]
 
     def __init__(self,

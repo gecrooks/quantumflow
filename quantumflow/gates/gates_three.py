@@ -337,7 +337,7 @@ class Deutsch(Gate):
     r"""
     The Deutsch gate, a 3-qubit universal quantum gate.
 
-    A controlled-controlled-i*R_x gate.
+    A controlled-controlled-i*R_x(2*theta) gate.
     Note that Deutsch(pi/2) is the CCNOT gate.
 
     .. math::
@@ -356,7 +356,7 @@ class Deutsch(Gate):
         D. Deutsch, Quantum Computational Networks,
             Proc. R. Soc. Lond. A 425, 73 (1989).
     """
-    _diagram_labels = (CTRL, CTRL, 'iRx({theta})')  # TESTME
+    _diagram_labels = (CTRL, CTRL, 'iRx({theta})^2')
 
     def __init__(self,
                  theta: Variable,

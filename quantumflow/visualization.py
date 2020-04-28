@@ -19,8 +19,7 @@ from sympy import Symbol
 
 from .qubits import Qubits
 from .gates import P0, P1
-from .gates import (SWAP, CNOT, CZ, CCNOT, CSWAP, IDEN, CH)
-
+from .gates import (SWAP, CZ, IDEN, CSWAP)
 from .ops import Gate
 from .stdops import Reset, Measure
 from .utils import symbolize, bitlist_to_int, int_to_bitlist
@@ -40,12 +39,13 @@ __all__ = ('LATEX_GATESET',
 # TODO: Should be set of types to match GATESET in stdgates?
 LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
-                           'CZ', 'SWAP', 'ISWAP', 'PSWAP', 'CCNOT', 'CSWAP',
-                           'XX', 'YY', 'ZZ', 'CAN', 'P0', 'P1', 'Reset'])
+                           'CZ', 'SWAP', 'ISWAP', 'PSWAP',
+                           'CV', 'CV_H', 'CPHASE', 'CH', 'Can', 'CCNOT', 'CSWAP',
+                           'CCZ', 'CCiX', 'Deutsch', 'CCXPow',
+                           'XX', 'YY', 'ZZ', 'CAN',
+                           'P0', 'P1', 'Reset', 'NoWire','Measure', 'Ph'])
 
 
-# TODO: Add default
-# TODO Move to utils?
 kwarg_to_symbol = {
     'alpha':    Symbol('α'),
     'lam':      Symbol('λ'),
@@ -72,9 +72,6 @@ kwarg_to_symbol = {
 class NoWire(IDEN):
     """Dummy gate used to draw a gap in a circuit"""
     _diagram_labels = ['  ']
-
-    # TODO: Override run()?
-    # DO I need this!?
 
 
 def circuit_to_latex(
@@ -118,7 +115,7 @@ def circuit_to_latex(
     # TODO: I would be good to move much of the gate dependent details
     # into the gate classes, as has been done for circuit_to_diagram.
     # But there seems to be too many exceptions to be practical. (??)
-
+    from .config import CTRL, TARGET
     latex_labels = {
         'S_H': [r'S^\dagger'],
         'T_H': [r'T^\dagger'],
@@ -135,6 +132,16 @@ def circuit_to_latex(
         'ISWAP': [r'\text{{iSwap}}'],
         'SqrtISwap': [r'\sqrt{{\text{{iSwap}}}}'],
         'SqrtISwap_H': [r'\sqrt{{\text{{iSwap}}}}^\dagger'],
+        'CNOT': [CTRL, TARGET],
+        'CH': [CTRL, 'H'],
+        'CV': [CTRL, 'V'],
+        'CV_H': [CTRL, r'V^\dagger'],
+        # 3-qubit gates
+        'CCNOT': [CTRL, CTRL, TARGET],
+        'CCXPow': [CTRL, CTRL, r'X^{{{t}}}'],
+        'CCZ': [CTRL, CTRL, r'Z'],
+        'CCiX': [CTRL, CTRL, r'iX'],
+        'Deutsch': [CTRL, CTRL, r'iR^2_x({theta})'],
         }
 
     if len(circ) == 0:
@@ -162,6 +169,9 @@ def circuit_to_latex(
 
             name = gate.name
 
+            if name not in LATEX_GATESET:
+                raise NotImplementedError(str(gate))
+
             pretty_params: Dict[str, str] = {}
             # FIXME: Do I need gate isinstance (Also below)
             if isinstance(elem, Gate) and elem.params:
@@ -175,7 +185,9 @@ def circuit_to_latex(
                 text_labels = latex_labels[name]
                 if len(idx) != 1 and len(text_labels) == 1:
                     text_labels = text_labels * len(idx)
-                text_labels = [t.format(**pretty_params) for t in text_labels]
+                if pretty_params:
+                    text_labels = [t.format(**pretty_params)
+                                   for t in text_labels]
             else:
                 if len(name) > 1:
                     name = r'\text{'+name+'}'
@@ -205,16 +217,10 @@ def circuit_to_latex(
             elif isinstance(gate, Measure):
                 code[idx[0]] = r'\meter{}'  # TODO: Add cbit label
 
-            # Special two-qubit gates
-            elif isinstance(gate, CNOT):
-                code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
-                code[idx[1]] = r'\targ{}'
+            # Special 2-qubit gates
             elif isinstance(gate, CZ):
                 code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
                 code[idx[1]] = r'\ctrl{' + str(idx[0] - idx[1]) + '}'
-            elif isinstance(gate, CH):
-                code[idx[0]] = r'\ctrl{' + str(idx[1] - idx[0]) + '}'
-                code[idx[1]] = r'\gate{H}'
             elif isinstance(gate, SWAP):
                 if package == 'qcircuit':
                     code[idx[0]] = r'\qswap \qwx[' + str(idx[1] - idx[0]) + ']'
@@ -223,32 +229,7 @@ def circuit_to_latex(
                     code[idx[0]] = r'\swap{' + str(idx[1] - idx[0]) + '}'
                     code[idx[1]] = r'\targX{}'
 
-            # Special three-qubit gates
-            elif isinstance(gate, CCNOT):
-                code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
-                code[idx[1]] = r'\ctrl{' + str(idx[2]-idx[1]) + '}'
-                code[idx[2]] = r'\targ{}'
-            elif isinstance(gate, CSWAP):
-                if package == 'qcircuit':
-                    code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
-                    code[idx[1]] = r'\qswap \qwx[' + str(idx[2] - idx[1]) + ']'
-                    code[idx[2]] = r'\qswap'
-                else:  # quantikz
-                    # FIXME: Leaves a weird gap in circuit
-                    code[idx[0]] = r'\ctrl{}\vqw{' + str(idx[1]-idx[0]) + '}'
-                    code[idx[1]] = r'\swap{' + str(idx[2] - idx[1]) + '}'
-                    code[idx[2]] = r'\targX{}'
-
-            # Special multi-qubit gates
-            elif isinstance(gate, Reset):
-                for i in idx:
-                    code[i] = r'\push{\rule{0.1em}{0.5em}\, \ket{0}\,} \qw'
-
-            # Generic 1-qubit gate
-            elif(gate.qubit_nb == 1):
-                code[idx[0]] = r'\gate{' + text_labels[0] + '}'
-
-            # Generic 2-qubit gate
+            # interchangeable 2-qubit gate
             elif(gate.qubit_nb == 2 and gate.interchangeable):
                 top = min(idx)
                 bot = max(idx)
@@ -271,6 +252,39 @@ def circuit_to_latex(
                         code[top] = r'\gate{%s}\vqw{%s}' % (text_labels[0],
                                                             str(bot - top))
                         code[bot] = r'\gate{%s}' % (text_labels[1])
+
+            # Special three-qubit gates
+            elif isinstance(gate, CSWAP):
+                if package == 'qcircuit':
+                    code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
+                    code[idx[1]] = r'\qswap \qwx[' + str(idx[2] - idx[1]) + ']'
+                    code[idx[2]] = r'\qswap'
+                else:  # quantikz
+                    # FIXME: Leaves a weird gap in circuit
+                    # code[idx[0]] = r'\ctrl{}\vqw{' + str(idx[1]-idx[0]) + '}'
+                    code[idx[0]] = r'\ctrl{' + str(idx[1]-idx[0]) + '}'
+                    code[idx[1]] = r'\swap{' + str(idx[2] - idx[1]) + '}'
+                    code[idx[2]] = r'\targX{}'
+
+            # Special multi-qubit gates
+            elif isinstance(gate, Reset):
+                for i in idx:
+                    code[i] = r'\push{\rule{0.1em}{0.5em}\, \ket{0}\,} \qw'
+
+            #  Other gates with explicit gate labels
+            elif name in latex_labels:
+                for i in range(gate.qubit_nb):
+                    if text_labels[i] == CTRL:
+                        code[idx[i]] = r'\ctrl{' + str(idx[i+1]-idx[i]) + '}'
+                    elif text_labels[i] == TARGET:
+                        code[idx[i]] = r'\targ{}'
+                    else:
+                        code[idx[i]] = r'\gate{' + text_labels[i] + '}'
+
+            # Generic 1-qubit gate
+            elif(gate.qubit_nb == 1):
+                code[idx[0]] = r'\gate{' + text_labels[0] + '}'
+
             else:
                 raise NotImplementedError(str(gate))
 
