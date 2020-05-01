@@ -499,10 +499,10 @@ class RX(Gate):
     r"""A 1-qubit Pauli-X parametric rotation gate.
 
     .. math::
-        R_X(\theta) =   \begin{pmatrix}
-                            \cos(\frac{\theta}{2}) & -i \sin(\theta/2) \\
-                            -i \sin(\theta/2) & \cos(\theta/2)
-                        \end{pmatrix}
+        R_x(\theta) =   \begin{bmatrix*}[r]
+                            \cos(\half\theta) & -i \sin(\half\theta) \\
+                            -i \sin(\half\theta) & \cos(\half\theta)
+                        \end{bmatrix*}
 
     Args:
         theta: Angle of rotation in Bloch sphere
@@ -549,10 +549,10 @@ class RY(Gate):
     r"""A 1-qubit Pauli-Y parametric rotation gate
 
     .. math::
-        R_Y(\theta) \equiv \begin{pmatrix}
-        \cos(\theta / 2) & -\sin(\theta / 2)
-        \\ \sin(\theta/2) & \cos(\theta/2) \end{pmatrix}
-
+        R_y(\theta) =   \begin{bmatrix*}[r]
+            \cos(\half\theta) & -\sin(\half\theta)
+            \\ \sin(\half\theta) & \cos(\half\theta)
+                        \end{bmatrix*}
     Args:
         theta: Angle of rotation in Bloch sphere
     """
@@ -598,10 +598,10 @@ class RZ(Gate):
     r"""A 1-qubit Pauli-X parametric rotation gate
 
     .. math::
-        R_Z(\theta)\equiv   \begin{pmatrix}
-                                \cos(\theta/2) - i \sin(\theta/2) & 0 \\
-                                0 & \cos(\theta/2) + i \sin(\theta/2)
-                            \end{pmatrix}
+        R_z(\theta) =   \begin{bmatrix*}
+        e^{-i\half\theta} & 0 \\
+        0 & e^{+i\half\theta}
+                        \end{bmatrix*}
 
     Args:
         theta: Angle of rotation in Bloch sphere
