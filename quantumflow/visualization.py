@@ -43,7 +43,8 @@ LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'CV', 'CV_H', 'CPHASE', 'CH', 'Can', 'CCNOT', 'CSWAP',
                            'CCZ', 'CCiX', 'Deutsch', 'CCXPow',
                            'XX', 'YY', 'ZZ', 'CAN',
-                           'P0', 'P1', 'Reset', 'NoWire','Measure', 'Ph'])
+                           'P0', 'P1', 'Reset', 'NoWire','Measure', 'Ph', 'ECP',
+                           'SqrtISwap_H', 'Barenco'])
 
 
 kwarg_to_symbol = {
@@ -142,6 +143,7 @@ def circuit_to_latex(
         'CCZ': [CTRL, CTRL, r'Z'],
         'CCiX': [CTRL, CTRL, r'iX'],
         'Deutsch': [CTRL, CTRL, r'iR^2_x({theta})'],
+        'Barenco': [CTRL, r'\text{{Bar}}({phi}, {alpha}, {theta})'],
         }
 
     if len(circ) == 0:
