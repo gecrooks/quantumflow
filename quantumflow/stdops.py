@@ -63,7 +63,7 @@ __all__ = ['dagger', 'Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
            'PermuteQubits',  'ReverseQubits', 'RotateQubits',
            'Display', 'StateDisplay', 'ProbabilityDisplay', 'DensityDisplay']
 
-
+# TODO: Remove, not needed
 def dagger(elem: Operation) -> Operation:
     """Return the complex conjugate of the Operation"""
     return elem.H
