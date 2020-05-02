@@ -16,7 +16,7 @@ import numpy as np
 from ..config import CONJ, SQRT
 from ..qubits import Qubit
 from ..states import State, Density
-from ..ops import Gate
+from ..ops import Gate, StdGate
 from ..utils import multi_slice, cached_property
 from ..variables import Variable
 from ..paulialgebra import Pauli, sX, sY, sZ, sI
@@ -26,8 +26,8 @@ from ..backends import BKTensor
 pi = bk.pi
 PI = bk.PI
 
-__all__ = (
-    'IDEN', 'I', 'Ph',
+__all__ = ('IDEN',
+    'I', 'Ph',
     'X', 'Y', 'Z', 'H', 'S', 'T', 'PhaseShift',
     'RX', 'RY', 'RZ', 'RN', 'TX', 'TY', 'TZ', 'TH', 'S_H', 'T_H',
     'V', 'V_H', 'SqrtY', 'SqrtY_H')
@@ -61,43 +61,7 @@ def _specialize_gate(gate: Gate,
     return type(gate)(*params, *gate.qubits)    # type: ignore
 
 
-# Standard 1 qubit gates
-
-class I(Gate):                                      # noqa: E742
-    r"""
-    The 1-qubit identity gate.
-
-    .. math::
-        I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
-    """
-    diagonal = True
-
-    def __init__(self, q0: Qubit = 0) -> None:
-        super().__init__(qubits=[q0])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        return Pauli.zero()
-
-    @cached_property
-    def tensor(self) -> BKTensor:
-        return bk.astensorproduct(np.eye(2))
-
-    @property
-    def H(self) -> 'I':
-        return self  # Hermitian
-
-    def __pow__(self, t: Variable) -> 'I':
-        return self
-
-    def run(self, ket: State) -> State:
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        return rho
-
-
-# TODO: Move to gate_utils? Or gates_three?
+# TODO: Move elsewhere. Not a standard gate.
 class IDEN(Gate):
     r"""
     The multi-qubit identity gate.
@@ -140,8 +104,44 @@ class IDEN(Gate):
 
 # end class IDEN
 
+# Standard 1 qubit gates
 
-class Ph(Gate):
+class I(StdGate):                                      # noqa: E742
+    r"""
+    The 1-qubit identity gate.
+
+    .. math::
+        I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
+    """
+    diagonal = True
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        return Pauli.zero()
+
+    @cached_property
+    def tensor(self) -> BKTensor:
+        return bk.astensorproduct(np.eye(2))
+
+    @property
+    def H(self) -> 'I':
+        return self  # Hermitian
+
+    def __pow__(self, t: Variable) -> 'I':
+        return self
+
+    def run(self, ket: State) -> State:
+        return ket
+
+    def evolve(self, rho: Density) -> Density:
+        return rho
+
+
+
+class Ph(StdGate):
     r"""
     Apply a global phase shift of exp(i phi).
 
@@ -202,7 +202,7 @@ class Ph(Gate):
 # End class Ph
 
 
-class X(Gate):
+class X(StdGate):
     r"""
     A 1-qubit Pauli-X gate.
 
@@ -247,7 +247,7 @@ class X(Gate):
 # end class X
 
 
-class Y(Gate):
+class Y(StdGate):
     r"""
     A 1-qubit Pauli-Y gate.
 
@@ -285,7 +285,7 @@ class Y(Gate):
 # end class Y
 
 
-class Z(Gate):
+class Z(StdGate):
     r"""
     A 1-qubit Pauli-Z gate.
 
@@ -321,7 +321,7 @@ class Z(Gate):
 # end class Z
 
 
-class H(Gate):
+class H(StdGate):
     r"""
     A 1-qubit Hadamard gate.
 
@@ -371,7 +371,7 @@ _H = H
 # End class H
 
 
-class S(Gate):
+class S(StdGate):
     r"""
     A 1-qubit phase S gate, equivalent to ``Z ** (1/2)``. The square root
     of the Z gate. Also sometimes denoted as the P gate.
@@ -408,7 +408,7 @@ class S(Gate):
 # end class S
 
 
-class T(Gate):
+class T(StdGate):
     r"""
     A 1-qubit T (pi/8) gate, equivalent to ``X ** (1/4)``. The forth root
     of the Z gate (up to global phase).
@@ -444,7 +444,7 @@ class T(Gate):
 # end class T
 
 
-class PhaseShift(Gate):
+class PhaseShift(StdGate):
     r"""
     A 1-qubit parametric phase shift gate.
     Equivalent to RZ up to a global phase.
@@ -495,7 +495,7 @@ class PhaseShift(Gate):
 # end class PhaseShift
 
 
-class RX(Gate):
+class RX(StdGate):
     r"""A 1-qubit Pauli-X parametric rotation gate.
 
     .. math::
@@ -545,7 +545,7 @@ class RX(Gate):
 # end class RX
 
 
-class RY(Gate):
+class RY(StdGate):
     r"""A 1-qubit Pauli-Y parametric rotation gate
 
     .. math::
@@ -594,7 +594,7 @@ class RY(Gate):
 # end class RY
 
 
-class RZ(Gate):
+class RZ(StdGate):
     r"""A 1-qubit Pauli-X parametric rotation gate
 
     .. math::
@@ -651,7 +651,7 @@ class RZ(Gate):
 
 # Other 1-qubit gates
 
-class S_H(Gate):
+class S_H(StdGate):
     r"""
     The inverse of the 1-qubit phase S gate, equivalent to
     ``Z ** -1/2``.
@@ -689,7 +689,7 @@ class S_H(Gate):
 # end class S_H
 
 
-class T_H(Gate):
+class T_H(StdGate):
     r"""
     The inverse (complex conjugate) of the 1-qubit T (pi/8) gate, equivalent
     to ``Z ** -1/4``.
@@ -726,7 +726,7 @@ class T_H(Gate):
 # end class T_H
 
 
-class RN(Gate):
+class RN(StdGate):
     r"""A 1-qubit rotation of angle theta about axis (nx, ny, nz)
 
     .. math::
@@ -798,7 +798,7 @@ class RN(Gate):
 # end class RN
 
 
-class TX(Gate):
+class TX(StdGate):
     r"""Powers of the 1-qubit Pauli-X gate.
 
     .. math::
@@ -842,7 +842,7 @@ class TX(Gate):
 # end class TX
 
 
-class TY(Gate):
+class TY(StdGate):
     r"""Powers of the 1-qubit Pauli-Y gate.
 
     The pseudo-Hadamard gate is TY(3/2), and its inverse is TY(1/2).
@@ -891,7 +891,7 @@ class TY(Gate):
 # end class TY
 
 
-class TZ(Gate):
+class TZ(StdGate):
     r"""Powers of the 1-qubit Pauli-Z gate.
 
     .. math::
@@ -949,7 +949,7 @@ class TZ(Gate):
 # end class TZ
 
 
-class TH(Gate):
+class TH(StdGate):
     r"""
     Powers of the 1-qubit Hadamard gate.
 
@@ -1001,7 +1001,7 @@ class TH(Gate):
 # end class TH
 
 
-class V(Gate):
+class V(StdGate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
     """
@@ -1028,7 +1028,7 @@ class V(Gate):
 # end class V
 
 
-class V_H(Gate):
+class V_H(StdGate):
     r"""
     Complex conjugate of the V gate, X-MINUS-90 gate.
     """
@@ -1055,7 +1055,7 @@ class V_H(Gate):
 # end class V_H
 
 
-class SqrtY(Gate):
+class SqrtY(StdGate):
     r"""
     Principal square root of the Y gate.
     """
@@ -1090,7 +1090,7 @@ class SqrtY(Gate):
 # end class SqrtY
 
 
-class SqrtY_H(Gate):
+class SqrtY_H(StdGate):
     r"""
     Complex conjugate of the SqrtY gate.
     """

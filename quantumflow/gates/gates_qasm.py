@@ -10,7 +10,7 @@ QuantumFlow: Gates specific to QASM
 """
 
 
-from ..ops import Gate
+from ..ops import Gate, StdGate
 from ..qubits import Qubit
 
 from ..utils import cached_property
@@ -52,7 +52,7 @@ U1 = PhaseShift
 CU1 = CPHASE
 
 
-class U3(Gate):
+class U3(StdGate):
     r"""The U3 single qubit gate from QASM.
     The U2 gate is the U3 gate with theta=pi/2. The U1 gate has theta=phi=0,
     which is the same as a PhaseShift gate.
@@ -100,7 +100,7 @@ class U3(Gate):
     # TODO: __pow__
 
 
-class U2(Gate):
+class U2(StdGate):
     """A 'single pulse' 1-qubit gate defined in QASM"""
     def __init__(self, phi: Variable, lam: Variable, q0: Qubit = 0) -> None:
         super().__init__(params=dict(phi=phi, lam=lam),
@@ -119,7 +119,7 @@ class U2(Gate):
     # TODO: __pow__
 
 
-class CU3(Gate):
+class CU3(StdGate):
     r"""The controlled U3 gate, as defined by QASM.
 
     Ref:
@@ -162,7 +162,7 @@ class CU3(Gate):
         return CU3(-theta, -lam, -phi, *self.qubits)
 
 
-class CRZ(Gate):
+class CRZ(StdGate):
     r"""A controlled RZ gate.
     """
     diagonal = True
@@ -198,7 +198,7 @@ class CRZ(Gate):
 
 # TODO: Check proper phase, so can add Hamiltonian.
 # How's this different from CRZ!?
-class RZZ(Gate):
+class RZZ(StdGate):
     """A two-qubit ZZ-rotation gate, as defined by QASM.
     Same as ZZ(theta/pi), up to phase.
     """

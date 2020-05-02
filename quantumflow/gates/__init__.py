@@ -252,6 +252,7 @@ _gates = (_gates_one + _gates_two + _gates_three + _gates_qasm
           + _gates_cirq + _gates_forest)
 
 NAMED_GATES = {name: globals()[name] for name in _gates}
+del NAMED_GATES['IDEN']  # FIXME: Removed because not a StdGate 
 """
 A mapping between gate names and gate classes
 """

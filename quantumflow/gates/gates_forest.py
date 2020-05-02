@@ -11,7 +11,7 @@ QuantumFlow: Gates peculiar to Rigetti's Forest
 
 # TODO: Rename CPHASE to CPhase, PSWAP to PSwap
 
-from ..ops import Gate
+from ..ops import Gate, StdGate
 from ..qubits import Qubit
 from ..utils import cached_property
 from ..variables import Variable
@@ -28,7 +28,7 @@ PI = bk.PI
 __all__ = ('CPHASE', 'CPHASE00', 'CPHASE01', 'CPHASE10', 'PSWAP')
 
 
-class CPHASE(Gate):
+class CPHASE(StdGate):
     r"""A 2-qubit 11 phase-shift gate
 
     .. math::
@@ -68,7 +68,7 @@ class CPHASE(Gate):
 # end class CPHASE
 
 
-class CPHASE00(Gate):
+class CPHASE00(StdGate):
     r"""A 2-qubit 00 phase-shift gate
 
     .. math::
@@ -109,7 +109,7 @@ class CPHASE00(Gate):
 # end class CPHASE00
 
 
-class CPHASE01(Gate):
+class CPHASE01(StdGate):
     r"""A 2-qubit 01 phase-shift gate
 
     .. math::
@@ -149,7 +149,7 @@ class CPHASE01(Gate):
 # end class CPHASE01
 
 
-class CPHASE10(Gate):
+class CPHASE10(StdGate):
     r"""A 2-qubit 10 phase-shift gate
 
     .. math::
@@ -189,7 +189,7 @@ class CPHASE10(Gate):
 # end class CPHASE10
 
 
-class PSWAP(Gate):
+class PSWAP(StdGate):
     r"""A 2-qubit parametric-swap gate, as defined by Quil.
     Interpolates between SWAP (theta=0) and iSWAP (theta=pi/2).
 

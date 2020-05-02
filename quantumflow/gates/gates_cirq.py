@@ -13,7 +13,7 @@ import numpy as np
 from typing import Iterator, Union
 
 from ..config import SWAP_TARGET
-from ..ops import Gate
+from ..ops import Gate, StdGate
 from ..qubits import Qubit
 from ..utils import cached_property
 from ..variables import Variable
@@ -31,7 +31,7 @@ __all__ = ('PhasedX', 'PhasedXPow', 'FSim', 'FSwap', 'FSwapPow', 'Sycamore')
 
 # Kudos: Phased X gate and powers of phased X gates adapted from Cirq
 
-class PhasedX(Gate):
+class PhasedX(StdGate):
     r""" A phased X gate, equivalent to the circuit
     ───Z^-p───X───Z^p───
     """
@@ -56,7 +56,7 @@ class PhasedX(Gate):
         p = self.params['p']
         return PhasedXPow(p, t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         qbs = self.qubits
         p = self.params['p'] % 2
         if np.isclose(p, 0.0) or np.isclose(p, 2.0):
@@ -66,7 +66,7 @@ class PhasedX(Gate):
 # end class PhasedX
 
 
-class PhasedXPow(Gate):
+class PhasedXPow(StdGate):
     """A phased X gate raised to a power.
 
     Equivalent to the circuit ───Z^-p───X^t───Z^p───
@@ -93,7 +93,7 @@ class PhasedXPow(Gate):
         p, s = self.params.values()
         return PhasedXPow(p, s * t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         qbs = self.qubits
         p = self.params['p'] % 2
         t = self.params['t'] % 2
@@ -106,7 +106,7 @@ class PhasedXPow(Gate):
 # end class PhasedXPow
 
 
-class FSim(Gate):
+class FSim(StdGate):
     r"""Fermionic simulation gate family.
 
     Contains all two qubit interactions that preserve excitations, up to
@@ -160,7 +160,7 @@ class FSim(Gate):
 
 # Kudos: Adapted from OpenFermion-Cirq
 # https://github.com/quantumlib/OpenFermion-Cirq/blob/master/openfermioncirq/gates/common_gates.py
-class FSwap(Gate):
+class FSwap(StdGate):
     r"""Fermionic swap gate. It swaps adjacent fermionic modes in
     the Jordan-Wigner representation.
     Locally equivalent to iSwap and ``Can(1/2, 1/2, 0)``
@@ -208,7 +208,7 @@ class FSwap(Gate):
 
 # Kudos: Adapted from OpenFermion-Cirq
 # https://github.com/quantumlib/OpenFermion-Cirq/blob/master/openfermioncirq/gates/common_gates.py
-class FSwapPow(Gate):
+class FSwapPow(StdGate):
     """Powers of the fermionic swap (FSwap) gate.
     Locally equivalent to ``Can(t/2, t/2, 0)``
     """
@@ -255,7 +255,7 @@ class FSwapPow(Gate):
 # End class FSwapPow
 
 
-class Sycamore(Gate):
+class Sycamore(StdGate):
     r"""The Sycamore gate is a two-qubit gate equivalent to
     ``FSim(π/2, π/6)``, and locally equivalent to ``Can(1/2, 1/2, 1/6)``.
 

@@ -21,7 +21,7 @@ from typing import Iterator, Union
 # from .. import backend as bk
 from ..qubits import Qubit
 # from ..variables import variable_is_symbolic
-from ..ops import Gate
+from ..ops import Gate, StdGate
 from ..states import State
 from ..utils import multi_slice, cached_property
 from ..variables import Variable
@@ -51,7 +51,7 @@ __all__ = (
     )
 
 
-class B(Gate):
+class B(StdGate):
     """ The B (Berkeley) gate. Equivalent to CAN(-1/2, -1/4, 0)
     """
     interchangeable = True
@@ -79,7 +79,7 @@ class B(Gate):
         return CAN(-t/2, -t/4, 0, *self.qubits)
 
 
-class Barenco(Gate):
+class Barenco(StdGate):
     """A universal two-qubit gate:
 
     Ref:
@@ -125,7 +125,7 @@ class Barenco(Gate):
 
 # TODO: Add references and explanation
 # DOCME: Comment on sign conventions.
-class Can(Gate):
+class Can(StdGate):
     r"""The canonical 2-qubit gate
 
     The canonical decomposition of 2-qubits gates removes local 1-qubit
@@ -197,7 +197,7 @@ CAN = Can
 # FIXME: Remove (Backwards compatibility)
 
 
-class CH(Gate):
+class CH(StdGate):
     r"""A controlled-Hadamard gate
 
     Equivalent to ``controlled_gate(H())`` and locally equivalent to
@@ -238,7 +238,7 @@ class CH(Gate):
 # end class CH
 
 
-class CNOT(Gate):
+class CNOT(StdGate):
     r"""A controlled-not gate
 
     Equivalent to ``controlled_gate(X())``, and
@@ -290,7 +290,7 @@ class CNOT(Gate):
 
 
 # FIXME: matrix in docs looks wrong?
-class CNotPow(Gate):
+class CNotPow(StdGate):
     r"""Powers of the CNOT gate.
 
     Equivalent to ``controlled_gate(TX(t))``, and locally equivalent to
@@ -357,7 +357,7 @@ class CNotPow(Gate):
 # end class CNotPow
 
 
-class CrossResonance(Gate):
+class CrossResonance(StdGate):
     # DOCME
     # TESTME
 
@@ -394,7 +394,7 @@ class CrossResonance(Gate):
 # end class CrossResonance
 
 
-class CY(Gate):
+class CY(StdGate):
     r"""A controlled-Y gate
 
     Equivalent to ``controlled_gate(Y())`` and locally equivalent to
@@ -438,7 +438,7 @@ class CY(Gate):
 # end class CY
 
 
-class CYPow(Gate):
+class CYPow(StdGate):
     r"""Powers of the controlled-Y gate
 
     Locally equivalent to ``CAN(t/2, 0, 0)``
@@ -486,7 +486,7 @@ class CYPow(Gate):
 # End class CYPow
 
 
-class CV(Gate):
+class CV(StdGate):
     r"""A controlled V (sqrt of CNOT) gate."""
 
     _diagram_labels = [CTRL, 'V']
@@ -515,7 +515,7 @@ class CV(Gate):
 # end class CV
 
 
-class CV_H(Gate):
+class CV_H(StdGate):
     r"""A controlled V (sqrt of CNOT) gate."""
 
     _diagram_labels = [CTRL, 'V' + CONJ]
@@ -544,7 +544,7 @@ class CV_H(Gate):
 # end class CV_H
 
 
-class CZ(Gate):
+class CZ(StdGate):
     r"""A controlled-Z gate
 
     Equivalent to ``controlled_gate(Z())`` and locally equivalent to
@@ -594,7 +594,7 @@ class CZ(Gate):
 # End class CZ
 
 
-class CZPow(Gate):
+class CZPow(StdGate):
     r"""Powers of the controlled-Z gate
 
     Locally equivalent to ``CAN(t/2, 0, 0)``
@@ -643,7 +643,7 @@ class CZPow(Gate):
 # TESTME
 # DOCME
 # TODO: Add citations x2
-class ECP(Gate):
+class ECP(StdGate):
     r"""The ECP gate. The peak of the pyramid of gates in the Weyl chamber
     that can be created with a square-root of iSWAP sandwich.
 
@@ -672,7 +672,7 @@ class ECP(Gate):
 # end class ECP
 
 
-class EXCH(Gate):
+class EXCH(StdGate):
     r"""A 2-qubit parametric gate generated from an exchange interaction.
 
     Equivalent to CAN(t,t,t)
@@ -712,7 +712,7 @@ class EXCH(Gate):
 # end class Exch
 
 
-class Givens(Gate):
+class Givens(StdGate):
     r"""
     In quantum computational chemistry refers to a 2-qubit gate that defined as
 
@@ -767,7 +767,7 @@ class Givens(Gate):
 # end class Givens
 
 
-class ISWAP(Gate):
+class ISWAP(StdGate):
     r"""A 2-qubit iSwap gate
 
     Equivalent to ``CAN(-1/2,-1/2,0)``.
@@ -820,7 +820,7 @@ class ISWAP(Gate):
 
 
 # TESTME
-class SqrtISwap(Gate):
+class SqrtISwap(StdGate):
     r"""A square root of the iswap gate
 
     Equivalent to ``CAN(-1/4,-1/4,0)``.
@@ -850,7 +850,7 @@ class SqrtISwap(Gate):
 
 
 # TESTME
-class SqrtISwap_H(Gate):
+class SqrtISwap_H(StdGate):
     r"""The Hermitian conjugate of the square root iswap gate
 
     Equivalent to ``CAN(1/4, 1/4, 0)``.
@@ -880,7 +880,7 @@ class SqrtISwap_H(Gate):
 
 
 # TESTME
-class SqrtSwap(Gate):
+class SqrtSwap(StdGate):
     r"""Square root of the 2-qubit swap gate
 
     Equivalent to ``CAN(1/4, 1/4, 1/4)``.
@@ -910,7 +910,7 @@ class SqrtSwap(Gate):
 
 
 # TESTME
-class SqrtSwap_H(Gate):
+class SqrtSwap_H(StdGate):
     r"""The conjugate of the Square root swap gate
 
     Equivalent to ``CAN(-1/4, -1/4, -1/4)``, and locally equivalent to
@@ -940,7 +940,7 @@ class SqrtSwap_H(Gate):
 # end class SR_SWAP_H
 
 
-class SWAP(Gate):
+class SWAP(StdGate):
     r"""A 2-qubit swap gate
 
     Equivalent to ``CAN(1/2, 1/2, 1/2)``.
@@ -994,7 +994,7 @@ class SWAP(Gate):
 
 
 # TESTME DOCME
-class W(Gate):
+class W(StdGate):
     r"""A dual-rail Hadamard gate.
 
     Locally equivalent to ECP, `CAN(1/2, 1/4, 1/4)`.
@@ -1042,7 +1042,7 @@ class W(Gate):
 # end class W
 
 
-class XX(Gate):
+class XX(StdGate):
     r"""A parametric 2-qubit gate generated from an XX interaction,
 
     Equivalent to ``CAN(t, 0, 0)``.
@@ -1091,11 +1091,11 @@ class XX(Gate):
         t, = self.parameters()
         t %= 2
         if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
-            return IDEN(*qbs)
+            return IDEN(qbs[0])
         return self
 
 
-class XY(Gate):
+class XY(StdGate):
     r"""XY interaction gate.
 
     Powers of the iSWAP gate. Equivalent to ``CAN(t, t, 0)``.
@@ -1126,7 +1126,7 @@ class XY(Gate):
         return XY(e*t, *self.qubits)
 
 
-class YY(Gate):
+class YY(StdGate):
     r"""A parametric 2-qubit gate generated from a YY interaction.
 
     Equivalent to ``CAN(0, t, 0)``, and locally equivalent to
@@ -1174,7 +1174,7 @@ class YY(Gate):
         return self
 
 
-class ZZ(Gate):
+class ZZ(StdGate):
     r"""A parametric 2-qubit gate generated from a ZZ interaction.
 
     Equivalent to ``CAN(0,0,t)``, and locally equivalent to

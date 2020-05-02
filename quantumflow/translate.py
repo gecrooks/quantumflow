@@ -1510,10 +1510,10 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
 
 # Multi qubit gates
 
-def translate_iden(gate: IDEN) -> Iterator[I]:
-    """Translate multi-qubit identity gate to single qubit identities"""
-    for q in gate.qubits:
-        yield I(q)
+# def translate_iden(gate: IDEN) -> Iterator[I]:
+#     """Translate multi-qubit identity gate to single qubit identities"""
+#     for q in gate.qubits:
+#         yield I(q)
 
 
 TRANSLATORS: Dict[str, Callable] = {}

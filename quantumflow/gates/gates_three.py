@@ -12,7 +12,7 @@ import numpy as np
 # from .. import backend as bk
 from ..qubits import Qubit
 from ..states import State
-from ..ops import Gate
+from ..ops import Gate, StdGate
 from ..utils import multi_slice, cached_property
 from ..variables import Variable
 from ..config import CTRL, TARGET, SWAP_TARGET
@@ -30,7 +30,7 @@ PI = bk.PI
 __all__ = ('CCiX', 'CCNOT', 'CCXPow', 'CCZ', 'CSWAP', 'Deutsch')
 
 
-class CCiX(Gate):
+class CCiX(StdGate):
     r"""
     A doubly controlled iX gate.
 
@@ -83,7 +83,7 @@ class CCiX(Gate):
 # end class CCiX
 
 
-class CCNOT(Gate):
+class CCNOT(StdGate):
     r"""
     A 3-qubit Toffoli gate. A controlled, controlled-not.
 
@@ -150,7 +150,7 @@ class CCNOT(Gate):
 # end class CCNOT
 
 
-class CCXPow(Gate):
+class CCXPow(StdGate):
     r"""
     Powers of the Toffoli gate.
 
@@ -203,7 +203,7 @@ class CCXPow(Gate):
 # end class CCXPow
 
 
-class CSWAP(Gate):
+class CSWAP(StdGate):
     r"""
     A 3-qubit Fredkin gate. A controlled swap.
 
@@ -268,7 +268,7 @@ class CSWAP(Gate):
 # end class CSWAP
 
 
-class CCZ(Gate):
+class CCZ(StdGate):
     r"""
     A controlled, controlled-Z.
 
@@ -333,7 +333,7 @@ class CCZ(Gate):
 
 
 # TODO: hamiltonian
-class Deutsch(Gate):
+class Deutsch(StdGate):
     r"""
     The Deutsch gate, a 3-qubit universal quantum gate.
 

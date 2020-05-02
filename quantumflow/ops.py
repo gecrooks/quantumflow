@@ -39,7 +39,7 @@ and Pauli.
 
 
 from typing import (
-    Dict, Union, Any, Tuple, TypeVar, Sequence, Optional, Iterator, ClassVar)
+    Dict, Union, Any, Tuple, TypeVar, Sequence, Optional, Iterator, ClassVar, Type)
 from copy import copy
 from abc import ABC  # Abstract Base Class
 
@@ -58,7 +58,7 @@ from .variables import Variable
 from .backends import get_backend, BKTensor, TensorLike
 bk = get_backend()
 
-__all__ = ['Operation', 'Gate', 'Channel', 'Unitary']
+__all__ = ['Operation', 'Gate', 'StdGate', 'Unitary', 'Channel']
 
 
 OperationType = TypeVar('OperationType', bound='Operation')
@@ -215,22 +215,17 @@ class Gate(Operation):
         Gate.name : The name of this gate
 
     """
-    # DOCME
-    @classmethod
-    def args(cls) -> Tuple[str, ...]:
-        return tuple(s for s in getattr(cls, '__init__').__annotations__.keys()
-                     if s[0] != 'q' and s != 'return' and s != 'tensor')
 
     diagonal: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to be diagonal
+    """Is the tensor representation of this Operation known to always be diagonal
     in the computation basis?"""
 
     permutation: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to be a permutation
+    """Is the tensor representation of this Operation known to always be a permutation
     matrix in the computation basis?"""
 
     monomial: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to be a monomial
+    """Is the tensor representation of this Operation known to always be a monomial
     matrix in the computation basis (but not a permutation or diagonal?
     (A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.)"""
@@ -396,7 +391,41 @@ class Gate(Operation):
         U /= np.linalg.det(U) ** (1/rank)
         return Unitary(U, *self.qubits)
 
-# End class Gate
+
+class StdGate(Gate):
+    """
+    A standard gate. Standard gates have a name, have a fixed number of real
+    parameters, and act upon a fixed number of qubits.
+    """
+
+    # DOCME
+    # TESTME
+    @classmethod
+    def args(cls) -> Tuple[str, ...]:
+        return tuple(s for s in getattr(cls, '__init__').__annotations__.keys()
+                     if s[0] != 'q' and s != 'return')
+
+    # TESTME
+    @classmethod
+    def random(cls: Type[GateType], *qubits) -> GateType:
+        """Return a random instance of this gate. If qubits are not given, then
+        they are also picked randomly. 
+        """
+        params = [random.uniform(4, 4) for arg in gatetype.args()]
+        gate = gatetype(*params)
+
+        if not qubits:
+            qubits = list(range(0, 16))
+            random.shuffle(qubits) 
+            qubits = qubits[0: gate.qubit_nb]
+
+        gate = gate.on(*qubits)
+
+        return gate
+
+    # def specialize(self) -> StdGate:
+  
+# End class StdGate
 
 
 class Unitary(Gate):

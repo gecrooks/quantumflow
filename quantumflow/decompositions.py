@@ -53,6 +53,7 @@ __all__ = ['bloch_decomposition',
            'convert_can_to_weyl']
 
 
+# TODO: Optionally include phase
 def bloch_decomposition(gate: Gate) -> Circuit:
     """
     Converts a 1-qubit gate into a RN gate, a 1-qubit rotation of angle theta
@@ -85,7 +86,7 @@ def bloch_decomposition(gate: Gate) -> Circuit:
     # interface of decomposition routines uniform.
     return Circuit([RN(theta, nx, ny, nz, *gate.qubits)])
 
-
+# TODO: Optionally include phase?
 def zyz_decomposition(gate: Gate) -> Circuit:
     """
     Returns the Euler Z-Y-Z decomposition of a local 1-qubit gate.
@@ -95,8 +96,7 @@ def zyz_decomposition(gate: Gate) -> Circuit:
 
     q, = gate.qubits
 
-    U = asarray(gate.asoperator())
-    U /= np.linalg.det(U) ** (1/2)    # SU(2)
+    U = gate.su().asoperator()  # SU(2)
 
     if abs(U[0, 0]) > abs(U[1, 0]):
         theta1 = 2 * np.arccos(min(abs(U[0, 0]), 1))
