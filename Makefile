@@ -81,6 +81,10 @@ meta:	## Report versions of dependent packages
 	@echo
 	@python -m quantumflow.meta
 
+status:  ## git status -uno
+	@echo
+	@git status -uno
+
 .PHONY: help
 .PHONY: docs
 .PHONY: build
