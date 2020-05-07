@@ -75,7 +75,7 @@ def test_partial_trace():
     assert tr8.qubits == (1, )
     assert tr8.rank == 8
 
-    chan012 = qf.identity_gate(3).aschannel()
+    chan012 = qf.IdentityGate([0, 1, 2]).aschannel()
     assert np.isclose(qf.asarray(chan012.trace()), 64)   # 2**(2**3)
 
     chan02 = chan012.partial_trace([0, 2])
@@ -161,7 +161,7 @@ def test_fubini_study_angle():
         assert 2 * ang / abs(theta) == ALMOST_ONE
 
     for n in range(1, 6):
-        eye = qf.identity_gate(n)
+        eye = qf.IdentityGate(list(range(n)))
         assert qf.asarray(qf.fubini_study_angle(eye.vec, eye.vec)) \
             == ALMOST_ZERO
 

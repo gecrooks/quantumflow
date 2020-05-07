@@ -39,7 +39,7 @@ from .gates import (
     CV, CV_H, CY, CYPow, CH, B, SqrtISwap, SqrtISwap_H, SqrtSwap, SqrtSwap_H,
     W,
     # three qubit
-    CCNOT, CCXPow, CSWAP, CCZ, Deutsch, IDEN, CCiX,
+    CCNOT, CCXPow, CSWAP, CCZ, Deutsch, CCiX,
     # qasm gates
     U3, U2, CU3, CRZ, RZZ,
     # cirq gates

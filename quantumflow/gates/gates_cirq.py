@@ -13,7 +13,7 @@ import numpy as np
 from typing import Iterator, Union
 
 from ..config import SWAP_TARGET
-from ..ops import Gate, StdGate
+from ..ops import StdGate
 from ..qubits import Qubit
 from ..utils import cached_property
 from ..variables import Variable

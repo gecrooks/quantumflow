@@ -35,7 +35,7 @@ from .states import State, zero_state
 from .circuits import Circuit
 from .gates import (I, X, Y, Z, S, T, H, TX, TY, TZ,
                     CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
-                    CCNOT, CSWAP, CCZ, FSim, IDEN)
+                    CCNOT, CSWAP, CCZ, FSim)
 from .translate import select_translators, circuit_translate
 
 from .backends import backend as bk
@@ -54,7 +54,7 @@ __all__ = ('from_cirq_qubit', 'to_cirq_qubit',
 CIRQ_GATES: List[Type[Gate]] = [
     I, X, Y, Z, S, T, H, TX, TY, TZ,
     CZ, SWAP, ISWAP, CNOT, XX, YY, ZZ,
-    CCNOT, CSWAP, CCZ, FSim, IDEN]
+    CCNOT, CSWAP, CCZ, FSim]
 """List of QuantumFlow gates that we know how to convert to Cirq"""
 
 
@@ -128,7 +128,7 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
 
     simple_gates = {
         cirq.CSwapGate: CSWAP,
-        cirq.IdentityGate: IDEN,
+        # cirq.IdentityGate: I,
     }
 
     exponent_gates = {
@@ -163,7 +163,10 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         qbs = [qubit_map[qb] for qb in op.qubits]
         t = getattr(op.gate, 'exponent', 1)
 
-        if gatetype in simple_gates:
+        if gatetype is cirq.IdentityGate:
+            for q in qbs:
+                circ += I(q)
+        elif gatetype in simple_gates:
             circ += simple_gates[gatetype](*qbs)     # type: ignore
         elif gatetype in exponent_gates:
             gate = exponent_gates[gatetype](*qbs)    # type: ignore
@@ -234,9 +237,9 @@ def circuit_to_cirq(circ: Circuit,
         elif type(op) in turn_gates:
             t = op.params['t']
             cqc.append(turn_gates[type(op)](*qbs) ** t)
-        elif isinstance(op, IDEN):
-            gate = cirq.IdentityGate(op.qubit_nb).on(*qbs)
-            cqc.append(gate)
+        # elif isinstance(op, IDEN):
+        #     gate = cirq.IdentityGate(op.qubit_nb).on(*qbs)
+        #     cqc.append(gate)
         elif isinstance(op, FSim):
             theta, phi = op.params.values()
             gate = cirq.FSimGate(theta=theta, phi=phi).on(*qbs)

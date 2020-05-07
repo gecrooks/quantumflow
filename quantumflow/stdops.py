@@ -23,9 +23,6 @@ channels, circuits, or DAGCircuit's.
 .. autoclass :: Initialize
 .. autoclass :: Barrier
 .. autoclass :: Projection
-.. autoclass :: PermuteQubits
-.. autoclass :: ReverseQubits
-.. autoclass :: RotateQubits
 .. autoclass :: Store
 .. autoclass :: If
 .. autoclass :: Display
@@ -41,32 +38,23 @@ import textwrap
 
 import numpy as np
 
-from sympy.combinatorics import Permutation
-
 from .config import CIRCUIT_INDENT
 from .variables import Variable
 from .qubits import Qubit, Qubits, asarray
 from .states import State, Density
 from .ops import Operation, Gate, Channel, Unitary
 from .gates import P0, P1
-from .gates import SWAP, I, IDEN
 from .circuits import Circuit
 from .utils import BOX_CHARS, BOX_LEFT, BOX_TOP, BOX_BOT
-from .utils import cached_property
 
 from .backends import get_backend, BKTensor
 bk = get_backend()
 
-__all__ = ['dagger', 'Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
+
+__all__ = ['Moment', 'Measure', 'Reset', 'Initialize', 'Barrier',
            'Store',
            'If', 'Projection',
-           'PermuteQubits',  'ReverseQubits', 'RotateQubits',
            'Display', 'StateDisplay', 'ProbabilityDisplay', 'DensityDisplay']
-
-# TODO: Remove, not needed
-def dagger(elem: Operation) -> Operation:
-    """Return the complex conjugate of the Operation"""
-    return elem.H
 
 
 # TODO: Move to ops? Superclass CompositeOperation?
@@ -299,127 +287,6 @@ class Projection(Operation):
     @property
     def H(self) -> 'Projection':
         return self
-
-
-# FIXME: Should be Gate subclass because pure quantum operation?
-# Or treat as some sort of composite object?
-# But variable-qubit, and does not have same interface as other gate classes?
-# If moved to .gates we will get circular import errors due to Circuit import.
-class PermuteQubits(Gate):
-    """A permutation of qubits. A generalized multi-qubit SWAP."""
-    def __init__(self, qubits_in: Qubits, qubits_out: Qubits) -> None:
-        if set(qubits_in) != set(qubits_out):
-            raise ValueError("Incompatible sets of qubits")
-
-        self.qubits_out = tuple(qubits_out)
-        self.qubits_in = tuple(qubits_in)
-        super().__init__(qubits=qubits_in)
-
-    # FIXME: Instead of circuit, take iterable of gates
-    @classmethod
-    def from_circuit(cls, circ: Circuit) -> 'PermuteQubits':
-        """Create a qubit permutation from a circuit of swap gates"""
-        qubits_in = circ.qubits
-        N = circ.qubit_nb
-        perm = list(range(N))
-        for elem in circ:
-            if isinstance(elem, I) or isinstance(elem, IDEN):
-                continue
-            assert isinstance(elem, SWAP)  # FIXME
-            q0, q1 = elem.qubits
-            i0 = qubits_in.index(q0)
-            i1 = qubits_in.index(q1)
-            perm[i1], perm[i0] = perm[i0], perm[i1]
-            # TODO: Should also accept PermuteQubits
-
-        qubits_out = [qubits_in[p] for p in perm]
-        return cls(qubits_in, qubits_out)
-
-    @property
-    def qubits(self) -> Qubits:
-        return self.qubits_in
-
-    @property
-    def H(self) -> 'PermuteQubits':
-        return PermuteQubits(self.qubits_out, self.qubits_in)
-
-    def run(self, ket: State) -> State:
-        qubits = ket.qubits
-        N = ket.qubit_nb
-
-        perm = list(range(N))
-        for q0, q1 in zip(self.qubits_in, self.qubits_out):
-            perm[qubits.index(q0)] = qubits.index(q1)
-
-        tensor = bk.transpose(ket.tensor, perm)
-
-        return State(tensor, qubits, ket.memory)
-
-    def evolve(self, rho: Density) -> Density:
-        qubits = rho.qubits
-        N = rho.qubit_nb
-
-        perm = list(range(N))
-        for q0, q1 in zip(self.qubits_in, self.qubits_out):
-            perm[qubits.index(q0)] = qubits.index(q1)
-        perm.extend([idx+N for idx in perm])
-
-        tensor = bk.transpose(rho.tensor, perm)
-
-        return Density(tensor, qubits, rho.memory)
-
-    @cached_property
-    def tensor(self) -> BKTensor:
-        N = self.qubit_nb
-        qubits = self.qubits
-
-        perm = list(range(2*N))
-        for q0, q1 in zip(qubits, self.qubits_out):
-            perm[qubits.index(q0)] = qubits.index(q1)
-
-        U = np.eye(2**N)
-        U = np.reshape(U, [2]*2*N)
-        U = np.transpose(U, perm)
-        return bk.astensorproduct(U)
-
-    # TODO: Rename to decomposition()?
-    def ascircuit(self) -> Circuit:
-        """
-        Returns a swap network for this permutation, assuming all-to-all
-        connectivity.
-        """
-        circ = Circuit()
-        qubits = self.qubits
-
-        perm = [self.qubits.index(q) for q in self.qubits_out]
-        for idx0, idx1 in (Permutation(perm).transpositions()):
-            circ += SWAP(qubits[idx0], qubits[idx1])
-
-        return circ
-
-
-class ReverseQubits(PermuteQubits):
-    """A qubit permutation that reverses the order of qubits"""
-    def __init__(self, qubits: Qubits) -> None:
-        super().__init__(qubits, tuple(reversed(qubits)))
-
-    def ascircuit(self) -> Circuit:
-        circ = Circuit()
-        qubits = self.qubits
-        for idx in range(self.qubit_nb//2):
-            circ += SWAP(qubits[idx], qubits[-idx-1])
-        return circ
-
-
-# DOCME
-class RotateQubits(PermuteQubits):
-    def __init__(self, qubits: Qubits, shift: int = 1) -> None:
-        qubits_in = tuple(qubits)
-        nshift = shift % len(qubits)
-        qubits_out = qubits_in[nshift:] + qubits_in[:nshift]
-
-        super().__init__(qubits_in, qubits_out)
-        self.shift = shift
 
 
 # FIXME: Conflicts with Store in xforest?

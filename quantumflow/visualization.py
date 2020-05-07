@@ -19,7 +19,8 @@ from sympy import Symbol
 
 from .qubits import Qubits
 from .gates import P0, P1
-from .gates import (SWAP, CZ, IDEN, CSWAP)
+from .gates import (SWAP, CZ, CSWAP)
+from .modules import (IdentityGate)
 from .ops import Gate
 from .stdops import Reset, Measure
 from .utils import symbolize, bitlist_to_int, int_to_bitlist
@@ -40,11 +41,12 @@ __all__ = ('LATEX_GATESET',
 LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
                            'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
                            'CZ', 'SWAP', 'ISWAP', 'PSWAP',
-                           'CV', 'CV_H', 'CPHASE', 'CH', 'Can', 'CCNOT', 'CSWAP',
+                           'CV', 'CV_H', 'CPHASE', 'CH', 'Can', 'CCNOT',
+                           'CSWAP',
                            'CCZ', 'CCiX', 'Deutsch', 'CCXPow',
                            'XX', 'YY', 'ZZ', 'CAN',
-                           'P0', 'P1', 'Reset', 'NoWire','Measure', 'Ph', 'ECP',
-                           'SqrtISwap_H', 'Barenco'])
+                           'P0', 'P1', 'Reset', 'NoWire', 'Measure', 'Ph',
+                           'ECP', 'SqrtISwap_H', 'Barenco'])
 
 
 kwarg_to_symbol = {
@@ -70,7 +72,7 @@ kwarg_to_symbol = {
 """Mapping of standard gate arguments to sympy Symbols"""
 
 
-class NoWire(IDEN):
+class NoWire(IdentityGate):
     """Dummy gate used to draw a gap in a circuit"""
     _diagram_labels = ['  ']
 
@@ -148,7 +150,7 @@ def circuit_to_latex(
 
     if len(circ) == 0:
         # Empty circuit
-        circ = Circuit(NoWire(0))
+        circ = Circuit(NoWire([0]))
 
     if qubits is None:
         qubits = circ.qubits
@@ -468,7 +470,7 @@ def circuit_to_diagram(
 
     if len(circ) == 0:
         # Empty circuit
-        circ = Circuit(NoWire(0))
+        circ = Circuit(NoWire([0]))
 
     if qubits is None:
         qubits = circ.qubits

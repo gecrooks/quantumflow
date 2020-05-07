@@ -104,7 +104,7 @@ def test_stdchannels_creation():
 
 
 def test_identity():
-    chan = qf.identity_gate(1).aschannel()
+    chan = qf.IdentityGate([1]).aschannel()
     rho = qf.random_density(2)
     after = chan.evolve(rho)
     assert qf.densities_close(rho, after)
@@ -113,7 +113,7 @@ def test_identity():
 
 
 def test_channel_chi():
-    chan = qf.identity_gate(3).aschannel()
+    chan = qf.IdentityGate([0, 1, 2]).aschannel()
     chi = qf.asarray(chan.chi())
     assert chi.shape == (64, 64)
 
@@ -126,7 +126,7 @@ def test_channle_choi():
 
 
 def test_channel_add():
-    chan1 = qf.identity_gate(1).aschannel()
+    chan1 = qf.IdentityGate([0]).aschannel()
     chan1 *= 0.5
 
     chan2 = qf.X().aschannel()

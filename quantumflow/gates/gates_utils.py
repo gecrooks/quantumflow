@@ -16,7 +16,6 @@ from ..qubits import Qubit, Qubits, qubits_count_tuple
 from ..qubits import outer_product
 from ..ops import Gate, Unitary
 from .. import utils
-from .gates_one import IDEN
 
 from ..paulialgebra import Pauli
 
@@ -24,7 +23,7 @@ from ..backends import backend as bk
 from ..backends import BKTensor
 
 
-__all__ = ['identity_gate',
+__all__ = [
            'random_gate',
            'join_gates',
            'control_gate',
@@ -34,12 +33,13 @@ __all__ = ['identity_gate',
            'print_gate',
            ]
 
+# TODO: Remove this module
 
 # TODO: Not needed?
-def identity_gate(qubits: Union[int, Qubits]) -> Gate:
-    """Returns the K-qubit identity gate"""
-    _, qubits = qubits_count_tuple(qubits)
-    return IDEN(*qubits)
+# def identity_gate(qubits: Union[int, Qubits]) -> Gate:
+#     """Returns the K-qubit identity gate"""
+#     _, qubits = qubits_count_tuple(qubits)
+#     return IDEN(*qubits)
 
 
 # TODO: Can also use circuit.asgate()
@@ -59,7 +59,9 @@ def control_gate(control: Qubit, gate: Gate) -> Unitary:
         raise ValueError('Gate and control qubits overlap')
 
     qubits = [control, *gate.qubits]
-    gate_tensor = join_gates(P0(control), identity_gate(gate.qubits)).tensor \
+    from ..modules import IdentityGate
+
+    gate_tensor = join_gates(P0(control), IdentityGate(gate.qubits)).tensor \
         + join_gates(P1(control), gate).tensor
     controlled_gate = Unitary(gate_tensor, *qubits)
 

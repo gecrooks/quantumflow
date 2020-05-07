@@ -28,7 +28,7 @@ from ..variables import Variable
 from ..config import CTRL, TARGET, SWAP_TARGET, SQRT, CONJ
 from ..paulialgebra import Pauli, sX, sY, sZ
 
-from .gates_one import IDEN, V, V_H, H, X, Z, Y, S, S_H
+from .gates_one import V, V_H, H, X, Z, Y, S, S_H, I
 from .gates_utils import control_gate, unitary_from_hamiltonian
 
 from ..backends import backend as bk
@@ -49,6 +49,46 @@ __all__ = (
     # Deprecated
     'CAN',
     )
+
+
+# class I2(Gate):
+#     r"""
+#     The two-qubit identity gate.
+#     """
+#     identity = True
+#     interchangeable = True
+#     diagonal = True
+#     _diagram_labels = ['I']
+#     _diagram_noline = True
+
+#     def __init__(self, q0, q1) -> None:
+#         super().__init__(qubits=(q0, q1))
+
+#     @property
+#     def hamiltonian(self) -> Pauli:
+#         return Pauli.zero()
+
+#     @cached_property
+#     def tensor(self) -> BKTensor:
+#         return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
+
+#     @property
+#     def H(self) -> 'I2':
+#         return self  # Hermitian
+
+#     def __pow__(self, t: Variable) -> 'I2':
+#         return self
+
+#     def run(self, ket: State) -> State:
+#         return ket
+
+#     def evolve(self, rho: Density) -> Density:
+#         return rho
+
+# # end class I2
+
+# # Legacy. Deprecate
+# IDEN = I2
 
 
 class B(StdGate):
@@ -349,7 +389,7 @@ class CNotPow(StdGate):
         t, = self.parameters()
         t %= 2
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
-            return IDEN(*qbs)
+            return I(qbs[0])
         elif np.isclose(t, 1.0):
             return CNOT(*qbs)
         return self
@@ -706,7 +746,7 @@ class EXCH(StdGate):
         t, = self.parameters()
         t %= 2
         if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
-            return IDEN(*qbs)
+            return I(qbs[0])
         return self
 
 # end class Exch
@@ -1091,7 +1131,7 @@ class XX(StdGate):
         t, = self.parameters()
         t %= 2
         if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
-            return IDEN(qbs[0])
+            return I(qbs[0])
         return self
 
 
@@ -1170,7 +1210,7 @@ class YY(StdGate):
         t, = self.parameters()
         t %= 2
         if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
-            return IDEN(*qbs)
+            return I(qbs[0])
         return self
 
 
@@ -1222,7 +1262,7 @@ class ZZ(StdGate):
         #     return self
         t = t % 2
         if (np.isclose(t, 0.0) or np.isclose(t, 2.0)):
-            return IDEN(*qbs)
+            return I(qbs[0])
         return self
 
 

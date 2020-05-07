@@ -50,7 +50,7 @@ def test_CZ():
 
 def test_cnot_reverse():
     # Hadamards reverse control on CNOT
-    gate0 = qf.identity_gate(2)
+    gate0 = qf.IdentityGate([0, 1])
     gate0 = qf.H(0) @ gate0
     gate0 = qf.H(1) @ gate0
     gate0 = qf.CNOT(1, 0) @ gate0
@@ -95,7 +95,7 @@ def test_xy():
         t = random.uniform(-4, +4)
         assert qf.almost_unitary(qf.XY(t))
 
-    assert qf.gates_close(qf.XY(0), qf.identity_gate(2))
+    assert qf.gates_close(qf.XY(0), qf.IdentityGate([0, 1]))
     assert qf.gates_close(qf.XY(-1/2), qf.ISWAP())
     assert qf.gates_close(qf.XY(1/2), qf.ISWAP().H)
 
@@ -120,7 +120,7 @@ def test_cphase_gates():
         gate01 = qf.conditional_gate(0, qf.PhaseShift(theta, 1), qf.I(1))
         assert qf.gates_close(gate01, qf.CPHASE01(theta))
 
-        gate00 = qf.identity_gate(2)
+        gate00 = qf.IdentityGate([0, 1])
         gate00 = qf.X(0) @ gate00
         gate00 = qf.X(1) @ gate00
         gate00 = gate11 @ gate00
@@ -128,7 +128,7 @@ def test_cphase_gates():
         gate00 = qf.X(1) @ gate00
         assert qf.gates_close(gate00, qf.CPHASE00(theta))
 
-        gate10 = qf.identity_gate(2)
+        gate10 = qf.IdentityGate([0, 1])
         gate10 = qf.X(0) @ gate10
         gate10 = qf.X(1) @ gate10
         gate10 = gate01 @ gate10
@@ -211,7 +211,7 @@ def test_inverse_parametric_2qubit():
             theta = random.uniform(-4*pi, +4*pi)
             g = gate(theta)
             inv = g.H
-            assert qf.gates_close(qf.identity_gate(2), g @ inv)
+            assert qf.gates_close(qf.IdentityGate([0, 1]), g @ inv)
             assert type(g) == type(inv)
 
 
@@ -235,7 +235,7 @@ def test_inverse_tgates_2qubit():
             t = random.uniform(-2, +2)
             g = gate(t)
             inv = g.H
-            assert qf.gates_close(qf.identity_gate(2), g @ inv)
+            assert qf.gates_close(qf.IdentityGate([0, 1]), g @ inv)
             assert type(g) == type(inv)
 
 
@@ -247,7 +247,7 @@ def test_CAN():
     assert qf.almost_unitary(gate)
     inv = gate.H
     assert type(gate) == type(inv)
-    assert qf.gates_close(qf.identity_gate(2), inv @ gate)
+    assert qf.gates_close(qf.IdentityGate([0, 1]), inv @ gate)
 
 
 def test_EXCH():
@@ -256,7 +256,7 @@ def test_EXCH():
     assert qf.almost_unitary(gate)
     inv = gate.H
     assert type(gate) == type(inv)
-    assert qf.gates_close(qf.identity_gate(2), inv @ gate)
+    assert qf.gates_close(qf.IdentityGate([0, 1]), inv @ gate)
 
     gate1 = qf.CAN(t, t, t)
     assert qf.gates_close(gate, gate1)
@@ -270,12 +270,12 @@ def test_XX_YY_ZZ():
         assert qf.almost_unitary(gate)
         inv = gate.H
         assert type(gate) == type(inv)
-        assert qf.gates_close(qf.identity_gate(2), gate @ inv)
+        assert qf.gates_close(qf.IdentityGate([0, 1]), gate @ inv)
 
 
 def test_pseudo_hadamard():
     # 1-qubit pseudo-Hadamard gates turn a cnot into a CZ
-    gate = qf.identity_gate(2)
+    gate = qf.IdentityGate([0, 1])
     gate = qf.TY(3/2, 1).H @ gate
     gate = qf.CNOT(0, 1) @ gate
     gate = qf.TY(3/2, 1) @ gate

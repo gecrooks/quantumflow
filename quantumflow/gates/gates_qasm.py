@@ -10,7 +10,7 @@ QuantumFlow: Gates specific to QASM
 """
 
 
-from ..ops import Gate, StdGate
+from ..ops import StdGate
 from ..qubits import Qubit
 
 from ..utils import cached_property

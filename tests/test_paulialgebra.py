@@ -4,20 +4,14 @@ Unit tests for quantumflow.paulialgebra
 
 from itertools import product
 
-from numpy import pi
 import numpy as np
 
-import networkx as nx
 import scipy.linalg
 
 import pytest
 
 import quantumflow as qf
 from quantumflow.paulialgebra import PAULI_OPS, sI, sX, sY, sZ
-
-from . import ALMOST_ZERO
-
-from quantumflow import backend as bk
 
 
 def test_term():
@@ -297,73 +291,6 @@ def test_run():
     ket0 = qf.zero_state(3)
     ket1 = s.run(ket0)
     qf.print_state(ket1)
-
-
-def test_pauli_exp_circuit():
-    pauli0 = 0.5 * pi * qf.sX(0) * sX(1)
-
-    alpha = 0.4
-    circ = qf.pauli_exp_circuit(pauli0, alpha)
-    print(circ)
-    coords = qf.canonical_coords(circ.asgate())
-    assert coords[0] - 0.4 == ALMOST_ZERO
-
-    pauli1 = pi * sX(0) * sX(1) * sY(2) * sZ(3)
-    circ1 = qf.pauli_exp_circuit(pauli1, alpha)
-
-    print(pauli1)
-    print(circ1)
-
-    print()
-    top2 = nx.star_graph(4)
-    pauli2 = 0.5 * pi * sX(1) * sY(2) * sZ(3)
-    circ2 = qf.pauli_exp_circuit(pauli2, alpha, top2)
-    print(circ2)
-
-    alpha = 0.2
-    top3 = nx.star_graph(4)
-    pauli3 = 0.5 * pi * sX(1) * sX(2)
-    circ3 = qf.pauli_exp_circuit(pauli3, alpha, top3)
-
-    print(pauli3)
-    print(circ3)
-
-    assert qf.circuits_close(circ3, qf.Circuit([qf.I(0), qf.XX(alpha, 1, 2)]))
-
-    qf.pauli_exp_circuit(sI(0), alpha, top2)
-
-    with pytest.raises(ValueError):
-        pauli4 = 0.5j * pi * sX(1) * sX(2)
-        _ = qf.pauli_exp_circuit(pauli4, alpha, top3)
-
-    top4 = nx.DiGraph()
-    nx.add_path(top4, [3, 2, 1, 0])
-    circ3 = qf.pauli_exp_circuit(pauli3, alpha, top4)
-
-
-def test_pauli_exp_circuit_more():
-
-    alphas = [0.1, 2., -3.14, -0.4]
-    paulis = [qf.sZ(0) + 1,
-              qf.sY(0),
-              qf.sX(0),
-              0.5 * pi * qf.sZ(0) * sZ(1),
-              0.5 * pi * qf.sX(0) * sZ(1)]
-
-    for alpha in alphas:
-        for pauli in paulis:
-            print(alpha, pauli)
-            circ = qf.pauli_exp_circuit(pauli, alpha)
-            qbs = circ.qubits
-
-            op = bk.evaluate(pauli.asoperator(qbs))
-            U = scipy.linalg.expm(-1.0j * alpha * op)
-            gate = qf.Unitary(U, *qbs)
-            assert qf.gates_close(gate, circ.asgate())
-
-    pauli = qf.sX(0) + qf.sZ(0)
-    with pytest.raises(ValueError):
-        qf.pauli_exp_circuit(pauli, 0.2)
 
 
 def test_pauli_decompose_hermitian():

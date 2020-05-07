@@ -251,13 +251,16 @@ from .gates_qasm import __all__ as _gates_qasm
 _gates = (_gates_one + _gates_two + _gates_three + _gates_qasm
           + _gates_cirq + _gates_forest)
 
+# TODO: Renamce?
 NAMED_GATES = {name: globals()[name] for name in _gates}
-del NAMED_GATES['IDEN']  # FIXME: Removed because not a StdGate 
 """
-A mapping between gate names and gate classes
+A mapping between gate names and standard gate classes
 """
 
-STD_GATESET = frozenset(NAMED_GATES.values())
+STDGATES = set(NAMED_GATES.values())
 """
 A set of all the standard gates classes.
 """
+
+# TODO: Deprecate
+STD_GATESET = STDGATES

@@ -115,7 +115,7 @@ def test_aschannel():
 
 
 def test_depth():
-    circ = qf.qft_circuit([0, 1, 2, 3])
+    circ = qf.QFTGate([0, 1, 2, 3]).ascircuit()
     dag = qf.DAGCircuit(circ)
     assert dag.depth() == 8
 
@@ -175,7 +175,7 @@ def test_components():
     comps = dag.components()
     assert dag.component_nb() == 2
 
-    circ0 = qf.qft_circuit([0, 2, 4, 6])
+    circ0 = qf.QFTGate([0, 2, 4, 6]).ascircuit()
     circ1 = qf.ghz_circuit([1, 3, 5, 7])
     circ.extend(circ0)
     circ.extend(circ1)

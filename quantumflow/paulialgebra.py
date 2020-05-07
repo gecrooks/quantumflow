@@ -259,7 +259,8 @@ class Pauli(Operation):
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
-        from .gates import NAMED_GATES, IDEN
+        from .gates import NAMED_GATES
+        from .modules import IdentityGate
 
         qbs = self.qubits if qubits is None else qubits
         if self.is_zero():
@@ -270,7 +271,7 @@ class Pauli(Operation):
         for term, coeff in self.terms:
             if variable_is_symbolic(coeff):
                 coeff = complex(coeff)
-            gate = IDEN(*qbs)
+            gate = IdentityGate(qbs)
             for qubit, op in term:
                 gate = NAMED_GATES[op](qubit) @ gate
             res.append(gate.asoperator() * coeff)

@@ -75,7 +75,8 @@ from .states import State, Density, random_state
 from .ops import Gate, Channel
 from .channels import Kraus
 from .circuits import Circuit
-from .gates import I, IDEN
+from .gates import I
+from .modules import IdentityGate
 
 from .backends import backend as bk
 from .backends import BKTensor
@@ -427,12 +428,12 @@ def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> BKTensor:
 
 def almost_unitary(gate: Gate) -> bool:
     """Return true if gate is (almost) unitary"""
-    return gates_close(gate @ gate.H, IDEN(*gate.qubits))
+    return gates_close(gate @ gate.H, IdentityGate(gate.qubits))
 
 
 def almost_identity(gate: Gate) -> bool:
     """Return true if gate tensor is (almost) the identity"""
-    return gates_close(gate, IDEN(*gate.qubits))
+    return gates_close(gate, IdentityGate(gate.qubits))
 
 
 def almost_hermitian(gate: Gate) -> bool:

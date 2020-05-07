@@ -110,7 +110,7 @@ def test_U3():
 
 
 def test_cu1():
-    # Test that QASM's cu1 gate is the same as CPHASE upto global phase
+    # Test that QASM's cu1 gate is the same as CPHASE up to global phase
 
     for _ in range(REPS):
         theta = random.uniform(0, 4)
@@ -136,8 +136,8 @@ def test_CU3():
         qf.CU3(theta, phi, lam).H
         ]).asgate()
 
-    assert qf.gates_close(gate, qf.IDEN(0, 1))
-    # assert qf.almost_identity(gate)
+    # assert qf.gates_close(gate, qf.IDEN(0, 1))
+    assert qf.almost_identity(gate)
 
     cgate = qf.control_gate(0, qf.U3(theta, phi, lam, 1))
     print()
@@ -211,34 +211,35 @@ def test_PhasedX():
         gate2 = gate1 ** t
         p2, t2 = gate2.params.values()
         assert p2 == p
-        assert t2 == t ** 2
+        assert t2 - t ** 2 == ALMOST_ZERO
 
         assert qf.gates_close(gate0, gate0.specialize())
 
     assert qf.gates_close(qf.PhasedX(-2.0, q0).specialize(), qf.X(q0))
 
 
-def test_IDEN():
-    gate0 = qf.IDEN(0, 1)
-    assert gate0.qubit_nb == 2
+# FIXME: Move to compounds
+# def test_IDEN():
+#     gate0 = qf.IDEN(0, 1)
+#     assert gate0.qubit_nb == 2
 
-    gate1 = qf.IDEN(0, 1, 4, 5)
-    assert gate1.qubit_nb == 4
+#     gate1 = qf.IDEN(0, 1, 4, 5)
+#     assert gate1.qubit_nb == 4
 
-    assert gate1 ** 0.5 == gate1
+#     assert gate1 ** 0.5 == gate1
 
-    ket = qf.random_state([0, 1])
-    assert gate0.run(ket) == ket
+#     ket = qf.random_state([0, 1])
+#     assert gate0.run(ket) == ket
 
-    rho = qf.random_density([0, 1])
-    assert gate0.evolve(rho) == rho
+#     rho = qf.random_density([0, 1])
+#     assert gate0.evolve(rho) == rho
 
 
 optimized_run_gates = [
     qf.I(), qf.X(), qf.Z(), qf.Y(), qf.H(), qf.T(), qf.S(), qf.T_H(),
     qf.S_H(), qf.TX(0.1), qf.TY(0.2), qf.TZ(0.2),
     qf.CNOT(), qf.CZ(), qf.SWAP(), qf.CCNOT(),
-    qf.CSWAP(), qf.CCZ(), qf.IDEN(0, 1, 2), qf.PhaseShift(0.2),
+    qf.CSWAP(), qf.CCZ(), qf.PhaseShift(0.2),
     qf.ISWAP()]
 
 

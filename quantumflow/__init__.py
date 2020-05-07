@@ -13,14 +13,14 @@ QuantumFlow: prototype simulator of gate-based quantum computers.
 #
 # Submodules for interfacing with external resources (.xcirq, .xforest, etc.)
 # are not imported at top level, since they have external dependencies that
-# are not installed by default.
+# often break, and are not installed by default.
 #
 # We use a star import here (which necessitates suppressing lint messages)
 # so that the public API can be specified in the individual submodules.
 # Each of these submodules should define __all__.
 #
 # Import order defines the import hierarchy (to avoid circular imports)
-# Modules should only import modules further up the list.
+# Modules should only top level import modules further up the list.
 
 from quantumflow.config import version as __version__       # noqa: F401
 from quantumflow.backends import backend                    # noqa: F401
@@ -33,6 +33,7 @@ from quantumflow.gates import *                             # noqa: F401, F403
 from quantumflow.channels import *                          # noqa: F401, F403
 from quantumflow.paulialgebra import *                      # noqa: F401, F403
 from quantumflow.circuits import *                          # noqa: F401, F403
+from quantumflow.modules import *							# noqa: F401, F403
 from quantumflow.decompositions import *                    # noqa: F401, F403
 from quantumflow.measures import *                          # noqa: F401, F403
 from quantumflow.dagcircuit import *                        # noqa: F401, F403

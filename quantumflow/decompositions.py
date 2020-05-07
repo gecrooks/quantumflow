@@ -86,6 +86,7 @@ def bloch_decomposition(gate: Gate) -> Circuit:
     # interface of decomposition routines uniform.
     return Circuit([RN(theta, nx, ny, nz, *gate.qubits)])
 
+
 # TODO: Optionally include phase?
 def zyz_decomposition(gate: Gate) -> Circuit:
     """

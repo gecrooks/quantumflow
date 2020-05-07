@@ -39,7 +39,7 @@ and Pauli.
 
 
 from typing import (
-    Dict, Union, Any, Tuple, TypeVar, Sequence, Optional, Iterator, ClassVar, Type)
+    Dict, Union, Any, Tuple, TypeVar, Sequence, Optional, Iterator, ClassVar)
 from copy import copy
 from abc import ABC  # Abstract Base Class
 
@@ -216,19 +216,25 @@ class Gate(Operation):
 
     """
 
+    identity: ClassVar[bool] = False
+    """Is this Gate type an identity?"""
+
     diagonal: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to always be diagonal
+    """Is the tensor representation of this Gate known to always be diagonal
     in the computation basis?"""
 
     permutation: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to always be a permutation
+    """Is the tensor representation of this Gate known to always be a permutation
     matrix in the computation basis?"""
 
     monomial: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to always be a monomial
-    matrix in the computation basis (but not a permutation or diagonal?
+    """Is the tensor representation of this Gate known to always be a monomial
+    matrix in the computation basis (but not diagonal or a permutation?).
     (A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.)"""
+
+    hermitian: ClassVar[bool] = False
+    """Is this Gate know to always be hermitian?"""
 
     # FIXME: Possible replacement for 2 separate boolean properties above.
     # Currently only 'diagonal' is actually exploited by run() method
@@ -245,11 +251,13 @@ class Gate(Operation):
         diagonal
         permutation
         monomial
+        swap
 
     A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.
 
-    This property is used to optimize the run() state evolution method.
+    This property is used to optimize the run() and evolve
+    state evolution methods.
     """
 
     # DOCME
@@ -326,6 +334,8 @@ class Gate(Operation):
 
     @property
     def H(self) -> 'Gate':
+        if self.hermitian:
+            return self
         return Unitary(self.vec.H.tensor, *self.qubits)
 
     def __matmul__(self, other: 'Gate') -> 'Gate':
@@ -405,26 +415,26 @@ class StdGate(Gate):
         return tuple(s for s in getattr(cls, '__init__').__annotations__.keys()
                      if s[0] != 'q' and s != 'return')
 
-    # TESTME
-    @classmethod
-    def random(cls: Type[GateType], *qubits) -> GateType:
-        """Return a random instance of this gate. If qubits are not given, then
-        they are also picked randomly. 
-        """
-        params = [random.uniform(4, 4) for arg in gatetype.args()]
-        gate = gatetype(*params)
+    # # TESTME
+    # @classmethod
+    # def random(cls: Type[GateType], *qubits) -> GateType:
+    #     """Return a random instance of this gate. If qubits are not given,
+    #     then they are also picked randomly.
+    #     """
+    #     params = [random.uniform(4, 4) for arg in gatetype.args()]
+    #     gate = gatetype(*params)
 
-        if not qubits:
-            qubits = list(range(0, 16))
-            random.shuffle(qubits) 
-            qubits = qubits[0: gate.qubit_nb]
+    #     if not qubits:
+    #         qubits = list(range(0, 16))
+    #         random.shuffle(qubits)
+    #         qubits = qubits[0: gate.qubit_nb]
 
-        gate = gate.on(*qubits)
+    #     gate = gate.on(*qubits)
 
-        return gate
+    #     return gate
 
     # def specialize(self) -> StdGate:
-  
+
 # End class StdGate
 
 

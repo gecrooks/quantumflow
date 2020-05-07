@@ -16,7 +16,7 @@ from numpy import sqrt, pi
 from .qubits import Qubit
 from .ops import Gate
 from .gates import S, S_H, V, X, Z, I
-from .gates import TX, TY, TZ, IDEN, RN
+from .gates import TX, TY, TZ, RN
 from .circuits import Circuit
 # from .variables import variable_is_symbolic
 from .measures import gates_close
@@ -136,7 +136,7 @@ class Clifford(Gate):
         if not isinstance(other, Gate):
             raise NotImplementedError()
 
-        if isinstance(other, I) or isinstance(other, IDEN):
+        if other.identity:
             return self
 
         if not isinstance(other, Clifford):

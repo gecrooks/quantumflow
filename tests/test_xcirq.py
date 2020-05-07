@@ -151,8 +151,7 @@ def test_cirq_to_circuit_0_7():
     assert isinstance(gate, qf.TZ)
     assert gate.params['t'] == 0.5/pi
 
-    gate = cirq_to_circuit(cq.Circuit(cq.IdentityGate(2).on(q0, q1)))[0]
-    assert isinstance(gate, qf.IDEN)
+    # gate = cirq_to_circuit(cq.Circuit(cq.IdentityGate(2).on(q0, q1)))[0]
 
     op = (cq.PhasedISwapPowGate()**0.5).on(q0, q1)
     circ = cirq_to_circuit(cq.Circuit(op))

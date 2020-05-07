@@ -98,7 +98,7 @@ def test_visualize_circuit():
 
     circ += qf.CH(1, 6)
 
-    circ += qf.visualization.NoWire(0, 1, 2)
+    circ += qf.visualization.NoWire([0, 1, 2])
     # circ += qf.visualization.NoWire(4, 1, 2)
 
     if os.environ.get('QUANTUMFLOW_VIZTEST'):

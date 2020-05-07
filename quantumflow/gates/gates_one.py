@@ -26,16 +26,16 @@ from ..backends import BKTensor
 pi = bk.pi
 PI = bk.PI
 
-__all__ = ('IDEN',
+__all__ = (
     'I', 'Ph',
     'X', 'Y', 'Z', 'H', 'S', 'T', 'PhaseShift',
     'RX', 'RY', 'RZ', 'RN', 'TX', 'TY', 'TZ', 'TH', 'S_H', 'T_H',
     'V', 'V_H', 'SqrtY', 'SqrtY_H')
 
 
-def _specialize_gate(gate: Gate,
+def _specialize_gate(gate: StdGate,
                      periods: List[float],
-                     opts: Dict[float, Type[Gate]]) -> Gate:
+                     opts: Dict[float, Type[StdGate]]) -> StdGate:
     """Return a specialized instance of a given general gate. Used
     by the specialize code of various gates.
 
@@ -61,49 +61,6 @@ def _specialize_gate(gate: Gate,
     return type(gate)(*params, *gate.qubits)    # type: ignore
 
 
-# TODO: Move elsewhere. Not a standard gate.
-class IDEN(Gate):
-    r"""
-    The multi-qubit identity gate.
-    """
-    interchangeable = True
-    diagonal = True
-    _diagram_labels = ['I']
-    _diagram_noline = True
-
-    def __init__(self, *qubits: Qubit) -> None:
-        if not qubits:
-            qubits = (0,)
-        super().__init__(qubits=qubits)
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        return Pauli.zero()
-
-    @cached_property
-    def tensor(self) -> BKTensor:
-        return bk.astensorproduct(np.eye(2 ** self.qubit_nb))
-
-    @property
-    def H(self) -> 'IDEN':
-        return self  # Hermitian
-
-    def __pow__(self, t: Variable) -> 'IDEN':
-        return self
-
-    def run(self, ket: State) -> State:
-        return ket
-
-    def evolve(self, rho: Density) -> Density:
-        return rho
-
-    def specialize(self) -> Gate:
-        if len(self.qubits) == 1:
-            return I(*self.qubits)
-        return self
-
-# end class IDEN
-
 # Standard 1 qubit gates
 
 class I(StdGate):                                      # noqa: E742
@@ -113,6 +70,7 @@ class I(StdGate):                                      # noqa: E742
     .. math::
         I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
     """
+    identity = True
     diagonal = True
 
     def __init__(self, q0: Qubit = 0) -> None:
@@ -138,7 +96,6 @@ class I(StdGate):                                      # noqa: E742
 
     def evolve(self, rho: Density) -> Density:
         return rho
-
 
 
 class Ph(StdGate):
@@ -484,7 +441,7 @@ class PhaseShift(StdGate):
         theta, = self.parameters()
         return TZ(theta/pi, *self.qubits).run(ket)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         qbs = self.qubits
         theta, = self.parameters()
         t = theta/pi
@@ -534,7 +491,7 @@ class RX(StdGate):
         theta, = self.parameters()
         return RX(theta * t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         qbs = self.qubits
         theta, = self.parameters()
         t = theta/pi
@@ -583,7 +540,7 @@ class RY(StdGate):
         theta, = self.parameters()
         return RY(theta * t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         qbs = self.qubits
         theta, = self.parameters()
         t = theta/pi
@@ -638,7 +595,7 @@ class RZ(StdGate):
         theta, = self.parameters()
         return TZ(theta/pi, *self.qubits).run(ket)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         qbs = self.qubits
         theta, = self.parameters()
         t = theta/pi
@@ -836,7 +793,7 @@ class TX(StdGate):
         t, = self.parameters()
         return TX(e * t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         opts = {0.0: I, 0.5: V, 1.0: X, 1.5: V_H, 2.0: I}
         return _specialize_gate(self, [2], opts)
 # end class TX
@@ -884,7 +841,7 @@ class TY(StdGate):
         t, = self.parameters()
         return TY(e*t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         opts = {0.0: I, 1.0: Y, 2.0: I}
         return _specialize_gate(self, [2], opts)
 
@@ -941,7 +898,7 @@ class TZ(StdGate):
 
         return super().run(ket)  # pragma: no cover
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         opts = {0.0: I, 0.25: T, 0.5: S, 1.0: Z, 1.5: S_H, 1.75: T_H, 2.0: I}
         return _specialize_gate(self, [2], opts)
 
@@ -994,7 +951,7 @@ class TH(StdGate):
         t, = self.parameters()
         return TH(e*t, *self.qubits)
 
-    def specialize(self) -> Gate:
+    def specialize(self) -> StdGate:
         opts = {0.0: I, 1.0: H, 2.0: I}
         return _specialize_gate(self, [2], opts)
 

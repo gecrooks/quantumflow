@@ -15,7 +15,6 @@ def test_qsim_simulator():
     circ0 = qf.Circuit()
 
     circ0 += qf.I(q0)
-    circ0 += qf.IDEN(q0, q1)
 
     circ0 += qf.H(q0)
     circ0 += qf.Z(q1)
