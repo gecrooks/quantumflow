@@ -8,8 +8,8 @@ python:
   - "3.8"
 
 env:
-  - CIRQ_VERSION="cirq >=0.7,<0.8"
-  - CIRQ_VERSION="cirq >=0.8"
+  - CIRQ_VERSION="cirq>=0.7,<0.8"
+  - CIRQ_VERSION="cirq>=0.8"
 
 install:
   - sudo apt-get update
