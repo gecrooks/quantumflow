@@ -52,20 +52,20 @@ from . import pyquil
 # not subpackages
 
 __all__ = [
-           # 'get_virtual_qc',
-           # 'get_compiler',
-           'NullCompiler',
-           'circuit_to_pyquil',
-           'quil_to_program',
-           'pyquil_to_program',
-           'pyquil_to_circuit',
-           # 'qvm_run_and_measure',
-           'wavefunction_to_state',
-           'state_to_wavefunction',
-           'QUIL_RESERVED_WORDS',
-           'QuantumFlowQVM',
-           'pyquil_to_image',
-           'QUIL_GATES']
+    # 'get_virtual_qc',
+    # 'get_compiler',
+    'NullCompiler',
+    'circuit_to_pyquil',
+    'quil_to_program',
+    'pyquil_to_program',
+    'pyquil_to_circuit',
+    # 'qvm_run_and_measure',
+    'wavefunction_to_state',
+    'state_to_wavefunction',
+    'QUIL_RESERVED_WORDS',
+    'QuantumFlowQVM',
+    'pyquil_to_image',
+    'QUIL_GATES']
 
 """Names of Quil compatible gates"""
 

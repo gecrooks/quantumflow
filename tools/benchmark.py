@@ -21,7 +21,7 @@ import quantumflow as qf
 
 __version__ = qf.__version__
 __description__ = 'Simple benchmark of QuantumFlow performance' + \
-                    'measured in GOPS (Gate Operations Per Second)'
+                  'measured in GOPS (Gate Operations Per Second)'
 
 
 GATES = 512

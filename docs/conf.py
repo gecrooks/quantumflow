@@ -125,31 +125,31 @@ html_static_path = ['_static']
 def do_edits():
 
     pats = [
-            # Hacks to shorten type descriptors
-            (r'quantumflow\.qubits', r'qf'),
-            (r'quantumflow\.ops', r'qf'),
-            (r'quantumflow\.stdops', r'qf'),
-            (r'quantumflow\.gates\.gates_one', r'qf'),
-            (r'quantumflow\.gates\.gates_two', r'qf'),
-            (r'quantumflow\.gates\.gates_three', r'qf'),
-            (r'quantumflow\.gates\.gates_qasm', r'qf'),
-            (r'quantumflow\.gates', r'qf'),
-            (r'quantumflow\.states', r'qf'),
-            (r'quantumflow\.circuits', r'qf'),
-            (r'quantumflow\.translate\.', r'qf.'),
-            (r'^/quantumflow\.', r'qf.'),
-            # (r'qf\.readthedocs\.io', r'quantumflow.readthedocs.io'),
+        # Hacks to shorten type descriptors
+        (r'quantumflow\.qubits', r'qf'),
+        (r'quantumflow\.ops', r'qf'),
+        (r'quantumflow\.stdops', r'qf'),
+        (r'quantumflow\.gates\.gates_one', r'qf'),
+        (r'quantumflow\.gates\.gates_two', r'qf'),
+        (r'quantumflow\.gates\.gates_three', r'qf'),
+        (r'quantumflow\.gates\.gates_qasm', r'qf'),
+        (r'quantumflow\.gates', r'qf'),
+        (r'quantumflow\.states', r'qf'),
+        (r'quantumflow\.circuits', r'qf'),
+        (r'quantumflow\.translate\.', r'qf.'),
+        (r'^/quantumflow\.', r'qf.'),
+        # (r'qf\.readthedocs\.io', r'quantumflow.readthedocs.io'),
 
 
-            # Hacks to fixup types
-            (r'sympy\.core\.symbol\.Symbol', r'Parameter'),
-            (r'Sequence\[collections\.abc\.Hashable\]', 'Qubits'),
-            (r'collections\.abc\.Hashable', 'Qubit'),
+        # Hacks to fixup types
+        (r'sympy\.core\.symbol\.Symbol', r'Parameter'),
+        (r'Sequence\[collections\.abc\.Hashable\]', 'Qubits'),
+        (r'collections\.abc\.Hashable', 'Qubit'),
 
-            (r'tensor: Any', r'tensor: TensorLike'),
-            (r'&#x2192; Any', r'&#x2192; BKTensor'),
+        (r'tensor: Any', r'tensor: TensorLike'),
+        (r'&#x2192; Any', r'&#x2192; BKTensor'),
 
-            ]
+        ]
 
     files = glob.glob('*build/html/*.html')
     for filename in files:

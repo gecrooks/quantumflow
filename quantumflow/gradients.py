@@ -61,27 +61,27 @@ _UNDIFFERENTIABLE_GATE_MSG = "Undifferentiable gate"
 
 # TODO: Move this data into gate classes?
 shift_constant = {
-        RX: 1/2,
-        RY: 1/2,
-        RZ: 1/2,
-        TX: pi/2,
-        TY: pi/2,
-        TZ: pi/2,
-        XX: pi/2,
-        YY: pi/2,
-        ZZ: pi/2}
+    RX: 1/2,
+    RY: 1/2,
+    RZ: 1/2,
+    TX: pi/2,
+    TY: pi/2,
+    TZ: pi/2,
+    XX: pi/2,
+    YY: pi/2,
+    ZZ: pi/2}
 
 
 gate_generator = {
-        RX: X(),
-        RY: Y(),
-        RZ: Z(),
-        TX: X(),
-        TY: Y(),
-        TZ: Z(),
-        XX: join_gates(X(0), X(1)),
-        YY: join_gates(Y(0), Y(1)),
-        ZZ: join_gates(Z(0), Z(1))}
+    RX: X(),
+    RY: Y(),
+    RZ: Z(),
+    TX: X(),
+    TY: Y(),
+    TZ: Z(),
+    XX: join_gates(X(0), X(1)),
+    YY: join_gates(Y(0), Y(1)),
+    ZZ: join_gates(Z(0), Z(1))}
 
 
 def expectation_gradients(ket0: State,

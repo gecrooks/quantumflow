@@ -261,7 +261,7 @@ def circuit_to_latex(
                         code[bot] = r'\ghost{%s}' % text_labels[0]
                     else:
                         code[top] = r'\sgate{%s}{%s}' \
-                                        % (text_labels[0], str(bot - top))
+                                    % (text_labels[0], str(bot - top))
                         code[bot] = r'\gate{%s}' % (text_labels[1])
                 else:  # quantikz
                     if bot-top == 1:
@@ -369,8 +369,8 @@ def latex_to_image(latex: str) -> Image:      # pragma: no cover
         with open(tmppath + '.tex', 'w') as latex_file:
             latex_file.write(latex)
 
-        subprocess.run([f"pdflatex",
-                        f"-halt-on-error",
+        subprocess.run(["pdflatex",
+                        "-halt-on-error",
                         f"-output-directory={tmpdirname}",
                         f"{tmpfilename}.tex"],
                        stdout=subprocess.PIPE,
@@ -434,12 +434,12 @@ def circuit_to_diagram(
     BOX_CHARS = STD_BOX_CHARS
 
     def qpad(lines: List[str]) -> List[str]:
-        max_length = max(len(l) for l in lines)
+        max_length = max(len(k) for k in lines)
         tot_length = max_length+3
 
-        for l, line in enumerate(lines):
-            pad_char = [BOX_CHARS[RIGHT+LEFT], ' '][l % 2]
-            lines[l] = lines[l].ljust(tot_length, pad_char)
+        for k, line in enumerate(lines):
+            pad_char = [BOX_CHARS[RIGHT+LEFT], ' '][k % 2]
+            lines[k] = lines[k].ljust(tot_length, pad_char)
         return lines
 
     def draw_line(code: List[str], i0: int, i1: int,
@@ -466,7 +466,7 @@ def circuit_to_diagram(
     if qubit_labels:
         for n in range(N):
             qubit_layer[n*2] = str(qubits[n]) + ': '
-        max_length = max(len(l) for l in qubit_layer)
+        max_length = max(len(k) for k in qubit_layer)
         qubit_layer = [line.ljust(max_length) for line in qubit_layer]
     layer_text.append(qpad(qubit_layer))
 
