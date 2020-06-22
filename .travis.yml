@@ -3,13 +3,9 @@ sudo: required
 dist: xenial
 
 python:
-  - "3.6"
   - "3.7"
   - "3.8"
 
-env:
-  - CIRQ_VERSION="cirq>=0.7,<0.8"
-  - CIRQ_VERSION="cirq>=0.8"
 
 install:
   - sudo apt-get update
@@ -24,8 +20,6 @@ install:
   - conda install -c conda-forge lapack
   - conda install -c cvxgrp cvxpy=1.0.24
   - conda list
-  - pip install -q -U $CIRQ_VERSION
-  - pip install -U sympy
   - pip install -q -r requirements.txt
   - pip install -q -r extra-requirements.txt
   - pip install .

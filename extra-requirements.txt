@@ -2,7 +2,7 @@
 ## Optional Extras
 
 pyquil	        >= 2.0.0b1
-cirq								# Not installable via conda
+cirq			>= 0.8					# Not installable via conda
 qiskit			<0.18.0				# Not installable via conda
 qsimcirq							# Not installable via conda
 
