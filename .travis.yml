@@ -25,6 +25,7 @@ install:
   - conda install -c cvxgrp cvxpy=1.0.24
   - conda list
   - pip install -q -U $CIRQ_VERSION
+  - pip install -U sympy
   - pip install -q -r requirements.txt
   - pip install -q -r extra-requirements.txt
   - pip install .
