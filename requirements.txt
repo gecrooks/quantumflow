@@ -6,7 +6,7 @@ networkx            >= 2.1
 pillow
 matplotlib
 cvxpy               >= 1.0.24
-sympy
+sympy				>= 1.6
 opt_einsum
 tensorflow          == 2.0.1
 
