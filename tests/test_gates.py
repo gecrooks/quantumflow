@@ -218,10 +218,10 @@ def test_print_gate():
 
     qf.print_gate(qf.CNOT(), file=stream)
     s = stream.getvalue()
-    ref = ("00 -> 00 : (1+0j)\n" +
-           "01 -> 01 : (1+0j)\n" +
-           "10 -> 11 : (1+0j)\n" +
-           "11 -> 10 : (1+0j)\n")
+    ref = ("00 -> 00 : (1+0j)\n"
+           + "01 -> 01 : (1+0j)\n"
+           + "10 -> 11 : (1+0j)\n"
+           + "11 -> 10 : (1+0j)\n")
 
     assert s == ref
 

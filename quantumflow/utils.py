@@ -28,22 +28,22 @@ import sympy
 # from scipy.linalg import sqrtm as matsqrt   # Matrix square root
 
 __all__ = [
-           'multi_slice',
-           'invert_map',
-           'FrozenDict',
-           'bitlist_to_int',
-           'int_to_bitlist',
-           'deprecated',
-           'cached_property',
-           'from_graph6',
-           'to_graph6',
-           'spanning_tree_count',
-           'octagonal_tiling_graph',
-           'rationalize',
-           'symbolize',
-           'complex_ginibre_ensemble',
-           'unitary_ensemble',
-           ]
+    'multi_slice',
+    'invert_map',
+    'FrozenDict',
+    'bitlist_to_int',
+    'int_to_bitlist',
+    'deprecated',
+    'cached_property',
+    'from_graph6',
+    'to_graph6',
+    'spanning_tree_count',
+    'octagonal_tiling_graph',
+    'rationalize',
+    'symbolize',
+    'complex_ginibre_ensemble',
+    'unitary_ensemble',
+    ]
 
 
 def multi_slice(axes: Sequence, items: Sequence,

@@ -272,6 +272,7 @@ class Gate(Operation):
 
     # Note: Circular import hell
     from .paulialgebra import Pauli
+
     @property
     def hamiltonian(self) -> 'Pauli':
         # DOCME

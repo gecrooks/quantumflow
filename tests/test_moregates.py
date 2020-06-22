@@ -115,12 +115,12 @@ def test_cu1():
     for _ in range(REPS):
         theta = random.uniform(0, 4)
         circ0 = qf.Circuit([
-                            qf.RZ(theta / 2, 0),
-                            qf.CNOT(0, 1),
-                            qf.RZ(-theta/2, 1),
-                            qf.CNOT(0, 1),
-                            qf.RZ(theta / 2, 1),
-                            ])
+            qf.RZ(theta / 2, 0),
+            qf.CNOT(0, 1),
+            qf.RZ(-theta/2, 1),
+            qf.CNOT(0, 1),
+            qf.RZ(theta / 2, 1),
+            ])
         gate0 = circ0.asgate()
         gate1 = qf.CPHASE(theta, 0, 1)
         assert qf.gates_close(gate0, gate1)

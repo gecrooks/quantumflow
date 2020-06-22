@@ -30,11 +30,11 @@ def benchmark_circuit(N, gate_nb, gate):
 def _cli():
 
     gates = [
-             qf.I(), qf.X(), qf.Y(), qf.Z(), qf.S(), qf.T(), qf.H(),
-             qf.TX(0.2), qf.TY(0.2), qf.TZ(0.2),
-             qf.CNOT(), qf.CZ(), qf.SWAP(),
-             qf.ISWAP(),
-             qf.CCNOT(), qf.CCZ(), qf.CSWAP()]
+        qf.I(), qf.X(), qf.Y(), qf.Z(), qf.S(), qf.T(), qf.H(),
+        qf.TX(0.2), qf.TY(0.2), qf.TZ(0.2),
+        qf.CNOT(), qf.CZ(), qf.SWAP(),
+        qf.ISWAP(),
+        qf.CCNOT(), qf.CCZ(), qf.CSWAP()]
 
     print()
     print('Gate     QF GOPS         Cirq GOPS')
