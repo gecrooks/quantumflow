@@ -186,7 +186,7 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         else:
             raise NotImplementedError(str(op.gate))  # pragma: no cover
 
-    circ = circ.specialize()
+    # circ = circ.specialize()
 
     return circ
 
