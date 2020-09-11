@@ -1,58 +1,87 @@
-# Copyright 2016-2018, Rigetti Computing
+# Copyright 2020-, Gavin E. Crooks and contributors
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow Configuration
+Package wide configuration
 """
 
-import os
-import random
+import platform
+import re
+import sys
+import typing
+
+from .utils import importlib_metadata
+
+__all__ = ["__version__", "about"]
 
 
-ENV_PREFIX = 'QUANTUMFLOW_'  # Environment variable prefix
+package_name = "quantumflow"
 
-
-# ==== Version number ====
 try:
-    from quantumflow.version import version
-except ImportError:                           # pragma: no cover
+    __version__ = importlib_metadata.version(package_name)
+except importlib_metadata.PackageNotFoundError:  # pragma: no cover
     # package is not installed
-    version = "?.?.?"
-
-versioninfo = tuple(int(c) if c.isdigit() else c for c in version.split('.'))
-
-# FIXME: atol? Make same as numpy
-# ==== TOLERANCE ====
-TOLERANCE = 1e-6
-"""Tolerance used in various floating point comparisons"""
+    __version__ = "?.?.?"
 
 
-# ==== Random Seed ====
-_ENVSEED = os.getenv(ENV_PREFIX + 'SEED', None)
-SEED = int(_ENVSEED) if _ENVSEED is not None else None
-if SEED is not None:
-    random.seed(SEED)  # pragma: no cover
+# See https://numpy.org/doc/stable/reference/generated/numpy.allclose.html
+
+RTOL = 1e-05
+"""Default relative tolerance for numerical comparisons"""
+
+ATOL = 1e-07
+"""Default absolute tolerance for numerical comparisons"""
 
 
 CIRCUIT_INDENT = 4
-"""Number of spaces to indent when converting circuits to s string"""
+"""Number of spaces to indent when listing circuits"""
 
-# Defaults for gate visualization as unicode text
+
+# --- Defaults for gate visualization as unicode text ---
 # Used by visualizations.circuit_to_diagram()
 
-TARGET = 'X'
+TARGET = "X"
 # TARGET = '⨁'              # "n-ary circled plus", U+2A01
-SWAP_TARGET = 'x'
-# SWAP_TARGET = '×'			# Multiplication sign
-CTRL = '●'
-NCTRL = '○'
-CONJ = '⁺'                   # Unicode "superscript plus sign"
-SQRT = '√'
+SWAP_TARGET = "x"
+# SWAP_TARGET = '×'         # Multiplication sign
+XCTRL = "⊖"  # ⊖ 'circled minus'
+NXCTRL = "⊕"  # ⊕ 'circled plus'
+YCTRL = "⊘"  # ⊘ 'circled division slash'
+NYCTRL = "⊗"  # ⊗ 'circled times'
+CTRL = "●"
+NCTRL = "○"
+CONJ = "⁺"  # Unicode "superscript plus sign"
+SQRT = "√"
 
-# Not currently used
-# ⊖ 'circled minus'
-# ⊗ 'circled times'
-# ⊕ 'circled plus'
-# ⊘ 'circled division slash'
+
+def about(file: typing.TextIO = None) -> None:
+    """Print information about the configuration
+
+     ``> python -m quantumcompiler.about``
+
+    Args:
+        file: Output stream (Defaults to stdout)
+    """
+    name_width = 24
+    versions = {}
+    versions["platform"] = platform.platform(aliased=True)
+    versions[package_name] = __version__
+    versions["python"] = sys.version[0:5]
+
+    for req in importlib_metadata.requires(package_name):
+        name = re.split("[; =><]", req)[0]
+        try:
+            versions[name] = importlib_metadata.version(name)
+        except importlib_metadata.PackageNotFoundError:  # pragma: no cover
+            pass
+
+    print(file=file)
+    print("# Configuration (> python -m quantumcompiler.about)", file=file)
+    for name, vers in versions.items():
+        print(name.ljust(name_width), vers, file=file)
+    print(file=file)
+
+
+# fin

@@ -1,6 +1,8 @@
-"""
-QuantumFlow: prototype simulator of gate-based quantum computers.
-"""
+# Copyright 2020-, Gavin E. Crooks and contributors
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 
 # Design Note:
 #
@@ -11,35 +13,34 @@ QuantumFlow: prototype simulator of gate-based quantum computers.
 #
 # We don't include `.utils` since those are internal utility routines.
 #
-# Submodules for interfacing with external resources (.xcirq, .xforest, etc.)
+# Submodules for interfacing with external resources (e.g. .xcirq, .xforest, etc.)
 # are not imported at top level, since they have external dependencies that
-# are not installed by default.
+# often break, and need not be installed by default.
 #
 # We use a star import here (which necessitates suppressing lint messages)
 # so that the public API can be specified in the individual submodules.
 # Each of these submodules should define __all__.
-#
-# Import order defines the import hierarchy (to avoid circular imports)
-# Modules should only import modules further up the list.
 
-from quantumflow.config import version as __version__       # noqa: F401
-from quantumflow.backends import backend                    # noqa: F401
-from quantumflow.variables import *                         # noqa: F401, F403
-from quantumflow.qubits import *                            # noqa: F401, F403
-from quantumflow.states import *                            # noqa: F401, F403
-from quantumflow.ops import *                               # noqa: F401, F403
-from quantumflow.stdops import *                            # noqa: F401, F403
-from quantumflow.gates import *                             # noqa: F401, F403
-from quantumflow.channels import *                          # noqa: F401, F403
-from quantumflow.paulialgebra import *                      # noqa: F401, F403
-from quantumflow.circuits import *                          # noqa: F401, F403
-from quantumflow.decompositions import *                    # noqa: F401, F403
-from quantumflow.measures import *                          # noqa: F401, F403
-from quantumflow.dagcircuit import *                        # noqa: F401, F403
-from quantumflow.visualization import *                     # noqa: F401, F403
-from quantumflow.gradients import *                         # noqa: F401, F403
-from quantumflow.translate import *                         # noqa: F401, F403
-from quantumflow.transform import *                         # noqa: F401, F403
-from quantumflow.cliffords import *                         # noqa: F401, F403
 
-# Fin GEC 2018
+from .channels import *  # noqa: F401, F403
+from .circuits import *  # noqa: F401, F403
+from .config import *  # noqa: F401, F403
+from .dagcircuit import *  # noqa: F401, F403
+from .decompositions import *  # noqa: F401, F403
+from .gates import *  # noqa: F401, F403
+from .gradients import *  # noqa: F401, F403
+from .info import *  # noqa: F401, F403
+from .modules import *  # noqa: F401, F403
+from .ops import *  # noqa: F401, F403
+from .paulialgebra import *  # noqa: F401, F403
+from .qubits import *  # noqa: F401, F403
+from .states import *  # noqa: F401, F403
+from .stdgates import *  # noqa: F401, F403
+from .stdops import *  # noqa: F401, F403
+from .tensors import *  # noqa: F401, F403
+from .transform import *  # noqa: F401, F403
+from .translate import *  # noqa: F401, F403
+from .var import *  # noqa: F401, F403
+from .visualization import *  # noqa: F401, F403
+
+# fin

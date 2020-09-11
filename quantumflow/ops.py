@@ -1,8 +1,8 @@
-
-# Copyright 2016-2018, Rigetti Computing
+# Copyright 2020-, Gavin E. Crooks and contributors
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
+
 
 """
 .. contents:: :local:
@@ -18,10 +18,9 @@ of operators; and Circuit, which is a list of other operations that act in
 sequence. Circuits can contain any instance of the abstract quantum operation
 superclass, Operation, including other circuits.
 
-We consider the elemental quantum operations, such as Gate, Channel, and Kraus,
-as immutable. (Although immutability is not enforced in general.)
-Transformations of these operations return new copies. On the other hand the
-composite operations Circuit and DAGCircuit are mutable.
+Quantum operations are immutable, and transformations of these operations return
+new copies. (Although immutability isn't strictly enforced). One exception is
+the composite operation DAGCircuit.
 
 The main types of Operation's are Gate, Channel, Kraus, Circuit, DAGCircuit,
 and Pauli.
@@ -31,53 +30,66 @@ and Pauli.
 
 """
 
-# NOTE: This file contains the two main types of operations on
-# Quantum states, Gate's and Channel's, and an abstract superclass
-# Operation. These need to be defined in the same module since they
-# reference each other. The class unit tests are currently located
-# separately, in test_gates.py, and test_channels.py.
-
-
-from typing import (
-    Dict, Union, Any, Tuple, TypeVar, Sequence, Optional, Iterator, ClassVar)
-from copy import copy
 from abc import ABC  # Abstract Base Class
+from copy import copy
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
-import sympy
 
-# import quantumflow.backend as bk
+from . import tensors, utils, var
+from .qubits import Qubit, Qubits
+from .states import Density, State
+from .tensors import QubitTensor, TensorLike
+from .var import Variable
 
-from .qubits import Qubit, Qubits, QubitVector, qubits_count_tuple, asarray
-from .states import State, Density
-from .utils import symbolize
-from .variables import Variable
-
-from .backends import get_backend, BKTensor, TensorLike
-bk = get_backend()
-
-__all__ = ['Operation', 'Gate', 'Channel', 'Unitary']
+__all__ = ["Operation", "Gate", "StdGate", "Unitary", "Channel"]
 
 
-OperationType = TypeVar('OperationType', bound='Operation')
+OperationType = TypeVar("OperationType", bound="Operation")
 """Generic type annotations for subtypes of Operation"""
 
-GateType = TypeVar('GateType', bound='Gate')
+GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
 
 class Operation(ABC):
-    """ An operation on a qubit state. An element of a quantum circuit.
+    """An operation on a quantum state. An element of a quantum circuit.
 
-    Abstract Base Class for Gate, Circuit, DAGCircuit, Channel, Kraus,
-    and Pauli.
+    Abstract Base Class for Gate, Circuit, and other quantum operations.
+
+    Attributes:
+        qubits: The qubits that this Operation acts upon.
+        params: Optional keyword parameters used to create this gate
     """
 
-    interchangeable: ClassVar[bool] = False
-    """ Is this a multi-qubit operation that is known to be invariant under
+    # Note: We prefix static class variables with "cv_" to avoid confusion
+    # with instance variables
+
+    __slots__ = ["_tensor", "_qubits", "_parameters"]
+
+    cv_interchangeable: ClassVar[bool] = False
+    """Is this a multi-qubit operation that is known to be invariant under
     permutations of qubits?"""
+
+    cv_qubit_nb: ClassVar[int] = None
+    """The number of qubits, for operations with a fixed number of qubits"""
+
+    cv_args: Tuple[str, ...] = ()
+    """The names of the parameters for this operation"""
 
     _diagram_labels: ClassVar[Optional[Sequence[str]]] = None
     """Override default labels for drawing text circuit diagrams.
@@ -87,17 +99,32 @@ class Operation(ABC):
     """Override default to not draw a line between qubit wires for multi-qubit
     operations. See visualizations.circuit_to_diagram()"""
 
-    # DOCME
-    def __init__(self,
-                 qubits: Qubits = (),
-                 params: Dict[str, Variable] = None,
-                 ) -> None:
+    def __init__(
+        self,
+        qubits: Qubits,
+        params: Sequence[Variable] = None,
+    ) -> None:
         self._qubits: Qubits = tuple(qubits)
-        self._params = params if params is not None else dict()
+        self._parameters = tuple(params) if params is not None else ()
+        self._tensor: QubitTensor = None
+
+        if self.cv_qubit_nb is not None:
+            if self.cv_qubit_nb != len(self._qubits):
+                raise ValueError(
+                    "Wrong number of qubits for Operation"
+                )  # pragma: no cover
+
+    def __iter__(self) -> Iterator["Operation"]:
+        yield self
+
+    @property
+    def name(self) -> str:
+        """Return the name of this Operation"""
+        return type(self).__name__
 
     @property
     def qubits(self) -> Qubits:
-        """Return the qubits that this operation acts upon"""
+        """Return the total number of qubits"""
         return self._qubits
 
     @property
@@ -106,43 +133,72 @@ class Operation(ABC):
         return len(self.qubits)
 
     def on(self: OperationType, *qubits: Qubit) -> OperationType:
-        """Return a copy of this Gate with new qubits"""
+        """Return a copy of this Operation with new qubits"""
         if len(qubits) != self.qubit_nb:
             raise ValueError("Wrong number of qubits")
         op = copy(self)
         op._qubits = qubits
         return op
 
-    # TODO: Rename to rewire? Or combine with .on()?
-    def relabel(self: OperationType, labels: Dict[Qubit, Qubit]) \
-            -> OperationType:
-        """Relabel qubits and return copy of this gate"""
+    def rewire(self: OperationType, labels: Dict[Qubit, Qubit]) -> OperationType:
+        """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
-        op = copy(self)
-        op._qubits = qubits
-        return op
+        return self.on(*qubits)
 
-    @property
-    def name(self) -> str:
-        """Return the name of this operation"""
-        return type(self).__name__
+    def qubit_indices(self, qubits: Qubits) -> List[int]:
+        """Convert qubits to index positions.
 
-    @property
-    def params(self) -> Dict[str, Variable]:
-        """Return the parameters of this Operation"""
-        return self._params
+        Raises:
+            ValueError: If argument qubits are not found in operation's qubits
+        """
+        return [self.qubits.index(q) for q in qubits]
 
-    def resolve(self, resolution: Dict[str, float]) -> 'Operation':
+    def resolve(self, subs: Mapping[str, float]) -> "Operation":
         """Resolve symbolic parameters"""
+        # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
-        params = {k: float(sympy.N(v, subs=resolution))
-                  for k, v in self._params.items()}
-        op._params = params
+        _parameters = [var.asfloat(v, subs) for v in self.parameters()]
+        op._parameters = tuple(_parameters)
+        op._tensor = None
         return op
 
-    def parameters(self) -> Iterator[Variable]:
-        """Iterate over all parameters of this Operation"""
-        yield from self.params.values()
+    def asgate(self) -> "Gate":
+        """
+        Convert this quantum operation to a gate (if possible).
+
+        Raises:
+            ValueError: If this operation cannot be converted to a Gate
+        """
+        raise ValueError()  # pragma: no cover
+
+    def aschannel(self) -> "Channel":
+        """Convert this quantum operation to a channel (if possible).
+
+        Raises:
+            ValueError: If this operation cannot be converted to a Channel
+        """
+        raise ValueError()  # pragma: no cover
+
+    @property
+    def H(self) -> "Operation":
+        """Return the Hermitian conjugate of this quantum operation.
+
+        For unitary Gates (and Circuits composed of the same) the
+        Hermitian conjugate returns the inverse Gate (or Circuit)
+
+        Raises:
+            ValueError: If this operation does not support Hermitian conjugate
+        """
+        raise ValueError(
+            "This operation does not support Hermitian conjugate"
+        )  # pragma: no cover
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        """
+        Returns the tensor representation of this operation (if possible)
+        """
+        raise NotImplementedError()
 
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
@@ -152,55 +208,53 @@ class Operation(ABC):
         """Apply the action of this operation upon a mixed state"""
         raise NotImplementedError()
 
-    def asgate(self) -> 'Gate':
-        """Convert this quantum operation to a gate (if possible)"""
-        raise NotImplementedError()
-
-    def aschannel(self) -> 'Channel':
-        """Convert this quantum operation to a channel (if possible)"""
-        raise NotImplementedError()
-
-    @property
-    def H(self) -> 'Operation':
-        """Return the Hermitian conjugate of this quantum operation.
-
-        For unitary Gates (and Circuits composed of the same) the
-        Hermitian conjugate returns the inverse Gate (or Circuit)"""
-        raise NotImplementedError()
-
-    @property
-    def tensor(self) -> BKTensor:
-        """
-        Returns the tensor representation of this operation (if possible)
-        """
-        raise NotImplementedError()
-
-    # So that we can ``extend`` Circuits with Operations
-    def __iter__(self) -> Any:
-        yield self
-
     # Make Operations sortable. (So we can use Operations in opt_einsum
     # axis labels.)
     def __lt__(self, other: Any) -> bool:
         return id(self) < id(other)
 
-    def specialize(self) -> 'Operation':
+    def specialize(self) -> "Operation":
         """For parameterized operations, return appropriate special cases
         for particular parameters. Else return the original Operation.
 
-              e.g. RX(0).specialize() -> I()
+              e.g. Rx(0.0, 0).specialize() -> I(0)
         """
-        return self
+        return self  # pragma: no cover
+
+    def decompose(self) -> Iterator["Operation"]:
+        """Decompose this operation into smaller or more standard subunits.
+        If cannot be decomposed, returns self.
+
+        Returns: An iteration of operations.
+        """
+        yield self  # pragma: no cover
 
     def _repr_png_(self) -> Optional[bytes]:
         """Jupyter/IPython rich display"""
         from .circuits import Circuit
+
         return Circuit(self)._repr_png_()
 
     def _repr_html_(self) -> Optional[str]:
         """Jupyter/IPython rich display"""
         from .circuits import Circuit
+
         return Circuit(self)._repr_html_()
+
+    # DOCME TESTME RENAME
+    def parameter(self, name: str) -> Variable:
+        idx = self.cv_args.index(name)
+        return self._parameters[idx]
+
+    # DOCME TESTME
+    def float_param(self, name: str, subs: Mapping[str, float] = None) -> float:
+        return var.asfloat(self.parameter(name), subs)
+
+    # DOCME TESTME RENAME
+    def parameters(self) -> Iterator[Variable]:
+        """Iterate over all parameters of this Operation"""
+        yield from self._parameters
+
 
 # End class Operation
 
@@ -209,38 +263,12 @@ class Gate(Operation):
     """
     A quantum logic gate. A unitary operator that acts upon a collection
     of qubits.
-
-    Attributes:
-        Gate.params: Optional keyword parameters used to create this gate
-        Gate.name : The name of this gate
-
     """
-    # DOCME
-    @classmethod
-    def args(cls) -> Tuple[str, ...]:
-        return tuple(s for s in getattr(cls, '__init__').__annotations__.keys()
-                     if s[0] != 'q' and s != 'return' and s != 'tensor')
 
-    diagonal: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to be diagonal
-    in the computation basis?"""
+    cv_hermitian: ClassVar[bool] = False
+    """Is this Gate know to always be hermitian?"""
 
-    permutation: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to be a permutation
-    matrix in the computation basis?"""
-
-    monomial: ClassVar[bool] = False
-    """Is the tensor representation of this Operation known to be a monomial
-    matrix in the computation basis (but not a permutation or diagonal?
-    (A monomial matrix is a product of a diagonal and a permutation matrix.
-    Only 1 entry in each row and column is non-zero.)"""
-
-    # FIXME: Possible replacement for 2 separate boolean properties above.
-    # Currently only 'diagonal' is actually exploited by run() method
-    # Maybe also need qubit_permutation (Permutation of qubits, not just
-    # states) and qubit_monomial. e.g. CNOT is a permutation matrix, but SWAP
-    # is both a permutation matrix and a permutation of qubits
-    tensor_structure: ClassVar[Optional[str]] = None
+    cv_tensor_structure: ClassVar[Optional[str]] = None
     """
     Is the tensor representation of this Operation known to have a particular
     structure in the computational basis?
@@ -251,89 +279,84 @@ class Gate(Operation):
         permutation
         monomial
 
+    A permutation matrix permutes states. It has a single '1' in each row and column.
+    All other entries are zero.
+
     A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.
 
-    This property is used to optimize the run() state evolution method.
     """
-
-    # DOCME
-    def __init__(self,
-                 qubits: Qubits,
-                 params: Dict[str, Variable] = None,
-                 ) -> None:
-        super().__init__(qubits=qubits, params=params)
-
-    # TODO: Not overriding tensor makes Gate an abstract class?
-    # @property
-    # def tensor(self) -> BKTensor:
-    #     """Returns the tensor representation of gate operator"""
-    #     raise NotImplementedError()
+    # TODO: Add "swap" t roster of tensor structures
 
     # Note: Circular import hell
     from .paulialgebra import Pauli
 
     @property
-    def hamiltonian(self) -> 'Pauli':
-        # DOCME
-        # FIXME: Doesn't always get phase of unitary correct.
+    def hamiltonian(self) -> "Pauli":
+        """
+        Returns the Hermitian Hamiltonian of corresponding to this
+        unitary operation.
+
+        .. math::
+            U = e^{-i H)
+
+        Returns:
+            A Hermitian operator represented as an element of the Pauli algebra.
+        """
         # See test_gate_hamiltonians()
         from .paulialgebra import pauli_decompose_hermitian
+
         H = -logm(self.asoperator()) / 1.0j
         pauli = pauli_decompose_hermitian(H, self.qubits)
         return pauli
 
-    def permute(self, qubits: Qubits) -> 'Unitary':
-        """Permute the order of the qubits"""
-        vec = self.vec.permute(qubits)
-        return Unitary(vec.tensor, *vec.qubits)
+    def asgate(self: GateType) -> GateType:
+        return self
 
-    # DOCME
-    @property
-    def vec(self) -> QubitVector:
-        return QubitVector(self.tensor, self.qubits)
-
-    # FIXME: Should copy before flatten?
-    def asoperator(self) -> BKTensor:
-        """Return the gate tensor as a square array"""
-        return bk.copy(self.vec.flatten())
-
-    def run(self, ket: State) -> State:
-        """Apply the action of this gate upon a state"""
-        # if self.tensor_structure == 'identity':
-        #     return ket
-
-        diagonal = self.diagonal
-        # diagonal = self.tensor_structure == 'diagonal'
-
-        qubits = self.qubits
-        indices = [ket.qubits.index(q) for q in qubits]
-        tensor = bk.tensormul(self.tensor, ket.tensor, tuple(indices),
-                              diagonal=diagonal)
-        return State(tensor, ket.qubits, ket.memory)
-
-    def evolve(self, rho: Density) -> Density:
-        """Apply the action of this gate upon a density"""
-        # TODO: implement without explicit channel creation? With Kraus?
-        chan = self.aschannel()
-        return chan.evolve(rho)
-
-    def __pow__(self, t: float) -> 'Gate':
-        """Return this gate raised to the given power."""
-        # Note: This operation cannot be performed within the tensorflow or
-        # torch backends in general. Subclasses of Gate may override
-        # for special cases.
+    def aschannel(self) -> "Channel":
+        """Convert a Gate into a Channel"""
         N = self.qubit_nb
-        matrix = asarray(self.vec.flatten())
-        matrix = matpow(matrix, t)
-        matrix = np.reshape(matrix, ([2]*(2*N)))
-        return Unitary(matrix, *self.qubits)
+        R = 4
+
+        # TODO: As Kraus?
+        tensor = np.outer(self.tensor, self.H.tensor)
+        tensor = np.reshape(tensor, [2 ** N] * R)
+        tensor = np.transpose(tensor, [0, 3, 1, 2])
+
+        return Channel(tensor, self.qubits)
+
+    def __pow__(self, t: float) -> "Gate":
+        """Return this gate raised to the given power."""
+        matrix = matpow(self.asoperator(), t)
+        return Unitary(matrix, self.qubits)
+
+    def permute(self, qubits: Qubits) -> "Gate":
+        """Permute the order of the qubits"""
+        if self.qubits == qubits:
+            return self
+        if self.cv_interchangeable:
+            return self.on(*qubits)
+        tensor = tensors.permute(self.tensor, self.qubit_indices(qubits))
+        return Unitary(tensor, qubits)
+
+    def asoperator(self) -> QubitTensor:
+        """Return tensor with with qubit indices flattened"""
+        return tensors.flatten(self.tensor, rank=2)
+        # N = self.qubit_nb
+        # return np.reshape(self.tensor, [2**N] * 2)
+
+    def su(self) -> "Unitary":
+        """Convert gate tensor to the special unitary group."""
+        rank = 2 ** self.qubit_nb
+        U = self.asoperator()
+        U /= np.linalg.det(U) ** (1 / rank)
+        return Unitary(U, self.qubits)
 
     @property
-    def H(self) -> 'Gate':
-        return Unitary(self.vec.H.tensor, *self.qubits)
+    def H(self) -> "Gate":
+        return Unitary(self.asoperator().conj().T, self.qubits)
 
-    def __matmul__(self, other: 'Gate') -> 'Gate':
+    def __matmul__(self, other: "Gate") -> "Gate":
         """Apply the action of this gate upon another gate,
         self_gate @ other_gate (Note time runs right to left with
         matrix notation)
@@ -346,120 +369,168 @@ class Gate(Operation):
             raise NotImplementedError()
         gate0 = self
         gate1 = other
-        indices = (gate1.qubits.index(q) for q in gate0.qubits)
-        tensor = bk.tensormul(gate0.tensor, gate1.tensor, tuple(indices))
-        return Unitary(tensor, *gate1.qubits)
+        indices = gate1.qubit_indices(gate0.qubits)
+        tensor = tensors.tensormul(gate0.tensor, gate1.tensor, tuple(indices))
+        return Unitary(tensor, gate1.qubits)
 
-    def __str__(self) -> str:
-        # Implementation note: We don't want to eval tensor here.
+    def run(self, ket: State) -> State:
+        """Apply the action of this gate upon a state"""
+        if self.cv_tensor_structure == "identity":
+            return ket
 
-        def _param_format(obj: Any) -> str:
-            if isinstance(obj, float):
-                try:
-                    return str(symbolize(obj))
-                except ValueError:
-                    return f'{obj}'
-            return str(obj)
+        qubits = self.qubits
+        indices = ket.qubit_indices(qubits)
+        tensor = tensors.tensormul(
+            self.tensor,
+            ket.tensor,
+            tuple(indices),
+            self.cv_tensor_structure == "diagonal",
+        )
+        return State(tensor, ket.qubits, ket.memory)
 
-        # # FIXME
-        # if self.name == 'Gate':
-        #     return super().__repr__()
+    def evolve(self, rho: Density) -> Density:
+        """Apply the action of this gate upon a density"""
+        # TODO: implement without explicit channel creation? With Kraus?
+        chan = self.aschannel()
+        return chan.evolve(rho)
 
-        fqubits = " "+" ".join([str(qubit) for qubit in self.qubits])
-
-        if self.params:
-            fparams = "(" + ", ".join(_param_format(p)
-                                      for p in self.params.values()) + ")"
-        else:
-            fparams = ""
-
-        return f'{self.name}{fparams}{fqubits}'
-
-    def asgate(self: OperationType) -> 'OperationType':
+    def specialize(self) -> "Gate":
         return self
 
-    def aschannel(self) -> 'Channel':
-        """Converts a Gate into a Channel"""
-        N = self.qubit_nb
-        R = 4
-
-        tensor = bk.outer(self.tensor, self.H.tensor)
-        tensor = bk.reshape(tensor, [2**N]*R)
-        tensor = bk.transpose(tensor, [0, 3, 1, 2])
-
-        return Channel(tensor, self.qubits)
-
-    def su(self) -> 'Unitary':
-        """Convert gate tensor to the special unitary group."""
-        rank = 2**self.qubit_nb
-        U = asarray(self.asoperator())
-        U /= np.linalg.det(U) ** (1/rank)
-        return Unitary(U, *self.qubits)
 
 # End class Gate
 
 
 class Unitary(Gate):
     """
-    A quantum logic gate, specified by an explicit unitary operator.
+    A quantum logic gate specified by an explicit unitary operator.
     """
 
-    def __init__(self,
-                 tensor: TensorLike,
-                 *qubits: Qubit,
-                 name: str = None) -> None:
+    def __init__(self, tensor: TensorLike, qubits: Qubits) -> None:
 
-        tensor = bk.astensorproduct(tensor)
+        tensor = tensors.asqutensor(tensor)
 
-        N = bk.ndim(tensor) // 2
-        if not qubits:
-            qubits = tuple(range(N))
+        N = np.ndim(tensor) // 2
 
-        if len(qubits) != N:
-            raise ValueError('Wrong number of qubits for tensor')
+        if len(tuple(qubits)) != N:
+            raise ValueError("Wrong number of qubits for tensor")
 
         super().__init__(qubits=qubits)
         self._tensor = tensor
-        self._name = type(self).__name__ if name is None else name
 
-    @property
-    def tensor(self) -> BKTensor:
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
         """Returns the tensor representation of gate operator"""
         return self._tensor
-
-    @property
-    def name(self) -> str:
-        return self._name
 
 
 # End class Unitary
 
 
+# TODO: Move?
+class StdGate(Gate):
+    """
+    A standard gate. Standard gates have a name, a fixed number of real
+    parameters, and act upon a fixed number of qubits.
+
+    e.g. Rx(theta, q0), CNot(q0, q1), Can(tx, ty, tz, q0, q1, q2)
+
+    In the argument list, parameters are first, then qubits. Parameters
+    have type Variable (either a concrete floating point number, or a symbolic
+    expression), and qubits have type Qubit (Any hashable python type).
+    """
+
+    cv_stdgates: Dict[str, Type["StdGate"]] = {}
+    """List of all StdGate subclasses"""
+
+    def __init_subclass__(cls) -> None:
+        # Note: The __init_subclass__ initializes all subclasses of a given class.
+        # see https://www.python.org/dev/peps/pep-0487/
+
+        # Parse the Gate arguments and number of qubits from the arguments to __init__
+        # Convention is that qubit names start with "q", but arguments do not.
+        names = getattr(cls, "__init__").__annotations__.keys()
+        args = tuple(s for s in names if s[0] != "q" and s != "return")
+        qubit_nb = len(names) - len(args)
+        if "return" in names:
+            # For unknown reasons, "return" is often, but not always in names.
+            qubit_nb -= 1
+
+        cls.cv_args = args
+        cls.cv_qubit_nb = qubit_nb
+
+        cls.cv_stdgates[cls.__name__] = cls  # Subclass registration
+
+    def __repr__(self) -> str:
+        args: List[str] = []
+        args.extend(str(p) for p in self.parameters())
+        args.extend(str(qubit) for qubit in self.qubits)
+        fargs = ", ".join(args)
+
+        return f"{self.name}({fargs})"
+
+    def __str__(self) -> str:
+        def _param_format(obj: Any) -> str:
+            if isinstance(obj, float):
+                try:
+                    return str(var.asexpression(obj))
+                except ValueError:
+                    return f"{obj}"
+            return str(obj)
+
+        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
+
+        params = tuple(self.parameters())
+        if params:
+            fparams = "(" + ", ".join(_param_format(p) for p in self.parameters()) + ")"
+        else:
+            fparams = ""
+
+        return f"{self.name}{fparams}{fqubits}"
+
+    def decompose(self) -> Iterator["StdGate"]:
+        from .translate import TRANSLATORS, translation_source_gate
+
+        # Terminal gates
+        if self.name in ("I", "Ph", "X", "Y", "Z", "XPow", "YPow", "ZPow", "CNot"):
+            yield self
+            return
+
+        for trans in TRANSLATORS.values():
+            from_gate = translation_source_gate(trans)
+            if isinstance(self, from_gate):
+                yield from trans(self)
+                return
+
+        yield self  # fall back  # pragma: no cover
+
+
+# End class StdGate
+
+
 class Channel(Operation):
     """A quantum channel"""
-    def __init__(self, tensor: TensorLike,
-                 qubits: Union[int, Qubits],
-                 params: Dict[str, Variable] = None,
-                 name: str = None) -> None:
-        _, qubits = qubits_count_tuple(qubits)  # FIXME NEEDED?
 
-        tensor = bk.astensorproduct(tensor)
+    def __init__(
+        self,
+        tensor: TensorLike,
+        qubits: Qubits,
+        params: Sequence[var.Variable] = None,
+        name: str = None,  # FIXME
+    ) -> None:
 
-        N = bk.ndim(tensor) // 4
+        tensor = tensors.asqutensor(tensor)
+
+        N = np.ndim(tensor) // 4
         if len(qubits) != N:
-            raise ValueError('Wrong number of qubits for tensor')
+            raise ValueError("Wrong number of qubits for tensor")
 
         super().__init__(qubits=qubits, params=params)
         self._tensor = tensor
         self._name = type(self).__name__ if name is None else name
 
-    @property
-    # @deprecated
-    def vec(self) -> QubitVector:
-        return QubitVector(self.tensor, self.qubits)
-
-    @property
-    def tensor(self) -> BKTensor:
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
         """Return the tensor representation of the channel's superoperator"""
         return self._tensor
 
@@ -467,18 +538,22 @@ class Channel(Operation):
     def name(self) -> str:
         return self._name
 
-    def permute(self, qubits: Qubits) -> 'Channel':
+    def permute(self, qubits: Qubits) -> "Channel":
         """Return a copy of this channel with qubits in new order"""
-        vec = self.vec.permute(qubits)
-        return Channel(vec.tensor, qubits=vec.qubits)
+        if self.qubits == qubits:
+            return self
+        # if self.cv_interchangeable:   # TODO
+        #     return self.on(*qubits)
+        tensor = tensors.permute(self.tensor, self.qubit_indices(qubits))
+        return Channel(tensor, qubits=qubits)
 
     @property
-    def H(self) -> 'Channel':
-        return Channel(tensor=self.vec.H.tensor, qubits=self.qubits)
+    def H(self) -> "Channel":
+        return Channel(tensor=tensors.conj_transpose(self.tensor), qubits=self.qubits)
 
     # TESTME
     @property
-    def sharp(self) -> 'Channel':
+    def sharp(self) -> "Channel":
         r"""Return the 'sharp' transpose of the superoperator.
 
         The transpose :math:`S^\#` switches the two covariant (bra)
@@ -494,36 +569,35 @@ class Channel(Operation):
 
         N = self.qubit_nb
 
+        # TODO: Use tensor_transpose, or remove tensor_transpose
         tensor = self.tensor
-        tensor = bk.reshape(tensor, [2**N] * 4)
-        tensor = bk.transpose(tensor, (0, 2, 1, 3))
-        tensor = bk.reshape(tensor, [2] * 4 * N)
+        tensor = np.reshape(tensor, [2 ** N] * 4)
+        tensor = np.transpose(tensor, (0, 2, 1, 3))
+        tensor = np.reshape(tensor, [2] * 4 * N)
         return Channel(tensor, self.qubits)
 
-    def choi(self) -> BKTensor:
+    def choi(self) -> QubitTensor:
         """Return the Choi matrix representation of this super
         operator"""
         # Put superop axes in the order [out_ket, in_bra, out_bra, in_ket]
         # and reshape to matrix
         N = self.qubit_nb
-        return bk.reshape(self.sharp.tensor, [2**(N*2)] * 2)
+        return np.reshape(self.sharp.tensor, [2 ** (N * 2)] * 2)
 
     @classmethod
-    def from_choi(cls,
-                  tensor: TensorLike,
-                  qubits: Union[int, Qubits]) -> 'Channel':
+    def from_choi(cls, tensor: TensorLike, qubits: Qubits) -> "Channel":
         """Return a Channel from a Choi matrix"""
         return cls(tensor, qubits).sharp
 
     # TESTME
     # FIXME: Can't be right, same as choi?
-    def chi(self) -> BKTensor:
+    def chi(self) -> QubitTensor:
         """Return the chi (or process) matrix representation of this
         superoperator"""
         N = self.qubit_nb
-        return bk.reshape(self.sharp.tensor, [2**(N*2)] * 2)
+        return np.reshape(self.sharp.tensor, [2 ** (N * 2)] * 2)
 
-    def run(self, ket: State) -> 'State':
+    def run(self, ket: State) -> "State":
         raise TypeError()  # Not possible in general
 
     def evolve(self, rho: Density) -> Density:
@@ -531,33 +605,20 @@ class Channel(Operation):
         N = rho.qubit_nb
         qubits = rho.qubits
 
-        indices = list([qubits.index(q) for q in self.qubits]) + \
-            list([qubits.index(q) + N for q in self.qubits])
+        indices = list([qubits.index(q) for q in self.qubits]) + list(
+            [qubits.index(q) + N for q in self.qubits]
+        )
 
-        tensor = bk.tensormul(self.tensor, rho.tensor, tuple(indices))
+        tensor = tensors.tensormul(self.tensor, rho.tensor, tuple(indices))
         return Density(tensor, qubits, rho.memory)
 
-    def asgate(self) -> 'Gate':
+    def asgate(self) -> "Gate":
         raise TypeError()  # Not possible in general
 
-    def aschannel(self) -> 'Channel':
+    def aschannel(self) -> "Channel":
         return self
 
-    # FIXME: Maybe not needed, too special a case. Remove?
-    # Or make sure can do other operations, such as neg, plus ect
-    # Move functionality to QubitVector
-    def __add__(self, other: Any) -> 'Channel':
-        if isinstance(other, Channel):
-            if not self.qubits == other.qubits:
-                raise ValueError("Qubits must be identical")
-            return Channel(self.tensor + other.tensor, self.qubits)
-        raise NotImplementedError()  # Or return NotImplemented?
-
-    # FIXME: Maybe not needed, too special a case. Remove?
-    def __mul__(self, other: Any) -> 'Channel':
-        return Channel(self.tensor*other, self.qubits)
-
-    def __matmul__(self, other: 'Channel') -> 'Channel':
+    def __matmul__(self, other: "Channel") -> "Channel":
         """Apply the action of this channel upon another channel,
         self_chan @ other_chan (Note time runs right to left with
         matrix notation)
@@ -572,22 +633,26 @@ class Channel(Operation):
         chan1 = other
         N = chan1.qubit_nb
         qubits = chan1.qubits
-        indices = list([chan1.qubits.index(q) for q in chan0.qubits]) + \
-            list([chan1.qubits.index(q) + N for q in chan0.qubits])
+        indices = list([chan1.qubits.index(q) for q in chan0.qubits]) + list(
+            [chan1.qubits.index(q) + N for q in chan0.qubits]
+        )
 
-        tensor = bk.tensormul(chan0.tensor, chan1.tensor, tuple(indices))
+        tensor = tensors.tensormul(chan0.tensor, chan1.tensor, tuple(indices))
 
         return Channel(tensor, qubits)
 
     # TESTME
-    def trace(self) -> BKTensor:
+    def trace(self) -> QubitTensor:
         """Return the trace of this super operator"""
-        return self.vec.trace()
+        return tensors.trace(self.tensor, rank=4)
 
-    # TESTME
-    def partial_trace(self, qubits: Qubits) -> 'Channel':
-        """Return the partial trace over the specified qubits"""
-        vec = self.vec.partial_trace(qubits)
-        return Channel(vec.tensor, vec.qubits)
+    # TESTME # TODO
+    # def partial_trace(self, qubits: Qubits) -> "Channel":
+    #     """Return the partial trace over the specified qubits"""
+    #     vec = tensors.partial_trace(self.tensor, qubits, rank=4)
+    #     return Channel(vec.tensor, vec.qubits)
 
-# End class Channel
+
+# end class Channel
+
+# fin

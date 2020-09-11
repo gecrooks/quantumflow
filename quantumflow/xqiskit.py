@@ -15,71 +15,73 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_qiskit
 """
 
-from typing import Iterable
-
-from .qubits import Qubits, asarray
-from .states import State
-from .circuits import Circuit
-from .ops import Operation
-from .stdops import If, Initialize
-from .gates import NAMED_GATES
-from .utils import invert_map
-from .translate import select_translators, circuit_translate
-
 import qiskit
+
+from .circuits import Circuit
+from .ops import Operation, StdGate
+from .qubits import Qubits
+from .states import State
+from .stdops import If, Initialize
+from .translate import circuit_translate, select_translators
+from .utils import invert_map
 
 # This module imports qiskit, so we do not include it at top level.
 # Must be imported explicitly. e.g.
 # > from quantumflow.xqiskit import qiskit_to_circuit, circuit_to_qiskit
 #
-# Note that QASM specific gates are defined in quantumflow/gates/gates_qasm.py
+# Note that QASM specific gates are defined in quantumflow/stdgates/stdgates_qasm.py
 # Conceivable you might want to use those gates in QuantumFlow without loading
 # qiskit
 
-__all__ = ['QiskitSimulator',
-           'qiskit_to_circuit',
-           'circuit_to_qiskit',
-           'translate_gates_to_qiskit']
+__all__ = [
+    "QiskitSimulator",
+    "qiskit_to_circuit",
+    "circuit_to_qiskit",
+    "translate_gates_to_qiskit",
+]
 
 QASM_TO_QF = {
-    'ccx': 'CCNOT',
-    'ch': 'CH',
-    'crz': 'CRZ',
-    'cswap': 'CSWAP',
-    'cu1': 'CPHASE',
-    'cu3': 'CU3',
-    'cx': 'CNOT',
-    'cy': 'CY',
-    'cz': 'CZ',
-    'h': 'H',
-    'id': 'I',
-    'rx': 'RX',
-    'ry': 'RY',
-    'rz': 'RZ',
-    'rzz': 'RZZ',
-    's': 'S',
-    'sdg': 'S_H',
-    'swap': 'SWAP',
-    't': 'T',
-    'tdg': 'T_H',
-    'u1': 'PhaseShift',
-    'u2': 'U2',
-    'u3': 'U3',
-    'x': 'X',
-    'y': 'Y',
-    'z': 'Z',
+    "ccx": "CCNot",
+    "ch": "CH",
+    "crz": "CRZ",
+    "cswap": "CSwap",
+    "cu1": "CPhase",
+    "cu3": "CU3",
+    "cx": "CNot",
+    "cy": "CY",
+    "cz": "CZ",
+    "h": "H",
+    "id": "I",
+    "rx": "Rx",
+    "ry": "Ry",
+    "rz": "Rz",
+    "rzz": "RZZ",
+    "s": "S",
+    "sdg": "S_H",
+    "swap": "Swap",
+    "t": "T",
+    "tdg": "T_H",
+    "u1": "PhaseShift",
+    "u2": "U2",
+    "u3": "U3",
+    "x": "X",
+    "y": "Y",
+    "z": "Z",
     # 'barrier': 'Barrier',   # TODO TESTME
     # 'measure': 'Measure'   # TODO
     #  'initialize': 'Initialize',
-    }
+}
 """Map from qiskit operation names to QuantumFlow names"""
 
 
+NAMED_GATES = StdGate.cv_stdgates
+
 # TODO: 'multiplexer', 'snapshot', 'unitary'
 
+
 class QiskitSimulator(Operation):
-    def __init__(self, elements: Iterable[Operation] = None) -> None:
-        self._circuit = Circuit(elements)
+    def __init__(self, *elements: Operation) -> None:
+        self._circuit = Circuit(*elements)
 
     @property
     def qubits(self) -> Qubits:
@@ -91,7 +93,7 @@ class QiskitSimulator(Operation):
             circ = Circuit(Initialize(ket)) + circ
 
         qkcircuit = circuit_to_qiskit(circ, translate=True)
-        simulator = qiskit.Aer.get_backend('statevector_simulator')
+        simulator = qiskit.Aer.get_backend("statevector_simulator")
         job = qiskit.execute(qkcircuit, simulator)
         result = job.result()
         tensor = result.get_statevector()
@@ -107,19 +109,19 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
     """Convert a qsikit QuantumCircuit to QuantumFlow's Circuit"""
     # We assume that there is only one quantum register of qubits.
 
-    named_ops = dict(NAMED_GATES)
+    named_ops = dict(StdGate.cv_stdgates)
 
     circ = Circuit()
 
     for instruction, qargs, cargs in qkcircuit:
         name = instruction.name
         if name not in QASM_TO_QF:
-            raise NotImplementedError('Unknown qiskit operation')
+            raise NotImplementedError("Unknown qiskit operation")
 
         qf_name = QASM_TO_QF[name]
         qubits = [q.index for q in qargs]
         args = [float(param) for param in instruction.params] + qubits
-        gate = named_ops[qf_name](*args)
+        gate = named_ops[qf_name](*args)  # type: ignore
 
         if instruction.condition is None:
             circ += gate
@@ -132,8 +134,7 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
 
 # TODO: Default translate to false?
 # TODO: QISKIT_GATES
-def circuit_to_qiskit(circ: Circuit,
-                      translate: bool = True) -> qiskit.QuantumCircuit:
+def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCircuit:
     """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
@@ -145,7 +146,7 @@ def circuit_to_qiskit(circ: Circuit,
         circ = translate_gates_to_qiskit(circ)
 
     QF_TO_QASM = invert_map(QASM_TO_QF)
-    QF_TO_QASM['I'] = 'iden'
+    QF_TO_QASM["I"] = "iden"
 
     # We assume only one QuantumRegister. Represent qubits by index in register
     qreg = qiskit.QuantumRegister(circ.qubit_nb)
@@ -154,9 +155,11 @@ def circuit_to_qiskit(circ: Circuit,
     qkcircuit = qiskit.QuantumCircuit(qreg)
 
     for op in circ:
-        if op.name == 'Initialize':
-            name = 'initialize'
-            params = asarray(op.tensor).transpose().flatten()
+        if op.name == "Initialize":
+            name = "initialize"
+
+            # TODO: CHECK
+            params = op.tensor.transpose().flatten()
 
             qbs = [qubit_map[qb] for qb in op.qubits]
             getattr(qkcircuit, name)(params, qbs)
@@ -178,3 +181,6 @@ def translate_gates_to_qiskit(circ: Circuit) -> Circuit:
 
     circ = circuit_translate(circ, trans)
     return circ
+
+
+# fin

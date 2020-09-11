@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
 
 """QuantumFlow: Validate and display various gate translations."""
 
@@ -9,34 +14,10 @@
 from itertools import zip_longest
 
 import numpy as np
-# from sympy import Symbol
 
 import quantumflow as qf
 from quantumflow.translate import translation_source_gate
-
 from quantumflow.visualization import kwarg_to_symbol as syms
-# TODO: Redundant with  visualizations.kwarg_to_symbol
-# Pretty print gate arguments
-# syms = {
-#     'alpha':    Symbol('α'),
-#     'lam':      Symbol('λ'),
-#     'nx':       Symbol('nx'),
-#     'ny':       Symbol('ny'),
-#     'nz':       Symbol('nz'),
-#     'p':        Symbol('p'),
-#     'phi':      Symbol('φ'),
-#     't':        Symbol('t'),
-#     't0':       Symbol('t0'),
-#     't1':       Symbol('t1'),
-#     't2':       Symbol('t2'),
-#     'theta':    Symbol('θ'),
-#     'tx':       Symbol('tx'),
-#     'ty':       Symbol('ty'),
-#     'tz':       Symbol('tz'),
-#     's':        Symbol('s'),
-#     'b':        Symbol('b'),
-#     'c':        Symbol('c'),
-#     }
 
 
 def _check_circuit_translations():
@@ -46,9 +27,9 @@ def _check_circuit_translations():
 
     for name, trans in qf.TRANSLATORS.items():
         gatet = translation_source_gate(trans)
-        args = [syms[a] for a in gatet.args()]
+        args = [syms[a] for a in gatet.cv_args]
 
-        gate = gatet(*args)
+        gate = gatet(*args, *range(gatet.cv_qubit_nb))
         circ0 = qf.Circuit([gate])
         circ1 = qf.Circuit(trans(gate))
 
@@ -62,11 +43,9 @@ def _check_circuit_translations():
         assert qf.gates_close(circ0f.asgate(), circ1f.asgate())
 
 
-# TODO: Fixup and move to visualization?
-def _print_circuit_identity(name, circ0, circ1,
-                            min_col_width=0,
-                            col_sep=5,
-                            left_margin=8):
+def _print_circuit_identity(
+    name, circ0, circ1, min_col_width=0, col_sep=5, left_margin=8
+):
 
     print()
     print("", name)
@@ -79,9 +58,10 @@ def _print_circuit_identity(name, circ0, circ1,
     gates1 = qf.circuit_to_diagram(circ1, qubit_labels=False).splitlines()
 
     for gate0, gate1 in zip_longest(gates0, gates1, fillvalue=""):
-        line = (' '*col_sep).join([gate0.ljust(min_col_width),
-                                   gate1.ljust(min_col_width)])
-        line = (' '*left_margin) + line
+        line = (" " * col_sep).join(
+            [gate0.ljust(min_col_width), gate1.ljust(min_col_width)]
+        )
+        line = (" " * left_margin) + line
         line = line.rstrip()
         print(line)
 
@@ -91,7 +71,6 @@ def _print_circuit_identity(name, circ0, circ1,
 
 if __name__ == "__main__":
     print()
-    print("# Validate and display various gate translations  "
-          "(up to global phase)")
+    print("# Validate and display various gate translations  " "(up to global phase)")
     print()
     _check_circuit_translations()

@@ -3,33 +3,18 @@ sudo: required
 dist: xenial
 
 python:
-  - "3.7"
+  - "3.7"  
   - "3.8"
 
+before_install:
+  - pip install -U pip
 
 install:
-  - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
-  - conda config --add channels conda-forge
-  - conda install -c conda-forge lapack
-  - conda install -c cvxgrp cvxpy=1.0.24
-  - conda list
-  - pip install -q -r requirements.txt
-  - pip install -q -r extra-requirements.txt
-  - pip install .
+  - pip install .[dev]  # install package + test dependencies
 
 script:
-  - QUANTUMFLOW_BACKEND=numpy python -m quantumflow.meta
-  - QUANTUMFLOW_BACKEND=numpy pytest --disable-pytest-warnings --cov=quantumflow --cov-config .toxcoveragerc --cov-fail-under 100  --cov-report term-missing tests/
-  - QUANTUMFLOW_BACKEND=tensorflow python -m quantumflow.meta
-  - QUANTUMFLOW_BACKEND=tensorflow pytest --disable-pytest-warnings
-  - flake8 quantumflow examples tests tools setup.py
-  - mypy -p quantumflow --ignore-missing-imports
+  - python -m quantumcompiler.about
+  - python -m pytest --cov=quantumcompiler --cov-fail-under 100
+  - flake8
+  - mypy quantumcompiler
   - sphinx-build -M html docs docs/_build
-

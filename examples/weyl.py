@@ -7,20 +7,18 @@
 
 """Canonical decompositions of pairs of 2-qubit gates."""
 
-import os
 import argparse
+from sys import platform as sys_pf
 
 from matplotlib import pyplot, rcParams
 from mpl_toolkits.mplot3d import Axes3D
 
-from sys import platform as sys_pf
-if sys_pf == 'darwin':
+if sys_pf == "darwin":
     import matplotlib
+
     matplotlib.use("TkAgg")
 
-
-os.environ['QUANTUMFLOW_BACKEND'] = 'numpy'
-import quantumflow as qf                                    # noqa: E402
+import quantumflow as qf  # noqa: E402
 
 __version__ = qf.__version__
 __description__ = """Canonical decompositions of pairs of 2-qubit gates.
@@ -78,7 +76,7 @@ biggest sandwich. (3/4 of all 2-qubit gates)
     ./weyl.py .375 .375 0  .375 .375 0
 
 """
-__author__ = 'Gavin E. Crooks'
+__author__ = "Gavin E. Crooks"
 
 
 SAMPLES = 1024 * 2
@@ -90,10 +88,10 @@ def sandwich_decompositions(coords0, coords1, samples=SAMPLES):
     decomps = []
     for _ in range(samples):
         circ = qf.Circuit()
-        circ += qf.CAN(*coords0, 0, 1)
-        circ += qf.random_gate([0])
-        circ += qf.random_gate([1])
-        circ += qf.CAN(*coords1, 0, 1)
+        circ += qf.Can(*coords0, 0, 1)
+        circ += qf.RandomGate([0])
+        circ += qf.RandomGate([1])
+        circ += qf.Can(*coords1, 0, 1)
         gate = circ.asgate()
 
         coords = qf.canonical_coords(gate)
@@ -106,33 +104,49 @@ def display_weyl(decomps):
     """Construct and display 3D plot of canonical coordinates"""
     tx, ty, tz = list(zip(*decomps))
 
-    rcParams['axes.labelsize'] = 24
-    rcParams['font.family'] = 'serif'
-    rcParams['font.serif'] = ['Computer Modern Roman']
-    rcParams['text.usetex'] = True
+    rcParams["axes.labelsize"] = 24
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = ["Computer Modern Roman"]
+    rcParams["text.usetex"] = True
     fig = pyplot.figure()
     ax = Axes3D(fig)
     ax.scatter(tx, ty, tz)
     ax.plot((1,), (1,), (1,))
-    ax.plot((0, 1, 1/2, 0, 1/2, 1, 1/2, 1/2),
-            (0, 0, 1/2, 0, 1/2, 0, 1/2, 1/2),
-            (0, 0, 0, 0, 1/2, 0, 0, 1/2))
-    ax.plot((0, 1/2, 1, 1/2, 1/2),
-            (0, 1/4, 0, 1/4, 1/2),
-            (0, 1/4, 0, 1/4, 0))
+    ax.plot(
+        (0, 1, 1 / 2, 0, 1 / 2, 1, 1 / 2, 1 / 2),
+        (0, 0, 1 / 2, 0, 1 / 2, 0, 1 / 2, 1 / 2),
+        (0, 0, 0, 0, 1 / 2, 0, 0, 1 / 2),
+    )
+    ax.plot(
+        (0, 1 / 2, 1, 1 / 2, 1 / 2),
+        (0, 1 / 4, 0, 1 / 4, 1 / 2),
+        (0, 1 / 4, 0, 1 / 4, 0),
+    )
 
-    points = [(0, 0, 0), (1/4, 0, 0), (1/2, 0, 0), (3/4, 0, 0), (1, 0, 0),
-              (1/4, 1/4, 0), (1/2, 1/4, 0), (3/4, 1/4, 0), (1/2, 1/2, 0),
-              (1/4, 1/4, 1/4), (1/2, 1/4, 1/4), (3/4, 1/4, 1/4),
-              (1/2, 1/2, 1/4), (1/2, 1/2, 1/2)]
+    points = [
+        (0, 0, 0),
+        (1 / 4, 0, 0),
+        (1 / 2, 0, 0),
+        (3 / 4, 0, 0),
+        (1, 0, 0),
+        (1 / 4, 1 / 4, 0),
+        (1 / 2, 1 / 4, 0),
+        (3 / 4, 1 / 4, 0),
+        (1 / 2, 1 / 2, 0),
+        (1 / 4, 1 / 4, 1 / 4),
+        (1 / 2, 1 / 4, 1 / 4),
+        (3 / 4, 1 / 4, 1 / 4),
+        (1 / 2, 1 / 2, 1 / 4),
+        (1 / 2, 1 / 2, 1 / 2),
+    ]
 
     ax.scatter(*zip(*points))
     eps = 0.04
-    ax.text(0, 0, 0-2*eps, 'I', ha='center')
-    ax.text(1, 0, 0-2*eps, 'I', ha='center')
-    ax.text(1/2, 1/2, 0-2*eps, 'iSWAP', ha='center')
-    ax.text(1/2, 1/2, 1/2+eps, 'SWAP', ha='center')
-    ax.text(1/2, 0, 0-2*eps, 'CNOT', ha='center')
+    ax.text(0, 0, 0 - 2 * eps, "I", ha="center")
+    ax.text(1, 0, 0 - 2 * eps, "I", ha="center")
+    ax.text(1 / 2, 1 / 2, 0 - 2 * eps, "iSWAP", ha="center")
+    ax.text(1 / 2, 1 / 2, 1 / 2 + eps, "SWAP", ha="center")
+    ax.text(1 / 2, 0, 0 - 2 * eps, "CNOT", ha="center")
 
     # More coordinate labels
     # ax.text(1/4-eps, 1/4, 1/4, '$\sqrt{SWAP}$', ha='right')
@@ -146,8 +160,8 @@ def display_weyl(decomps):
     # ax.text(1/2, 1/2+eps, 1/4, 'PSWAP(1/2)', ha='left')
 
     ax.set_xlim(0, 1)
-    ax.set_ylim(-1/4, 3/4)
-    ax.set_zlim(-1/4, 3/4)
+    ax.set_ylim(-1 / 4, 3 / 4)
+    ax.set_zlim(-1 / 4, 3 / 4)
 
     # Get rid of the panes
     ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
@@ -172,19 +186,22 @@ def _cli():
 
     parser = argparse.ArgumentParser(
         description=__description__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
-    parser.add_argument('--version', action='version', version=__version__)
-    parser.add_argument('coords', nargs=6,
-                        metavar='COORD',
-                        type=float,
-                        action='store',
-                        help='Coordinates of initial and final gates'
-                        )
+    parser.add_argument("--version", action="version", version=__version__)
+    parser.add_argument(
+        "coords",
+        nargs=6,
+        metavar="COORD",
+        type=float,
+        action="store",
+        help="Coordinates of initial and final gates",
+    )
 
     # Parse
     opts = vars(parser.parse_args())
-    coords = opts.pop('coords')
+    coords = opts.pop("coords")
 
     # Decompose and display
     decomps = sandwich_decompositions(coords[0:3], coords[3:6])

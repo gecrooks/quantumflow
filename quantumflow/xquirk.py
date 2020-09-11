@@ -18,11 +18,11 @@ https://algassert.com/quirk
 import json
 import urllib
 import webbrowser
-from typing import cast, List, Dict
+from typing import Dict, List, cast
 
 from .circuits import Circuit
 
-__all__ = 'circuit_to_quirk', 'quirk_url', 'open_quirk_webserver'
+__all__ = "circuit_to_quirk", "quirk_url", "open_quirk_webserver"
 
 
 # TODOs
@@ -46,35 +46,35 @@ __all__ = 'circuit_to_quirk', 'quirk_url', 'open_quirk_webserver'
 # TODO: Docs
 
 quirk_labels: Dict[str, List] = {
-    'I':        [1],
-    'H':        ['H'],
-    'X':        ['X'],
-    'Y':        ['Y'],
-    'Z':        ['Z'],
-    'V':        ['X^½'],
-    'V_H':      ['X^-½'],
-    'SqrtY':    ['Y^½'],
-    'SqrtY_H':  ['Y^-½'],
-    'S':        ['Z^½'],
-    'S_H':      ['Z^-½'],
-    'T':        ['Z^¼'],
-    'T_H':      ['Z^-¼'],
-    'CNOT':     ['•', 'X'],
-    'CY':       ['•', 'Y'],
-    'CZ':       ['•', 'Z'],
-    'SWAP':     ['Swap', 'Swap'],
-    'CSWAP':    ['•', 'Swap', 'Swap'],
-    'CCNOT':    ['•', '•', 'X'],
-    'CCZ':      ['•', '•', 'Z'],
-    }
+    "I": [1],
+    "H": ["H"],
+    "X": ["X"],
+    "Y": ["Y"],
+    "Z": ["Z"],
+    "V": ["X^½"],
+    "V_H": ["X^-½"],
+    "SqrtY": ["Y^½"],
+    "SqrtY_H": ["Y^-½"],
+    "S": ["Z^½"],
+    "S_H": ["Z^-½"],
+    "T": ["Z^¼"],
+    "T_H": ["Z^-¼"],
+    "CNot": ["•", "X"],
+    "CY": ["•", "Y"],
+    "CZ": ["•", "Z"],
+    "Swap": ["Swap", "Swap"],
+    "CSwap": ["•", "Swap", "Swap"],
+    "CCNot": ["•", "•", "X"],
+    "CCZ": ["•", "•", "Z"],
+}
 
 quirk_formulaic = {
-    'RX': "Rxft",
-    'RY': "Ryft",
-    'RZ': "Rzft",
-    'TX': 'X^ft',
-    'TY': 'Y^ft',
-    'TZ': 'Z^ft',
+    "Rx": "Rxft",
+    "Ry": "Ryft",
+    "Rz": "Rzft",
+    "XPow": "X^ft",
+    "YPow": "Y^ft",
+    "ZPow": "Z^ft",
 }
 
 
@@ -88,7 +88,7 @@ def circuit_to_quirk(circ: Circuit) -> str:
     circ = circ.on(*range(0, N))
 
     columns = []
-    col: List = [1]*N
+    col: List = [1] * N
     columns.append(col)
 
     for op in circ:
@@ -96,23 +96,22 @@ def circuit_to_quirk(circ: Circuit) -> str:
 
         if op.name in quirk_labels:
             labels = quirk_labels[op.name]
-            if '•' in col or not all(col[q] == 1 for q in qbs):
+            if "•" in col or not all(col[q] == 1 for q in qbs):
                 # New column
-                col = [1]*N
+                col = [1] * N
                 columns.append(col)
             for i, q in enumerate(qbs):
                 col[q] = labels[i]
         elif op.name in quirk_formulaic:
             q = qbs[0]
-            if '•' in col or col[q] != 1:
+            if "•" in col or col[q] != 1:
                 # New column
-                col = [1]*N
+                col = [1] * N
                 columns.append(col)
-            p, = op.parameters()
-            col[q] = {'id': quirk_formulaic[op.name],
-                      'arg': str(p)}
+            (p,) = op.parameters()
+            col[q] = {"id": quirk_formulaic[op.name], "arg": str(p)}
         else:
-            raise ValueError('Cannot convert Operation to Quirk')
+            raise ValueError("Cannot convert Operation to Quirk")
 
     # Remove excess '1's  at end of column
     for col in columns:
@@ -120,23 +119,28 @@ def circuit_to_quirk(circ: Circuit) -> str:
             col.pop()
 
     quirk = {"cols": columns}
-    s = json.dumps(quirk, ensure_ascii=False).replace(' ', '')
+    s = json.dumps(quirk, ensure_ascii=False).replace(" ", "")
     return s
 
 
-def quirk_url(quirk: str,
-              base_url: str = 'https://algassert.com/quirk#circuit={}',
-              escape: bool = False) -> str:
+def quirk_url(
+    quirk: str,
+    base_url: str = "https://algassert.com/quirk#circuit={}",
+    escape: bool = False,
+) -> str:
     """Given a quirk circuit, returns the corresponding quirk web-server URL"""
     if escape:
         quirk = urllib.parse.quote(quirk)
     return base_url.format(quirk)
 
 
-def open_quirk_webserver(circ: Circuit) -> None:        # pragma: no cover
+def open_quirk_webserver(circ: Circuit) -> None:  # pragma: no cover
     """Translate a Circuit to quirk and open the quirk
     webapp in a browser window"""
 
     quirk = circuit_to_quirk(circ)
     url = quirk_url(quirk, escape=True)
     webbrowser.open(url)
+
+
+# fin

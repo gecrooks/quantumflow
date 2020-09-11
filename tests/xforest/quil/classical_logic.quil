@@ -1,6 +1,0 @@
-# Classical logic instructions
-
-AND [1] [0]
-MOVE [0] [3]
-EXCHANGE [3] [4]
-

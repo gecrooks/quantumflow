@@ -1,4 +1,3 @@
-
 # Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
 # Copyright 2016-2018, Rigetti Computing
 #
@@ -30,56 +29,65 @@ QuantumFlow module for working with the Pauli algebra.
 
 # Kudos: Adapted from PyQuil's paulis.py, original written by Nick Rubin
 
-from typing import Tuple, Any, Iterator, List
-from operator import itemgetter, mul
-from functools import reduce, total_ordering
-from itertools import groupby, product
 import heapq
 from cmath import isclose  # type: ignore
+from functools import reduce
+from itertools import groupby, product
 from numbers import Complex
+from operator import itemgetter, mul
+from typing import Any, Dict, Iterator, List, Set, Tuple
 
 import numpy as np
 
-
-from .config import TOLERANCE
-from .qubits import Qubit, Qubits
+from . import var
+from .config import ATOL
 from .ops import Operation
+from .qubits import Qubit, Qubits
 from .states import State
-from .variables import (variable_almost_zero, variable_is_symbolic,
-                        variable_is_number)
+from .tensors import TensorLike
+from .var import Variable
+
+__all__ = [
+    "PauliTerm",
+    "Pauli",
+    "sX",
+    "sY",
+    "sZ",
+    "sI",
+    "pauli_sum",
+    "pauli_product",
+    "pauli_pow",
+    "paulis_commute",
+    "pauli_commuting_sets",
+    "paulis_close",
+    "pauli_decompose_hermitian",
+]
 
 
-from .backends import TensorLike
-
-__all__ = ['PauliTerm', 'Pauli', 'sX', 'sY', 'sZ', 'sI',
-           'pauli_sum', 'pauli_product', 'pauli_pow', 'paulis_commute',
-           'pauli_commuting_sets', 'paulis_close',
-           'pauli_decompose_hermitian']
-
-
-PauliTerm = Tuple[Tuple[Tuple[Qubit, str], ...], complex]
+PauliTerm = Tuple[Qubits, str, Variable]
 
 PAULI_OPS = ["X", "Y", "Z", "I"]
 
-PAULI_PROD = {'ZZ': ('I', 1.0),
-              'YY': ('I', 1.0),
-              'XX': ('I', 1.0),
-              'II': ('I', 1.0),
-              'XY': ('Z', 1.0j),
-              'XZ': ('Y', -1.0j),
-              'YX': ('Z', -1.0j),
-              'YZ': ('X', 1.0j),
-              'ZX': ('Y', 1.0j),
-              'ZY': ('X', -1.0j),
-              'IX': ('X', 1.0),
-              'IY': ('Y', 1.0),
-              'IZ': ('Z', 1.0),
-              'ZI': ('Z', 1.0),
-              'YI': ('Y', 1.0),
-              'XI': ('X', 1.0)}
+PAULI_PROD = {
+    "ZZ": ("I", 1.0),
+    "YY": ("I", 1.0),
+    "XX": ("I", 1.0),
+    "II": ("I", 1.0),
+    "XY": ("Z", 1.0j),
+    "XZ": ("Y", -1.0j),
+    "YX": ("Z", -1.0j),
+    "YZ": ("X", 1.0j),
+    "ZX": ("Y", 1.0j),
+    "ZY": ("X", -1.0j),
+    "IX": ("X", 1.0),
+    "IY": ("Y", 1.0),
+    "IZ": ("Z", 1.0),
+    "ZI": ("Z", 1.0),
+    "YI": ("Y", 1.0),
+    "XI": ("X", 1.0),
+}
 
 
-@total_ordering
 class Pauli(Operation):
     """
     An element of the Pauli algebra.
@@ -105,46 +113,51 @@ class Pauli(Operation):
     # simplification efficient. We use Tuples (and not lists) because they are
     # immutable and hashable.
 
-    terms: Tuple[PauliTerm, ...]
+    def __init__(self, *terms: PauliTerm) -> None:
+        the_terms = []
+        qubits: Set[Qubit] = set()
 
-    def __init__(self, terms: Tuple[PauliTerm, ...]) -> None:
-        self.terms = terms
+        if len(terms) != 0:  # == 0 zero element
+            # print(terms)
+            for qbs, ops, coeff in terms:
+                if not all(op in PAULI_OPS for op in ops):
+                    raise ValueError("Valid Pauli operators are I, X, Y, and Z")
+                if isinstance(coeff, Complex) and isclose(coeff, 0.0):
+                    continue
+                if len(ops) != 0:
+                    qops = sorted(zip(qbs, ops))
+                    qops = list(filter(lambda x: x[1] != "I", qops))
+                    qbs, ops = zip(*qops) if qops else ((), "")  # type: ignore
 
+                the_terms.append((tuple(qbs), "".join(ops), coeff))
+                qubits.update(qbs)
+
+        qbs = sorted(list(qubits))
+        super().__init__(qbs)
+
+        self.terms = tuple(the_terms)
+
+    # Rename coeff?
     @classmethod
-    def term(cls, qubits: Qubits, ops: str,
-             coefficient: complex = 1.0) -> 'Pauli':
+    def term(cls, qubits: Qubits, ops: str, coefficient: Variable = 1.0) -> "Pauli":
         """
         Create an element of the Pauli algebra from a sequence of qubits
         and operators. Qubits must be unique and sortable
         """
-        if not all(op in PAULI_OPS for op in ops):
-            raise ValueError("Valid Pauli operators are I, X, Y, and Z")
-
-        coeff = (coefficient)
-
-        terms = ()  # type: Tuple[PauliTerm, ...]
-        if isinstance(coeff, Complex) and isclose(coeff, 0.0):
-            terms = ()
-        else:
-            qops = zip(qubits, ops)
-            qops = filter(lambda x: x[1] != 'I', qops)
-            terms = ((tuple(sorted(qops)), coeff),)
-
-        return cls(terms)
+        return cls((qubits, ops, coefficient))
 
     @classmethod
-    def sigma(cls, qubit: Qubit, operator: str,
-              coefficient: complex = 1.0) -> 'Pauli':
+    def sigma(cls, qubit: Qubit, operator: str, coefficient: complex = 1.0) -> "Pauli":
         """Returns a Pauli operator ('I', 'X', 'Y', or 'Z') acting
         on the given qubit"""
-        if operator == 'I':
+        if operator == "I":
             return cls.scalar(coefficient)
         return cls.term([qubit], operator, coefficient)
 
     @classmethod
-    def scalar(cls, coefficient: complex) -> 'Pauli':
+    def scalar(cls, coefficient: complex) -> "Pauli":
         """Return a scalar multiple of the Pauli identity element."""
-        return cls.term((), '', coefficient)
+        return cls.term((), "", coefficient)
 
     def is_scalar(self) -> bool:
         """Returns true if this object is a scalar multiple of the Pauli
@@ -153,12 +166,12 @@ class Pauli(Operation):
             return False
         if len(self.terms) == 0:
             return True  # Zero element
-        if self.terms[0][0] == ():
+        if len(self.terms[0][0]) == 0:
             return True
         return False
 
     @classmethod
-    def identity(cls) -> 'Pauli':
+    def identity(cls) -> "Pauli":
         """Return the identity element of the Pauli algebra"""
         return cls.scalar(1.0)
 
@@ -169,83 +182,115 @@ class Pauli(Operation):
             return False
         if self.terms[0][0] != ():
             return False
-        return isclose(self.terms[0][1], 1.0)
+        return isclose(self.terms[0][2], 1.0)  # FIXME Variables
 
     @classmethod
-    def zero(cls) -> 'Pauli':
+    def zero(cls) -> "Pauli":
         """Return the zero element of the Pauli algebra"""
-        return cls(())
+        return cls()
 
     def is_zero(self) -> bool:
         """Return True if this object is the zero Pauli element."""
         return len(self.terms) == 0
 
-    @property
-    def qubits(self) -> Qubits:
-        """Return a list of qubits acted upon by the Pauli element"""
-        return list({q for term, _ in self.terms
-                     for q, _ in term})  # type: ignore
+    # FIXME?
+    # @property
+    # def qubits(self) -> Qubits:
+    #     """Return a list of qubits acted upon by the Pauli element"""
+    #     return list({q for term, _ in self.terms
+    #                  for q, _ in term})  # type: ignore
 
     def __repr__(self) -> str:
-        return 'Pauli(' + str(self.terms) + ')'
+        return "Pauli(" + str(self.terms) + ")"
 
     def __str__(self) -> str:
         out = []
-        for term in self.terms:
-            out.append(f'+ {term[1]}')
+        for qbs, ops, coeff in self.terms:
+            str_coeff = str(coeff)
+            if str_coeff[0] != "-":
+                str_coeff = "+" + str_coeff
 
-            for q, op in term[0]:
-                out.append(f'{op}({q})')
+            if len(ops) == 0:
+                # scalar
+                out.append(str_coeff)
+            else:
+                if coeff == 1:
+                    out.append("+")
+                elif coeff == -1:
+                    out.append("-")
+                else:
+                    out.append(str_coeff)
 
-        return ' '.join(out)
+                out.append(" * ".join(f"s{op}({q})" for q, op in zip(qbs, ops)))
 
-    # TODO: Should return Paulis?
-    def __iter__(self) -> Iterator[PauliTerm]:
+        return " ".join(out)
+
+    # FIXME
+    # TODO: Should return Paulis if at all
+    def __iter__(self) -> Iterator[PauliTerm]:  # type: ignore  # FIXME
         return iter(self.terms)
 
     def __len__(self) -> int:
         return len(self.terms)
 
-    def __add__(self, other: Any) -> 'Pauli':
+    def __add__(self, other: Any) -> "Pauli":
         if isinstance(other, Complex):
             other = Pauli.scalar(complex(other))
         return pauli_sum(self, other)
 
-    def __radd__(self, other: Any) -> 'Pauli':
+    def __radd__(self, other: Any) -> "Pauli":
         return self.__add__(other)
 
-    def __mul__(self, other: Any) -> 'Pauli':
-        if variable_is_symbolic(other):
+    def __mul__(self, other: Any) -> "Pauli":
+        if var.is_symbolic(other):
             other = Pauli.scalar(other)
-        if variable_is_number(other):
+        if isinstance(other, Complex):
             other = Pauli.scalar(complex(other))
         return pauli_product(self, other)
 
-    def __rmul__(self, other: Any) -> 'Pauli':
+    def __rmul__(self, other: Any) -> "Pauli":
         return self.__mul__(other)
 
-    def __truediv__(self, other: Any) -> 'Pauli':
-        return self * (1/other)
+    def __truediv__(self, other: Any) -> "Pauli":
+        return self * (1 / other)
 
-    def __sub__(self, other: Any) -> 'Pauli':
+    def __sub__(self, other: Any) -> "Pauli":
         return self + -1 * other
 
-    def __rsub__(self, other: Any) -> 'Pauli':
+    def __rsub__(self, other: Any) -> "Pauli":
         return other + -1 * self
 
-    def __neg__(self) -> 'Pauli':
+    def __neg__(self) -> "Pauli":
         return self * -1
 
-    def __pos__(self) -> 'Pauli':
+    def __pos__(self) -> "Pauli":
         return self
 
-    def __pow__(self, exponent: int) -> 'Pauli':
+    def __pow__(self, exponent: int) -> "Pauli":
         return pauli_pow(self, exponent)
+
+    # Note: functools.total_ordering does not play nice with mypy
+    # So we add all comparisons explicitly
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Pauli):
             return NotImplemented
         return self.terms < other.terms
+
+    def __le__(self, other: Any) -> bool:
+        if not isinstance(other, Pauli):
+            return NotImplemented
+        return self.terms <= other.terms
+
+    def __gt__(self, other: Any) -> bool:
+        if not isinstance(other, Pauli):
+            return NotImplemented
+        return self.terms > other.terms
+
+    def __ge__(self, other: Any) -> bool:
+        if not isinstance(other, Pauli):
+            return NotImplemented
+        return self.terms >= other.terms
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Pauli):
@@ -259,36 +304,56 @@ class Pauli(Operation):
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
-        from .gates import NAMED_GATES, IDEN
+        from .modules import IdentityGate
+        from .ops import StdGate
 
-        qbs = self.qubits if qubits is None else qubits
+        NAMED_GATES = StdGate.cv_stdgates
+
+        qubits = self.qubits if qubits is None else qubits
         if self.is_zero():
-            N = len(qbs)
-            return np.zeros(shape=(2**N, 2**N))
+            N = len(qubits)
+            return np.zeros(shape=(2 ** N, 2 ** N))
 
         res = []
-        for term, coeff in self.terms:
-            if variable_is_symbolic(coeff):
+        for qbs, ops, coeff in self.terms:
+            if var.is_symbolic(coeff):
                 coeff = complex(coeff)
-            gate = IDEN(*qbs)
-            for qubit, op in term:
-                gate = NAMED_GATES[op](qubit) @ gate
+            gate = IdentityGate(qubits)
+            for q, op in zip(qbs, ops):
+                gate = NAMED_GATES[op](q) @ gate  # type: ignore
             res.append(gate.asoperator() * coeff)
-        return (sum(res))
+        return sum(res)
 
     # TESTME
     def run(self, ket: State) -> State:
-        from .gates import NAMED_GATES
+        from .ops import StdGate
+
+        NAMED_GATES = StdGate.cv_stdgates
 
         resultants = []
-        for term, coeff in self.terms:
+        for qbs, ops, coeff in self.terms:
             res = State(ket.tensor * coeff, ket.qubits)
-            for qubit, op in term:
-                res = NAMED_GATES[op](qubit).run(res)
+            for q, op in zip(qbs, ops):
+                res = NAMED_GATES[op](q).run(res)  # type: ignore
             resultants.append(res.tensor)
 
         out = State(sum(resultants), ket.qubits)
         return out
+
+    # TESTME (was broken)
+    def on(self, *qubits: Qubit) -> "Pauli":
+        if len(qubits) != self.qubit_nb:
+            raise ValueError("Wrong number of qubits")
+
+        return self.rewire(dict(zip(self.qubits, qubits)))
+
+    def rewire(self, labels: Dict[Qubit, Qubit]) -> "Pauli":
+        paulis = []
+        for qbs, ops, coeff in self.terms:
+            new_qbs = [labels[q] for q in qbs]
+            paulis.append(Pauli.term(new_qbs, ops, coeff))
+
+        return pauli_sum(*paulis)
 
 
 # End class Pauli
@@ -296,36 +361,36 @@ class Pauli(Operation):
 
 def sX(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_X operator acting on the given qubit"""
-    return Pauli.sigma(qubit, 'X', coefficient)
+    return Pauli.sigma(qubit, "X", coefficient)
 
 
 def sY(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_Y operator acting on the given qubit"""
-    return Pauli.sigma(qubit, 'Y', coefficient)
+    return Pauli.sigma(qubit, "Y", coefficient)
 
 
 def sZ(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_Z operator acting on the given qubit"""
-    return Pauli.sigma(qubit, 'Z', coefficient)
+    return Pauli.sigma(qubit, "Z", coefficient)
 
 
 def sI(qubit: Qubit, coefficient: complex = 1) -> Pauli:
     """Return the Pauli sigma_I (identity) operator. The qubit is irrelevant,
     but kept as an argument for consistency"""
-    return Pauli.sigma(qubit, 'I', coefficient)
+    return Pauli.sigma(qubit, "I", coefficient)
 
 
 def pauli_sum(*elements: Pauli) -> Pauli:
     """Return the sum of elements of the Pauli algebra"""
     terms = []
 
-    key = itemgetter(0)
+    key = itemgetter(0, 1)  # (qbs, str)
     for term, grp in groupby(heapq.merge(*elements, key=key), key=key):
-        coeff = sum(g[1] for g in grp)
-        if not variable_almost_zero(coeff):
-            terms.append((term, coeff))
+        coeff = sum(g[2] for g in grp)
+        if not var.almost_zero(coeff):
+            terms.append((term[0], term[1], coeff))
 
-    return Pauli(tuple(terms))
+    return Pauli(*terms)
 
 
 def pauli_product(*elements: Pauli) -> Pauli:
@@ -333,9 +398,10 @@ def pauli_product(*elements: Pauli) -> Pauli:
     result_terms = []
 
     for terms in product(*elements):
-        coeff = reduce(mul, [term[1] for term in terms])
-        ops = (term[0] for term in terms)
-        out = []
+        coeff = reduce(mul, [term[2] for term in terms])
+        ops = (zip(qbs, ops) for qbs, ops, _ in terms)
+        out_qubits = []
+        out_ops = []
         key = itemgetter(0)
         for qubit, qops in groupby(heapq.merge(*ops, key=key), key=key):
             res = next(qops)[1]  # Operator: X Y Z
@@ -343,16 +409,17 @@ def pauli_product(*elements: Pauli) -> Pauli:
                 pair = res + op[1]
                 res, rescoeff = PAULI_PROD[pair]
                 coeff *= rescoeff
-            if res != 'I':
-                out.append((qubit, res))
+            if res != "I":
+                out_qubits.append(qubit)
+                out_ops.append(res)
 
-        p = Pauli(((tuple(out), coeff),))
+        p = Pauli.term(out_qubits, "".join(out_ops), coeff)
         result_terms.append(p)
 
     return pauli_sum(*result_terms)
 
 
-# # DOCME TESTME
+# # FIXME DOCME TESTME
 # def pauli_grad(pauli: Pauli, *x: Variable) -> Pauli:
 #     result_terms = []
 
@@ -387,19 +454,18 @@ def pauli_pow(pauli: Pauli, exponent: int) -> Pauli:
         if n % 2 == 0:  # Even
             x = x * x
             n = n // 2
-        else:           # Odd
+        else:  # Odd
             y = x * y
             x = x * x
             n = (n - 1) // 2
     return x * y
 
 
-def paulis_close(pauli0: Pauli, pauli1: Pauli, tolerance: float = TOLERANCE) \
-        -> bool:
+def paulis_close(pauli0: Pauli, pauli1: Pauli, atol: float = ATOL) -> bool:
     """Returns: True if Pauli elements are almost identical."""
     pauli = pauli0 - pauli1
-    d = sum(abs(coeff)**2 for _, coeff in pauli.terms)
-    return d <= tolerance
+    d = sum(abs(coeff) ** 2 for _, _, coeff in pauli.terms)
+    return d <= atol
 
 
 def paulis_commute(element0: Pauli, element1: Pauli) -> bool:
@@ -415,8 +481,8 @@ def paulis_commute(element0: Pauli, element1: Pauli) -> bool:
         non_similar = 0
         key = itemgetter(0)
 
-        op0 = term0[0]
-        op1 = term1[0]
+        op0 = zip(term0[0], term0[1])
+        op1 = zip(term1[0], term1[1])
         for _, qops in groupby(heapq.merge(op0, op1, key=key), key=key):
 
             listqops = list(qops)
@@ -441,10 +507,10 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     if len(element) < 2:
         return (element,)
 
-    groups: List[Pauli] = []  # typing: List[Pauli]
+    groups: List[Pauli] = []
 
     for term in element:
-        pterm = Pauli((term,))
+        pterm = Pauli.term(*term)
 
         assigned = False
         for i, grp in enumerate(groups):
@@ -458,8 +524,7 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     return tuple(groups)
 
 
-def pauli_decompose_hermitian(matrix: TensorLike,
-                              qubits: Qubits = None) -> Pauli:
+def pauli_decompose_hermitian(matrix: TensorLike, qubits: Qubits = None) -> Pauli:
     """Decompose a Hermitian matrix into an element of the Pauli algebra.
 
     This works because tensor products of Pauli matrices form an orthonormal
@@ -467,8 +532,7 @@ def pauli_decompose_hermitian(matrix: TensorLike,
     inner product.
     """
     # TODO: This should work for any matrix, not just Hermitian?
-    # Generalize: remove hermitian check and coercing coefficients to real.
-    # FIXME: Gets phase wrong?
+    #       Generalize: remove hermitian check and coercing coefficients to real.
 
     if not np.ndim(matrix) == 2:
         raise ValueError("Must be square matrix")
@@ -477,9 +541,9 @@ def pauli_decompose_hermitian(matrix: TensorLike,
     if not np.allclose(matrix.conj().T, matrix):
         raise ValueError("Matrix must be Hermitian")
 
-    N = int(np.log2(np.size(matrix)))//2
-    if not 2**(2*N) == np.size(matrix):
-        raise ValueError('Matrix dimensions must be power of 2')
+    N = int(np.log2(np.size(matrix))) // 2
+    if not 2 ** (2 * N) == np.size(matrix):
+        raise ValueError("Matrix dimensions must be power of 2")
 
     if qubits is None:
         qubits = list(range(N))
@@ -487,10 +551,10 @@ def pauli_decompose_hermitian(matrix: TensorLike,
         assert len(qubits) == N
 
     terms = []
-    for ops in product('IXYZ', repeat=N):
-        P = Pauli.term(qubits, ''.join(ops)).asoperator(qubits=qubits)
-        coeff = np.real(np.trace(P @ matrix)/(2**N))
-        term = Pauli.term(qubits, ''.join(ops), coeff)
+    for ops in product("IXYZ", repeat=N):
+        P = Pauli.term(qubits, "".join(ops)).asoperator(qubits=qubits)
+        coeff = np.real(np.trace(P @ matrix) / (2 ** N))
+        term = Pauli.term(qubits, "".join(ops), coeff)
         terms.append(term)
 
     return pauli_sum(*terms)

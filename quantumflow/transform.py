@@ -1,4 +1,3 @@
-
 # Copyright 2019-, Gavin E. Crooks and the QuantumFlow contributors
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
@@ -11,44 +10,47 @@ QuantumFlow: Translate, transform, and compile circuits.
 
 # Note: Beta Prototype
 
-from typing import Generator, Tuple, Set, Callable
-from .ops import Operation, Gate
+from typing import Callable, Generator, Set, Tuple
+
 from .circuits import Circuit
-from .gates import (TX, TZ, ZZ, CZ, H, TY)
 from .dagcircuit import DAGCircuit
-from .measures import almost_identity
+from .info import almost_identity
+from .ops import Gate, Operation
+from .stdgates import CZ, ZZ, H, XPow, YPow, ZPow
 from .translate import (
-    translate_cswap_to_ccnot,
+    circuit_translate,
     translate_ccnot_to_cnot,
-    translate_cphase_to_zz,
     translate_cnot_to_cz,
-    translate_t_to_tz,
-    translate_invt_to_tz,
-    translate_zz_to_cnot,
+    translate_cphase_to_zz,
+    translate_cswap_to_ccnot,
     translate_hadamard_to_zxz,
+    translate_invt_to_tz,
+    translate_invv_to_tx,
+    translate_t_to_tz,
     translate_tx_to_zxzxz,
     translate_v_to_tx,
-    translate_invv_to_tx,
-    circuit_translate)
+    translate_zz_to_cnot,
+)
 
 
 # FIXME: transpile instead of compile?
 def compile_circuit(circ: Circuit) -> Circuit:
-    """Compile a circuit to standard gate set (CZ, X^0.5, TZ),
+    """Compile a circuit to standard gate set (CZ, X^0.5, ZPow),
     simplifying circuit where possible.
     """
     # FIXME: Should be automagic translations
     # Convert multi-qubit gates to CZ gates
-    trans = [translate_cswap_to_ccnot,
-             translate_ccnot_to_cnot,
-             translate_cphase_to_zz,
-             translate_cnot_to_cz,
-             translate_t_to_tz,
-             translate_invt_to_tz,
-             translate_zz_to_cnot,
-             translate_v_to_tx,
-             translate_invv_to_tx,
-             ]
+    trans = [
+        translate_cswap_to_ccnot,
+        translate_ccnot_to_cnot,
+        translate_cphase_to_zz,
+        translate_cnot_to_cz,
+        translate_t_to_tz,
+        translate_invt_to_tz,
+        translate_zz_to_cnot,
+        translate_v_to_tx,
+        translate_invv_to_tx,
+    ]
     circ = circuit_translate(circ, trans)
 
     dagc = DAGCircuit(circ)
@@ -61,7 +63,7 @@ def compile_circuit(circ: Circuit) -> Circuit:
     circ = circuit_translate(circ, [translate_hadamard_to_zxz])
     circ = circuit_translate(circ, [translate_tx_to_zxzxz], recurse=False)
 
-    # Gather and merge TZ gates
+    # Gather and merge ZPow gates
     dagc = DAGCircuit(circ)
     retrogress_tz(dagc)
     merge_tz(dagc)
@@ -72,10 +74,11 @@ def compile_circuit(circ: Circuit) -> Circuit:
     return circ
 
 
-def find_pattern(dagc: DAGCircuit,
-                 gateset1: Set,
-                 gateset2: Set,
-                 ) -> Generator[Tuple[Operation, Operation], None, None]:
+def find_pattern(
+    dagc: DAGCircuit,
+    gateset1: Set,
+    gateset2: Set,
+) -> Generator[Tuple[Operation, Operation], None, None]:
     """Find where a gate from gateset1 is followed by a gate from gateset2 in
     a DAGCircuit"""
     for elem2 in dagc:
@@ -114,24 +117,24 @@ def merge_hadamards(dagc: DAGCircuit) -> None:
 
 
 def merge_tx(dagc: DAGCircuit) -> None:
-    """Merge neighboring TZ gates"""
-    _merge_turns(dagc, TX)
+    """Merge neighboring ZPow gates"""
+    _merge_turns(dagc, XPow)
 
 
 def merge_ty(dagc: DAGCircuit) -> None:
-    """Merge neighboring TZ gates"""
-    _merge_turns(dagc, TY)
+    """Merge neighboring ZPow gates"""
+    _merge_turns(dagc, YPow)
 
 
 def merge_tz(dagc: DAGCircuit) -> None:
-    """Merge neighboring TZ gates"""
-    _merge_turns(dagc, TZ)
+    """Merge neighboring ZPow gates"""
+    _merge_turns(dagc, ZPow)
 
 
 def _merge_turns(dagc: DAGCircuit, gate_class: Callable) -> None:
     for gate0, gate1 in find_pattern(dagc, {gate_class}, {gate_class}):
-        t = gate0.params['t'] + gate1.params['t']
-        qubit, = gate0.qubits
+        t = gate0.parameter("t") + gate1.parameter("t")
+        (qubit,) = gate0.qubits
         gate = gate_class(t, qubit)
 
         prv = dagc.prev_element(gate0)
@@ -144,13 +147,13 @@ def _merge_turns(dagc: DAGCircuit, gate_class: Callable) -> None:
 
 
 def retrogress_tz(dagc: DAGCircuit) -> None:
-    """Commute TZ gates as far backward in the circuit as possible"""
+    """Commute ZPow gates as far backward in the circuit as possible"""
     G = dagc.graph
     again = True
     while again:
         again = False
-        for elem1, elem2 in find_pattern(dagc, {ZZ, CZ}, {TZ}):
-            q, = elem2.qubits
+        for elem1, elem2 in find_pattern(dagc, {ZZ, CZ}, {ZPow}):
+            (q,) = elem2.qubits
             elem0 = dagc.prev_element(elem1, q)
             elem3 = dagc.next_element(elem2, q)
 
@@ -167,8 +170,8 @@ def retrogress_tz(dagc: DAGCircuit) -> None:
 # TODO: Rename? merge_hzh
 # TODO: larger pattern, simplifying sequences of 1-qubit Clifford gates
 def convert_HZH(dagc: DAGCircuit) -> None:
-    """Convert a sequence of H-TZ-H gates to a TX gate"""
-    for elem2, elem3 in find_pattern(dagc, {TZ}, {H}):
+    """Convert a sequence of H-ZPow-H gates to a XPow gate"""
+    for elem2, elem3 in find_pattern(dagc, {ZPow}, {H}):
         elem1 = dagc.prev_element(elem2)
         if not isinstance(elem1, H):
             continue
@@ -176,9 +179,9 @@ def convert_HZH(dagc: DAGCircuit) -> None:
         prv = dagc.prev_element(elem1)
         nxt = dagc.next_element(elem3)
 
-        t = elem2.params['t']
-        q0, = elem2.qubits
-        gate = TX(t, q0)
+        t = elem2.parameter("t")
+        (q0,) = elem2.qubits
+        gate = XPow(t, q0)
 
         dagc.graph.remove_node(elem1)
         dagc.graph.remove_node(elem2)
@@ -186,3 +189,6 @@ def convert_HZH(dagc: DAGCircuit) -> None:
 
         dagc.graph.add_edge(prv, gate, key=q0)
         dagc.graph.add_edge(gate, nxt, key=q0)
+
+
+# fin
