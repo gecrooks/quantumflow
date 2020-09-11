@@ -217,7 +217,7 @@ def test_diamond_norm() -> None:
     # (https://goo.gl/oWXhO9)
 
     # Skip test if cvxpy not installed
-    pytest.importorskip("cvxpy")
+    # pytest.importorskip("cvxpy")
 
     RTOL = 0.01
     chan0 = qf.I(0).aschannel()
