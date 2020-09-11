@@ -14,7 +14,7 @@ Gate Modules
 MultiGates larger unitary computational modules that
 can be broken up into standard gates.
 
-.. autoclass:: MultiGates
+.. autoclass:: MultiGate
     :members:
 
 .. autoclass:: IdentityGate
@@ -69,6 +69,7 @@ bk = get_backend()
 # TODO: __all__
 # TODO: Interleave gate
 
+from .variables import variable_is_symbolic
 
 class MultiGate(Gate):
     """
@@ -315,6 +316,18 @@ class PauliGate(MultiGate):
         super().__init__(qubits=element.qubits)
         self.element = element
         self.alpha = alpha
+
+    def __str__(self):
+        return f"PauliGate({self.element}, {self.alpha}) {self.qubits}"
+
+
+    # fixme docme testme
+    def resolve(self, resolver) -> 'Circuit':
+        import sympy
+        if variable_is_symbolic(self.alpha):
+            alpha = float(sympy.N(self.alpha, subs=resolver))
+            return PauliGate(self.element, alpha)
+        return self
 
     def ascircuit(self, topology: nx.Graph = None) -> Circuit:
         """

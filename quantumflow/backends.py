@@ -408,10 +408,10 @@ class NumpyBackend(QFBackend):
             tensor[s1] *= d[1]
             return tensor
 
-        # return _tensormul_tensordot(tensor0, tensor1, indices)
-        # return _tensormul_cirq(tensor0, tensor1, indices)
-        return self._tensormul_matmul(tensor0, tensor1, indices, diagonal)
-        # return _tensormul_contract(tensor0, tensor1, indices)
+        #return self._tensormul_tensordot(tensor0, tensor1, indices)
+        return self._tensormul_cirq(tensor0, tensor1, indices)
+        #return self._tensormul_matmul(tensor0, tensor1, indices, diagonal)
+        #return self._tensormul_contract(tensor0, tensor1, indices)
 
     def _tensormul_matmul(self, tensor0: BKTensor, tensor1: BKTensor,
                           indices: Tuple[int, ...],
@@ -442,44 +442,44 @@ class NumpyBackend(QFBackend):
 
         return tensor
 
-    # def _tensormul_cirq(self, tensor0: BKTensor, tensor1: BKTensor,
-    #                     indices: Tuple[int, ...]) -> BKTensor:
-    #     from cirq import targeted_left_multiply
-    #     tensor = targeted_left_multiply(tensor0, tensor1, indices)
-    #     return tensor
+    def _tensormul_cirq(self, tensor0: BKTensor, tensor1: BKTensor,
+                        indices: Tuple[int, ...]) -> BKTensor:
+        from cirq import targeted_left_multiply
+        tensor = targeted_left_multiply(tensor0, tensor1, indices)
+        return tensor
 
-    # def _tensormul_tensordot(self, tensor0: BKTensor, tensor1: BKTensor,
-    #                          indices: Tuple[int, ...]) -> BKTensor:
-    #     # Significantly faster than using einsum.
-    #     N = self.ndim(tensor1)
-    #     K = self.ndim(tensor0) // 2
-    #     assert K == len(indices)
+    def _tensormul_tensordot(self, tensor0: BKTensor, tensor1: BKTensor,
+                             indices: Tuple[int, ...]) -> BKTensor:
+        # Significantly faster than using einsum.
+        N = self.ndim(tensor1)
+        K = self.ndim(tensor0) // 2
+        assert K == len(indices)
 
-    #     perm = list(indices) + [n for n in range(N) if n not in indices]
-    #     inv_perm = np.argsort(perm)
+        perm = list(indices) + [n for n in range(N) if n not in indices]
+        inv_perm = np.argsort(perm)
 
-    #     tensor = self.tensordot(tensor0, tensor1, (range(K, 2*K), indices))
-    #     tensor = self.transpose(tensor, inv_perm)
+        tensor = self.tensordot(tensor0, tensor1, (range(K, 2*K), indices))
+        tensor = self.transpose(tensor, inv_perm)
 
-    #     return tensor
+        return tensor
 
-    # def _tensormul_contract(self, tensor0: BKTensor, tensor1: BKTensor,
-    #                         indices: Tuple[int, ...]) -> BKTensor:
+    def _tensormul_contract(self, tensor0: BKTensor, tensor1: BKTensor,
+                            indices: Tuple[int, ...]) -> BKTensor:
 
-    #     N = self.ndim(tensor1)
-    #     K = self.ndim(tensor0) // 2
-    #     assert K == len(indices)
+        N = self.ndim(tensor1)
+        K = self.ndim(tensor0) // 2
+        assert K == len(indices)
 
-    #     left_out = list(indices)
-    #     left_in = list(range(N, N+K))
-    #     right = list(range(0, N))
-    #     for idx, s in zip(indices, left_in):
-    #         right[idx] = s
+        left_out = list(indices)
+        left_in = list(range(N, N+K))
+        right = list(range(0, N))
+        for idx, s in zip(indices, left_in):
+            right[idx] = s
 
-    #     tensor = self.contract(tensor0, tuple(left_out+left_in),
-    #      tensor1, tuple(right))
+        tensor = self.contract(tensor0, tuple(left_out+left_in),
+         tensor1, tuple(right))
 
-    #     return tensor
+        return tensor
 
 
 class Numpy64Backend(NumpyBackend):

@@ -24,7 +24,8 @@ Interface to pyQuil and the Rigetti Forest.
 
 """
 
-from typing import Sequence, Any
+from functools import total_ordering
+from typing import Sequence, Any, Hasable
 
 # import networkx as nx
 import PIL
@@ -85,6 +86,74 @@ QUIL_GATES = {'I', 'X', 'Y', 'Z', 'H', 'S', 'T', 'PhaseShift',
               'RX', 'RY', 'RZ', 'CZ', 'CNOT', 'SWAP',
               'ISWAP', 'CPHASE00', 'CPHASE01', 'CPHASE10',
               'CPHASE', 'PSWAP', 'CCNOT', 'CSWAP'}
+
+__all__ = ["Register", "Addr"]
+
+DTYPE = {"BIT", "REAL", "INT", "OCTET", "ANY"}
+
+DEFAULT_REGION = "ro"
+
+
+# DOCME
+@total_ordering
+class Register:
+    """Create addresses space for a register of classical memory"""
+
+    def __init__(self, name: str = DEFAULT_REGION, dtype: str = "BIT") -> None:
+        assert dtype in DTYPE
+        self.name = name
+        self.dtype = dtype
+
+    def __getitem__(self, key: Hashable) -> "Addr":
+        return Addr(self, key)
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, Register):
+            return NotImplemented
+        return (self.dtype, self.name) < (other.dtype, other.name)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Register):
+            return NotImplemented
+        return (self.dtype, self.name) == (other.dtype, other.name)
+
+    def __hash__(self) -> int:
+        return hash((self.dtype, self.name))
+
+    def __repr__(self) -> str:
+        return "Register" + "(" + repr(self.name) + ", " + repr(self.dtype) + ")"
+
+
+@total_ordering
+class Addr:
+    """An address for an item of classical memory"""
+
+    def __init__(self, register: "Register", key: Hashable) -> None:
+        self.register = register
+        self.key = key
+
+    @property
+    def dtype(self) -> str:
+        return self.register.dtype
+
+    def __str__(self) -> str:
+        return f"{self.register.name}[{self.key}]"
+
+    def __repr__(self) -> str:
+        return repr(self.register) + "[" + repr(self.key) + "]"
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, Addr):
+            return NotImplemented
+        return (self.register, self.key) < (other.register, other.key)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Addr):
+            return NotImplemented
+        return (self.register, self.key) == (other.register, other.key)
+
+    def __hash__(self) -> int:
+        return hash((self.register, self.key))
 
 
 class NullCompiler(pyquil.AbstractCompiler):

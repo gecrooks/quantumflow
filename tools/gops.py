@@ -29,6 +29,15 @@ def benchmark_circuit(N, gate_nb, gate):
 
 def _cli():
 
+    # Random gate in Cirq?
+    # for n in range(4):
+    #     circ = benchmark_circuit(QUBITS, GATES, qf.random_gate([0, 1]))
+    #     t = timeit.timeit(lambda: circ.run(), number=REPS,
+    #                       timer=time.process_time)
+    #     gops = int((GATES*REPS)/t)
+    #     gops = int((gops * 100) + 0.5) / 100.0
+    #     print(f"gate qubits: {n}  gops:{gops}")
+
     gates = [
         qf.I(), qf.X(), qf.Y(), qf.Z(), qf.S(), qf.T(), qf.H(),
         qf.TX(0.2), qf.TY(0.2), qf.TZ(0.2),

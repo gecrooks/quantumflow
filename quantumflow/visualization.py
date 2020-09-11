@@ -38,8 +38,8 @@ __all__ = ('LATEX_GATESET',
 
 
 # TODO: Should be set of types to match GATESET in stdgates?
-LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H',
-                           'RX', 'RY', 'RZ', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
+LATEX_GATESET = frozenset(['I', 'X', 'Y', 'Z', 'H', 'T', 'S', 'T_H', 'S_H', 'V', 'V_H',
+                           'RX', 'RY', 'RZ', 'SqrtY', 'SqrtY_H', 'TX', 'TY', 'TZ', 'TH', 'CNOT',
                            'CZ', 'SWAP', 'ISWAP', 'PSWAP',
                            'CV', 'CV_H', 'CPHASE', 'CH', 'Can', 'CCNOT',
                            'CSWAP',
@@ -121,7 +121,10 @@ def circuit_to_latex(
     from .config import CTRL, TARGET
     latex_labels = {
         'S_H': [r'S^\dagger'],
+        'V_H': [r'V^\dagger'],
         'T_H': [r'T^\dagger'],
+        'SqrtY': [r'Y^{{\frac{{1}}{{2}}}}'],
+        'SqrtY_H': [r'Y^{{-\frac{{1}}{{2}}}}'],
         'RX': [r'R_x({theta})'],
         'RY': [r'R_y({theta})'],
         'RZ': [r'R_z({theta})'],

@@ -109,15 +109,18 @@ class Ph(StdGate):
 
     We generally don't actually care about the global phase, since it has no
     physical meaning. It does matter when constructing controlled gates.
-    GlobalPhase and the identity differ only by the phase, but a
+    Global phase and the identity differ only by the phase, but a
     controlled-identity is the identity, but a controlled-Global-Phase gate
     will be some instance of the CPHASE (controlled-phase) gate.
+
+    [FIXME: That doesn't sound right]
 
     .. math::
         \operatorname{Ph}(\phi) \equiv \begin{pmatrix} e^{i \phi}& 0 \\
                               0 & e^{i \phi} \end{pmatrix}
     """
     # Ref: Explorations in Quantum Computing, Williams, p77
+    # Ref: Barenco
 
     _diagram_labels = ['Ph({phi})']
     diagonal = True
@@ -300,7 +303,7 @@ class H(StdGate):
         return bk.astensorproduct(unitary)
 
     @property
-    def H(self) -> '_H':
+    def H(self) -> '_H':  # See NB implementation note below
         return self  # Hermitian
 
     def __pow__(self, t: Variable) -> 'TH':
@@ -321,7 +324,7 @@ class H(StdGate):
         return super().run(ket)     # pragma: no cover
 
 
-# Hack. H().H -> H, but the method shadows the class, so can't
+# NB: H().H -> H, but the method shadows the class, so we can't
 # annotate directly.
 _H = H
 

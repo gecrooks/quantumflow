@@ -63,7 +63,7 @@ def variable_almost_zero(var: Variable) -> bool:
     # if variable_is_number(var) and np.isclose(var, 0.0):
     #     return True
     # return False
-    if isinstance(var, sympy.core.numbers.Zero):
+    if var == sympy.S.Zero:
         return True
     return variables_close(var, 0.0)
 

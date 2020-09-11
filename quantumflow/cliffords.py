@@ -8,14 +8,14 @@
 QuantumFlow: Clifford gates
 """
 
-
+from typing import Any
 import numpy as np
 from numpy import sqrt, pi
 
 # from . import backend as bk
-from .qubits import Qubit
+from .qubits import Qubit, Qubits
 from .ops import Gate
-from .gates import S, S_H, V, X, Z, I
+from .gates import S, S_H, V, X, Z, I, H, V_H, Y
 from .gates import TX, TY, TZ, RN
 from .circuits import Circuit
 # from .variables import variable_is_symbolic
@@ -31,13 +31,15 @@ _clifford_gates = (
     I(),
 
     RN(0.5 * pi, 1., 0., 0.),
-    RN(0.5 * pi, 0, 1, 0),
-    RN(0.5 * pi, 0, 0, 1),
     RN(pi, 1, 0, 0),
-    RN(pi, 0, 1, 0),
-    RN(pi, 0, 0, 1),
     RN(-0.5 * pi, 1, 0, 0),
+
+    RN(0.5 * pi, 0, 1, 0),
+    RN(pi, 0, 1, 0),
     RN(-0.5 * pi, 0, 1, 0),
+
+    RN(0.5 * pi, 0, 0, 1),
+    RN(pi, 0, 0, 1),
     RN(-0.5 * pi, 0, 0, 1),
 
     RN(pi, 1/sqrt(2), 1/sqrt(2), 0),
@@ -63,16 +65,20 @@ The rest are given as instances of the generic rotation gate RN
 
 
 _clifford_circuits = [
-    Circuit([I()]),
-    Circuit([V()]),
-    Circuit([S_H(), V(), S()]),
-    Circuit([S()]),
-    Circuit([X()]),
-    Circuit([S_H(), X(), S()]),
-    Circuit([Z()]),
-    Circuit([Z(), V(), Z()]),
-    Circuit([S(), V(), S_H()]),
-    Circuit([S_H()]),
+    Circuit(I()),
+
+    Circuit(V()),
+    Circuit(X()),
+    Circuit(V_H()),
+
+    Circuit(S_H(), V(), S()),
+    Circuit(Y()),
+    Circuit(S(), V(), S_H()),
+
+    Circuit(S()),
+    Circuit(Z()),
+    Circuit(S_H()),
+
     Circuit([X(), S()]),
     Circuit([S(), V(), S()]),
     Circuit([V(), Z()]),
@@ -113,6 +119,253 @@ def _clifford_mul(index0: int, index1: int) -> int:
     return _clifford_cayley_table[index0, index1]
 
 
+from typing import Sequence
+from .paulialgebra import Pauli
+class CliffordGate(Gate):
+    # prototype multiqubit Clifford, to replace Clifford
+    # qubits optional?
+    def __init__(self,
+                 stabalizer: Sequence[Pauli],
+                 destabalizer: Sequence[Pauli],
+                 qubits: Qubits) -> None:
+        qubits_sorted = all(qubits[i] < qubits[i+1] for i in range(0, len(qubits)-1))
+        if not qubits_sorted:
+            qubits, stabalizer, destabalizer \
+                = list(zip(*sorted(zip(qubits, stabalizer, destabalizer))))
+
+        super().__init__(qubits)
+        self.stabalizer = stabalizer
+        self.destabalizer = destabalizer
+
+        # TODO: Check compatible qubits, check legit tableau
+
+    def on(self, qubits):
+        assert self.qubit_nb == len(qubits)
+        rewire = {q0: q1 for q0, q1 in zip(self.qubits, qubits)}
+        x = [x.relabel(rewire) for x in self.stabalizer]
+        z = [z.relabel(rewire) for z in self.destabalizer]
+        return CliffordGate(x, z, qubits)
+
+    # TODO: Rewire
+
+    def __str__(self):
+        sx = ", ".join(str(x) for x in self.stabalizer)
+        sz = ", ".join(str(z) for z in self.destabalizer)
+        return f"{self.name}([{sx}], [{sz}], {self.qubits})"
+
+    def conjugate(self, pauli):
+        from .paulialgebra import sI, Pauli
+        for qbs, ops, coeff in pauli:
+            out = sI(0) * coeff
+            for q, op in zip(qbs, ops):
+                if q in self.qubits:
+                    idx = self.qubits.index(q)
+                    if op == "X":
+                        out *= self.stabalizer[idx]
+                    elif op == "Z":
+                        out *= self.destabalizer[idx]
+                    else:  # Y
+                        out *= 1j * self.stabalizer[idx] * self.destabalizer[idx]  # FIXME Sign?
+                else:
+                    out *= Pauli.sigma(q, op)
+        out = round_pauli(out)
+        return out
+
+    def __matmul__(self, other):
+        qubits = sorted(list(set(other.qubits) | set(self.qubits)))
+        # Brain hurts. Why this way around!?
+        xs = [other.conjugate(self.conjugate(sX(q))) for q in qubits]
+        zs = [other.conjugate(self.conjugate(sZ(q))) for q in qubits]
+        # zs = [self.conjugate(z) for z in other.z]
+        return CliffordGate(xs, zs, qubits)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, CliffordGate):
+            return NotImplemented
+        return self.stabalizer == other.stabalizer \
+            and self.destabalizer == other.destabalizer \
+            and self.qubits == other.qubits
+
+    # todo: cache
+    def __hash__(self) -> int:
+        return hash((self.stabalizer, self.destabalizer, self.qubits))
+
+        # set(other.qubits) | set(self.qubits)
+        #     -> list
+        #     -> sort
+        #     -> some_name
+
+    # def deke(self):
+    #     circ = []
+    #     cliff = self
+    #     for n, q in enumerate(self.qubits):
+    #         subterm coeff = cliff.x[n]
+    #         for 
+
+
+from .paulialgebra import sX, sZ, sY
+def test_CliffordGate():
+    cnot01 = CliffordGate([sX(0) * sX(1), sX(1)],
+                          [sZ(0), sZ(0) * sZ(1)],
+                          [0, 1])
+    print(cnot01)
+
+    cnot10 = cnot01.on([1, 0])
+    print('CNOT10', cnot10)
+
+    h0 = CliffordGate([sZ(0)], [sX(0)], [0])
+    print(h0)
+    h1 = h0.on([1])
+    print(h1)
+
+    print(h0.conjugate(sX(0)))
+    print(h0.conjugate(sY(0)))
+    print(h0.conjugate(sY(0)*sX(1)))
+
+    print(cnot01.conjugate(sX(0)))
+
+    # out = cnot01 @ cnot01
+    # print(out)
+
+    # out = cnot01 @ cnot10
+    # print("DCNOT", out)
+
+    out = cnot10 @ cnot01
+    print("DCNOT", out)
+
+    print(cnot01.conjugate(cnot10.conjugate(sX(0))))
+
+    print("HERE", h0@h1)
+
+    sh2 = CliffordGate([-sY(2)], [sZ(2)], [2])
+
+    cnot12 = cnot01.on([1, 2])
+    cnot23 = cnot01.on([2, 3])
+    h2 = h0.on([2])
+
+    ladder = cnot01 @ cnot12 @ sh2 @ cnot12 @ cnot01
+    print("Ladder", ladder)
+
+    ladder = cnot01 @ cnot12 @ sh2 @ sh2@ sh2  @ cnot12 @ cnot01
+    print("Ladder", ladder)
+
+    ladder = cnot01 @ cnot12 @ h2  @ cnot12 @ cnot01
+    print("H Ladder", ladder)
+
+    ladder = cnot01 @ cnot12 @ cnot23 @ cnot12 @ cnot01
+    print("cnot Ladder", ladder)
+
+    ladder = cnot23 @ cnot12 @ cnot01
+    print("cnot single 1", ladder)
+
+    cnot02 = cnot01.on([0, 2])
+    cnot03 = cnot01.on([0, 3])
+    ladder = cnot03 @ cnot02 @ cnot01
+    print("cnot single 2", ladder)
+    c = ladder.conjugate(sX(0) * sX(1) * sX(2) * sX(3))
+    print(c)
+
+
+def almost_integer(number, atol=1e-08):
+    if isinstance(number, complex):
+        if not np.isclose(number.imag, 0, atol=atol):
+            return False
+        number = number.real
+    x = np.isclose(round(number)-number, 0, atol=atol)
+    return x
+
+def test_almost_integer():
+    assert almost_integer(1)
+    assert almost_integer(1.0)    
+    assert almost_integer(11239847819349871423)
+    assert almost_integer(-4)
+    assert almost_integer(-4+0j)
+    assert almost_integer(1.0000000000000001)
+    assert not almost_integer(1.0000001)
+
+from .paulialgebra import pauli_sum
+
+# To pauli_group
+def round_pauli(pauli):
+    terms = []
+    for qbs, ops, coeff in pauli:
+        if not almost_integer(coeff):
+            raise ValueError()
+        coeff = round(coeff.real)
+        assert coeff == -1 or coeff == 0 or coeff == 1
+        terms.append(Pauli.term(qbs, ops, round(coeff.real)))
+    return pauli_sum(*terms)
+
+
+def clifford_from_gate(gate: Gate):
+    from .paulialgebra import pauli_decompose_hermitian
+    x = []
+    z = []
+    qubits = gate.qubits
+    for q in qubits:
+        m = Circuit(gate, X(q), gate.H).asgate().asoperator()
+        p = pauli_decompose_hermitian(m)
+        p = round_pauli(p)
+        # Test
+        x.append(p)
+
+        m = Circuit(gate, Z(q), gate.H).asgate().asoperator()
+        p = pauli_decompose_hermitian(m)
+        p = round_pauli(p)
+        # Test
+        z.append(p)
+
+    return CliffordGate(x, z, qubits)
+
+# _tabs = {
+#     CNOT: CliffordGate([+ sX(0) * sX(1), + sX(1)],
+#                        [+ sZ(0), + sZ(0) * sZ(1)], (0, 1)),
+#     }
+
+# def translate_to_clifford(gate):
+#     if type(gate) in _tabs:
+#         return _tabs[type(gate)].on(gate.qubits)
+#     assert False
+
+
+# def translate_clifford(cliff):
+#     circ = []
+#     for n, term in enumerate(cliff):
+#         qbs, ops, coeff = term
+#         for q, op in zip(qbs, ops):
+#             if op == "Z":
+                
+
+
+
+
+def test_deke():
+    from .paulialgebra import pauli_decompose_hermitian
+    from .gates import CNOT, ISWAP, T
+    gate = ISWAP(0, 1)
+    gate = H(0)
+    # x0_out = Circuit(gate, X(0), gate.H).asgate().asoperator()
+    # x1_out = Circuit(gate, X(1), gate.H).asgate().asoperator()
+    # z0_out = Circuit(gate, Z(0), gate.H).asgate().asoperator()
+    # z1_out = Circuit(gate, Z(1), gate.H).asgate().asoperator()
+    # x0_deke = pauli_decompose_hermitian(x0_out)
+    # x1_deke = pauli_decompose_hermitian(x1_out)
+    # z0_deke = pauli_decompose_hermitian(z0_out)
+    # z1_deke = pauli_decompose_hermitian(z1_out)    
+    # print(x0_deke)
+    # print(x1_deke)
+    # print(z0_deke)
+    # print(z1_deke)
+
+
+    print(clifford_from_gate(gate))
+
+
+    for gate in _clifford_gates:
+        print(clifford_from_gate(gate))
+
+
+
 class Clifford(Gate):
 
     text_labels = 'CL{index}'
@@ -132,7 +385,7 @@ class Clifford(Gate):
     def tensor(self) -> BKTensor:
         return _clifford_gates[self.index].tensor
 
-    def __matmul__(self, other: 'Gate') -> 'Gate':  # noqa: F811
+    def __matmul__(self, other: 'Gate') -> 'Gate':
         if not isinstance(other, Gate):
             raise NotImplementedError()
 
@@ -147,9 +400,10 @@ class Clifford(Gate):
 
     @property
     def H(self) -> 'Clifford':
-        # FIXME: Inelegant
-        index = _index_from_gate(_clifford_gates[self.index].H)
-        return Clifford(index, *self.qubits)
+        # FIXME: Inelegant, doesn't respect phase
+        # index = _index_from_gate(_clifford_gates[self.index].H)
+        # return Clifford(index, *self.qubits)
+        return self.su().H
 
     # TODO: Rename, deke? decomposition?
     def ascircuit(self) -> Circuit:
@@ -232,6 +486,41 @@ for k, cg in enumerate(_clifford_gates):
                 if gates_close(cls0(t) @ cg, cg @ cls1(s*t)):
                     _from_to[(k, cls0)] = (s, cls1)
 
+
+_cliffords = [
+    CliffordGate([+sX(0)], [+sZ(0)], (0,)),
+    CliffordGate([+sX(0)], [+sY(0)], (0,)),
+    CliffordGate([+sX(0)], [-sZ(0)], (0,)),
+    CliffordGate([+sX(0)], [-sY(0)], (0,)),
+    CliffordGate([+sZ(0)], [-sX(0)], (0,)),
+    CliffordGate([-sX(0)], [-sZ(0)], (0,)),
+    CliffordGate([-sZ(0)], [+sX(0)], (0,)),
+    CliffordGate([-sY(0)], [+sZ(0)], (0,)),
+    CliffordGate([-sX(0)], [+sZ(0)], (0,)),
+    CliffordGate([+sY(0)], [+sZ(0)], (0,)),
+    CliffordGate([+sY(0)], [-sZ(0)], (0,)),
+    CliffordGate([+sZ(0)], [+sX(0)], (0,)),
+    CliffordGate([-sX(0)], [+sY(0)], (0,)),
+    CliffordGate([-sY(0)], [-sZ(0)], (0,)),
+    CliffordGate([-sZ(0)], [-sX(0)], (0,)),
+    CliffordGate([-sX(0)], [-sY(0)], (0,)),
+    CliffordGate([+sZ(0)], [+sY(0)], (0,)),
+    CliffordGate([+sY(0)], [+sX(0)], (0,)),
+    CliffordGate([-sY(0)], [-sX(0)], (0,)),
+    CliffordGate([-sZ(0)], [+sY(0)], (0,)),
+    CliffordGate([-sY(0)], [+sX(0)], (0,)),
+    CliffordGate([+sZ(0)], [-sY(0)], (0,)),
+    CliffordGate([+sY(0)], [-sX(0)], (0,)),
+    CliffordGate([-sZ(0)], [-sY(0)], (0,)),
+    ]
+
+
+def decompose_clifford(clifford):
+    if clifford.qubit_nb == 1:
+        clifford_circ = {cl: circ for cl, circ in zip(_cliffords, _clifford_circuits)}
+        c = clifford.on(range(clifford.qubit_nb))
+        return clifford_circ[c].on(clifford.qubits)
+    assert False
 
 # # FIXME: What is this meant to be for?
 # def convert_to_cliffords(circ: Circuit) -> Generator[Operation, None, None]:

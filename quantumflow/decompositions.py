@@ -37,7 +37,7 @@ from .qubits import asarray
 from .config import TOLERANCE
 from .ops import Gate, Unitary
 from .measures import gates_close
-from .gates import RN, CAN, TY, TZ, Y, S_H, I, B
+from .gates import RN, CAN, TY, TZ, Y, S_H, I, B, H
 from .gates import X, Z, V, S
 from .circuits import Circuit, euler_circuit
 from .translate import translate_can_to_cnot
@@ -183,14 +183,17 @@ def kronecker_decomposition(gate: Gate, euler: str = 'ZYZ') -> Circuit:
     rank = 2**gate.qubit_nb
     U /= np.linalg.det(U) ** (1/rank)
 
-    R = np.stack([U[0:2, 0:2].reshape(4),
-                  U[0:2, 2:4].reshape(4),
-                  U[2:4, 0:2].reshape(4),
-                  U[2:4, 2:4].reshape(4)])
+    R = U.reshape(2, 2, 2, 2)
+    R = R.transpose(0, 2, 1, 3)
+    R = R.reshape(4, 4)
+
     u, s, vh = np.linalg.svd(R)
-    v = vh.transpose()
-    A = (np.sqrt(s[0]) * u[:, 0]).reshape(2, 2)
-    B = (np.sqrt(s[0]) * v[:, 0]).reshape(2, 2)
+    A = np.sqrt(s[0]) * u[:, 0].reshape(2, 2)
+    B = np.sqrt(s[0]) * vh[0, :].reshape(2, 2)
+    # print(s)
+    # A = (u[:, 0]).reshape(2, 2)
+    # B = (vh[0, :]).reshape(2, 2)
+
 
     q0, q1 = gate.qubits
     g0 = Unitary(A, q0)
