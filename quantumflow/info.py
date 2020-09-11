@@ -61,7 +61,6 @@ Channel Measures
 
 .. autofunction:: channel_angle
 .. autofunction:: channels_close
-.. autofunction:: diamond_norm
 .. autofunction:: average_gate_fidelity
 .. autofunction:: almost_unital
 """
@@ -102,7 +101,6 @@ __all__ = (
     "gates_commute",
     "channels_close",
     "circuits_close",
-    "diamond_norm",
     "trace_distance",
     "average_gate_fidelity",
     "almost_unitary",
