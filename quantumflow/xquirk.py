@@ -5,7 +5,7 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: quantumflow
+.. currentmodule:: quantumflow.xquirk
 
 Interface between Quirk and QuantumFlow
 

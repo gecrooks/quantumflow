@@ -1,16 +1,17 @@
-# QuantumCompiler: A cross compiler for gate based models of quantum computing
+#  QuantumFlow: A Quantum Algorithms Development Toolkit
 
+A cross-compiler for gate based models of quantum computing
 
-[![Build Status](https://travis-ci.org/gecrooks/quantumcompiler.svg?branch=master)](https://travis-ci.org/gecrooks/quantumcompiler) [![Documentation Status](https://readthedocs.org/projects/quantumcompiler/badge/?version=latest)](https://quantumcompiler.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/gecrooks/quantumflow.svg?branch=master)](https://travis-ci.org/gecrooks/quantumflow) [![Documentation Status](https://readthedocs.org/projects/quantumflow/badge/?version=latest)](https://quantumflow.readthedocs.io/en/latest/?badge=latest)
 
-[Source](https://github.com/gecrooks/quantumcompiler)
+[Source](https://github.com/gecrooks/quantumflow)
 
 
 ## Installation for development
 
 ```
-$ git clone https://github.com/gecrooks/quantumcompiler.git
-$ cd quantumcompiler
+$ git clone https://github.com/gecrooks/quantumflow.git
+$ cd quantumflow
 $ pip install -e .[dev]
 ```
 

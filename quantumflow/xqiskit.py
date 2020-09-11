@@ -6,13 +6,13 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: quantumflow
+.. currentmodule:: quantumflow.xqiskit
 
 Interface between IBM's Qiskit and QuantumFlow
 
 .. autoclass:: QiskitSimulator
 .. autofunction:: qiskit_to_circuit
-.. autofunction:: circuit_qiskit
+.. autofunction:: circuit_to_qiskit
 """
 
 import qiskit

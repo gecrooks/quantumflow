@@ -6,7 +6,7 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: quantumflow
+.. currentmodule:: quantumflow.xcirq
 
 Interface between Google's Cirq and QuantumFlow
 

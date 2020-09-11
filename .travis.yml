@@ -13,8 +13,8 @@ install:
   - pip install .[dev]  # install package + test dependencies
 
 script:
-  - python -m quantumcompiler.about
-  - python -m pytest --cov=quantumcompiler --cov-fail-under 100
+  - python -m quantumflow.about
+  - python -m pytest --cov=quantumflow --cov-fail-under 100
   - flake8
-  - mypy quantumcompiler
+  - mypy quantumflow
   - sphinx-build -M html docs docs/_build

@@ -36,6 +36,10 @@ using (stochastic) gradient descent.
       transform
       gradients  
       examples
+      xforest
+      xcirq
+      xqiskit
+      xquirk
 
 
 .. toctree::
