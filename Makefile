@@ -30,11 +30,14 @@ coverage:	## Report test coverage using current backend
 
 lint:		## Lint check python source
 	@echo
-	isort --check -m 3 --tc $(FILES)  || echo "FAILED isort!"
+	@echo "isort"
+	@isort --check -m 3 --tc $(FILES)  || echo "FAILED isort!"
 	@echo
-	black --diff --color $(FILES)  || echo "FAILED black"
+	@echo "black"
+	@black --diff --color $(FILES)  || echo "FAILED black"
 	@echo
-	flake8 $(FILES)  || echo "FAILED flake8"
+	@echo "flake8"
+	@flake8 $(FILES)  || echo "FAILED flake8"
 	@echo
 
 delint:   ## Run isort and black to delint project

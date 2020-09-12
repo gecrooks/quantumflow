@@ -9,7 +9,7 @@ QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 
 import itertools
 import textwrap
-from typing import Any, Dict, Generator, Iterable, Iterator, List, Tuple, Union
+from typing import Any, Dict, Generator, Iterable, Iterator, List, Tuple
 
 import networkx as nx
 import numpy as np
@@ -50,7 +50,7 @@ class Out(Operation):
         return hash(self.qubits)
 
 
-# FIXME: Design flaw!
+# FIXME: Design flaw!?
 # DAGCircuit fails if we try to add multi instances of the same gate
 # The problem is that we use gates as nodes in the graph, so they have to be
 # unique.
@@ -70,8 +70,8 @@ class DAGCircuit(Operation):
     end of a circuit. Edges are directed from 'in' to 'out' via the Operation
     nodes. Each edge is keyed to a qubit.
 
-    A DAGCircuit is considered a mutable object, like Circuit, the other
-    composite Operation class.
+    A DAGCircuit is considered a mutable object. But it should not be mutated
+    if it is part of another Circuit or other immutable composite Operation.
 
     DAGCircuit is iterable, yielding all of the operation nodes in
     topological sort order.
@@ -79,11 +79,7 @@ class DAGCircuit(Operation):
     Note: Provisional API
     """
 
-    def __init__(self, *elements: Union[Iterable[Operation], Operation]) -> None:
-        # Deprecated legacy interface
-        # TODO: Throw deprecations warning
-        if len(elements) == 1 and isinstance(elements[0], Iterable):
-            elements = elements[0]  # type: ignore
+    def __init__(self, elements: Iterable[Operation]) -> None:
 
         self.graph = nx.MultiDiGraph()
         self._qubits_in: Dict[Qubit, In] = {}

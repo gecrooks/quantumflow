@@ -34,22 +34,24 @@ def test_CH() -> None:
     # But it clearly far too long. CH is locally equivalent to CNOT,
     # so requires only one CNOT gate.
     circ2 = qf.Circuit(
-        qf.H(1),
-        qf.S_H(1),
-        qf.CNot(0, 1),
-        qf.H(1),
-        qf.T(1),
-        qf.CNot(0, 1),
-        qf.T(1),
-        qf.H(1),
-        qf.S(1),
-        qf.X(1),
-        qf.S(0),
+        [
+            qf.H(1),
+            qf.S_H(1),
+            qf.CNot(0, 1),
+            qf.H(1),
+            qf.T(1),
+            qf.CNot(0, 1),
+            qf.T(1),
+            qf.H(1),
+            qf.S(1),
+            qf.X(1),
+            qf.S(0),
+        ]
     )
     assert qf.gates_close(gate1, circ2.asgate())
 
     # Here's a better decomposition
-    circ1 = qf.Circuit(qf.YPow(+0.25, 1), qf.CNot(0, 1), qf.YPow(-0.25, 1))
+    circ1 = qf.Circuit([qf.YPow(+0.25, 1), qf.CNot(0, 1), qf.YPow(-0.25, 1)])
     assert qf.gates_close(gate1, circ1.asgate())
     assert qf.circuits_close(circ1, circ2)
 

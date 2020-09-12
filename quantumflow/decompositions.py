@@ -30,7 +30,7 @@ Two-qubit gate decompositions
 
 
 import itertools
-from typing import Sequence, Tuple, cast
+from typing import List, Sequence, Tuple, cast
 
 import numpy as np
 
@@ -537,13 +537,13 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
     q0, q1 = gate.qubits
 
     # Local gates to put before the canonical Weyl gate
-    before_q0 = Circuit([I(q0)])
-    before_q1 = Circuit([I(q1)])
+    before_q0: List[Gate] = [I(q0)]
+    before_q1: List[Gate] = [I(q1)]
 
     # Local gates that come after the canonical Weyl gate, in reverse
     # (complex conjugate) order.
-    after_q0_H = Circuit([I(q0)])
-    after_q1_H = Circuit([I(q1)])
+    after_q0_H: List[Gate] = [I(q0)]
+    after_q1_H: List[Gate] = [I(q1)]
 
     def tx_minus_1() -> None:
         before_q0.append(Y(q0))
@@ -666,19 +666,23 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
     # Insanity check
     assert _in_weyl(tx, ty, tz)
 
+    circ_before_q0 = Circuit(before_q0)
+    circ_before_q1 = Circuit(before_q1)
+    circ_after_q0_H = Circuit(after_q0_H)
+    circ_after_q1_H = Circuit(after_q1_H)
     if euler is not None:
-        before_q0 = euler_decomposition(before_q0.asgate(), euler=euler)
-        before_q1 = euler_decomposition(before_q1.asgate(), euler=euler)
-        after_q0_H = euler_decomposition(after_q0_H.asgate(), euler=euler)
-        after_q1_H = euler_decomposition(after_q1_H.asgate(), euler=euler)
+        circ_before_q0 = euler_decomposition(circ_before_q0.asgate(), euler=euler)
+        circ_before_q1 = euler_decomposition(circ_before_q1.asgate(), euler=euler)
+        circ_after_q0_H = euler_decomposition(circ_after_q0_H.asgate(), euler=euler)
+        circ_after_q1_H = euler_decomposition(circ_after_q1_H.asgate(), euler=euler)
 
     circ = Circuit()
 
-    circ.append(before_q0)
-    circ.append(before_q1)
-    circ.append(Can(tx, ty, tz, q0, q1))
-    circ.append(after_q0_H.H)
-    circ.append(after_q1_H.H)
+    circ += circ_before_q0
+    circ += circ_before_q1
+    circ += Can(tx, ty, tz, q0, q1)
+    circ += circ_after_q0_H.H
+    circ += circ_after_q1_H.H
 
     return circ
 

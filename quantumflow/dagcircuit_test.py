@@ -173,17 +173,15 @@ def test_components() -> None:
     circ0 = qf.ghz_circuit([0, 2, 4, 6, 8])
     circ1 = qf.ghz_circuit([1, 3, 5, 7, 9])
 
-    circ = qf.Circuit()
-    circ.extend(circ0)
-    circ.extend(circ1)
+    circ = circ0 + circ1
     dag = qf.DAGCircuit(circ)
     comps = dag.components()
     assert dag.component_nb() == 2
 
     circ0 = qf.Circuit(qf.QFTGate([0, 2, 4, 6]).decompose())
     circ1 = qf.ghz_circuit([1, 3, 5, 7])
-    circ.extend(circ0)
-    circ.extend(circ1)
+    circ += circ0
+    circ += circ1
     circ += qf.H(10)
     dag = qf.DAGCircuit(circ)
     comps = dag.components()

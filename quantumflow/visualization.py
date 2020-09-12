@@ -23,7 +23,7 @@ from .circuits import Circuit
 from .dagcircuit import DAGCircuit
 from .gates import P0, P1
 from .modules import IdentityGate
-from .ops import Gate
+from .ops import Gate, Operation
 from .qubits import Qubits
 from .stdgates import CZ, CSwap, Swap
 from .stdops import Reset
@@ -34,7 +34,6 @@ __all__ = (
     "latex_to_image",
     "circuit_to_image",
     "circuit_to_diagram",
-    "circuit_diagram",
 )
 
 
@@ -536,6 +535,7 @@ def circuit_to_diagram(
         for i in range(i0 + 2, i1, 2):
             code[i] = (BOX_CHARS[LEFT + RIGHT] * left_pad) + BOX_CHARS[CROSS]
 
+    print("Here len", len(circ))
     if len(circ) == 0:
         # Empty circuit
         circ = Circuit(NoWire([0]))
@@ -543,9 +543,11 @@ def circuit_to_diagram(
     if qubits is None:
         qubits = circ.qubits
     N = len(qubits)
+    print("Here N", N)
 
     qubit_idx = dict(zip(qubits, range(0, 2 * N - 1, 2)))
     layers = _display_layers(circ, qubits)
+    print(layers)
     layer_text = []
 
     qubit_layer = [""] * (2 * N - 1)
@@ -617,10 +619,6 @@ def circuit_to_diagram(
     return circ_text + "\n"
 
 
-# FIXME: Remove
-circuit_diagram = circuit_to_diagram
-
-
 # ==== UTILITIES ====
 
 
@@ -633,12 +631,13 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     # Split circuit into Moments, where the elements in each
     # moment operate on non-overlapping qubits
     gate_layers = DAGCircuit(circ).moments()
+    print(len(gate_layers))
 
     # Now split each moment into visual layers where the
     # control lines do not visually overlap.
     layers = []
     for gl in gate_layers:
-        lcirc = Circuit()
+        lcirc: List[Operation] = []
         layers.append(lcirc)
         unused = [True] * N
         for gate in gl:
@@ -646,7 +645,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
 
             if not all(unused[min(indices) : max(indices) + 1]):
                 # New layer
-                lcirc = Circuit()
+                lcirc = []
                 layers.append(lcirc)
                 unused = [True] * N
 
@@ -666,7 +665,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     #         layers[i-1].extend(layers[i])
     #         del layers[i]
 
-    return Circuit(layers)
+    return Circuit([Circuit(L) for L in layers])
 
 
 def _pretty(obj: Any, format: str = "text") -> str:

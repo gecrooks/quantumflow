@@ -34,23 +34,6 @@ def test_str() -> None:
     # TODO Expand
 
 
-def test_circuit_mutable_sequence_interface() -> None:
-
-    circ = qf.Circuit()
-    circ += qf.H(0)
-    circ.append(qf.H(1))
-    circ.extend([qf.H(2), qf.H(3)])
-    assert len(circ) == 4
-
-    del circ[1]
-    assert len(circ) == 3
-
-    circ[0] = qf.X(4)
-    assert len(circ) == 3
-
-    assert isinstance(circ[0:2], qf.Circuit)
-
-
 def test_name() -> None:
     assert qf.Circuit().name == "Circuit"
 
@@ -172,26 +155,13 @@ def test_elements() -> None:
     circ += circ1
     circ += circ2
 
-    gates = list(circ)
-    assert len(gates) == 11
+    assert len(circ) == 11
     assert circ.size() == 11
-    assert gates[4].name == "CNot"
+    assert circ[4].name == "CNot"
 
-
-# def test_qft()->None:
-#     circ = qf.Circuit()
-#     circ += qf.X(2)
-#     circ.extend(qf.qft_circuit([0, 1, 2]))
-
-#     ket = qf.zero_state(3)
-#     ket = circ.run(ket)
-
-#     true_qft = qf.State([0.35355339+0.j, 0.25000000+0.25j,
-#                          0.00000000+0.35355339j, -0.25000000+0.25j,
-#                          -0.35355339+0.j, -0.25000000-0.25j,
-#                          0.00000000-0.35355339j, 0.25000000-0.25j])
-
-#     assert qf.states_close(ket, true_qft)
+    circ_13 = circ[1:3]
+    assert len(circ_13) == 2
+    assert isinstance(circ_13, qf.Circuit)
 
 
 def test_create() -> None:

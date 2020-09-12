@@ -120,7 +120,7 @@ def test_circuit_to_qiskit() -> None:
 
     circ1 = translate_gates_to_qiskit(circ)
     print()
-    print(qf.circuit_diagram(circ1))
+    print(qf.circuit_to_diagram(circ1))
 
     qc = circuit_to_qiskit(circ, translate=True)
     print(qc)
@@ -137,7 +137,7 @@ def test_qiskitsimulator() -> None:
     circ += qf.Z(2)
     circ += qf.Can(0.1, 0.2, 0.2, 0, 1)
 
-    sim = QiskitSimulator(*circ)
+    sim = QiskitSimulator(circ)
     assert qf.states_close(circ.run(), sim.run())
 
     ket0 = qf.random_state([0, 1, 2, 3])

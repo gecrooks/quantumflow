@@ -94,6 +94,7 @@ def test_gate_symbolic_params() -> None:
     assert str(gate1) == "Rz(4*θ) 1"
 
     circ = qf.Circuit([gate0, gate1])
+    print(circ)
     diag = qf.circuit_to_diagram(circ)
     assert diag == "1: ───Rz(θ)───Rz(4*θ)───\n"
 

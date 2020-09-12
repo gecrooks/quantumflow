@@ -36,8 +36,8 @@ def test_circuit_to_pyquil() -> None:
     circ2 += qf.CNot(0, 1)
     circ2 += qf.Rx(-2 * 2.74973750579, 0)
     circ2 += qf.Rx(-2 * 2.74973750579, 1)
-    circ.extend(circ1)
-    circ.extend(circ2)
+    circ += circ1
+    circ += circ2
 
     prog = xforest.circuit_to_pyquil(circ)
     new_circ = xforest.pyquil_to_circuit(prog)

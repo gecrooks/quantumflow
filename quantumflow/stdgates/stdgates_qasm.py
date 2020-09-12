@@ -150,12 +150,14 @@ class CU3(StdGate):
         from ..circuits import Circuit
 
         circ = Circuit(
-            PhaseShift((lam + phi) / 2, 0),
-            PhaseShift((lam - phi) / 2, 1),
-            CNot(0, 1),
-            U3(-theta / 2, 0.0, -(phi + lam) / 2, 1),
-            CNot(0, 1),
-            U3(theta / 2, phi, 0.0, 1),
+            [
+                PhaseShift((lam + phi) / 2, 0),
+                PhaseShift((lam - phi) / 2, 1),
+                CNot(0, 1),
+                U3(-theta / 2, 0.0, -(phi + lam) / 2, 1),
+                CNot(0, 1),
+                U3(theta / 2, phi, 0.0, 1),
+            ]
         )
 
         return circ.asgate().tensor

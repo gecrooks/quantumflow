@@ -238,14 +238,14 @@ def parameter_shift_circuits(
     r = shift_constant[gate_type]
     param = list(elem.params)[0]
     gate0 = gate_type(param - 0.25 * pi / r, *elem.qubits)  # type: ignore
-    circ0 = Circuit(circ)
+    circ0 = list(circ)
     circ0[index] = gate0
 
     gate1 = gate_type(param + 0.25 * pi / r, *elem.qubits)  # type: ignore
-    circ1 = Circuit(circ)
+    circ1 = list(circ)
     circ1[index] = gate1
 
-    return r, circ0, circ1
+    return r, Circuit(circ0), Circuit(circ1)
 
 
 # class SGD(object):

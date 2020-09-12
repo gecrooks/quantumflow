@@ -219,7 +219,7 @@ def circuit_translate(
         else:
             translated += gate
 
-    return Circuit(*translated)
+    return Circuit(translated)
 
 
 # 1-qubit gates

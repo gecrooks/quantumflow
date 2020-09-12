@@ -41,14 +41,12 @@ Visualizations
 
 import textwrap
 from collections import defaultdict
-from collections.abc import MutableSequence
 from itertools import chain
 from typing import (
     Any,
     Dict,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -84,28 +82,21 @@ __all__ = [
 ]
 
 
-# TODO: Move Circuit to Operations?
-# TODO: Make immutable?
-# TODO: CompositiOperation superclass?
-class Circuit(MutableSequence, Operation):
+class Circuit(Sequence, Operation):
     """A quantum Circuit contains a sequences of circuit elements.
     These can be any quantum Operation, including other circuits.
-
-    QuantumFlow's circuit can only contain Operations. They do not contain
-    control flow of other classical computations (similar to pyQuil's
-    protoquil). For hybrid algorithms involving control flow and other
-    classical processing use QuantumFlow's Program class.
     """
 
-    def __init__(self, *elements: Union[Iterable[Operation], Operation]) -> None:
-        # Deprecated legacy interface
-        # TODO: Throw deprecations warning
-        if len(elements) == 1 and isinstance(elements[0], Iterable):
-            elements = elements[0]  # type: ignore
+    def __init__(self, elements: Iterable[Operation] = ()) -> None:
+        elements = tuple(elements)
+        qbs = [q for elem in elements for q in elem.qubits]  # gather
+        qbs = list(set(qbs))  # unique
+        qbs = sorted(qbs)  # sort
 
-        self._elements: List[Operation] = list(elements)  # type: ignore
+        super().__init__(qubits=qbs)
+        self._elements: Tuple[Operation, ...] = elements
 
-    # Methods for MutableSequence
+    # Methods for Sequence
     @overload
     def __getitem__(self, key: int) -> Operation:
         ...  # pragma: no cover
@@ -119,41 +110,23 @@ class Circuit(MutableSequence, Operation):
             return Circuit(self._elements[key])
         return self._elements[key]
 
-    def __delitem__(self, key: Union[int, slice]) -> None:
-        del self._elements[key]
-
-    def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-        self._elements[key] = value
-
     def __len__(self) -> int:
-        return self._elements.__len__()
+        return len(self._elements)
 
-    def insert(self, idx: int, value: Any) -> None:
-        self._elements.insert(idx, value)
-
-    def extend(self, other: Iterable[Any]) -> None:
-        """Append gates from circuit to the end of this circuit"""
-        if other is self:
-            # We can go into infinite regress otherwise.
-            other = list(self._elements)
-        self._elements.extend(other)
-
-    def add(self, other: "Circuit") -> "Circuit":
-        """Concatenate gates and return new circuit"""
+    def add(self, other: Iterable[Operation]) -> "Circuit":
+        """Concatenate operations and return new circuit"""
         return Circuit(chain(self, other))
 
     def __add__(self, other: "Circuit") -> "Circuit":
         return self.add(other)
 
     def __iadd__(self, other: Iterable[Any]) -> "Circuit":
-        self.extend(other)
-        return self
+        return self.add(other)
 
     def __iter__(self) -> Iterator[Operation]:
-        # return iter(self._elements)
         yield from self._elements
 
-    # End methods for MutableSequence
+    # End methods for Sequence
 
     def flat(self) -> Iterator[Operation]:
         """Iterate over all elementary elements of Circuit,
@@ -168,18 +141,6 @@ class Circuit(MutableSequence, Operation):
     def size(self) -> int:
         """Return the number of operations in this circuit"""
         return len(self._elements)
-
-    @property
-    def qubits(self) -> Qubits:
-        """Returns: Sorted list of qubits acted upon by this circuit
-
-        Raises:
-            TypeError: If qubits cannot be sorted into unique order.
-        """
-        qbs = [q for elem in self for q in elem.qubits]  # gather
-        qbs = list(set(qbs))  # unique
-        qbs = sorted(qbs)  # sort
-        return tuple(qbs)
 
     def on(self, *qubits: Qubit) -> "Circuit":
         if len(qubits) != self.qubit_nb:

@@ -211,7 +211,7 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
             circ += parity_gates[gatetype](t, *qbs)  # type: ignore
         elif gatetype.__name__ in decomposable_gates:
             subcqc = cirq.Circuit(op._decompose_())  # type: ignore
-            circ.extend(cirq_to_circuit(subcqc))
+            circ += cirq_to_circuit(subcqc)
         elif gatetype.__name__ == "FSimGate":
             circ += FSim(op.gate.theta, op.gate.phi, *qbs)  # type: ignore
         elif gatetype.__name__ == "MatrixGate":
