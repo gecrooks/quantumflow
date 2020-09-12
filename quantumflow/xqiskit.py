@@ -165,7 +165,7 @@ def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCi
             getattr(qkcircuit, name)(params, qbs)
         else:
             name = QF_TO_QASM[op.name]
-            params = [float(p) for p in op.parameters()]
+            params = [float(p) for p in op.params]
             qbs = [qubit_map[qb] for qb in op.qubits]
             getattr(qkcircuit, name)(*params, *qbs)
 

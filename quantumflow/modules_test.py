@@ -13,46 +13,6 @@ import quantumflow as qf
 from quantumflow import var
 
 
-def test_moment() -> None:
-    circ = qf.Circuit()
-    circ += qf.X(0)
-    circ += qf.Swap(1, 2)
-
-    moment = qf.Moment(circ)
-
-    assert moment.qubits == (0, 1, 2)
-    assert moment.run()
-    assert moment.evolve()
-    assert isinstance(moment.H, qf.Moment)
-
-    circ += qf.Y(0)
-    with pytest.raises(ValueError):
-        moment = qf.Moment(circ)
-
-    assert moment.asgate()
-    assert moment.aschannel()
-
-    circ1 = qf.Circuit(moment)
-    assert len(circ1) == 2
-
-    assert isinstance(moment[1], qf.Swap)
-
-    moment1 = moment.on("a", "b", "c")
-
-    moment2 = moment1.rewire({"a": 0, "b": 1, "c": 2})
-    assert str(moment) == str(moment2)
-
-
-def test_moment_parameters() -> None:
-    circ = qf.Circuit()
-    circ += qf.X(0) ** 0.3
-    circ += qf.Swap(1, 2)
-    moment = qf.Moment(circ)
-
-    params = list(moment.parameters())
-    assert len(params) == 1
-
-
 def test_identitygate() -> None:
     qubits = [3, 4, 5, 6, 7, 8]
     gate = qf.IdentityGate(qubits)

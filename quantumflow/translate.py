@@ -270,7 +270,7 @@ def translate_invt_to_tz(gate: T_H) -> Iterator[ZPow]:
 def translate_rx_to_tx(gate: Rx) -> Iterator[XPow]:
     """Translate Rx gate to XPow"""
     (q0,) = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     t = theta / var.PI
     yield XPow(t, q0)
 
@@ -278,7 +278,7 @@ def translate_rx_to_tx(gate: Rx) -> Iterator[XPow]:
 def translate_ry_to_ty(gate: Ry) -> Iterator[YPow]:
     """Translate Ry gate to YPow"""
     (q0,) = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     t = theta / var.PI
     yield YPow(t, q0)
 
@@ -286,7 +286,7 @@ def translate_ry_to_ty(gate: Ry) -> Iterator[YPow]:
 def translate_rz_to_tz(gate: Rz) -> Iterator[ZPow]:
     """Translate Rz gate to ZPow"""
     (q0,) = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     t = theta / var.PI
     yield ZPow(t, q0)
 
@@ -298,7 +298,7 @@ def translate_rn_to_rz_ry(gate: Rn) -> Iterator[Union[Rz, Ry]]:
         http://www.vcpc.univie.ac.at/~ian/hotlist/qc/talks/bloch-sphere-rotations.pdf
     """
     (q0,) = gate.qubits
-    theta, nx, ny, nz = gate.parameters()
+    theta, nx, ny, nz = gate.params
 
     ang_y = var.arccos(nz)
     ang_z = var.arctan2(ny, nx)
@@ -313,7 +313,7 @@ def translate_rn_to_rz_ry(gate: Rn) -> Iterator[Union[Rz, Ry]]:
 def translate_phase_to_rz(gate: PhaseShift) -> Iterator[Rz]:
     """Translate Phase gate to Rz (ignoring global phase)"""
     (q0,) = gate.qubits
-    theta = gate.parameter("theta")
+    theta = gate.param("theta")
     yield Rz(theta, q0)
 
 
@@ -332,28 +332,28 @@ def translate_sqrty_h_to_ty(gate: SqrtY_H) -> Iterator[YPow]:
 def translate_tx_to_rx(gate: XPow) -> Iterator[Rx]:
     """Translate XPow gate to Rx"""
     (q0,) = gate.qubits
-    theta = gate.parameter("t") * var.PI
+    theta = gate.param("t") * var.PI
     yield Rx(theta, q0)
 
 
 def translate_ty_to_ry(gate: YPow) -> Iterator[Ry]:
     """Translate YPow gate to Ry"""
     (q0,) = gate.qubits
-    theta = gate.parameter("t") * var.PI
+    theta = gate.param("t") * var.PI
     yield Ry(theta, q0)
 
 
 def translate_tz_to_rz(gate: ZPow) -> Iterator[Rz]:
     """Translate ZPow gate to Rz"""
     (q0,) = gate.qubits
-    theta = gate.parameter("t") * var.PI
+    theta = gate.param("t") * var.PI
     yield Rz(theta, q0)
 
 
 def translate_ty_to_xzx(gate: YPow) -> Iterator[Union[XPow, ZPow]]:
     """Translate YPow gate to XPow and ZPow gates"""
     (q0,) = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield XPow(0.5, q0)
     yield ZPow(t, q0)
     yield XPow(-0.5, q0)
@@ -362,7 +362,7 @@ def translate_ty_to_xzx(gate: YPow) -> Iterator[Union[XPow, ZPow]]:
 def translate_tx_to_zyz(gate: XPow) -> Iterator[Union[YPow, S, S_H]]:
     """Translate XPow gate to S and YPow gates"""
     (q0,) = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield S(q0)
     yield YPow(t, q0)
     yield S_H(q0)
@@ -371,7 +371,7 @@ def translate_tx_to_zyz(gate: XPow) -> Iterator[Union[YPow, S, S_H]]:
 def translate_tz_to_xyx(gate: ZPow) -> Iterator[Union[YPow, V, V_H]]:
     """Translate ZPow gate to V and YPow gates"""
     (q0,) = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield V_H(q0)
     yield YPow(t, q0)
     yield V(q0)
@@ -380,7 +380,7 @@ def translate_tz_to_xyx(gate: ZPow) -> Iterator[Union[YPow, V, V_H]]:
 def translate_phased_x_to_zxz(gate: PhasedX) -> Iterator[Union[X, ZPow]]:
     """Translate YPow gate to XPow and ZPow gates"""
     (q0,) = gate.qubits
-    p = gate.parameter("p")
+    p = gate.param("p")
     yield ZPow(-p, q0)
     yield X(q0)
     yield ZPow(p, q0)
@@ -389,7 +389,7 @@ def translate_phased_x_to_zxz(gate: PhasedX) -> Iterator[Union[X, ZPow]]:
 def translate_phased_tx_to_zxz(gate: PhasedXPow) -> Iterator[Union[XPow, ZPow]]:
     """Translate YPow gate to XPow and ZPow gates"""
     (q0,) = gate.qubits
-    p, t = gate.parameters()
+    p, t = gate.params
     yield ZPow(-p, q0)
     yield XPow(t, q0)
     yield ZPow(p, q0)
@@ -410,7 +410,7 @@ def translate_invv_to_tx(gate: V_H) -> Iterator[XPow]:
 def translate_th_to_tx(gate: HPow) -> Iterator[Union[XPow, H, S, T, S_H, T_H]]:
     """Translate powers of the Hadamard gate to XPow and YPow"""
     (q0,) = gate.qubits
-    (t,) = gate.parameters()
+    (t,) = gate.params
 
     yield S(q0)
     yield H(q0)
@@ -424,7 +424,7 @@ def translate_th_to_tx(gate: HPow) -> Iterator[Union[XPow, H, S, T, S_H, T_H]]:
 def translate_ty_to_zxz(gate: YPow) -> Iterator[Union[XPow, S, S_H]]:
     """Translate YPow gate to ZPow and XPow gates"""
     (q0,) = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield S_H(q0)
     yield XPow(t, q0)
     yield S(q0)
@@ -433,7 +433,7 @@ def translate_ty_to_zxz(gate: YPow) -> Iterator[Union[XPow, S, S_H]]:
 def translate_tx_to_zxzxz(gate: XPow) -> Iterator[Union[XPow, ZPow]]:
     """Convert an arbitrary power of a Pauli-X gate to Z and V gates"""
     (q0,) = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
 
     if var.isclose(t, 0.5) or var.isclose(t, -0.5):
         yield gate
@@ -457,7 +457,7 @@ def translate_hadamard_to_zxz(gate: H) -> Iterator[Union[XPow, ZPow]]:
 def translate_u3_to_zyz(gate: U3) -> Iterator[Union[Rz, Ry]]:
     """Translate QASMs U3 gate to Rz and Ry"""
     (q0,) = gate.qubits
-    theta, phi, lam = gate.parameters()
+    theta, phi, lam = gate.params
     yield Rz(lam, q0)
     yield Ry(theta, q0)
     yield Rz(phi, q0)
@@ -466,7 +466,7 @@ def translate_u3_to_zyz(gate: U3) -> Iterator[Union[Rz, Ry]]:
 def translate_u2_to_zyz(gate: U2) -> Iterator[Union[Rz, Ry]]:
     """Translate QASMs U2 gate to Rz and Ry"""
     (q0,) = gate.qubits
-    phi, lam = gate.parameters()
+    phi, lam = gate.params
     yield Rz(lam, q0)
     yield Ry(var.PI / 2, q0)
     yield Rz(phi, q0)
@@ -475,7 +475,7 @@ def translate_u2_to_zyz(gate: U2) -> Iterator[Union[Rz, Ry]]:
 def translate_tx_to_hzh(gate: XPow) -> Iterator[Union[H, ZPow]]:
     """Convert a XPow gate to a circuit with Hadamard and ZPow gates"""
     (q0,) = gate.qubits
-    (t,) = gate.parameters()
+    (t,) = gate.params
     yield H(q0)
     yield ZPow(t, q0)
     yield H(q0)
@@ -496,7 +496,7 @@ def translate_b_to_can(gate: B) -> Iterator[Union[Can, Y, Z]]:
 
 def translate_barenco_to_xx(gate: Barenco) -> Iterator[Union[XX, YPow, ZPow]]:
     """Translate a Barenco gate to XX plus local gates"""
-    phi, alpha, theta = gate.parameters()
+    phi, alpha, theta = gate.params
 
     ct = theta / var.PI
     ca = alpha / var.PI
@@ -539,7 +539,7 @@ def translate_can_to_cnot(
 
     # Note: sign flip on central ZPow, YPow, YPow because of differing sign
     # conventions for Canonical.
-    tx, ty, tz = gate.parameters()
+    tx, ty, tz = gate.params
     q0, q1 = gate.qubits
 
     if var.isclose(tz, 0.0):
@@ -569,7 +569,7 @@ def translate_can_to_cnot(
 
 def translate_can_to_xx_yy_zz(gate: Can) -> Iterator[Union[XX, YY, ZZ]]:
     """Convert a canonical gate to a circuit with XX, YY, and ZZ gates."""
-    tx, ty, tz = gate.parameters()
+    tx, ty, tz = gate.params
     q0, q1 = gate.qubits
 
     if not var.isclose(tx, 0.0):
@@ -670,7 +670,7 @@ def translate_cypow_to_cxpow(gate: CYPow) -> Iterator[Union[CNotPow, S, S_H]]:
 
 def translate_cphase_to_zz(gate: CPhase) -> Iterator[Union[ZZ, ZPow]]:
     """Convert a CPhase gate to a ZZ based circuit."""
-    t = -gate.parameter("theta") / (2 * var.PI)
+    t = -gate.param("theta") / (2 * var.PI)
     q0, q1 = gate.qubits
     yield ZZ(t, q0, q1)
     yield ZPow(-t, q0)
@@ -679,7 +679,7 @@ def translate_cphase_to_zz(gate: CPhase) -> Iterator[Union[ZZ, ZPow]]:
 
 def translate_cphase00_to_zz(gate: CPhase00) -> Iterator[Union[X, ZZ, ZPow]]:
     """Convert a CPhase00 gate to a ZZ based circuit."""
-    t = -gate.parameter("theta") / (2 * var.PI)
+    t = -gate.param("theta") / (2 * var.PI)
     q0, q1 = gate.qubits
     yield X(q0)
     yield X(q1)
@@ -692,7 +692,7 @@ def translate_cphase00_to_zz(gate: CPhase00) -> Iterator[Union[X, ZZ, ZPow]]:
 
 def translate_cphase01_to_zz(gate: CPhase01) -> Iterator[Union[X, ZZ, ZPow]]:
     """Convert a CPhase01 gate to a ZZ based circuit."""
-    t = -gate.parameter("theta") / (2 * var.PI)
+    t = -gate.param("theta") / (2 * var.PI)
     q0, q1 = gate.qubits
     yield X(q0)
     yield ZZ(t, q0, q1)
@@ -703,7 +703,7 @@ def translate_cphase01_to_zz(gate: CPhase01) -> Iterator[Union[X, ZZ, ZPow]]:
 
 def translate_cphase10_to_zz(gate: CPhase10) -> Iterator[Union[X, ZZ, ZPow]]:
     """Convert a CPhase10 gate to a ZZ based circuit."""
-    t = -gate.parameter("theta") / (2 * var.PI)
+    t = -gate.param("theta") / (2 * var.PI)
     q0, q1 = gate.qubits
 
     yield X(q1)
@@ -717,7 +717,7 @@ def translate_cross_resonance_to_xx(
     gate: CrossResonance,
 ) -> Iterator[Union[XX, XPow, YPow, X]]:
     """Translate a cross resonance gate to an XX based circuit"""
-    s, b, c = gate.parameters()
+    s, b, c = gate.params
     q0, q1 = gate.qubits
 
     t7 = (
@@ -755,7 +755,7 @@ def translate_crz_to_cnot(gate: CRZ) -> Iterator[Union[CNot, PhaseShift, U3]]:
         https://arxiv.org/pdf/1707.03429.pdf
     """
     q0, q1 = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
 
     yield PhaseShift(theta / 2, q1)
     yield CNot(q0, q1)
@@ -772,7 +772,7 @@ def translate_cnotpow_to_zz(gate: CNotPow) -> Iterator[Union[ZZ, ZPow, H]]:
         ───X^t───     ───H───ZZ^-t/2───Z^t/2───H───
 
     """
-    (t,) = gate.parameters()
+    (t,) = gate.params
     q0, q1 = gate.qubits
     yield H(q1)
     yield ZZ(-t / 2, q0, q1)
@@ -791,7 +791,7 @@ def translate_cz_to_zz(gate: CZ) -> Iterator[Union[ZZ, S_H]]:
 
 def translate_czpow_to_zz(gate: CZPow) -> Iterator[Union[ZZ, ZPow]]:
     """Convert a CZPow gate to a ZZ based circuit."""
-    t = gate.parameter("t")
+    t = gate.param("t")
     q0, q1 = gate.qubits
     yield ZZ(-t / 2, q0, q1)
     yield ZPow(t / 2, q0)
@@ -800,13 +800,13 @@ def translate_czpow_to_zz(gate: CZPow) -> Iterator[Union[ZZ, ZPow]]:
 
 def translate_czpow_to_cphase(gate: CZPow) -> Iterator[CPhase]:
     """Convert a CZPow gate to CPhase."""
-    theta = gate.parameter("t") * var.PI
+    theta = gate.param("t") * var.PI
     yield CPhase(theta, *gate.qubits)
 
 
 def translate_cphase_to_czpow(gate: CPhase) -> Iterator[CZPow]:
     """Convert a CPhase gate to a CZPow."""
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     t = theta / var.PI
     yield CZPow(t, *gate.qubits)
 
@@ -820,7 +820,7 @@ def translate_cu3_to_cnot(gate: CU3) -> Iterator[Union[CNot, PhaseShift, U3]]:
     # Kudos: Adapted from qiskit
     # https://github.com/Qiskit/qiskit-terra/blob/master/qiskit/extensions/standard/cu3.py
     q0, q1 = gate.qubits
-    theta, phi, lam = gate.parameters()
+    theta, phi, lam = gate.params
 
     yield PhaseShift((lam + phi) / 2, q0)
     yield PhaseShift((lam - phi) / 2, q1)
@@ -898,14 +898,14 @@ def translate_ecp_to_sqrtiswap(gate: ECP) -> Iterator[Union[SqrtISwap_H, YPow, S
 def translate_exch_to_can(gate: Exch) -> Iterator[Can]:
     """Convert an exchange gate to a canonical based circuit"""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield Can(t, t, t, q0, q1)
 
 
 def translate_exch_to_xy_zz(gate: Exch) -> Iterator[Union[XY, ZZ]]:
     """Convert an exchange gate to XY and ZZ gates"""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield XY(t, q0, q1)
     yield ZZ(t, q0, q1)
 
@@ -913,7 +913,7 @@ def translate_exch_to_xy_zz(gate: Exch) -> Iterator[Union[XY, ZZ]]:
 def translate_fsim_to_xy_cz(gate: FSim) -> Iterator[Union[XY, CZ]]:
     """Convert the Cirq's FSim  gate to a canonical gate"""
     q0, q1 = gate.qubits
-    theta, phi = gate.parameters()
+    theta, phi = gate.params
 
     yield XY(theta / var.PI, q0, q1)
     yield CZ(q0, q1) ** (-phi / var.PI)
@@ -929,7 +929,7 @@ def translate_fswap(gate: FSwap) -> Iterator[Union[Swap, CZ]]:
 def translate_fswappow(gate: FSwapPow) -> Iterator[Union[Exch, CZPow]]:
     """Translate fSwap gate to XY and CVPow"""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield Swap(q0, q1) ** t
     yield CZ(q0, q1) ** t
 
@@ -938,7 +938,7 @@ def translate_fswappow(gate: FSwapPow) -> Iterator[Union[Exch, CZPow]]:
 def translate_givens_to_xy(gate: Givens) -> Iterator[Union[XY, T, T_H]]:
     """Convert a Givens  gate to an XY gate"""
     q0, q1 = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
 
     yield T_H(q0)
     yield T(q1)
@@ -981,7 +981,7 @@ def translate_pswap_to_canonical(gate: PSwap) -> Iterator[Union[Can, Y]]:
     """Translate parametric Swap to a canonical circuit"""
 
     q0, q1 = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     t = 0.5 - theta / var.PI
     yield Y(q0)
     yield Can(0.5, 0.5, t, q0, q1)
@@ -991,7 +991,7 @@ def translate_pswap_to_canonical(gate: PSwap) -> Iterator[Union[Can, Y]]:
 def translate_rzz_to_cnot(gate: RZZ) -> Iterator[Union[CNot, PhaseShift, U3]]:
     """Translate QASM's RZZ gate to standard gates"""
     q0, q1 = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     yield CNot(q0, q1)
     yield PhaseShift(theta, q1)
     yield CNot(q0, q1)
@@ -1127,14 +1127,14 @@ def translate_w_to_ch_cnot(gate: W) -> Iterator[Union[CNot, CH]]:
 def translate_xx_to_can(gate: XX) -> Iterator[Union[Can]]:
     """Convert an XX gate to a canonical circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield Can(t, 0, 0, q0, q1)
 
 
 def translate_xx_to_zz(gate: XX) -> Iterator[Union[H, ZZ]]:
     """Convert an XX gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield H(q0)
     yield H(q1)
     yield ZZ(t, q0, q1)
@@ -1145,7 +1145,7 @@ def translate_xx_to_zz(gate: XX) -> Iterator[Union[H, ZZ]]:
 def translate_xy_to_can(gate: XY) -> Iterator[Can]:
     """Convert XY gate to a canonical gate."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield Can(t, t, 0, q0, q1)
 
 
@@ -1155,7 +1155,7 @@ def translate_xy_to_sqrtiswap(
     """Translate an XY gate to sandwich of square-root iswaps"""
 
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
 
     yield Z(q0)
     yield T(q0)
@@ -1171,14 +1171,14 @@ def translate_xy_to_sqrtiswap(
 def translate_yy_to_can(gate: YY) -> Iterator[Union[Can]]:
     """Convert an YY gate to a canonical circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield Can(0, t, 0, q0, q1)
 
 
 def translate_yy_to_zz(gate: YY) -> Iterator[Union[XPow, ZZ]]:
     """Convert a YY gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield XPow(0.5, q0)
     yield XPow(0.5, q1)
     yield ZZ(t, q0, q1)
@@ -1189,14 +1189,14 @@ def translate_yy_to_zz(gate: YY) -> Iterator[Union[XPow, ZZ]]:
 def translate_zz_to_can(gate: ZZ) -> Iterator[Union[Can]]:
     """Convert an ZZ gate to a canonical circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield Can(0, 0, t, q0, q1)
 
 
 def translate_zz_to_cnot(gate: ZZ) -> Iterator[Union[CNot, ZPow]]:
     """Convert a ZZ gate to a CNot based circuit"""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield CNot(q0, q1)
     yield ZPow(t, q1)
     yield CNot(q0, q1)
@@ -1205,7 +1205,7 @@ def translate_zz_to_cnot(gate: ZZ) -> Iterator[Union[CNot, ZPow]]:
 def translate_zz_to_xx(gate: ZZ) -> Iterator[Union[H, XX]]:
     """Convert an XX gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield H(q0)
     yield H(q1)
     yield XX(t, q0, q1)
@@ -1216,7 +1216,7 @@ def translate_zz_to_xx(gate: ZZ) -> Iterator[Union[H, XX]]:
 def translate_zz_to_yy(gate: ZZ) -> Iterator[Union[XPow, YY]]:
     """Convert a YY gate to a ZZ based circuit."""
     q0, q1 = gate.qubits
-    t = gate.parameter("t")
+    t = gate.param("t")
     yield XPow(-0.5, q0)
     yield XPow(-0.5, q1)
     yield YY(t, q0, q1)
@@ -1412,7 +1412,7 @@ def translate_ccnot_to_cv(gate: CCNot) -> Iterator[Union[CV, CV_H, CNot]]:
 def translate_ccxpow_to_cnotpow(gate: CCXPow) -> Iterator[Union[CNot, CNotPow]]:
     """Decomposition of powers of CCNot gates to powers of CNot gates."""
     q0, q1, q2 = gate.qubits
-    (t,) = gate.parameters()
+    (t,) = gate.params
     yield CNotPow(t / 2, q1, q2)
     yield CNot(q0, q1)
     yield CNotPow(-t / 2, q1, q2)
@@ -1575,7 +1575,7 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
         https://arxiv.org/pdf/quant-ph/9505016.pdf  :cite:`Barenco1995a`
     """
     q0, q1, q2 = gate.qubits
-    (theta,) = gate.parameters()
+    (theta,) = gate.params
     yield Barenco(0, var.PI / 4, theta / 2, q1, q2)
     yield Barenco(0, var.PI / 4, theta / 2, q0, q2)
     yield Barenco(0, var.PI / 2, var.PI / 2, q0, q1)

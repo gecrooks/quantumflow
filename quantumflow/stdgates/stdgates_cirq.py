@@ -40,7 +40,7 @@ class PhasedX(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        p = var.asfloat(self.parameter("p"))
+        p = var.asfloat(self.param("p"))
         gate = ZPow(p, 0) @ X(0) @ ZPow(-p, 0)
         return gate.tensor
 
@@ -49,12 +49,12 @@ class PhasedX(StdGate):
         return self
 
     def __pow__(self, t: Variable) -> "PhasedXPow":
-        p = self.parameter("p")
+        p = self.param("p")
         return PhasedXPow(p, t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        p = self.parameter("p") % 2
+        p = self.param("p") % 2
         if np.isclose(p, 0.0) or np.isclose(p, 2.0):
             return X(*qbs)
         return self
@@ -79,7 +79,7 @@ class PhasedXPow(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        p, t = self.parameters()
+        p, t = self.params
         gate = ZPow(p, 0) @ XPow(t, 0) @ ZPow(-p, 0)
         return gate.tensor
 
@@ -88,13 +88,13 @@ class PhasedXPow(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "PhasedXPow":
-        p, s = self.parameters()
+        p, s = self.params
         return PhasedXPow(p, s * t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        p = self.parameter("p") % 2
-        t = self.parameter("t") % 2
+        p = self.param("p") % 2
+        t = self.param("t") % 2
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
             return I(*qbs)
         if np.isclose(p, 0.0):
@@ -136,8 +136,8 @@ class FSim(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = var.asfloat(self.parameter("theta"))
-        phi = var.asfloat(self.parameter("phi"))
+        theta = var.asfloat(self.param("theta"))
+        phi = var.asfloat(self.param("phi"))
 
         unitary = [
             [1, 0, 0, 0],
@@ -152,7 +152,7 @@ class FSim(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "FSim":
-        theta, phi = self.parameters()
+        theta, phi = self.params
         return FSim(theta * t, phi * t, *self.qubits)
 
 
@@ -219,7 +219,7 @@ class FSwapPow(StdGate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1 = self.qubits
-        return self.parameter("t") * FSwap(q0, q1).hamiltonian
+        return self.param("t") * FSwap(q0, q1).hamiltonian
 
     @cached_property
     def tensor(self) -> QubitTensor:
@@ -241,7 +241,7 @@ class FSwapPow(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "FSwapPow":
-        (t,) = self.parameters()
+        (t,) = self.params
         return FSwapPow(e * t, *self.qubits)
 
 

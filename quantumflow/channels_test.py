@@ -391,7 +391,7 @@ def test_create_channel() -> None:
     gate = qf.Rx(0.2, 0)
     _ = qf.Rx(0.2, 0).aschannel()
 
-    params = tuple(gate.parameters())
+    params = tuple(gate.params)
     qubits = gate.qubits
     tensor = gate.aschannel().tensor
     name = "ChanRx"

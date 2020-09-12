@@ -10,7 +10,15 @@ FILES = $(PROJECT) docs/conf.py setup.py examples/
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-all: about coverage lint typecheck docs build   ## Run all tests
+init:  ## Install and initlize package ready for development
+	pip install -e .[dev]
+
+about:	## Report versions of dependent packages
+	@python -m $(PROJECT).about
+
+status:  ## git status -uno
+	@echo
+	@git status -uno
 
 test:		## Run unittests
 	pytest --disable-pytest-warnings
@@ -49,6 +57,8 @@ docs-open:  ## Build documentation and open in webbrowser
 docs-clean: 	## Clean documentation build
 	(cd docs; make clean)
 
+testall: about coverage lint typecheck docs build   ## Run all tests
+
 pragmas:	## Report all pragmas in code
 	@echo
 	@echo "** Code that needs something done **"
@@ -79,17 +89,9 @@ pragmas:	## Report all pragmas in code
 	@echo "** Typecheck pragmas **"
 	@grep '# type:' --color -r -n $(FILES) || echo "No Typecheck Pragmas"
 
-about:	## Report versions of dependent packages
-	@python -m $(PROJECT).about
-
-status:  ## git status -uno
-	@echo
-	@git status -uno
-
 build: ## Setuptools build
 	./setup.py clean --all
 	./setup.py sdist bdist_wheel
-
 
 clean: ## Clean up after setuptools
 	./setup.py clean --all

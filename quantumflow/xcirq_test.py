@@ -50,7 +50,7 @@ def test_cirq_to_circuit() -> None:
     gate = cirq_to_circuit(cq.Circuit(cq.CZ(q1, q0) ** 0.3))[0]
     assert isinstance(gate, qf.CZPow)
     assert gate.qubits == (1, 0)
-    assert gate.parameter("t") == 0.3
+    assert gate.param("t") == 0.3
 
     gate = cirq_to_circuit(cq.Circuit(cq.CNOT(q0, q1)))[0]
     assert isinstance(gate, qf.CNot)
@@ -59,7 +59,7 @@ def test_cirq_to_circuit() -> None:
     gate = cirq_to_circuit(cq.Circuit(cq.CNOT(q0, q1) ** 0.25))[0]
     assert isinstance(gate, qf.CNotPow)
     assert gate.qubits == (0, 1)
-    assert gate.parameter("t") == 0.25
+    assert gate.param("t") == 0.25
 
     gate = cirq_to_circuit(cq.Circuit(cq.SWAP(q0, q1)))[0]
     assert isinstance(gate, qf.Swap)
@@ -81,27 +81,27 @@ def test_cirq_to_circuit() -> None:
 
     gate = cirq_to_circuit(cq.Circuit(cq.XX(q0, q2)))[0]
     assert isinstance(gate, qf.XX)
-    assert gate.parameter("t") == 1.0
+    assert gate.param("t") == 1.0
 
     gate = cirq_to_circuit(cq.Circuit(cq.XX(q0, q2) ** 0.3))[0]
     assert isinstance(gate, qf.XX)
-    assert gate.parameter("t") == 0.3
+    assert gate.param("t") == 0.3
 
     gate = cirq_to_circuit(cq.Circuit(cq.YY(q0, q2)))[0]
     assert isinstance(gate, qf.YY)
-    assert gate.parameter("t") == 1.0
+    assert gate.param("t") == 1.0
 
     gate = cirq_to_circuit(cq.Circuit(cq.YY(q0, q2) ** 0.3))[0]
     assert isinstance(gate, qf.YY)
-    assert gate.parameter("t") == 0.3
+    assert gate.param("t") == 0.3
 
     gate = cirq_to_circuit(cq.Circuit(cq.ZZ(q0, q2)))[0]
     assert isinstance(gate, qf.ZZ)
-    assert gate.parameter("t") == 1.0
+    assert gate.param("t") == 1.0
 
     gate = cirq_to_circuit(cq.Circuit(cq.ZZ(q0, q2) ** 0.3))[0]
     assert isinstance(gate, qf.ZZ)
-    assert gate.parameter("t") == 0.3
+    assert gate.param("t") == 0.3
 
     # Check that cirq's parity gates are the same as QF's XX, YY, ZZ
     # up to parity
@@ -128,15 +128,15 @@ def test_cirq_to_circuit_0_7() -> None:
     q1 = cq.LineQubit(1)
     gate = cirq_to_circuit(cq.Circuit(cq.rx(0.5).on(q0)))[0]
     assert isinstance(gate, qf.XPow)
-    assert gate.parameter("t") == 0.5 / pi
+    assert gate.param("t") == 0.5 / pi
 
     gate = cirq_to_circuit(cq.Circuit(cq.ry(0.5).on(q0)))[0]
     assert isinstance(gate, qf.YPow)
-    assert gate.parameter("t") == 0.5 / pi
+    assert gate.param("t") == 0.5 / pi
 
     gate = cirq_to_circuit(cq.Circuit(cq.rz(0.5).on(q0)))[0]
     assert isinstance(gate, qf.ZPow)
-    assert gate.parameter("t") == 0.5 / pi
+    assert gate.param("t") == 0.5 / pi
 
     # gate = cirq_to_circuit(cq.Circuit(cq.IdentityGate(2).on(q0, q1)))[0]
 

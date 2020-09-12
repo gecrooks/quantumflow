@@ -39,6 +39,7 @@ from typing import (
     Iterable,
     Iterator,
     Sequence,
+    Tuple,
     Union,
 )
 
@@ -124,9 +125,12 @@ class Moment(Sequence, Operation):
     def rewire(self, labels: Dict[Qubit, Qubit]) -> "Moment":
         return Moment(Circuit(self).rewire(labels))
 
-    def parameters(self) -> Iterator[Variable]:
-        for elem in self:
-            yield from elem.parameters()
+    @property
+    def params(self) -> Tuple[Variable, ...]:
+        return tuple(item for elem in self for item in elem.params)
+
+    def param(self, name: str) -> Variable:
+        raise ValueError("Cannot lookup parameters by name for composite operations")
 
 
 # end class Moment

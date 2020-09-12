@@ -43,7 +43,7 @@ def test_PhasedX() -> None:
         gate0.H
         gate1.H
         gate2 = gate1 ** t
-        p2, t2 = gate2.parameters()
+        p2, t2 = gate2.params
         assert p2 == p
         assert np.isclose(t2 - t ** 2, 0.0)
 

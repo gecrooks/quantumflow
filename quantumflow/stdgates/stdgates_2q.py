@@ -139,7 +139,7 @@ class Barenco(StdGate):
 
     @property
     def H(self) -> "Barenco":
-        phi, alpha, theta = self.parameters()
+        phi, alpha, theta = self.params
         alpha = -alpha
         phi = phi + PI
         return Barenco(phi, alpha, theta, *self.qubits)
@@ -168,7 +168,7 @@ class Can(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        tx, ty, tz = self.parameters()
+        tx, ty, tz = self.params
         q0, q1 = self.qubits
         return (
             (tx * sX(q0) * sX(q1) + ty * sY(q0) * sY(q1) + tz * sZ(q0) * sZ(q1))
@@ -178,7 +178,7 @@ class Can(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        tx, ty, tz = [var.asfloat(v) for v in self.parameters()]
+        tx, ty, tz = [var.asfloat(v) for v in self.params]
         xx = XX(tx, 0, 1)
         yy = YY(ty, 0, 1)
         zz = ZZ(tz, 0, 1)
@@ -192,13 +192,13 @@ class Can(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "Can":
-        tx, ty, tz = self.parameters()
+        tx, ty, tz = self.params
         return Can(tx * t, ty * t, tz * t, *self.qubits)
 
     # TODO: XY, ECP, ...
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        tx, ty, tz = [t % 2 for t in self.parameters()]
+        tx, ty, tz = [t % 2 for t in self.params]
 
         tx_zero = var.isclose(tx, 0.0) or var.isclose(tx, 2.0)
         ty_zero = var.isclose(ty, 0.0) or var.isclose(ty, 2.0)
@@ -342,12 +342,12 @@ class CNotPow(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         return CNot(*self.qubits).hamiltonian * t
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        ctheta = np.pi * var.asfloat(self.parameter("t"))
+        ctheta = np.pi * var.asfloat(self.param("t"))
         phase = np.exp(0.5j * ctheta)
         cht = np.cos(ctheta / 2)
         sht = np.sin(ctheta / 2)
@@ -364,12 +364,12 @@ class CNotPow(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "CNotPow":
-        (t,) = self.parameters()
+        (t,) = self.params
         return CNotPow(e * t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        (t,) = self.parameters()
+        (t,) = self.params
         t %= 2
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
             return I(qbs[0])
@@ -392,7 +392,7 @@ class CrossResonance(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        s, b, c = self.parameters()
+        s, b, c = self.params
         q0, q1 = self.qubits
         return s * (sX(q0) - b * sZ(q0) * sX(q1) + c * sX(q1)) * PI / 2
 
@@ -407,7 +407,7 @@ class CrossResonance(StdGate):
 
     # TESTME
     def __pow__(self, t: Variable) -> "CrossResonance":
-        s, b, c = self.parameters()
+        s, b, c = self.params
         return CrossResonance(t * s, b, c, *self.qubits)
 
 
@@ -471,12 +471,12 @@ class CYPow(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         return CY(*self.qubits).hamiltonian * t
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        ctheta = np.pi * var.asfloat(self.parameter("t"))
+        ctheta = np.pi * var.asfloat(self.param("t"))
         phase = np.exp(0.5j * ctheta)
         unitary = [
             [1, 0, 0, 0],
@@ -491,12 +491,12 @@ class CYPow(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "CYPow":
-        (t,) = self.parameters()
+        (t,) = self.params
         return CYPow(e * t, *self.qubits)
 
     def decompose(self) -> Iterator[Union[S, S_H, CNotPow]]:
         """Convert powers of CZ gate to powers of CNOT gate"""
-        (t,) = self.parameters()
+        (t,) = self.params
         q0, q1 = self.qubits
         yield S_H(q1)
         yield CNot(q0, q1) ** t
@@ -633,12 +633,12 @@ class CZPow(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         return CZ(*self.qubits).hamiltonian * t
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        t = var.asfloat(self.parameter("t"))
+        t = var.asfloat(self.param("t"))
         unitary = [
             [1, 0, 0, 0],
             [0, 1, 0, 0],
@@ -652,7 +652,7 @@ class CZPow(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "CZPow":
-        (t,) = self.parameters()
+        (t,) = self.params
         return CZPow(e * t, *self.qubits)
 
 
@@ -705,12 +705,12 @@ class Exch(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         return Can(t, t, t, *self.qubits).hamiltonian
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        (t,) = self.parameters()
+        (t,) = self.params
         return Can(t, t, t, *self.qubits).tensor
 
     @property
@@ -718,12 +718,12 @@ class Exch(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "Exch":
-        (t,) = self.parameters()
+        (t,) = self.params
         return Exch(e * t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        (t,) = self.parameters()
+        (t,) = self.params
         t %= 2
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
             return I(qbs[0])
@@ -763,13 +763,13 @@ class Givens(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (theta,) = self.parameters()
+        (theta,) = self.params
         q0, q1 = self.qubits
         return theta * (sY(q0) * sX(q1) - sX(q0) * sY(q1)) / 2
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = var.asfloat(self.parameter("theta"))
+        theta = var.asfloat(self.param("theta"))
         unitary = [
             [1, 0, 0, 0],
             [0, np.cos(theta), -np.sin(theta), 0],
@@ -783,7 +783,7 @@ class Givens(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "Givens":
-        (theta,) = self.parameters()
+        (theta,) = self.params
         return Givens(t * theta, *self.qubits)
 
 
@@ -1082,13 +1082,13 @@ class XX(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         return Can(t, 0, 0, *self.qubits).hamiltonian
 
     # FIXME: Phase
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = np.pi * var.asfloat(self.parameter("t"))
+        theta = np.pi * var.asfloat(self.param("t"))
         unitary = [
             [np.cos(theta / 2), 0, 0, -1.0j * np.sin(theta / 2)],
             [0, np.cos(theta / 2), -1.0j * np.sin(theta / 2), 0],
@@ -1102,12 +1102,12 @@ class XX(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "XX":
-        (t,) = self.parameters()
+        (t,) = self.params
         return XX(e * t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        (t,) = self.parameters()
+        (t,) = self.params
         t %= 2
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
             return I(qbs[0])
@@ -1127,13 +1127,13 @@ class XY(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         q0, q1 = self.qubits
         return t * (sX(q0) * sX(q1) + sY(q0) * sY(q1)) * PI / 2
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        t = var.asfloat(self.parameter("t"))
+        t = var.asfloat(self.param("t"))
         return Can(t, t, 0, *self.qubits).tensor
 
     @property
@@ -1141,7 +1141,7 @@ class XY(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "XY":
-        (t,) = self.parameters()
+        (t,) = self.params
         return XY(e * t, *self.qubits)
 
 
@@ -1162,13 +1162,13 @@ class YY(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         q0, q1 = self.qubits
         return t * sY(q0) * sY(q1) * PI / 2
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = np.pi * var.asfloat(self.parameter("t"))
+        theta = np.pi * var.asfloat(self.param("t"))
         unitary = [
             [np.cos(theta / 2), 0, 0, 1.0j * np.sin(theta / 2)],
             [0, np.cos(theta / 2), -1.0j * np.sin(theta / 2), 0],
@@ -1182,12 +1182,12 @@ class YY(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "YY":
-        (t,) = self.parameters()
+        (t,) = self.params
         return YY(e * t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        (t,) = self.parameters()
+        (t,) = self.params
         t %= 2
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
             return I(qbs[0])
@@ -1212,14 +1212,14 @@ class ZZ(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (t,) = self.parameters()
+        (t,) = self.params
         q0, q1 = self.qubits
         return t * sZ(q0) * sZ(q1) * PI / 2
 
     # FIXME: Phase?
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = np.pi * var.asfloat(self.parameter("t"))
+        theta = np.pi * var.asfloat(self.param("t"))
         unitary = [
             [
                 [[np.exp(-1j * theta / 2), 0], [0, 0]],
@@ -1237,12 +1237,12 @@ class ZZ(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "ZZ":
-        (t,) = self.parameters()
+        (t,) = self.params
         return ZZ(e * t, *self.qubits)
 
     def specialize(self) -> StdGate:
         qbs = self.qubits
-        (t,) = self.parameters()
+        (t,) = self.params
         # if variable_is_symbolic(t):
         #     return self
         t = t % 2

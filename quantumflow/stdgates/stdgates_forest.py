@@ -37,12 +37,12 @@ class CPhase(StdGate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1 = self.qubits
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return -theta * (1 + sZ(q0) * sZ(q1) - sZ(q0) - sZ(q1)) / 4
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = var.asfloat(self.parameter("theta"))
+        theta = var.asfloat(self.param("theta"))
         unitary = [
             [1.0, 0, 0, 0],
             [0, 1.0, 0, 0],
@@ -56,7 +56,7 @@ class CPhase(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase":
-        theta = self.parameter("theta") * t
+        theta = self.param("theta") * t
         return CPhase(theta, *self.qubits)
 
 
@@ -79,12 +79,12 @@ class CPhase00(StdGate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1 = self.qubits
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return -theta * (1 + sZ(q0) * sZ(q1) + sZ(q0) + sZ(q1)) / (4)
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = var.asfloat(self.parameter("theta"))
+        theta = var.asfloat(self.param("theta"))
         unitary = [
             [np.exp(1j * theta), 0, 0, 0],
             [0, 1.0, 0, 0],
@@ -98,7 +98,7 @@ class CPhase00(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase00":
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return CPhase00(theta * t, *self.qubits)
 
 
@@ -120,13 +120,13 @@ class CPhase01(StdGate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1 = self.qubits
-        return -self.parameter("theta") * (1 - sZ(q0) * sZ(q1) + sZ(q0) - sZ(q1)) / (4)
+        return -self.param("theta") * (1 - sZ(q0) * sZ(q1) + sZ(q0) - sZ(q1)) / (4)
 
     @cached_property
     def tensor(self) -> QubitTensor:
         unitary = [
             [1.0, 0, 0, 0],
-            [0, np.exp(1j * var.asfloat(self.parameter("theta"))), 0, 0],
+            [0, np.exp(1j * var.asfloat(self.param("theta"))), 0, 0],
             [0, 0, 1.0, 0],
             [0, 0, 0, 1.0],
         ]
@@ -137,7 +137,7 @@ class CPhase01(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase01":
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return CPhase01(theta * t, *self.qubits)
 
 
@@ -159,7 +159,7 @@ class CPhase10(StdGate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1 = self.qubits
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return -theta * (1 - sZ(q0) * sZ(q1) - sZ(q0) + sZ(q1)) / (4)
 
     @cached_property
@@ -167,7 +167,7 @@ class CPhase10(StdGate):
         unitary = [
             [1.0, 0, 0, 0],
             [0, 1.0, 0, 0],
-            [0, 0, np.exp(1j * var.asfloat(self.parameter("theta"))), 0],
+            [0, 0, np.exp(1j * var.asfloat(self.param("theta"))), 0],
             [0, 0, 0, 1.0],
         ]
         return tensors.asqutensor(unitary)
@@ -177,7 +177,7 @@ class CPhase10(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase10":
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return CPhase10(theta * t, *self.qubits)
 
 
@@ -202,7 +202,7 @@ class PSwap(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        theta = var.asfloat(self.parameter("theta"))
+        theta = var.asfloat(self.param("theta"))
         unitary = [
             [[[1, 0], [0, 0]], [[0, 0], [np.exp(theta * 1.0j), 0]]],
             [[[0, np.exp(theta * 1.0j)], [0, 0]], [[0, 0], [0, 1]]],
@@ -211,7 +211,7 @@ class PSwap(StdGate):
 
     @property
     def H(self) -> "PSwap":
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         theta = 2.0 * np.pi - theta % (2.0 * np.pi)
         return PSwap(theta, *self.qubits)
 

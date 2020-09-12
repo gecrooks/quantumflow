@@ -240,10 +240,10 @@ def circuit_to_latex(
 
             pretty_params: Dict[str, str] = {}
             # FIXME: Do I need gate isinstance (Also below)
-            if isinstance(elem, Gate) and elem.parameters():
+            if isinstance(elem, Gate) and elem.params:
                 pretty_params = {
                     key: _pretty(value, format="latex")
-                    for key, value in zip(gate.cv_args, elem.parameters())
+                    for key, value in zip(gate.cv_args, elem.params)
                 }
 
             # Construct text labels
@@ -564,7 +564,7 @@ def circuit_to_diagram(
 
             # Pretty print parameters
             pretty_params: Dict[str, str] = {}
-            params = elem.parameters()
+            params = elem.params
             if params:
                 pretty_params = {
                     key: _pretty(value, format="text")

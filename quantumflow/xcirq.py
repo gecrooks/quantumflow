@@ -268,10 +268,10 @@ def circuit_to_cirq(circ: Circuit, translate: bool = False) -> cirq.Circuit:
         if type(op) in operations:
             cqc.append(operations[type(op)].on(*qbs))
         elif type(op) in turn_gates:
-            t = op.parameter("t")
+            t = op.param("t")
             cqc.append(turn_gates[type(op)](*qbs) ** t)
         elif isinstance(op, FSim):
-            theta, phi = op.parameters()
+            theta, phi = op.params
             theta = var.asfloat(theta)
             phi = var.asfloat(phi)
             gate = cirq.FSimGate(theta=theta, phi=phi).on(*qbs)

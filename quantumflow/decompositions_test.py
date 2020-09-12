@@ -137,9 +137,7 @@ def test_canonical_decomposition() -> None:
                 assert qf.gates_close(gate0, circ1.asgate())
 
                 canon = circ1[1]
-                new_coords = np.asarray(
-                    [canon.parameter(n) for n in ["tx", "ty", "tz"]]
-                )
+                new_coords = np.asarray([canon.param(n) for n in ["tx", "ty", "tz"]])
                 assert np.allclose(coords, np.asarray(new_coords))
 
                 coords2 = qf.canonical_coords(gate0)

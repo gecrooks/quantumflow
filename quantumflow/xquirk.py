@@ -108,7 +108,7 @@ def circuit_to_quirk(circ: Circuit) -> str:
                 # New column
                 col = [1] * N
                 columns.append(col)
-            (p,) = op.parameters()
+            (p,) = op.params
             col[q] = {"id": quirk_formulaic[op.name], "arg": str(p)}
         else:
             raise ValueError("Cannot convert Operation to Quirk")

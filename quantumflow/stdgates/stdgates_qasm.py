@@ -89,7 +89,7 @@ class U3(StdGate):
 
     @property
     def H(self) -> "U3":
-        theta, phi, lam = self.parameters()
+        theta, phi, lam = self.params
         return U3(-theta, -lam, -phi, *self.qubits)
 
 
@@ -104,12 +104,12 @@ class U2(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        phi, lam = self.parameters()
+        phi, lam = self.params
         return U3(np.pi / 2, phi, lam, q0=0).tensor
 
     @property
     def H(self) -> "U3":
-        phi, lam = self.parameters()
+        phi, lam = self.params
         return U3(-np.pi / 2, -lam, -phi, *self.qubits)
 
 
@@ -162,7 +162,7 @@ class CU3(StdGate):
 
     @property
     def H(self) -> "CU3":
-        theta, phi, lam = self.parameters()
+        theta, phi, lam = self.params
         return CU3(-theta, -lam, -phi, *self.qubits)
 
 
@@ -179,13 +179,13 @@ class CRZ(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        (theta,) = self.parameters()
+        (theta,) = self.params
         q0, q1 = self.qubits
         return Rz(theta, q1).hamiltonian * (1 - sZ(q0)) / 2
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        (theta,) = self.parameters()
+        (theta,) = self.params
         q0, q1 = self.qubits
         gate = Rz(theta, q1)
         from ..modules import ControlGate
@@ -197,7 +197,7 @@ class CRZ(StdGate):
         return self ** -1
 
     def __pow__(self, t: Variable) -> "CRZ":
-        theta = self.parameter("theta")
+        theta = self.param("theta")
         return CRZ(theta * t, *self.qubits)
 
 
@@ -219,7 +219,7 @@ class RZZ(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        (theta,) = self.parameters()
+        (theta,) = self.params
         q0, q1 = self.qubits
         from ..circuits import Circuit
 
@@ -231,7 +231,7 @@ class RZZ(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "RZZ":
-        (theta,) = self.parameters()
+        (theta,) = self.params
         return RZZ(theta * e, *self.qubits)
 
 

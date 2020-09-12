@@ -9,6 +9,49 @@ import pytest
 import quantumflow as qf
 
 
+def test_moment() -> None:
+    circ = qf.Circuit()
+    circ += qf.X(0)
+    circ += qf.Swap(1, 2)
+
+    moment = qf.Moment(circ)
+
+    assert moment.qubits == (0, 1, 2)
+    assert moment.run()
+    assert moment.evolve()
+    assert isinstance(moment.H, qf.Moment)
+
+    circ += qf.Y(0)
+    with pytest.raises(ValueError):
+        moment = qf.Moment(circ)
+
+    assert moment.asgate()
+    assert moment.aschannel()
+
+    circ1 = qf.Circuit(moment)
+    assert len(circ1) == 2
+
+    assert isinstance(moment[1], qf.Swap)
+
+    moment1 = moment.on("a", "b", "c")
+
+    moment2 = moment1.rewire({"a": 0, "b": 1, "c": 2})
+    assert str(moment) == str(moment2)
+
+
+def test_moment_params() -> None:
+    circ = qf.Circuit()
+    circ += qf.X(0) ** 0.3
+    circ += qf.Swap(1, 2)
+    moment = qf.Moment(circ)
+
+    assert len(moment.params) == 1
+    assert moment.params == (0.3,)
+
+    with pytest.raises(ValueError):
+        _ = moment.param("theta")
+
+
 def test_measure() -> None:
     prog = qf.Circuit()
     prog += qf.Measure(0, ("c", 0))

@@ -52,6 +52,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Tuple,
     Type,
     Union,
     overload,
@@ -246,11 +247,12 @@ class Circuit(MutableSequence, Operation):
         """Resolve the parameters of all of the elements of this circuit"""
         return Circuit(op.resolve(subs) for op in self)
 
-    # FIXME?
-    def parameters(self) -> Iterator[Variable]:
-        """Iterate over all parameters of the elements of this circuit"""
-        for elem in self:
-            yield from elem.parameters()
+    @property
+    def params(self) -> Tuple[Variable, ...]:
+        return tuple(item for elem in self for item in elem.params)
+
+    def param(self, name: str) -> Variable:
+        raise ValueError("Cannot lookup parameters by name for composite operations")
 
     # TESTME
     def specialize(self) -> "Circuit":

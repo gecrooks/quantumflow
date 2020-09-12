@@ -161,7 +161,7 @@ class CCXPow(StdGate):
 
     @property
     def hamiltonian(self) -> Pauli:
-        return CCNot(*self.qubits).hamiltonian * self.parameter("t")
+        return CCNot(*self.qubits).hamiltonian * self.param("t")
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -187,7 +187,7 @@ class CCXPow(StdGate):
         return self ** -1
 
     def __pow__(self, e: Variable) -> "CCXPow":
-        (t,) = self.parameters()
+        (t,) = self.params
         return CCXPow(e * t, *self.qubits)
 
 
@@ -351,7 +351,7 @@ class Deutsch(StdGate):
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
-        theta = var.asfloat(self.parameter("theta"))
+        theta = var.asfloat(self.param("theta"))
 
         unitary = [
             [1, 0, 0, 0, 0, 0, 0, 0],

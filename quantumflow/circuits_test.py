@@ -390,10 +390,13 @@ def test_circuit_flat() -> None:
     assert flat[2].name == "Y"
 
 
-def test_circuit_parameters() -> None:
+def test_circuit_params() -> None:
     circ = qf.Circuit()
     circ += qf.X(0) ** 0.3
     circ += qf.Swap(1, 2)
 
-    params = list(circ.parameters())
-    assert len(params) == 1
+    assert len(circ.params) == 1
+    assert circ.params == (0.3,)
+
+    with pytest.raises(ValueError):
+        _ = circ.param("theta")

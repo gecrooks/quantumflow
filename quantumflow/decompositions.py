@@ -162,7 +162,7 @@ def euler_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     trans = euler_trans[euler].on(q0)
     gate = Circuit([trans, gate, trans.H]).asgate()
     zyz = zyz_decomposition(gate)
-    params = [elem.parameter("t") for elem in zyz]  # type: ignore
+    params = [elem.param("t") for elem in zyz]  # type: ignore
     return euler_circuit(params[0], params[1], params[2], q0, euler)
 
 
@@ -215,7 +215,7 @@ def canonical_coords(gate: Gate) -> Sequence[float]:
     """Returns the canonical coordinates of a 2-qubit gate"""
     circ = canonical_decomposition(gate)
     gate = circ[1]  # type: ignore
-    params = [gate.parameter(key) for key in ("tx", "ty", "tz")]
+    params = [gate.param(key) for key in ("tx", "ty", "tz")]
     return params  # type: ignore
 
 
@@ -483,7 +483,7 @@ def b_decomposition(gate: Gate) -> Circuit:
     gate_can = gate_dek[1]
     gate_after = cast(Circuit, gate_dek[2])
 
-    tx, ty, tz = gate_can.parameters()
+    tx, ty, tz = gate_can.params
     c0 = np.sin(0.5 * ty * np.pi) ** 2 * np.cos(0.5 * tz * np.pi) ** 2
     c0 = max(0.0, min(0.5, c0))
     c1 = (np.cos(ty * np.pi) * np.cos(tz * np.pi)) / (1 - 2 * c0)
@@ -533,7 +533,7 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
             circuit of gates acting on the second qubit
     """
 
-    tx, ty, tz = gate.parameters()
+    tx, ty, tz = gate.params
     q0, q1 = gate.qubits
 
     # Local gates to put before the canonical Weyl gate

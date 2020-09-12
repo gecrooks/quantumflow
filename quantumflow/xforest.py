@@ -69,7 +69,7 @@ def circuit_to_pyquil(circuit: Circuit) -> pqProgram:
     QF_TO_QUIL = utils.invert_map(QUIL_TO_QF)
     for elem in circuit:
         if isinstance(elem, Gate) and elem.name in QF_TO_QUIL:
-            params = list(elem.parameters())
+            params = list(elem.params)
             name = QF_TO_QUIL[elem.name]
             prog.gate(name, params, elem.qubits)
         elif isinstance(elem, Measure):  # pragma: no cover

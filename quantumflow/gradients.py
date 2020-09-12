@@ -115,7 +115,7 @@ def expectation_gradients(
         back = elem.run(back)
         forward = elem.run(forward)
 
-        if len(list(elem.parameters())) == 0:  # Skip gates with no parameters
+        if len(list(elem.params)) == 0:  # Skip gates with no parameters
             continue
 
         gate_type = type(elem)
@@ -162,7 +162,7 @@ def state_fidelity_gradients(
         back = elem.run(back)
         forward = elem.run(forward)
 
-        if len(list(elem.parameters())) == 0:  # Skip gates with no parameters
+        if len(list(elem.params)) == 0:  # Skip gates with no parameters
             continue
 
         gate_type = type(elem)
@@ -236,7 +236,7 @@ def parameter_shift_circuits(
         raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
 
     r = shift_constant[gate_type]
-    param = list(elem.parameters())[0]
+    param = list(elem.params)[0]
     gate0 = gate_type(param - 0.25 * pi / r, *elem.qubits)  # type: ignore
     circ0 = Circuit(circ)
     circ0[index] = gate0

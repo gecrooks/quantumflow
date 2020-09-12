@@ -84,7 +84,7 @@ def test_interchangeable() -> None:
     assert not qf.CNot(0, 1).cv_interchangeable
 
 
-def test_gate_symbolic_parameters() -> None:
+def test_gate_symbolic_params() -> None:
     theta = Symbol("θ")
 
     gate0 = qf.Rz(theta, 1)
@@ -98,7 +98,10 @@ def test_gate_symbolic_parameters() -> None:
     assert diag == "1: ───Rz(θ)───Rz(4*θ)───\n"
 
     gate2 = gate0.resolve({"θ": 2})
-    assert gate2.parameter("theta") == 2.0
+    assert gate2.param("theta") == 2.0
+
+    with pytest.raises(KeyError):
+        _ = gate2.param("asldfh")
 
 
 def test_gate_rewire() -> None:

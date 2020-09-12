@@ -79,7 +79,7 @@ class Operation(ABC):
     # Note: We prefix static class variables with "cv_" to avoid confusion
     # with instance variables
 
-    __slots__ = ["_tensor", "_qubits", "_parameters"]
+    __slots__ = ["_tensor", "_qubits", "_params"]
 
     cv_interchangeable: ClassVar[bool] = False
     """Is this a multi-qubit operation that is known to be invariant under
@@ -105,7 +105,7 @@ class Operation(ABC):
         params: Sequence[Variable] = None,
     ) -> None:
         self._qubits: Qubits = tuple(qubits)
-        self._parameters = tuple(params) if params is not None else ()
+        self._params = tuple(params) if params is not None else ()
         self._tensor: QubitTensor = None
 
         if self.cv_qubit_nb is not None:
@@ -153,12 +153,42 @@ class Operation(ABC):
         """
         return [self.qubits.index(q) for q in qubits]
 
+    @property
+    def params(self) -> Tuple[Variable, ...]:
+        """Return all of the parameters of this Operation"""
+        return self._params
+
+    def param(self, name: str) -> Variable:
+        """Return a a named parameters of this Operation.
+
+        Raise:
+            KeyError: If unrecognized parameter name
+        """
+        try:
+            idx = self.cv_args.index(name)
+        except ValueError:
+            raise KeyError("Unknown parameter name", name)
+
+        return self._params[idx]
+
+    def float_param(self, name: str, subs: Mapping[str, float] = None) -> float:
+        """Return a a named parameters of this Operation as a float.
+
+        Args:
+            name: The name of the parameter (should be in cls.cv_args)
+            subs: Symbolic substitutions to resolve symbolic Variables
+        Raise:
+            KeyError:  If unrecognized parameter name
+            ValueError: If Variable cannot be converted to float
+        """
+        return var.asfloat(self.param(name), subs)
+
     def resolve(self, subs: Mapping[str, float]) -> "Operation":
         """Resolve symbolic parameters"""
         # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
-        _parameters = [var.asfloat(v, subs) for v in self.parameters()]
-        op._parameters = tuple(_parameters)
+        _params = [var.asfloat(v, subs) for v in self.params]
+        op._params = tuple(_params)
         op._tensor = None
         return op
 
@@ -240,20 +270,6 @@ class Operation(ABC):
         from .circuits import Circuit
 
         return Circuit(self)._repr_html_()
-
-    # DOCME TESTME RENAME
-    def parameter(self, name: str) -> Variable:
-        idx = self.cv_args.index(name)
-        return self._parameters[idx]
-
-    # DOCME TESTME
-    def float_param(self, name: str, subs: Mapping[str, float] = None) -> float:
-        return var.asfloat(self.parameter(name), subs)
-
-    # DOCME TESTME RENAME
-    def parameters(self) -> Iterator[Variable]:
-        """Iterate over all parameters of this Operation"""
-        yield from self._parameters
 
 
 # End class Operation
@@ -463,7 +479,7 @@ class StdGate(Gate):
 
     def __repr__(self) -> str:
         args: List[str] = []
-        args.extend(str(p) for p in self.parameters())
+        args.extend(str(p) for p in self.params)
         args.extend(str(qubit) for qubit in self.qubits)
         fargs = ", ".join(args)
 
@@ -480,9 +496,8 @@ class StdGate(Gate):
 
         fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
 
-        params = tuple(self.parameters())
-        if params:
-            fparams = "(" + ", ".join(_param_format(p) for p in self.parameters()) + ")"
+        if self.params:
+            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
         else:
             fparams = ""
 

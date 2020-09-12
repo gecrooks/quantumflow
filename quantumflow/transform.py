@@ -133,7 +133,7 @@ def merge_tz(dagc: DAGCircuit) -> None:
 
 def _merge_turns(dagc: DAGCircuit, gate_class: Callable) -> None:
     for gate0, gate1 in find_pattern(dagc, {gate_class}, {gate_class}):
-        t = gate0.parameter("t") + gate1.parameter("t")
+        t = gate0.param("t") + gate1.param("t")
         (qubit,) = gate0.qubits
         gate = gate_class(t, qubit)
 
@@ -179,7 +179,7 @@ def convert_HZH(dagc: DAGCircuit) -> None:
         prv = dagc.prev_element(elem1)
         nxt = dagc.next_element(elem3)
 
-        t = elem2.parameter("t")
+        t = elem2.param("t")
         (q0,) = elem2.qubits
         gate = XPow(t, q0)
 
