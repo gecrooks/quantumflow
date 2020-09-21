@@ -1,51 +1,66 @@
 
+# Kudos: Adapted from Auto-documenting default target
+# https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+
 .DEFAULT_GOAL := help
 
 PROJECT = quantumflow
-FILES = quantumflow examples tests tools docs/conf.py setup.py
+FILES = $(PROJECT) docs/conf.py setup.py examples/
 
-# Kudos: Adapted from Auto-documenting default target
-# https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-test:		## Run unittests with current backend
-	pytest --disable-pytest-warnings tests/
+init:  ## Install and initlize package ready for development
+	pip install -e .[dev]
 
-testall:	## Run full tox build and test
-	tox
+about:	## Report versions of dependent packages
+	@python -m $(PROJECT).about
 
-viztest:		## Run full visulization unittests
-	QUANTUMFLOW_VIZTEST=True pytest --disable-pytest-warnings -s tests/test_visualization.py
+status:  ## git status -uno
+	@echo
+	@git status -uno
+
+test:		## Run unittests
+	pytest --disable-pytest-warnings
 
 coverage:	## Report test coverage using current backend
 	@echo
-	pytest --disable-pytest-warnings --cov=quantumflow --cov-report term-missing tests/
-	@echo
-	@echo "** Note: Only active backend will have full test coverage **"
+	pytest --disable-pytest-warnings --cov
 	@echo
 
-lint:		## Delint python source
-	flake8 $(FILES)
+lint:		## Lint check python source
+	@echo
+	@echo "isort"
+	@isort --check -m 3 --tc $(FILES)  || echo "FAILED isort!"
+	@echo
+	@echo "black"
+	@black --diff --color $(FILES)  || echo "FAILED black"
+	@echo
+	@echo "flake8"
+	@flake8 $(FILES)  || echo "FAILED flake8"
+	@echo
+
+delint:   ## Run isort and black to delint project
+	@echo	
+	isort -m 3 --tc $(FILES)
+	@echo
+	black $(FILES)
+	@echo
 
 typecheck:	## Static typechecking 
-	mypy -p quantumflow --ignore-missing-imports --disallow-untyped-defs
+	mypy $(PROJECT)
 
 docs:		## Build documentation
 	(cd docs; make html)
+
+docs-open:  ## Build documentation and open in webbrowser
+	(cd docs; make html)
 	open docs/_build/html/index.html
 
-doctest:	## Run doctests in documentation
-	(cd docs; make doctest)
-
-doccover:   ## Report documentation coverage
-	(cd docs; make coverage && open build/coverage/python.txt)
-
-docclean: 	## Clean documentation build
+docs-clean: 	## Clean documentation build
 	(cd docs; make clean)
 
-lines:	## Count lines of code (Includes blank lines and comments)
-	@wc -l quantumflow/*.py quantumflow/*/*.py quantumflow/*/*/*.py examples/*.py tests/*.py tests/*/*.py setup.py docs/*.rst
+testall: about coverage lint typecheck docs build   ## Run all tests
 
 pragmas:	## Report all pragmas in code
 	@echo
@@ -55,12 +70,15 @@ pragmas:	## Report all pragmas in code
 	@echo "** Code that needs fixing **"
 	@grep 'FIXME' --color -r -n $(FILES) || echo "No FIXME pragmas"
 	@echo
-	@echo "** Code that needs documentation **"
+	@echo "** Code that needs documenting **"
 	@grep 'DOCME' --color -r -n $(FILES) || echo "No DOCME pragmas"
 	@echo
 	@echo "** Code that needs more tests **"
 	@grep 'TESTME' --color -r -n $(FILES) || echo "No TESTME pragmas"
 	@echo
+	@echo "** Implementation notes **"
+	@grep 'NB:' --color -r -n $(FILES)  || echo "No NB implementation notes Pragmas"
+	@echo	
 	@echo "** Acknowledgments **"
 	@grep 'kudos:' --color -r -n -i $(FILES) || echo "No kudos"
 	@echo
@@ -73,13 +91,14 @@ pragmas:	## Report all pragmas in code
 	@echo
 	@echo "** Typecheck pragmas **"
 	@grep '# type:' --color -r -n $(FILES) || echo "No Typecheck Pragmas"
-	@echo
-	@echo "** Implementation notes **"
-	@grep '# Implementation note:' --color -r -n $(FILES)  || echo "No Implementation Notes Pragmas"
 
-meta:	## Report versions of dependent packages
-	@echo
-	@python -m quantumflow.meta
+build: ## Setuptools build
+	./setup.py clean --all
+	./setup.py sdist bdist_wheel
+
+clean: ## Clean up after setuptools
+	./setup.py clean --all
+
 
 .PHONY: help
 .PHONY: docs

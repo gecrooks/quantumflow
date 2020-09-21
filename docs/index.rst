@@ -31,13 +31,15 @@ using (stochastic) gradient descent.
       misc
       pauli
       decomp
-      measures
-      gradients
+      info
       translate
       transform
-      backends
-      forest      
+      gradients  
       examples
+      xforest
+      xcirq
+      xqiskit
+      xquirk
 
 
 .. toctree::

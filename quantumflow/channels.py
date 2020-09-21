@@ -1,4 +1,3 @@
-
 # Copyright 2016-2018, Rigetti Computing
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
@@ -35,7 +34,6 @@ Actions on Channels
 .. autofunction:: join_channels
 .. autofunction:: channel_to_kraus
 .. autofunction:: kraus_iscomplete
-.. autofunction:: almost_unital
 
 
 Standard channels
@@ -56,43 +54,43 @@ Standard channels
 
 from functools import reduce
 from operator import add
-from typing import Sequence, Union
+from typing import Sequence
 
 import numpy as np
 from scipy import linalg
 
-from .qubits import Qubit, Qubits, outer_product, asarray, qubits_count_tuple
-from .ops import Operation, Gate, Channel, Unitary
-from .states import State, Density
-# from .gates import almost_identity
-from .gates import I, X, Y, Z
-from .utils import complex_ginibre_ensemble
+from . import tensors, utils
+from .ops import Channel, Gate, Operation, Unitary
+from .qubits import Qubit, Qubits
+from .states import Density, State
+from .stdgates import I, X, Y, Z
 
-__all__ = ['Kraus',
-           'UnitaryMixture',
-           'Depolarizing',
-           'Damping',
-           'Dephasing',
-           'join_channels',
-           'channel_to_kraus',
-           'kraus_iscomplete',
-           'random_channel',
-           'almost_unital'
-           ]
+__all__ = [
+    "Kraus",
+    "UnitaryMixture",
+    "Depolarizing",
+    "Damping",
+    "Dephasing",
+    "join_channels",
+    "channel_to_kraus",
+    "kraus_iscomplete",
+    "random_channel",
+]
 
 
-# DOCME
 class Kraus(Operation):
     """A Kraus representation of a quantum channel"""
-    # DOCME: operator-value-sum representation
 
-    def __init__(self,
-                 operators: Sequence[Gate],
-                 weights: Sequence[float] = None) -> None:
+    # DOCME: operator-value-sum representation
+    # FIXME: Shouldn't take Gate, since may not be Unitary operators
+
+    def __init__(
+        self, operators: Sequence[Gate], weights: Sequence[float] = None
+    ) -> None:
         self.operators = operators
 
         if weights is None:
-            weights = [1.]*len(operators)
+            weights = [1.0] * len(operators)
 
         self.weights = tuple(weights)
 
@@ -101,27 +99,29 @@ class Kraus(Operation):
 
         Raises: TypeError
         """
-        raise TypeError('Not possible in general')
+        raise TypeError("Not possible in general")
 
     def aschannel(self) -> Channel:
         """Returns: Action of Kraus operators as a superoperator Channel"""
         qubits = self.qubits
         N = len(qubits)
-        ident = Unitary(np.eye(2**N), *qubits).aschannel()
+        ident = Unitary(np.eye(2 ** N), qubits).aschannel()
 
-        channels = [op.aschannel() @ ident for op in self.operators]
+        tensors = [(op.aschannel() @ ident).tensor for op in self.operators]
         if self.weights is not None:
-            channels = [c*w for c, w in zip(channels, self.weights)]
-        channel = reduce(add, channels)
-        return channel
+            tensors = [t * w for t, w in zip(tensors, self.weights)]
+        chan_tensor = reduce(add, tensors)
+
+        return Channel(chan_tensor, self.qubits)
 
     def run(self, ket: State) -> State:
         """Apply the action of this Kraus quantum operation upon a state"""
         res = [op.run(ket) for op in self.operators]
-        probs = [asarray(ket.norm()) * w for ket, w in zip(res, self.weights)]
+        probs = [ket.norm() * w for ket, w in zip(res, self.weights)]
         probs = np.asarray(np.abs(probs))
         probs /= np.sum(probs)
-        newket = np.random.choice(res, p=probs)
+        n = np.random.choice(len(res), p=probs)
+        newket = res[n]
         return newket.normalize()
 
     def evolve(self, rho: Density) -> Density:
@@ -142,27 +142,43 @@ class Kraus(Operation):
         Raises:
             TypeError: If qubits cannot be sorted into unique order.
         """
-        qbs = [q for elem in self.operators for q in elem.qubits]   # gather
-        qbs = list(set(qbs))                                        # unique
-        qbs = sorted(qbs)                                           # sort
+        qbs = [q for elem in self.operators for q in elem.qubits]  # gather
+        qbs = list(set(qbs))  # unique
+        qbs = sorted(qbs)  # sort
         return tuple(qbs)
 
     @property
-    def H(self) -> 'Kraus':
+    def H(self) -> "Kraus":
         """Return the complex conjugate of this Kraus operation"""
         operators = [op.H for op in self.operators]
         return Kraus(operators, self.weights)
+
 
 # End class Kraus
 
 
 class UnitaryMixture(Kraus):
-    """A Kraus channel which is a convex mixture of unitary dynamics."""
-    # def __init__(self,
-    #              operators: Sequence[Gate],
-    #              weights: Sequence[float] = None) -> None:
-    #     super().__init__(operators, weights)
-    #     # TODO: Sanity check. operators unitary, weights unit
+    """A Kraus channel which is a convex mixture of unitary dynamics.
+
+    This Channel is unital, but not all unital channels are unitary
+    mixtures.
+    """
+
+    def __init__(
+        self, operators: Sequence[Gate], weights: Sequence[float] = None
+    ) -> None:
+
+        from .info import almost_unitary
+
+        for op in operators:
+            if not almost_unitary(op):
+                raise ValueError("Operators not all unitary")  # pragma: no cover
+
+        if weights is not None and not np.isclose(np.sum(weights), 1.0):
+            raise ValueError("Weights must sum to unity")  # pragma: no cover  # TESTME
+
+        super().__init__(operators, weights)
+        # TODO: Sanity check. operators unitary, weights unit
 
     def asgate(self) -> Gate:
         """Return one of the composite Kraus operators at random with
@@ -180,9 +196,10 @@ class Depolarizing(UnitaryMixture):
         prob:   The one-step depolarizing probability.
         q0:     The qubit on which to act.
     """
+
     def __init__(self, prob: float, q0: Qubit) -> None:
         operators = [I(q0), X(q0), Y(q0), Z(q0)]
-        weights = [1 - prob, prob/3.0, prob/3.0, prob/3.0]
+        weights = [1 - prob, prob / 3.0, prob / 3.0, prob / 3.0]
         super().__init__(operators, weights)
 
 
@@ -196,8 +213,8 @@ class Damping(Kraus):
     """
 
     def __init__(self, prob: float, q0: Qubit) -> None:
-        kraus0 = Unitary([[1.0, 0.0], [0.0, np.sqrt(1 - prob)]], q0)
-        kraus1 = Unitary([[0.0, np.sqrt(prob)], [0.0, 0.0]], q0)
+        kraus0 = Unitary([[1.0, 0.0], [0.0, np.sqrt(1 - prob)]], [q0])
+        kraus1 = Unitary([[0.0, np.sqrt(prob)], [0.0, 0.0]], [q0])
         super().__init__([kraus0, kraus1])
 
 
@@ -208,56 +225,46 @@ class Dephasing(UnitaryMixture):
         prob:   The one-step damping probability.
         q0:     The qubit on which to act.
     """
+
     def __init__(self, prob: float, q0: Qubit) -> None:
         operators = [I(q0), Z(q0)]
-        weights = [1 - prob/2, prob/2]
+        weights = [1 - prob / 2, prob / 2]
         super().__init__(operators, weights)
 
 
-# TESTME
-def join_channels(*channels: Channel) -> Channel:
+def join_channels(chan0: Channel, chan1: Channel) -> Channel:
     """Join two channels acting on different qubits into a single channel
     acting on all qubits"""
-    vectors = [chan.vec for chan in channels]
-    vec = reduce(outer_product, vectors)
-    return Channel(vec.tensor, vec.qubits)
+    tensor = tensors.outer(chan0.tensor, chan1.tensor, rank=4)
+    return Channel(tensor, tuple(chan0.qubits) + tuple(chan1.qubits))
 
 
 # TESTME
-# DOCME
-# FIXME
-def channel_to_kraus(chan: Channel) -> 'Kraus':
+def channel_to_kraus(chan: Channel) -> "Kraus":
     """Convert a channel superoperator into a Kraus operator representation
     of the same channel."""
     qubits = chan.qubits
     N = chan.qubit_nb
 
-    choi = asarray(chan.choi())
+    choi = chan.choi()
     evals, evecs = np.linalg.eig(choi)
     evecs = np.transpose(evecs)
 
     assert np.allclose(evals.imag, 0.0)  # FIXME exception
-    assert np.all(evals.real >= 0.0)     # FIXME exception
+    assert np.all(evals.real >= 0.0)  # FIXME exception
 
     values = np.sqrt(evals.real)
 
     ops = []
-    for i in range(2**(2*N)):
+    for i in range(2 ** (2 * N)):
         if not np.isclose(values[i], 0.0):
-            mat = np.reshape(evecs[i], (2**N, 2**N))*values[i]
-            g = Unitary(mat, *qubits)
+            mat = np.reshape(evecs[i], (2 ** N, 2 ** N)) * values[i]
+            g = Unitary(mat, qubits)
             ops.append(g)
 
     return Kraus(ops)
 
 
-def _almost_identity(gate: Gate) -> bool:
-    """Return true if gate tensor is (almost) the identity"""
-    N = gate.qubit_nb
-    return np.allclose(asarray(gate.asoperator()), np.eye(2**N))
-
-
-# TESTME DOCME
 def kraus_iscomplete(kraus: Kraus) -> bool:
     """Returns True if the collection of (weighted) Kraus operators are
     complete. (Which is necessary for a CPTP map to preserve trace)
@@ -265,23 +272,21 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
     qubits = kraus.qubits
     N = kraus.qubit_nb
 
-    ident = Unitary(np.eye(2**N), *qubits)  # FIXME
+    ident = Unitary(np.eye(2 ** N), qubits)
 
     tensors = [(op.H @ op @ ident).asoperator() for op in kraus.operators]
-    tensors = [t*w for t, w in zip(tensors, kraus.weights)]
+    tensors = [t * w for t, w in zip(tensors, kraus.weights)]
 
     tensor = reduce(np.add, tensors)
-    res = Unitary(tensor, *qubits)
+    res = Unitary(tensor, qubits)
 
-    # from .gates import almost_identity  # FIXME: Circular import workaround
-    return _almost_identity(res)
+    N = res.qubit_nb
+    return np.allclose(res.asoperator(), np.eye(2 ** N))
 
 
-# TESTME
+# TODO: as class RandomChannel?
 # Author: GEC (2019)
-def random_channel(qubits: Union[Qubits, int],
-                   rank: int = None,
-                   unital: bool = False) -> Channel:
+def random_channel(qubits: Qubits, rank: int = None, unital: bool = False) -> Channel:
     """
     Returns: A randomly sampled Channel drawn from the BCSZ ensemble with
     the specified Kraus rank.
@@ -294,37 +299,26 @@ def random_channel(qubits: Union[Qubits, int],
         "Random quantum operations", Bruzda, Cappellini, Sommers, and
         Zyczkowski, Physics Letters A 373, 320 (2009). arXiv:0804.2361
     """
-    N, qubits = qubits_count_tuple(qubits)
+    qubits = tuple(qubits)
+    N = len(qubits)
     dim = 2 ** N  # Hilbert space dimension
     size = (dim ** 2, dim ** 2) if rank is None else (dim ** 2, rank)
 
     # arXiv:0804.2361 page 4, steps 1 to 4
     # arXiv:0709.0824 page 6
-    X = complex_ginibre_ensemble(size)
+    X = utils.complex_ginibre_ensemble(size)
     XX = X @ X.conj().T
 
     if unital:
-        Y = np.einsum('ikjk -> ij', XX.reshape([dim, dim, dim, dim]))
+        Y = np.einsum("ikjk -> ij", XX.reshape([dim, dim, dim, dim]))
         Q = np.kron(linalg.sqrtm(linalg.inv(Y)), np.eye(dim))
     else:
-        Y = np.einsum('kikj -> ij', XX.reshape([dim, dim, dim, dim]))
+        Y = np.einsum("kikj -> ij", XX.reshape([dim, dim, dim, dim]))
         Q = np.kron(np.eye(dim), linalg.sqrtm(linalg.inv(Y)))
 
     choi = Q @ XX @ Q
 
     return Channel.from_choi(choi, qubits)
-
-
-# Author: GEC (2019)
-def almost_unital(chan: Channel) -> bool:
-    """Return true if the channel is (almost) unital."""
-    # Untial channels leave the identity unchanged.
-    dim = 2 ** chan.qubit_nb
-    eye0 = np.eye(dim, dim)
-    rho0 = Density(eye0, chan.qubits)
-    rho1 = chan.evolve(rho0)
-    eye1 = asarray(rho1.asoperator())
-    return np.allclose(eye0, eye1)
 
 
 # Fin

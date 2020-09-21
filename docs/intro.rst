@@ -6,24 +6,11 @@ Getting Started
 Installation
 ############
 
-It is easiest to install QuantumFlow's requirements using conda.
-
 .. code-block:: console
 
 	> git clone https://github.com/gecrooks/quantumflow.git
 	> cd quantumflow
-	> conda install -c conda-forge --yes --file requirements.txt
-	> pip install -e .
-	> make docs
-
-You can also install with pip. However some of the requirements are tricky to install (i.e. tensorflow & cvxpy), and (probably) not everything in QuantumFlow will work correctly.
-
-.. code-block:: console
-
-	> git clone https://github.com/gecrooks/quantumflow.git
-	> cd quantumflow
-	> pip install -r requirements.txt
-	> pip install -e .
+	> pip install -e .[dev]
 	> make docs
 
 
@@ -122,7 +109,7 @@ the gate shape is (2, 2, 2, 2, 2, 2, 2, 2).
 
 .. doctest::
 
-	>>> qf.X().asoperator()
+	>>> qf.X(0).asoperator()
 	array([[0.+0.j, 1.+0.j],
 	       [1.+0.j, 0.+0.j]])
 

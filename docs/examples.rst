@@ -19,14 +19,3 @@ The examples folder contains various illustrations of QuantumFlow in action.
 
 	Apply a Swap Test to measure fidelity between two qubits
 
-- ``tensorflow_fit_gate.py``
-
-	Tensorflow example. Given an arbitrary one-qubit gate, use gradient
-	descent to find corresponding parameters of a universal ZYZ gate.
-
-- ``eager_fit_gate.py``
-
-	Tensorflow eager mode example. Given an arbitrary one-qubit gate, use
-	gradient descent to find corresponding parameters of a universal ZYZ
-	gate.
-
