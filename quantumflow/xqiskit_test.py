@@ -34,14 +34,38 @@ def test_qiskit_to_circuit() -> None:
     qc.ch(q[0], q[1])
     qc.crz(0.1, q[0], q[1])
     qc.cswap(q[0], q[1], q[2])
+
+    # The QuantumCircuit.cu1 method is deprecated as of 0.16.0.
+    # You should use the QuantumCircuit.cp method instead, which acts identically.
+
+    # The QuantumCircuit.cu3 method is deprecated as of 0.16.0.
+    # You should use the QuantumCircuit.cu method instead,
+    # where cu3(ϴ,φ,λ) = cu(ϴ,φ,λ,0).
+
+    # The QuantumCircuit.u1 method is deprecated as of 0.16.0.
+    # You should use the QuantumCircuit.p method instead, which acts identically.
+
+    # The QuantumCircuit.u2 method is deprecated as of 0.16.0.
+    # You can use the general 1-qubit gate QuantumCircuit.u instead:
+    # u2(φ,λ) = u(π/2, φ, λ).
+    # Alternatively, you can decompose it in terms of QuantumCircuit.p
+    # and QuantumCircuit.sx
+    # u2(φ,λ) = p(π/2+φ) sx p(π/2+λ) (1 pulse on hardware).
+
+    # The QuantumCircuit.u3 method is deprecated as of 0.16.0.
+    # You should use QuantumCircuit.u instead, which acts identically.
+    # Alternatively, you can decompose u3 in terms of QuantumCircuit.p
+    # and QuantumCircuit.sx
+    # u3(ϴ,φ,λ) = p(φ+π) sx p(ϴ+π) sx p(λ) (2 pulses on hardware).
+
     qc.cu1(0.1, q[0], q[1])
     qc.cu3(0.1, 0.2, 0.3, q[0], q[1])
     qc.cx(q[0], q[1])
     qc.cy(q[0], q[1])
     qc.cz(q[0], q[1])
     qc.h(q[0])
-    qc.iden(q[1])
-    qc.iden(q[2])
+    qc.i(q[1])
+    qc.i(q[2])
     qc.rx(0.0, q[0])
     qc.ry(0.1, q[1])
     qc.rz(0.2, q[2])
