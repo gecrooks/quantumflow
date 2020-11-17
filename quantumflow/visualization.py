@@ -199,7 +199,7 @@ def circuit_to_latex(
         "CNotPow": [CTRL, r"X^{{{t}}}"],
         "CY": [CTRL, r"Y"],
         "CYPow": [CTRL, r"Y^{{{t}}}"],
-        "CZPow": [CTRL, r"Y^{{{t}}}"],
+        "CZPow": [CTRL, r"Z^{{{t}}}"],
         # 3-qubit gates
         "CCNot": [CTRL, CTRL, TARGET],
         "CCXPow": [CTRL, CTRL, r"X^{{{t}}}"],
@@ -299,7 +299,8 @@ def circuit_to_latex(
             elif (
                 gate.qubit_nb == 2
                 and gate.cv_interchangeable
-                and gate.name not in latex_labels
+                and gate.name != "CZPow"
+                # and gate.name not in latex_labels
             ):
                 top = min(idx)
                 bot = max(idx)
@@ -543,11 +544,11 @@ def circuit_to_diagram(
     if qubits is None:
         qubits = circ.qubits
     N = len(qubits)
-    print("Here N", N)
+    # print("Here N", N)
 
     qubit_idx = dict(zip(qubits, range(0, 2 * N - 1, 2)))
     layers = _display_layers(circ, qubits)
-    print(layers)
+    # print(layers)
     layer_text = []
 
     qubit_layer = [""] * (2 * N - 1)
@@ -631,7 +632,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     # Split circuit into Moments, where the elements in each
     # moment operate on non-overlapping qubits
     gate_layers = DAGCircuit(circ).moments()
-    print(len(gate_layers))
+    # print(len(gate_layers))
 
     # Now split each moment into visual layers where the
     # control lines do not visually overlap.
