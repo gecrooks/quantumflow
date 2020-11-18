@@ -1,3 +1,0 @@
-# docs/requirements.txt
-sphinx
-guzzle_sphinx_theme
