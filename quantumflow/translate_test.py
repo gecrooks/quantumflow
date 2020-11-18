@@ -4,6 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
+from itertools import chain
 from typing import List, Type
 
 import numpy as np
@@ -20,7 +21,7 @@ def test_translators(trans: Type[qf.StdGate]) -> None:
 
     args = [np.random.uniform(-4, 4) for _ in gatet.cv_args]
     qbs = range(10, 10 + gatet.cv_qubit_nb)  # Check that qubits are preserved
-    gate = gatet(*args, *qbs)
+    gate = gatet(*chain(args, qbs))
 
     circ1 = qf.Circuit(trans(gate))  # type: ignore
     print(type(circ1[0]))
@@ -45,7 +46,7 @@ def test_translators_symbolic(trans: Type[qf.StdGate]) -> None:
     gatet = translation_source_gate(trans)
     args = [kwarg_to_symbol[a] for a in gatet.cv_args]
     qbs = range(gatet.cv_qubit_nb)
-    gate = gatet(*args, *qbs)
+    gate = gatet(*chain(args, qbs))
 
     qubits = "abcdefg"[0 : gate.qubit_nb]  # Check that qubits are preserved
     gate = gate.on(*qubits)

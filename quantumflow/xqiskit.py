@@ -146,7 +146,7 @@ def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCi
         circ = translate_gates_to_qiskit(circ)
 
     QF_TO_QASM = invert_map(QASM_TO_QF)
-    QF_TO_QASM["I"] = "iden"
+    # QF_TO_QASM["I"] = "i"
 
     # We assume only one QuantumRegister. Represent qubits by index in register
     qreg = qiskit.QuantumRegister(circ.qubit_nb)

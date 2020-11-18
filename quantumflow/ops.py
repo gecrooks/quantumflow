@@ -104,7 +104,9 @@ class Operation(ABC):
         params: Sequence[Variable] = None,
     ) -> None:
         self._qubits: Qubits = tuple(qubits)
-        self._params = tuple(params) if params is not None else ()
+        self._params: Tuple[Variable, ...] = ()
+        if params is not None:
+            self._params = tuple(params)
         self._tensor: QubitTensor = None
 
         if self.cv_qubit_nb is not None:

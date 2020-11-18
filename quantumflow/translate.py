@@ -196,7 +196,7 @@ def circuit_translate(
         raise ValueError("Specify either targets or translators, not both")
 
     gates = list(reversed(list(circ)))
-    translated = []
+    translated: List[Gate] = []
 
     if translators is None:
         if targets is None:
