@@ -20,17 +20,20 @@ so don't mix different incomparable data types.
 """
 
 
-from typing import Hashable, Sequence
+from typing import Any, Sequence
 
 __all__ = ("Qubit", "Qubits")
 
 
-Qubit = Hashable
+Qubit = Any
 """
 Type for qubits. Any hashable python object.
 Qubits should be mutually sortable, so don't mix different types, e.g. integers
 and strings.
 """
+# This used to be 'Qubit = Hashable', but mypy started complaining that
+# you cant sort Hashable objects. There doesn't seem to be any good way of
+# specifying a type that's sortable and hashable.
 
 
 Qubits = Sequence[Qubit]
