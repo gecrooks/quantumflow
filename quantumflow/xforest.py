@@ -75,7 +75,7 @@ def circuit_to_pyquil(circuit: Circuit) -> pqProgram:
             name = QF_TO_QUIL[elem.name]
             prog.gate(name, params, elem.qubits)
         elif isinstance(elem, Measure):  # pragma: no cover
-            prog.measure(elem.qubit, elem.cbit)  # pragma: no cover
+            prog.measure(elem.qubit, elem.cbit)  # pragma: no cover # type: ignore
         else:
             raise ValueError("Cannot convert operation to pyquil")  # pragma: no cover
 
@@ -100,7 +100,7 @@ def pyquil_to_circuit(program: pqProgram) -> Circuit:
             name = QUIL_TO_QF[inst.name]
             defgate = StdGate.cv_stdgates[name]
             qubits = [q.index for q in inst.qubits]
-            gate = defgate(*chain(inst.params, qubits))
+            gate = defgate(*chain(inst.params, qubits))  # type: ignore
             circ += gate
         else:
             raise ValueError("PyQuil program is not protoquil")  # pragma: no cover
