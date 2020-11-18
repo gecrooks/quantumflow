@@ -74,8 +74,6 @@ def circuit_to_pyquil(circuit: Circuit) -> pqProgram:
             params = list(elem.params)
             name = QF_TO_QUIL[elem.name]
             prog.gate(name, params, elem.qubits)
-        elif isinstance(elem, Measure):  # pragma: no cover
-            prog.measure(elem.qubit, elem.cbit)  # pragma: no cover # type: ignore
         else:
             raise ValueError("Cannot convert operation to pyquil")  # pragma: no cover
 
