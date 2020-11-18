@@ -59,7 +59,7 @@ SQRT = "√"
 def about(file: typing.TextIO = None) -> None:
     """Print information about the configuration
 
-     ``> python -m quantumcompiler.about``
+     ``> python -m quantumflow.about``
 
     Args:
         file: Output stream (Defaults to stdout)
@@ -78,7 +78,7 @@ def about(file: typing.TextIO = None) -> None:
             pass
 
     print(file=file)
-    print("# Configuration (> python -m quantumcompiler.about)", file=file)
+    print("# Configuration (> python -m quantumflow.about)", file=file)
     for name, vers in versions.items():
         print(name.ljust(name_width), vers, file=file)
     print(file=file)

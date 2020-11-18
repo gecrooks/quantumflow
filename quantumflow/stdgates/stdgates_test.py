@@ -4,6 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 import random
+from itertools import chain
 from typing import Type
 
 import numpy as np
@@ -164,7 +165,7 @@ def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     qbs = range(gatet.cv_qubit_nb)
 
     # Make gate with symbols
-    gate0 = gatet(*args, *qbs)
+    gate0 = gatet(*chain(args, qbs))
     gate1 = gate0.resolve(subs=args)
     gate2 = gatet(*args.values(), *qbs)  # type: ignore
     assert isinstance(gate1, qf.StdGate)
@@ -172,7 +173,7 @@ def test_symbolic(gatet: Type[qf.StdGate]) -> None:
 
     # Arguments with symbolic constants should be converted to float before
     # creating tensor
-    gate0 = gatet(*([qf.PI] * len(args)), *qbs)
+    gate0 = gatet(*chain(([qf.PI] * len(args)), qbs))
     gate0.tensor
 
 

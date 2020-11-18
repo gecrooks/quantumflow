@@ -16,6 +16,8 @@ Interface to pyQuil and the Rigetti Forest.
 
 """
 
+from itertools import chain
+
 from pyquil.quil import Program as pqProgram
 from pyquil.quilbase import Declare as pqDeclare
 from pyquil.quilbase import Gate as pqGate
@@ -98,7 +100,7 @@ def pyquil_to_circuit(program: pqProgram) -> Circuit:
             name = QUIL_TO_QF[inst.name]
             defgate = StdGate.cv_stdgates[name]
             qubits = [q.index for q in inst.qubits]
-            gate = defgate(*inst.params, *qubits)
+            gate = defgate(*chain(inst.params, qubits))
             circ += gate
         else:
             raise ValueError("PyQuil program is not protoquil")  # pragma: no cover
