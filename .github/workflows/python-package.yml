@@ -1,0 +1,52 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest
+        python -m pip install .[dev]
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: About
+      run: |
+        python -m ${{ github.event.repository.name }}.about
+    - name: Test with pytest
+      run: |
+        python -m pytest --cov=${{ github.event.repository.name }} --cov-fail-under 100
+    - name: Lint with black and isort (run `make delint` to fix issues)
+      run: |
+        black --check .  
+        isort --check -m 3 --tc .
+    - name: Lint with flake8
+      run: |
+        flake8 .            
+    - name: Typecheck with mypy
+      run: |
+        mypy ${{ github.event.repository.name }}
+    - name: Build documentation with sphinx
+      run: |
+        sphinx-build -M html docs docs/_build
+        
+        
