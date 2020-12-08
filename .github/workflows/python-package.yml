@@ -31,10 +31,10 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: About
       run: |
-        python -m ${{ github.event.repository.name }}.about
+        python -m quantumflow.about
     - name: Test with pytest
       run: |
-        python -m pytest --cov=${{ github.event.repository.name }} --cov-fail-under 100
+        python -m pytest --cov=quantumflow --cov-fail-under 100
     - name: Lint with black and isort (run `make delint` to fix issues)
       run: |
         black --check .  
@@ -44,7 +44,7 @@ jobs:
         flake8 .            
     - name: Typecheck with mypy
       run: |
-        mypy ${{ github.event.repository.name }}
+        mypy quantumflow
     - name: Build documentation with sphinx
       run: |
         sphinx-build -M html docs docs/_build
