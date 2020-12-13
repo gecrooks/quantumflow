@@ -72,7 +72,7 @@ extensions = [
 
 extensions.append("guzzle_sphinx_theme")
 
-bibtex_bibfiles = ['references.bib']
+bibtex_bibfiles = ["references.bib"]
 
 napoleon_use_ivar = True
 napoleon_use_rtype = False
