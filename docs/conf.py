@@ -49,7 +49,7 @@ html_sidebars = {
 
 
 def setup(app):
-    app.add_stylesheet("qf.css")  # also can be a full URL
+    app.add_css_file("qf.css")  # also can be a full URL
 
 
 # -- General configuration ---------------------------------------------------
@@ -71,6 +71,8 @@ extensions = [
 ]
 
 extensions.append("guzzle_sphinx_theme")
+
+bibtex_bibfiles = ['references.bib']
 
 napoleon_use_ivar = True
 napoleon_use_rtype = False
