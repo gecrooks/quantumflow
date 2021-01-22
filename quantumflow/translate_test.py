@@ -5,7 +5,7 @@
 
 
 from itertools import chain
-from typing import List, Type, Set
+from typing import List, Set, Type
 
 import numpy as np
 import pytest
@@ -117,7 +117,7 @@ def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
     trans = qf.select_translators(gates, qf.TRANSLATORS.values())  # type: ignore
     for t in trans:
         gatet = translation_source_gate(t)
-        gates.add(gatet) # type: ignore
+        gates.add(gatet)  # type: ignore
 
     missing = set(qf.StdGate.cv_stdgates.values()) - gates
     if len(missing) != 0:
