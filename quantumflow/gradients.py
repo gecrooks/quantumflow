@@ -104,7 +104,6 @@ def expectation_gradients(
     grads = []
     forward = ket0
     back = circ.run(ket0)
-    print(">>>", back.qubits, hermitian.qubits)
     back = hermitian.run(back)
     back = circ.H.run(back)
 
@@ -128,7 +127,7 @@ def expectation_gradients(
         g = -2 * r * np.imag(tensors.inner(f0.tensor, back.tensor))
 
         if dfunc is not None:
-            g = g * dfunc(expectation)
+            g = g * dfunc(float(expectation))
 
         grads.append(g)
 

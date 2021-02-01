@@ -117,8 +117,8 @@ class Kraus(Operation):
     def run(self, ket: State) -> State:
         """Apply the action of this Kraus quantum operation upon a state"""
         res = [op.run(ket) for op in self.operators]
-        probs = [ket.norm() * w for ket, w in zip(res, self.weights)]
-        probs = np.asarray(np.abs(probs))
+        probs = np.asarray(list(ket.norm() * w for ket, w in zip(res, self.weights)))
+        probs = np.abs(probs)
         probs /= np.sum(probs)
         n = np.random.choice(len(res), p=probs)
         newket = res[n]

@@ -194,7 +194,7 @@ def almost_integer(number: Union[float, complex], atol: float = 1e-08) -> bool:
             return False
         number = number.real
     x = np.isclose(round(number) - number, 0, atol=atol)
-    return x
+    return bool(x)
 
 
 def bitlist_to_int(bitlist: Sequence[int]) -> int:

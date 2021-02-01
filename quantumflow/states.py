@@ -76,7 +76,7 @@ class QuantumState(ABC):
             memory: Classical data storage. Stored as an immutable dictionary.
         """
 
-        self._tensor = tensor
+        self._tensor = np.asarray(tensor)
         self._qubits = tuple(qubits)
 
         if memory is None:
@@ -231,7 +231,7 @@ class State(QuantumState):
         diag_hermitian = tensors.asqutensor(diag_hermitian)
         return np.sum(np.real(diag_hermitian) * probs)
 
-    def measure(self) -> TensorLike:
+    def measure(self) -> np.ndarray:
         """Measure the state in the computational basis.
 
         Returns:
@@ -345,8 +345,7 @@ def join_states(ket0: State, ket1: State) -> State:
 
 def print_state(state: State, file: TextIO = None) -> None:
     """Print a state vector"""
-    state = state.tensor
-    for index, amplitude in np.ndenumerate(state):
+    for index, amplitude in np.ndenumerate(state.tensor):
         ket = "".join([str(n) for n in index])
         print(ket, ":", amplitude, file=file)
 
@@ -363,11 +362,11 @@ def print_probabilities(state: State, ndigits: int = 4, file: TextIO = None) -> 
     """
     prob = state.probabilities()
     for index, prob in np.ndenumerate(prob):
-        prob = round(prob, ndigits)
+        p = round(float(prob), ndigits)
         if prob == 0.0:
             continue
         ket = "".join([str(n) for n in index])
-        print(ket, ":", prob, file=file)
+        print(ket, ":", p, file=file)
 
 
 # --  Mixed Quantum States --
@@ -389,7 +388,7 @@ class Density(QuantumState):
 
         super().__init__(tensor, qubits, memory)
 
-    def trace(self) -> QubitTensor:
+    def trace(self) -> float:
         """Return the trace of this density operator"""
         return tensors.trace(self.tensor, rank=2)
 

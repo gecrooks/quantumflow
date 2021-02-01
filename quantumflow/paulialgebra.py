@@ -35,7 +35,7 @@ from functools import reduce
 from itertools import groupby, product
 from numbers import Complex
 from operator import itemgetter, mul
-from typing import Any, Dict, Iterator, List, Set, Tuple
+from typing import Any, Dict, Iterator, List, Set, Tuple, cast
 
 import numpy as np
 
@@ -44,7 +44,7 @@ from .config import ATOL
 from .ops import Operation
 from .qubits import Qubit, Qubits
 from .states import State
-from .tensors import TensorLike
+from .tensors import QubitTensor
 from .var import Variable
 
 __all__ = [
@@ -300,7 +300,7 @@ class Pauli(Operation):
     def __hash__(self) -> int:
         return hash(self.terms)
 
-    def asoperator(self, qubits: Qubits = None) -> TensorLike:
+    def asoperator(self, qubits: Qubits = None) -> QubitTensor:
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
@@ -322,7 +322,7 @@ class Pauli(Operation):
             for q, op in zip(qbs, ops):
                 gate = NAMED_GATES[op](q) @ gate  # type: ignore
             res.append(gate.asoperator() * coeff)
-        return sum(res)
+        return cast(np.ndarray, sum(res))
 
     # TESTME
     def run(self, ket: State) -> State:
@@ -524,7 +524,7 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     return tuple(groups)
 
 
-def pauli_decompose_hermitian(matrix: TensorLike, qubits: Qubits = None) -> Pauli:
+def pauli_decompose_hermitian(matrix: np.ndarray, qubits: Qubits = None) -> Pauli:
     """Decompose a Hermitian matrix into an element of the Pauli algebra.
 
     This works because tensor products of Pauli matrices form an orthonormal
@@ -537,7 +537,7 @@ def pauli_decompose_hermitian(matrix: TensorLike, qubits: Qubits = None) -> Paul
     if not np.ndim(matrix) == 2:
         raise ValueError("Must be square matrix")
 
-    # Wait is this true?
+    # TODO: Wait is this true?
     if not np.allclose(matrix.conj().T, matrix):
         raise ValueError("Matrix must be Hermitian")
 

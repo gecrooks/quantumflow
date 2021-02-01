@@ -813,7 +813,7 @@ class ISwap(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        unitary = [[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]]
+        unitary = np.asarray([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]])
 
         return tensors.asqutensor(unitary)
 

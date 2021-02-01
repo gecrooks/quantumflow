@@ -5,8 +5,7 @@
 
 # DOCME
 
-from numbers import Real
-from typing import Any, Mapping, Union
+from typing import Mapping, Union
 
 import numpy as np
 import sympy
@@ -21,7 +20,7 @@ Symbol = sympy.Symbol
 """Class for symbols in symbolic expressions"""
 
 
-Variable = Union[Real, sympy.Expr]
+Variable = Union[float, sympy.Expr]
 """Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
 
 
@@ -29,7 +28,7 @@ PI = sympy.pi
 """Symbolic constant pi"""
 
 
-def is_symbolic(x: Any) -> bool:
+def is_symbolic(x: Variable) -> bool:
     """Returns true if a symbolic expression"""
     return isinstance(x, sympy.Expr)
 
@@ -41,7 +40,7 @@ def isclose(x: Variable, y: Variable, atol: float = ATOL, rtol: float = RTOL) ->
         of if they are the same symbolic expression, else False.
     """
     if not is_symbolic(x) and not is_symbolic(y):
-        return np.isclose(x, y, atol=atol, rtol=rtol)
+        return bool(np.isclose(x, y, atol=atol, rtol=rtol))
     if is_symbolic(x) and is_symbolic(y):
         return x == y
     return False

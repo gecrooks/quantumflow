@@ -33,7 +33,7 @@ and strings.
 """
 # This used to be 'Qubit = Hashable', but mypy started complaining that
 # you cant sort Hashable objects. There doesn't seem to be any good way of
-# specifying a type that's sortable and hashable.
+# specifying a type that is sortable and hashable.
 
 
 Qubits = Sequence[Qubit]
