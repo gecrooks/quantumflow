@@ -104,7 +104,6 @@ def expectation_gradients(
     grads = []
     forward = ket0
     back = circ.run(ket0)
-    # print(">>>", back.qubits, hermitian.qubits)
     back = hermitian.run(back)
     back = circ.H.run(back)
 
