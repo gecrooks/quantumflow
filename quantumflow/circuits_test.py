@@ -272,8 +272,8 @@ def test_addition_circuit() -> None:
                 ket = qf.State(state)
 
                 ket = circ.run(ket)
-                bits = ket.measure()
-                res = bits[[5, 2, 3]]  # type: ignore
+                bits2 = ket.measure()
+                res = bits2[[5, 2, 3]]  # type: ignore
                 res = bitlist_to_int(res)
 
                 assert res == expected
@@ -294,8 +294,8 @@ def test_addition_circuit() -> None:
                 ket = qf.State(state)
 
                 ket = circ.run(ket)
-                bits = ket.measure()
-                res = bits[[7, 3, 4, 5]]  # type: ignore
+                bits2 = ket.measure()
+                res = bits2[[7, 3, 4, 5]]  # type: ignore
                 res = bitlist_to_int(res)
 
                 # print(c0, a0, a1, expected, res)

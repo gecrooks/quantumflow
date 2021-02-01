@@ -6,9 +6,10 @@
 # DOCME
 
 import string
-from typing import Any, List, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 __all__ = ("QubitTensor", "TensorLike", "asqutensor")
 
@@ -16,17 +17,13 @@ __all__ = ("QubitTensor", "TensorLike", "asqutensor")
 qubit_dtype = np.complex128
 """The complex data type used by the backend"""
 
-QubitTensor = Any
+QubitTensor = np.ndarray
 """Type hint for numpy arrays representing quantum data.
 QubitTensor arrays have complex data type, and all axes have length 2."""
 
-# NB: Currently only used for documentation, not type checking
 
-
-TensorLike = Any
+TensorLike = ArrayLike
 """Any python object that can be converted into a numpy array"""
-
-# NB: This annotation currently only used for documentation, not type checking
 
 
 def asqutensor(array: TensorLike) -> QubitTensor:
@@ -127,7 +124,7 @@ def trace(tensor: QubitTensor, rank: int) -> float:
 
     tensor = np.reshape(tensor, [2 ** (N * R // 2)] * 2)
     trace = np.trace(tensor)
-    return trace
+    return float(trace)
 
 
 def norm(tensor: QubitTensor) -> QubitTensor:

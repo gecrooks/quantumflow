@@ -658,7 +658,7 @@ class Channel(Operation):
         return Channel(tensor, qubits)
 
     # TESTME
-    def trace(self) -> QubitTensor:
+    def trace(self) -> float:
         """Return the trace of this super operator"""
         return tensors.trace(self.tensor, rank=4)
 

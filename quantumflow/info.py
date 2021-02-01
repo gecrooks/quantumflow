@@ -186,7 +186,7 @@ def states_close(ket0: State, ket1: State, atol: float = ATOL) -> bool:
 # -- Measures on density matrices ---
 
 
-def purity(rho: Density) -> QubitTensor:
+def purity(rho: Density) -> float:
     """
     Calculate the purity of a mixed quantum state.
 
@@ -200,7 +200,7 @@ def purity(rho: Density) -> QubitTensor:
     tensor = rho.tensor
     N = rho.qubit_nb
     matrix = np.reshape(tensor, [2 ** N, 2 ** N])
-    return np.trace(matrix @ matrix)
+    return float(np.trace(matrix @ matrix))
 
 
 def fidelity(rho0: Density, rho1: Density) -> float:
@@ -332,7 +332,7 @@ def gates_phase_close(gate0: Gate, gate1: Gate, atol: float = ATOL) -> bool:
         return False
     N = gate0.qubit_nb
     phase = np.trace((gate1 @ gate0.H).asoperator()) / 2 ** N
-    return np.isclose(phase, 1.0)
+    return bool(np.isclose(phase, 1.0))
 
 
 # TESTME

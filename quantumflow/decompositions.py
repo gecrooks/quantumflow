@@ -424,11 +424,10 @@ def _constrain_to_weyl(
             coords = _lambdas_to_coords(lambdas_perm)
 
             if _in_weyl(*coords):
-                return coords, np.asarray(signs), perm
+                return coords, np.asarray(signs), np.asarray(perm)
 
     # Should never get here
     assert False  # pragma: no cover
-    return None, None, None  # pragma: no cover
 
 
 def _in_weyl(tx: float, ty: float, tz: float) -> bool:
