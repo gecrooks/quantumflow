@@ -159,7 +159,7 @@ def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCi
             name = "initialize"
 
             # TODO: CHECK
-            params = op.tensor.transpose().flatten()
+            params = list(op.tensor.transpose().flatten())
 
             qbs = [qubit_map[qb] for qb in op.qubits]
             getattr(qkcircuit, name)(params, qbs)
