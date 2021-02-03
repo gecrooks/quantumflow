@@ -30,22 +30,22 @@ Standard one-qubit gates
 .. autoclass:: S
 .. autoclass:: T
 .. autoclass:: PhaseShift
-.. autoclass:: RX
-.. autoclass:: RY
-.. autoclass:: RZ
+.. autoclass:: Rx
+.. autoclass:: Ry
+.. autoclass:: Rz
 .. autoclass:: Ph
 
 Standard two-qubit gates
 ************************
 .. autoclass:: CZ
-.. autoclass:: CNOT
-.. autoclass:: SWAP
-.. autoclass:: ISWAP
-.. autoclass:: CPHASE00
-.. autoclass:: CPHASE01
-.. autoclass:: CPHASE10
-.. autoclass:: CPHASE
-.. autoclass:: PSWAP
+.. autoclass:: CNot
+.. autoclass:: Swap
+.. autoclass:: ISwap
+.. autoclass:: CPhase00
+.. autoclass:: CPhase01
+.. autoclass:: CPhase10
+.. autoclass:: CPhase
+.. autoclass:: PSwap
 
 
 Standard three-qubit gates
@@ -75,12 +75,12 @@ One-qubit gates
 
 Two-qubit gates
 ***************
-.. autoclass:: CAN
+.. autoclass:: Can
 .. autoclass:: XX
 .. autoclass:: YY
 .. autoclass:: ZZ
 .. autoclass:: XY
-.. autoclass:: EXCH
+.. autoclass:: Exch
 .. autoclass:: Barenco
 .. autoclass:: CY
 .. autoclass:: CH
@@ -93,7 +93,7 @@ Two-qubit gates
 
 Three-qubit gates
 *****************
-.. autoclass:: CZ
+.. autoclass:: CCZ
 .. autoclass:: Deutsch
 .. autoclass:: CCiX
 
