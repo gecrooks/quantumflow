@@ -73,7 +73,7 @@ def circuit_to_pyquil(circuit: Circuit) -> pqProgram:
         if isinstance(elem, Gate) and elem.name in QF_TO_QUIL:
             params = list(elem.params)
             name = QF_TO_QUIL[elem.name]
-            prog.gate(name, params, elem.qubits)
+            prog.gate(name, params, elem.qubits)  # type: ignore
         else:
             raise ValueError("Cannot convert operation to pyquil")  # pragma: no cover
 
