@@ -46,13 +46,14 @@ from typing import (
 )
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
 
 from . import tensors, utils, var
 from .qubits import Qubit, Qubits
 from .states import Density, State
-from .tensors import QubitTensor, TensorLike
+from .tensors import QubitTensor
 from .var import Variable
 
 __all__ = ["Operation", "Gate", "StdGate", "Unitary", "Channel"]
@@ -423,7 +424,7 @@ class Unitary(Gate):
     A quantum logic gate specified by an explicit unitary operator.
     """
 
-    def __init__(self, tensor: TensorLike, qubits: Qubits) -> None:
+    def __init__(self, tensor: ArrayLike, qubits: Qubits) -> None:
 
         tensor = tensors.asqutensor(tensor)
 
@@ -529,7 +530,7 @@ class Channel(Operation):
 
     def __init__(
         self,
-        tensor: TensorLike,
+        tensor: ArrayLike,
         qubits: Qubits,
         params: Sequence[var.Variable] = None,
         name: str = None,  # FIXME
@@ -601,7 +602,7 @@ class Channel(Operation):
         return np.reshape(self.sharp.tensor, [2 ** (N * 2)] * 2)
 
     @classmethod
-    def from_choi(cls, tensor: TensorLike, qubits: Qubits) -> "Channel":
+    def from_choi(cls, tensor: ArrayLike, qubits: Qubits) -> "Channel":
         """Return a Channel from a Choi matrix"""
         return cls(tensor, qubits).sharp
 
