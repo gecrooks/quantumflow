@@ -96,6 +96,9 @@ build: ## Setuptools build
 	./setup.py clean --all
 	./setup.py sdist bdist_wheel
 
+requirements: ## Make requirements.txt
+	pip freeze > requirements.txt
+
 clean: ## Clean up after setuptools
 	./setup.py clean --all
 

@@ -37,10 +37,11 @@ from typing import Any, Dict, List, Mapping, TextIO, Tuple, TypeVar, Union
 
 import numpy as np
 import opt_einsum
+from numpy.typing import ArrayLike
 
 from . import tensors, utils
 from .qubits import Qubit, Qubits
-from .tensors import QubitTensor, TensorLike
+from .tensors import QubitTensor
 
 __all__ = [
     "State",
@@ -64,7 +65,7 @@ QuantumStateType = TypeVar("QuantumStateType", bound="QuantumState")
 
 class QuantumState(ABC):
     def __init__(
-        self, tensor: TensorLike, qubits: Qubits, memory: Mapping = None
+        self, tensor: ArrayLike, qubits: Qubits, memory: Mapping = None
     ) -> None:
         """
         Abstract base class for representations of a quantum state.
@@ -108,7 +109,7 @@ class QuantumState(ABC):
     def replace(
         self: QuantumStateType,
         *,
-        tensor: TensorLike = None,
+        tensor: ArrayLike = None,
         qubits: Qubits = None,
         memory: Mapping = None,
     ) -> QuantumStateType:
@@ -169,7 +170,7 @@ class State(QuantumState):
     """
 
     def __init__(
-        self, tensor: TensorLike, qubits: Qubits = None, memory: Mapping = None
+        self, tensor: ArrayLike, qubits: Qubits = None, memory: Mapping = None
     ) -> None:
         """Create a new State from a tensor of qubit amplitudes
 
@@ -212,9 +213,7 @@ class State(QuantumState):
         res = res.reshape(probs.shape)
         return res
 
-    def expectation(
-        self, diag_hermitian: TensorLike, trials: int = None
-    ) -> QubitTensor:
+    def expectation(self, diag_hermitian: ArrayLike, trials: int = None) -> QubitTensor:
         """Return the expectation of a measurement. Since we can only measure
         our computer in the computational basis, we only require the diagonal
         of the Hermitian in that basis.
@@ -376,7 +375,7 @@ class Density(QuantumState):
     """A density matrix representation of a mixed quantum state"""
 
     def __init__(
-        self, tensor: TensorLike, qubits: Qubits = None, memory: Mapping = None
+        self, tensor: ArrayLike, qubits: Qubits = None, memory: Mapping = None
     ) -> None:
         tensor = tensors.asqutensor(tensor)
 

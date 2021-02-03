@@ -2,4 +2,4 @@
 Gates
 =====
 
-.. automodule :: quantumflow.gates
+.. automodule :: quantumflow.stdgates

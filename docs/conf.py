@@ -118,11 +118,13 @@ def do_edits():
         (r"^/quantumflow\.", r"qf."),
         # (r'qf\.readthedocs\.io', r'quantumflow.readthedocs.io'),
         # Hacks to fixup types
-        (r"sympy\.core\.symbol\.Symbol", r"Parameter"),
-        (r"Sequence\[collections\.abc\.Hashable\]", "Qubits"),
-        (r"collections\.abc\.Hashable", "Qubit"),
+        # (r"sympy\.core\.symbol\.Symbol", r"Parameter"),
+        # (r"Sequence\[collections\.abc\.Hashable\]", "Qubits"),
+        # (r"collections\.abc\.Hashable", "Qubit"),
         (r"tensor: Any", r"tensor: TensorLike"),
         (r"&#x2192; Any", r"&#x2192; BKTensor"),
+        ("Sequence[qf.Qubit]", "qf.Qubits"),
+        ("Sequence[Union[float, sympy.core.expr.Expr]]", "qf.Variable"),
     ]
 
     files = glob.glob("*build/html/*.html")

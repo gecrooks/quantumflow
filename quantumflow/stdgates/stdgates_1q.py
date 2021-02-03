@@ -525,6 +525,7 @@ class Ry(StdGate):
             \cos(\half\theta) & -\sin(\half\theta)
             \\ \sin(\half\theta) & \cos(\half\theta)
                         \end{bmatrix*}
+
     Args:
         theta: Angle of rotation in Bloch sphere
     """
