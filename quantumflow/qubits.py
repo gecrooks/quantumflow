@@ -22,18 +22,23 @@ so don't mix different incomparable data types.
 
 from typing import Any, Sequence
 
+from typing_extensions import Protocol  # py 3.7 compatibility.  3.8+ import from typing
+
 __all__ = ("Qubit", "Qubits")
 
 
-Qubit = Any
-"""
-Type for qubits. Any hashable python object.
-Qubits should be mutually sortable, so don't mix different types, e.g. integers
-and strings.
-"""
-# This used to be 'Qubit = Hashable', but mypy started complaining that
-# you cant sort Hashable objects. There doesn't seem to be any good way of
-# specifying a type that is sortable and hashable.
+class Qubit(Protocol):
+    """Type for qubits. Any sortable and hashable python object.
+    e.g. strings, integers, tuples of strings and integers, etc.
+    Qubits must be mutually sortable, so don't mix different types, e.g. integers
+    and strings.
+    """
+
+    def __lt__(self, other: Any) -> bool:
+        pass
+
+    def __hash__(self) -> int:
+        pass
 
 
 Qubits = Sequence[Qubit]
