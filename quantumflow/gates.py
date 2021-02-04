@@ -16,6 +16,16 @@ from .paulialgebra import Pauli
 from .qubits import Qubit, Qubits
 from .tensors import QubitTensor
 
+__all__ = (
+    "RandomGate",
+    "join_gates",
+    "print_gate",
+    "P0",
+    "P1",
+    "unitary_from_hamiltonian",
+    "conditional_gate",
+)
+
 
 # DOCME: Explain cv_interchangeable
 class RandomGate(Unitary):

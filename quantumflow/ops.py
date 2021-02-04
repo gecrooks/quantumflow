@@ -31,6 +31,7 @@ and Pauli.
 
 from abc import ABC  # Abstract Base Class
 from copy import copy
+from functools import total_ordering
 from typing import (
     Any,
     ClassVar,
@@ -66,6 +67,7 @@ GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
 
+@total_ordering
 class Operation(ABC):
     """An operation on a quantum state. An element of a quantum circuit.
 
