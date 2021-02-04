@@ -443,7 +443,6 @@ def cnot_decomposition(gate: Gate) -> Circuit:
         Optimal Quantum Circuits for General Two-Qubit Gates, Vatan & Williams
         (2004) (quant-ph/0308006) Fig. 6
     """
-    q0, q1 = gate.qubits
 
     gate_dek = canonical_decomposition(gate)
     gate_before = cast(Circuit, gate_dek[0])

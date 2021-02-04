@@ -224,7 +224,7 @@ def test_neg() -> None:
     ps = sY(0) - sX(0)
     ps -= sZ(1)
     ps = ps - 3
-    ps = 3 + ps
+    _ = 3 + ps
 
 
 def test_paulisum_iteration() -> None:
