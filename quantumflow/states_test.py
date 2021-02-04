@@ -138,7 +138,7 @@ def test_expectation() -> None:
     m = ket.expectation([0.4, 0.6])
     assert np.isclose(m, 0.5)
 
-    m = ket.expectation([0.4, 0.6], 10)
+    ket.expectation([0.4, 0.6], 10)
 
 
 def test_random_density() -> None:

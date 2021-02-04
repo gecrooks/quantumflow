@@ -179,7 +179,7 @@ def test_PauliGate() -> None:
 
     top4 = nx.DiGraph()
     nx.add_path(top4, [3, 2, 1, 0])
-    circ3 = qf.Circuit(qf.PauliGate(pauli3, alpha).decompose(top4))
+    _ = qf.Circuit(qf.PauliGate(pauli3, alpha).decompose(top4))
 
 
 def test_PauliGate_more() -> None:
