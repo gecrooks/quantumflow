@@ -536,7 +536,6 @@ def circuit_to_diagram(
         for i in range(i0 + 2, i1, 2):
             code[i] = (BOX_CHARS[LEFT + RIGHT] * left_pad) + BOX_CHARS[CROSS]
 
-    print("Here len", len(circ))
     if len(circ) == 0:
         # Empty circuit
         circ = Circuit(NoWire([0]))
@@ -544,11 +543,9 @@ def circuit_to_diagram(
     if qubits is None:
         qubits = circ.qubits
     N = len(qubits)
-    # print("Here N", N)
 
     qubit_idx = dict(zip(qubits, range(0, 2 * N - 1, 2)))
     layers = _display_layers(circ, qubits)
-    # print(layers)
     layer_text = []
 
     qubit_layer = [""] * (2 * N - 1)
