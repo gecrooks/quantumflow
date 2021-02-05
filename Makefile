@@ -16,9 +16,9 @@ init:  ## Install and initlize package ready for development
 about:	## Report versions of dependent packages
 	@python -m $(PROJECT).about
 
-status:  ## git status -uno
+status:  ## git status
 	@echo
-	@git status -uno
+	@git status --short --branch
 
 test:		## Run unittests
 	pytest --disable-pytest-warnings

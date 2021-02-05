@@ -38,7 +38,7 @@ def test_gate_mul() -> None:
     assert qf.gates_close(gate, qf.Swap("a", "b"))
 
     gate4 = qf.X("a")
-    gate = gate4 @ gate
+    _ = gate4 @ gate
 
     with pytest.raises(NotImplementedError):
         _ = gate4 @ 3  # type: ignore
