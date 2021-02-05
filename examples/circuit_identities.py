@@ -12,8 +12,11 @@ from itertools import zip_longest
 import numpy as np
 from sympy import Symbol, pi
 
-import quantumflow as qf
 from quantumflow import (
+    CCZ,
+    CH,
+    CV,
+    CV_H,
     CZ,
     XX,
     YY,
@@ -22,10 +25,12 @@ from quantumflow import (
     CCNot,
     Circuit,
     CNot,
+    CNotPow,
     CPhase,
     CPhase00,
     CPhase01,
     CPhase10,
+    CSwap,
     H,
     I,
     ISwap,
@@ -42,8 +47,20 @@ from quantumflow import (
     Z,
     ZPow,
     circuit_to_diagram,
+    circuit_translate,
     gates_close,
+    translate_can_to_cnot,
+    translate_ccnot_to_ccz,
     translate_ccnot_to_cnot,
+    translate_ccz_to_adjacent_cnot,
+    translate_ch_to_cpt,
+    translate_cnotpow_to_zz,
+    translate_cswap_inside_to_cnot,
+    translate_cswap_to_ccnot,
+    translate_cswap_to_cnot,
+    translate_cv_to_cpt,
+    translate_cvh_to_cpt,
+    translate_xy_to_can,
 )
 
 syms = {
@@ -424,13 +441,13 @@ def identities():
     circuit_identities.append([name, circ0, circ1])
 
     def cphase_to_zz(gate: CPhase):
-        t = -gate.parameter("theta") / (2 * pi)
+        t = -gate.param("theta") / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([ZZ(t, q0, q1), ZPow(-t, q0), ZPow(-t, q1)])
         return circ
 
     def cphase00_to_zz(gate: CPhase00):
-        t = -gate.parameter("theta") / (2 * pi)
+        t = -gate.param("theta") / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit(
             [X(0), X(1), ZZ(t, q0, q1), ZPow(-t, q0), ZPow(-t, q1), X(0), X(1)]
@@ -438,13 +455,13 @@ def identities():
         return circ
 
     def cphase01_to_zz(gate: CPhase00):
-        t = -gate.parameter("theta") / (2 * pi)
+        t = -gate.param("theta") / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([X(0), ZZ(t, q0, q1), ZPow(-t, q0), ZPow(-t, q1), X(0)])
         return circ
 
     def cphase10_to_zz(gate: CPhase00):
-        t = -gate.parameter("theta") / (2 * pi)
+        t = -gate.param("theta") / (2 * pi)
         q0, q1 = gate.qubits
         circ = Circuit([X(1), ZZ(t, q0, q1), ZPow(-t, q0), ZPow(-t, q1), X(1)])
         return circ
@@ -490,77 +507,77 @@ def identities():
     circuit_identities.append([name, circ0, circ1])
 
     name = "CCZ to CNots, respecting adjacency"
-    gate = qf.CCZ(0, 1, 2)
+    gate = CCZ(0, 1, 2)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_ccz_to_adjacent_cnot(gate))
+    circ1 = Circuit(translate_ccz_to_adjacent_cnot(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CCNot to CCZ"
-    gate = qf.CCNot(0, 1, 2)
+    gate = CCNot(0, 1, 2)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_ccnot_to_ccz(gate))
+    circ1 = Circuit(translate_ccnot_to_ccz(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CSwap to CCNot"
-    gate = qf.CSwap(0, 1, 2)
+    gate = CSwap(0, 1, 2)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_cswap_to_ccnot(gate))
+    circ1 = Circuit(translate_cswap_to_ccnot(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CSwap to CNot"
-    gate = qf.CSwap(0, 1, 2)
+    gate = CSwap(0, 1, 2)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_cswap_to_cnot(gate))
+    circ1 = Circuit(translate_cswap_to_cnot(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CSwap to CNot (control between targets)"
-    gate = qf.CSwap(1, 0, 2)
+    gate = CSwap(1, 0, 2)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_cswap_inside_to_cnot(gate))
+    circ1 = Circuit(translate_cswap_inside_to_cnot(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CH to Clifford+T"
-    gate = qf.CH(0, 1)
+    gate = CH(0, 1)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_ch_to_cpt(gate))
+    circ1 = Circuit(translate_ch_to_cpt(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CV to Clifford+T"
-    gate = qf.CV(0, 1)
+    gate = CV(0, 1)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_cv_to_cpt(gate))
+    circ1 = Circuit(translate_cv_to_cpt(gate))
     circuit_identities.append([name, circ0, circ1])
 
     name = "CV_H to Clifford+T"
-    gate = qf.CV_H(0, 1)
+    gate = CV_H(0, 1)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_cvh_to_cpt(gate))
+    circ1 = Circuit(translate_cvh_to_cpt(gate))
     circuit_identities.append([name, circ0, circ1])
 
     # from sympy import Symbol, pi
     name = "CNotPow to ZZ"
-    gate = qf.CNotPow(t, 0, 1)
+    gate = CNotPow(t, 0, 1)
     circ0 = Circuit([gate])
-    circ1 = Circuit(qf.translate_cnotpow_to_zz(gate))
+    circ1 = Circuit(translate_cnotpow_to_zz(gate))
     circuit_identities.append([name, circ0, circ1])
 
     # name = "PISwap to XY"
-    # gate = qf.PISwap(theta, 0, 1)
+    # gate = PISwap(theta, 0, 1)
     # circ0 = Circuit([gate])
-    # circ1 = Circuit(qf.translate_piswap_to_xy(gate))
+    # circ1 = Circuit(translate_piswap_to_xy(gate))
     # circuit_identities.append([name, circ0, circ1])
 
     name = "Powers of iSwap to CNot sandwich"
-    gate = qf.ISwap(0, 1) ** t
-    trans = [qf.translate_xy_to_can, qf.translate_can_to_cnot]
+    gate = ISwap(0, 1) ** t
+    trans = [translate_xy_to_can, translate_can_to_cnot]
     circ0 = Circuit([gate])
-    circ1 = qf.circuit_translate(circ0, trans)
+    circ1 = circuit_translate(circ0, trans)
     circuit_identities.append([name, circ0, circ1])
 
     name = "Commute ZPow past multiple CNots"
-    gate = qf.ZPow(t, 1)
-    circ0 = Circuit([gate, qf.CNot(0, 1), qf.CNot(1, 2), qf.CNot(0, 1)])
-    circ1 = Circuit([qf.CNot(0, 1), qf.CNot(1, 2), qf.CNot(0, 1), gate])
+    gate = ZPow(t, 1)
+    circ0 = Circuit([gate, CNot(0, 1), CNot(1, 2), CNot(0, 1)])
+    circ1 = Circuit([CNot(0, 1), CNot(1, 2), CNot(0, 1), gate])
     circuit_identities.append([name, circ0, circ1])
 
     return circuit_identities

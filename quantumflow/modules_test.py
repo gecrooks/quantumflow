@@ -10,7 +10,6 @@ import pytest
 import scipy.linalg
 
 import quantumflow as qf
-from quantumflow import var
 
 
 def test_identitygate() -> None:
@@ -209,7 +208,7 @@ def test_PauliGate_more() -> None:
 
 
 def test_PauliGate_resolve() -> None:
-    alpha = var.Symbol("alpha")
+    alpha = qf.var.Symbol("alpha")
     g = qf.PauliGate(qf.sZ(0), alpha)
     r = g.resolve(subs={"alpha": 0.3})
     assert r.alpha == 0.3

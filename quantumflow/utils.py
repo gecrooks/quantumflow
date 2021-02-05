@@ -7,9 +7,9 @@
 Useful routines not necessarily intended to be part of the public API.
 """
 
-import functools
 import warnings
 from fractions import Fraction
+from functools import wraps
 from typing import (
     Any,
     Callable,
@@ -90,7 +90,7 @@ def deprecated(func: Callable) -> Callable:
     as deprecated. It will result in a warning being emitted
     when the function is used."""
 
-    @functools.wraps(func)
+    @wraps(func)
     def _new_func(*args: Any, **kwargs: Any) -> Any:
         warnings.simplefilter("always", DeprecationWarning)  # turn off filter
         warnings.warn(

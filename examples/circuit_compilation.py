@@ -7,7 +7,7 @@ import quantumflow as qf
 
 example_circuits = [
     ["3-qubit addition", qf.addition_circuit([0, 1, 2], [3, 4, 5], [6, 7])],
-    ["7-qubit QFT", qf.QFTGate([0, 1, 2, 3, 4, 5, 6, 7]).ascircuit()],  # FIXME
+    ["7-qubit QFT", qf.Circuit(qf.QFTGate([0, 1, 2, 3, 4, 5, 6, 7]).decompose())],
 ]
 
 for title, example in example_circuits:
