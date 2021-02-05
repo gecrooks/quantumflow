@@ -5,7 +5,6 @@ import time
 import timeit
 
 import quantumflow as qf
-from quantumflow import xcirq
 
 GATES = 512
 REPS = 8
@@ -64,7 +63,7 @@ def _cli():
         circ = benchmark_circuit(QUBITS, GATES, gate)
         t = timeit.timeit(lambda: circ.run(), number=REPS, timer=time.process_time)
 
-        cq = xcirq.CirqSimulator(circ)
+        cq = qf.xcirq.CirqSimulator(circ)
         t2 = timeit.timeit(lambda: cq.run(), number=REPS, timer=time.process_time)
 
         gops = int((GATES * REPS) / t)

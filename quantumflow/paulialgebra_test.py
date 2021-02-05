@@ -86,13 +86,15 @@ def test_sub() -> None:
 
 def test_cmp() -> None:
     x = sX(1)
+    x2 = sX(1)
     y = sY(2, 2.0)
+    y2 = sY(2, 2.0)
     assert x < y
-    assert x <= y
-    assert x <= x
-    assert x == x
-    assert y > x
-    assert y >= y
+    assert x2 <= y
+    assert x <= x2
+    assert x == x2
+    assert y2 > x
+    assert y >= y2
 
     with pytest.raises(TypeError):
         "foo" > y
