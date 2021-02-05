@@ -22,4 +22,4 @@ translators = [
 circ1 = qf.circuit_translate(circ0, translators)
 
 assert circ1.size() == 33
-print(qf.circuit_diagram(circ1))
+print(qf.circuit_to_diagram(circ1))
