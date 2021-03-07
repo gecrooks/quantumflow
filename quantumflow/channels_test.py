@@ -40,6 +40,7 @@ def test_transpose_map() -> None:
 
     # The Choi matrix should be same as Swap operator
     choi = kraus.aschannel().choi()
+    choi = choi
     assert np.allclose(choi, qf.Swap(0, 2).asoperator())
 
 
@@ -155,7 +156,7 @@ def test_measurement() -> None:
     rho = chan.evolve(rho)
     rho = qf.Kraus([qf.P0(0), qf.P1(0)]).aschannel().evolve(rho)
     K = qf.Kraus([qf.P0(1), qf.P1(1)])
-    _ = K.aschannel()
+    chan = K.aschannel()
 
     rho = qf.Kraus([qf.P0(1), qf.P1(1)]).aschannel().evolve(rho)
     prob = rho.probabilities()

@@ -5,7 +5,7 @@
 
 
 from itertools import chain
-from typing import List, Set, Type
+from typing import List, Type
 
 import numpy as np
 import pytest
@@ -111,13 +111,13 @@ def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
     # 1 qubit terminal gates
     # We include identity and global phase because translators can't
     # delete gates
-    gates: Set[Type[qf.StdGate]] = {qf.XPow, qf.ZPow, qf.I, qf.Ph}
+    gates = {qf.XPow, qf.ZPow, qf.I, qf.Ph}
 
     gates.add(term_gate)
     trans = qf.select_translators(gates, qf.TRANSLATORS.values())  # type: ignore
     for t in trans:
         gatet = translation_source_gate(t)
-        gates.add(gatet)  # type: ignore
+        gates.add(gatet)
 
     missing = set(qf.StdGate.cv_stdgates.values()) - gates
     if len(missing) != 0:

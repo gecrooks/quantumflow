@@ -138,7 +138,7 @@ def test_expectation() -> None:
     m = ket.expectation([0.4, 0.6])
     assert np.isclose(m, 0.5)
 
-    ket.expectation([0.4, 0.6], 10)
+    m = ket.expectation([0.4, 0.6], 10)
 
 
 def test_random_density() -> None:
@@ -246,7 +246,7 @@ def test_density_memory() -> None:
     assert rho1.memory == {ro[1]: 1}
 
     rho2 = qf.H(0).aschannel().evolve(rho1)
-    assert rho1.memory == rho2.memory
+    assert rho2.memory == rho2.memory
 
     rho3 = qf.X(0).evolve(rho1)
     assert rho3.memory == rho2.memory

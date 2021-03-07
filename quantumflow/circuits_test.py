@@ -251,7 +251,7 @@ def test_phase_estimation_circuit_3() -> None:
 
     with pytest.raises(ValueError):
         # Gate and output qubits overlap
-        _ = qf.phase_estimation_circuit(gate, range(N + 1))
+        circ = qf.phase_estimation_circuit(gate, range(N + 1))
 
 
 def test_addition_circuit() -> None:
@@ -272,8 +272,8 @@ def test_addition_circuit() -> None:
                 ket = qf.State(state)
 
                 ket = circ.run(ket)
-                bits2 = ket.measure()
-                res = bits2[[5, 2, 3]]  # type: ignore
+                bits = ket.measure()
+                res = bits[[5, 2, 3]]  # type: ignore
                 res = bitlist_to_int(res)
 
                 assert res == expected
@@ -294,8 +294,8 @@ def test_addition_circuit() -> None:
                 ket = qf.State(state)
 
                 ket = circ.run(ket)
-                bits2 = ket.measure()
-                res = bits2[[7, 3, 4, 5]]  # type: ignore
+                bits = ket.measure()
+                res = bits[[7, 3, 4, 5]]  # type: ignore
                 res = bitlist_to_int(res)
 
                 # print(c0, a0, a1, expected, res)

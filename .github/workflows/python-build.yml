@@ -20,6 +20,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with: 
+        fetch-depth: 0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -32,6 +34,10 @@ jobs:
     - name: About
       run: |
         python -m $(python -Wi setup.py --name).about
+    - name: Regression tests
+      run: |
+        git checkout tags/v1.0.1 quantumflow/*_test.py
+        python -m pytest
     - name: Test with pytest
       run: |
         python -m pytest --cov-fail-under 100
@@ -48,3 +54,7 @@ jobs:
     - name: Build documentation with sphinx
       run: |
         sphinx-build -M html docs docs/_build
+
+
+
+        python -m pytest

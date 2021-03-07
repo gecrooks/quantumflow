@@ -86,15 +86,13 @@ def test_sub() -> None:
 
 def test_cmp() -> None:
     x = sX(1)
-    x2 = sX(1)
     y = sY(2, 2.0)
-    y2 = sY(2, 2.0)
     assert x < y
-    assert x2 <= y
-    assert x <= x2
-    assert x == x2
-    assert y2 > x
-    assert y >= y2
+    assert x <= y
+    assert x <= x
+    assert x == x
+    assert y > x
+    assert y >= y
 
     with pytest.raises(TypeError):
         "foo" > y
@@ -226,7 +224,7 @@ def test_neg() -> None:
     ps = sY(0) - sX(0)
     ps -= sZ(1)
     ps = ps - 3
-    _ = 3 + ps
+    ps = 3 + ps
 
 
 def test_paulisum_iteration() -> None:

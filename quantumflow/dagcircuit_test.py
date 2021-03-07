@@ -156,7 +156,7 @@ def test_moments() -> None:
     assert len(moments[2]) == 3  # type: ignore
 
     with pytest.warns(DeprecationWarning):
-        _ = dag.layers()
+        circ = dag.layers()
 
 
 def test_components() -> None:
@@ -177,7 +177,6 @@ def test_components() -> None:
     dag = qf.DAGCircuit(circ)
     comps = dag.components()
     assert dag.component_nb() == 2
-    assert len(comps) == 2
 
     circ0 = qf.Circuit(qf.QFTGate([0, 2, 4, 6]).decompose())
     circ1 = qf.ghz_circuit([1, 3, 5, 7])

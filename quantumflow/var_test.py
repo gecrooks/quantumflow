@@ -54,7 +54,7 @@ def test_asexpression() -> None:
     assert str(s) == "1"
 
     with pytest.raises(ValueError):
-        _ = var.asexpression(1.13434538345)
+        s = var.asexpression(1.13434538345)
 
     s = var.asexpression(np.pi * 123)
     assert str(s) == "123*pi"

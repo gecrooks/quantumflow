@@ -10,6 +10,7 @@ import pytest
 import scipy.linalg
 
 import quantumflow as qf
+from quantumflow import var
 
 
 def test_identitygate() -> None:
@@ -178,7 +179,7 @@ def test_PauliGate() -> None:
 
     top4 = nx.DiGraph()
     nx.add_path(top4, [3, 2, 1, 0])
-    _ = qf.Circuit(qf.PauliGate(pauli3, alpha).decompose(top4))
+    circ3 = qf.Circuit(qf.PauliGate(pauli3, alpha).decompose(top4))
 
 
 def test_PauliGate_more() -> None:
@@ -208,7 +209,7 @@ def test_PauliGate_more() -> None:
 
 
 def test_PauliGate_resolve() -> None:
-    alpha = qf.var.Symbol("alpha")
+    alpha = var.Symbol("alpha")
     g = qf.PauliGate(qf.sZ(0), alpha)
     r = g.resolve(subs={"alpha": 0.3})
     assert r.alpha == 0.3
