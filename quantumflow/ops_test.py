@@ -38,10 +38,10 @@ def test_gate_mul() -> None:
     assert qf.gates_close(gate, qf.Swap("a", "b"))
 
     gate4 = qf.X("a")
-    gate = gate4 @ gate
+    _ = gate4 @ gate
 
     with pytest.raises(NotImplementedError):
-        gate = gate4 @ 3  # type: ignore
+        _ = gate4 @ 3  # type: ignore
 
 
 def test_gate_permute() -> None:
@@ -114,7 +114,7 @@ def test_gate_rewire() -> None:
     assert gate2.qubits == ("b", "a")
 
     with pytest.raises(ValueError):
-        gate1 = gate0.on("B", "A", "C")
+        _ = gate0.on("B", "A", "C")
 
 
 def test_join_gates() -> None:
