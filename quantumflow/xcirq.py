@@ -24,7 +24,7 @@ Interface between Google's Cirq and QuantumFlow
 # Conventions
 # cqc: Abbreviation for Cirq circuit
 
-from typing import List, Type, cast
+from typing import List, Type
 
 import cirq
 import numpy as np
