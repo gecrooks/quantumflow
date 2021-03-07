@@ -36,7 +36,7 @@ jobs:
         python -m $(python -Wi setup.py --name).about
     - name: Regression tests
       run: |
-        git checkout tags/v1.0.1 quantumflow/*_test.py
+        git checkout tags/v1.0.0 quantumflow/*_test.py
         python -m pytest
     - name: Test with pytest
       run: |
@@ -54,7 +54,3 @@ jobs:
     - name: Build documentation with sphinx
       run: |
         sphinx-build -M html docs docs/_build
-
-
-
-        python -m pytest
