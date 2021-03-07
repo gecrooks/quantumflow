@@ -123,7 +123,7 @@ class CirqSimulator(Operation):
         tensor = np.asarray(tensor, dtype=np.complex64)
         sim = cirq.Simulator()
         res = sim.simulate(self._cirq, initial_state=tensor)
-        tensor = res.state_vector()     # type:ignore  # Needed for cirq <0.10.0
+        tensor = res.state_vector()  # type:ignore  # Needed for cirq <0.10.0
         return State(tensor, ket.qubits, ket.memory)
 
 
