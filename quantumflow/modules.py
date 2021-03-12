@@ -893,4 +893,176 @@ class RandomGate(UnitaryGate):
 # end class RandomGate
 
 
+class DiagonalGate(Gate):
+    r"""
+    A quantum gate whose unitary operator is diagonal in the computational basis.
+
+    .. math::
+        \text{DiagonalGate}(u_0, u_1, .., u_{n-1}) =
+            \begin{pmatrix}
+                \exp(-i h_0)     & 0       & \dots   & 0 \\
+                0       & \exp(-i h_1)     & \dots   & 0 \\
+                \vdots  & \vdots  & \ddots  & 0 \\
+                0       & 0       & \dots   & \exp(-i h_{n-1})
+            \end{pmatrix}
+
+    Diagonal gates can be decomposed in O(2^K) 2 qubit gates [1].
+
+    [1] Shende, Bullock, & Markov, Synthesis of Quantum Logic Circuits, 2006
+    IEEE Trans. on Computer-Aided Design, 25 (2006), 1000-1010
+    `arXiv:0406176 <https://arxiv.org/pdf/quant-ph/0406176.pdf>`_
+
+    """
+    cv_tensor_structure = "diagonal"
+
+    def __init__(self, diag_hamiltonian: Sequence[Variable], qubits: Qubits) -> None:
+        super().__init__(qubits=qubits, params=diag_hamiltonian)
+
+        assert len(self.params) == 2 ** self.qubit_nb  # FIXME
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        diags_U = np.exp(-1.0j * np.asarray(self.params))
+        return asqutensor(np.diag(diags_U))
+
+    @property
+    def H(self) -> "DiagonalGate":
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> "DiagonalGate":
+        params = [p * e for p in self.params]
+        return DiagonalGate(params, self.qubits)
+
+    def decompose(self, topology: nx.Graph = None) -> Iterator[Union[Rz, CNot]]:
+        diag_phases = self.params
+        N = self.qubit_nb
+        qbs = self.qubits
+
+        if N == 1:
+            yield Rz((diag_phases[0] - diag_phases[1]), qbs[0])
+        else:
+            phases = []
+            angles = []
+            for n in range(0, len(diag_phases), 2):
+                phases.append((diag_phases[n] + diag_phases[n + 1]) / 2)
+                angles.append(-(diag_phases[n + 1] - diag_phases[n]))
+
+            yield from MultiplexedRzGate(angles, qbs).decompose()
+            yield from DiagonalGate(phases, qbs[:-1]).decompose()
+
+    # TODO: refactor these string methods. Copied from stdgates
+    def __str__(self) -> str:
+        def _param_format(obj: Any) -> str:
+            if isinstance(obj, float):
+                try:
+                    return str(var.asexpression(obj))
+                except ValueError:
+                    return f"{obj}"
+            return str(obj)
+
+        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
+
+        if self.params:
+            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
+        else:
+            fparams = ""
+
+        return f"{self.name}{fparams}{fqubits}"
+
+# end class DiagonalGate
+
+
+class MultiplexedRzGate(Gate):
+    """Uniformly controlled (multiplexed) Rz gate"""
+
+    cv_tensor_structure = "diagonal"
+
+    def __init__(self, thetas: Sequence[Variable], qubits: Qubits) -> None:
+        super().__init__(params=thetas, qubits=qubits)
+        assert len(self.params) == 2 ** (self.qubit_nb - 1)  # FIXME
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        diagonal = []
+        for theta in self.params:
+            rz = Rz(theta, 0)
+            diagonal.extend(np.diag(rz.tensor))
+
+        assert len(diagonal) == 2 ** self.qubit_nb
+        return tensors.asqutensor(np.diag(diagonal))
+
+    @property
+    def H(self) -> "MultiplexedRzGate":
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> "MultiplexedRzGate":
+        thetas = [e * p for p in self.params]
+        return MultiplexedRzGate(thetas, self.qubits)
+
+    def __str__(self) -> str:
+        def _param_format(obj: Any) -> str:
+            if isinstance(obj, float):
+                try:
+                    return str(var.asexpression(obj))
+                except ValueError:
+                    return f"{obj}"
+            return str(obj)
+
+        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
+
+        if self.params:
+            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
+        else:
+            fparams = ""
+
+        return f"{self.name}{fparams}{fqubits}"
+
+    def decompose(self, topology: nx.Graph = None) -> Iterator[Union[Rz, CNot]]:
+        thetas = self.params
+        N = self.qubit_nb
+        qbs = self.qubits
+
+        if N == 1:
+            yield Rz(thetas[0], qbs[0])
+        elif N == 2:
+            yield Rz((thetas[0] + thetas[1]) / 2, qbs[1])
+            yield CNot(qbs[0], qbs[1])
+            yield Rz((thetas[0] - thetas[1]) / 2, qbs[1])
+            yield CNot(qbs[0], qbs[1])
+        else:
+            # Note that we lop off 2 qubits with each recursion.
+            # This allows us to cancel two cnots by reordering the second
+            # deke.
+            #
+            # If we lopped off one at a time the deke would look like this:
+            # t0 = thetas[0: len(thetas) // 2]
+            # t1 = thetas[len(thetas) // 2:]
+            # thetas0 = [(a + b) / 2 for a, b in zip(t0, t1)]
+            # thetas1 = [(a - b) / 2 for a, b in zip(t0, t1)]
+            # yield from MultiplexedRzGate(thetas0, qbs[1:]).decompose()
+            # yield CNot(qbs[0], qbs[-1])
+            # yield from MultiplexedRzGate(thetas1, qbs[1:]).decompose()
+            # yield CNot(qbs[0], qbs[-1])
+
+            M = len(thetas) // 4
+            quarters = list(thetas[i : i + M] for i in range(0, len(thetas), M))
+
+            theta0 = [(t0 + t1 + t2 + t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
+            theta1 = [(t0 - t1 + t2 - t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
+            theta2 = [(t0 + t1 - t2 - t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
+            theta3 = [(t0 - t1 - t2 + t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
+
+            yield from MultiplexedRzGate(theta0, qbs[2:]).decompose()
+            yield CNot(qbs[1], qbs[-1])
+            yield from MultiplexedRzGate(theta1, qbs[2:]).decompose()
+            yield CNot(qbs[0], qbs[-1])
+            yield from MultiplexedRzGate(theta3, qbs[2:]).decompose()
+            yield CNot(qbs[1], qbs[-1])
+            yield from MultiplexedRzGate(theta2, qbs[2:]).decompose()
+            yield CNot(qbs[0], qbs[-1])
+
+
+# end class MultiplexedRzGate
+
+
 # Fin
