@@ -155,7 +155,10 @@ class Operation(ABC):
         Raises:
             ValueError: If argument qubits are not found in operation's qubits
         """
-        return [self.qubits.index(q) for q in qubits]
+        try:
+            return [self.qubits.index(q) for q in qubits]
+        except ValueError:
+            raise ValueError("Incommensurate qubits")
 
     @property
     def params(self) -> Tuple[Variable, ...]:
