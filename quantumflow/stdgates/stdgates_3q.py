@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Three qubit gates
+QuantumFlow: Standard three qubit gates
 """
 
 import numpy as np
