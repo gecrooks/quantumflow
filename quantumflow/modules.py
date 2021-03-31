@@ -1030,10 +1030,14 @@ class MultiplexedRzGate(Gate):
             yield Rz((thetas[0] - thetas[1]) / 2, qbs[1])
             yield CNot(qbs[0], qbs[1])
         else:
+            # FIXME: Not quite optimal. There's additional cancellation of CNOTs that could happen
+            # See: From "Decomposition of Diagonal Hermitian Quantum Gates Using
+            # Multiple-Controlled Pauli Z Gates" (2014).
+
             # Note that we lop off 2 qubits with each recursion.
             # This allows us to cancel two cnots by reordering the second
             # deke.
-            #
+
             # If we lopped off one at a time the deke would look like this:
             # t0 = thetas[0: len(thetas) // 2]
             # t1 = thetas[len(thetas) // 2:]
