@@ -3,7 +3,18 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
-# DOCME
+"""
+.. contents:: :local:
+.. currentmodule:: quantumflow.xquirk
+
+Interface to qsim
+
+https://github.com/quantumlib/qsim
+
+Note that `qsim` and the python binding `qsimcirq` are not
+installed by default, since installation via pip currently only works on Linux.
+For details on how to install qsim on Mac or Windows, see qsim's githib issues.
+"""
 
 from typing import cast
 
