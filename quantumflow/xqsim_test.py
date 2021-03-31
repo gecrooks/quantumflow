@@ -34,12 +34,12 @@ def test_qsim_simulator() -> None:
     # Waiting for bugfix in qsim
     circ0 += qf.Z(q1) ** 0.2
     circ0 += qf.X(q1) ** 0.2
-    circ0 += qf.TX(0.2, q0)
-    circ0 += qf.TY(0.2, q1)
-    circ0 += qf.TZ(0.5, q2)
+    circ0 += qf.XPow(0.2, q0)
+    circ0 += qf.YPow(0.2, q1)
+    circ0 += qf.ZPow(0.5, q2)
 
     circ0 += qf.CZ(q0, q1)
-    circ0 += qf.CNOT(q0, q1)
+    circ0 += qf.CNot(q0, q1)
     # circ0 += qf.SWAP(q0, q1)   # No SWAP!
     #  circ0 += qf.ISWAP(q0, q1) # Waiting for bugfix in qsim
     circ0 += qf.FSim(0.1, 0.2, q0, q1)
@@ -69,8 +69,8 @@ def test_qsim_translate() -> None:
     circ0 += qf.X(q1)
     circ0 += qf.S_H(q0)
     circ0 += qf.XX(0.2, q0, q1)
-    circ0 += qf.CAN(0.2, 0.1, 0.4, q0, q2)
-    circ0 += qf.SWAP(q0, q1)
+    circ0 += qf.Can(0.2, 0.1, 0.4, q0, q2)
+    circ0 += qf.Swap(q0, q1)
 
     ket1 = circ0.run()
     sim = QSimSimulator(circ0, translate=True)
