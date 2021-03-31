@@ -77,7 +77,6 @@ class QSimSimulator(Operation):
 
         sim = qsimcirq.QSimSimulator()
         res = sim.simulate(self._qsim_circuit)
-        res = cast(cirq.WaveFunctionTrialResult, res)
         tensor = res.state_vector()
         return State(tensor, ket.qubits, ket.memory)
 
