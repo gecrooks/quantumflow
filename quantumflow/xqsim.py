@@ -16,9 +16,7 @@ installed by default, since installation via pip currently only works on Linux.
 For details on how to install qsim on Mac or Windows, see qsim's githib issues.
 """
 
-from typing import cast
 
-import cirq
 import qsimcirq
 
 from .circuits import Circuit
