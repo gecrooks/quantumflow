@@ -266,16 +266,33 @@ def test_DiagonalGate() -> None:
     circ8 = qf.Circuit(gate8.decompose())
     assert qf.gates_close(circ8.asgate(), gate8)
 
-    circ9 = qf.Circuit([gate8, gate0, gate2])
-    print(str(circ9))
-
-    # print("1", qf.count_operations(circ0))
-    # print("2", qf.count_operations(circ6))
-    # print("3", qf.count_operations(circ7))
-    # print("5", qf.count_operations(circ8))
-    # print(circ8)
-
+    # circ9 = qf.Circuit([gate8, gate0, gate2])
     assert str(gate2) == "DiagonalGate(1/10, -1/10) 1"
+
+
+def test_DiagonalGate_decomposition_count():
+
+    for N in range(1, 9):
+        qbs = list(range(0, N))
+        params = np.random.rand(2**N)
+        gate = qf.DiagonalGate(params, qbs)
+        circ = qf.Circuit(gate.decompose())
+        ops = qf.count_operations(circ)
+        print(N, ops)
+        # print(qf.circuit_to_diagram(circ))
+
+        # From Shende2006a
+        if N == 3 :
+            assert ops[qf.CNot] == 6
+            assert ops[qf.Rz] == 7
+
+        # # From "Decomposition of Diagonal Hermitian Quantum Gates Using
+        # # Multiple-Controlled Pauli Z Gates"
+        # # (2014).
+        # # FIXME: Not optimal yet.
+        # if N == 4 :
+        #     assert ops[qf.CNot] == 14
+        #     assert ops[qf.Rz] == 15
 
 
 def test_MultiplexedRzGate() -> None:
