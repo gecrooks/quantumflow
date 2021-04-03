@@ -22,7 +22,7 @@ import qsimcirq
 from .circuits import Circuit
 from .ops import Operation
 from .qubits import Qubits
-from .states import State, zero_state
+from .states import State
 from .stdgates import (
     CZ,
     CNot,
@@ -42,7 +42,7 @@ from .stdgates import (
 from .translate import circuit_translate, select_translators
 from .xcirq import circuit_to_cirq
 
-# Note missing Swap, I, IDEN
+# Note missing Swap, ...
 QSIM_GATES = (I, X, Y, Z, S, T, H, XPow, YPow, ZPow, CZ, ISwap, CNot, FSim)
 
 
@@ -68,7 +68,7 @@ class QSimSimulator(Operation):
 
     def run(self, ket: State = None) -> State:
         if ket is not None:
-            raise NotImplementedError("Not yet implemented in qsim")
+            raise NotImplementedError("Not yet supported")
 
         sim = qsimcirq.QSimSimulator()
         res = sim.simulate(self._qsim_circuit)
