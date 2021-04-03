@@ -67,16 +67,13 @@ class QSimSimulator(Operation):
         return self._circuit.qubits
 
     def run(self, ket: State = None) -> State:
-        if ket is None:
-            qubits = self.qubits
-            ket = zero_state(qubits=qubits)
-        else:
+        if ket is not None:
             raise NotImplementedError("Not yet implemented in qsim")
 
         sim = qsimcirq.QSimSimulator()
         res = sim.simulate(self._qsim_circuit)
         tensor = res.state_vector()
-        return State(tensor, ket.qubits, ket.memory)
+        return State(tensor, self.qubits)
 
 
 def translate_circuit_to_qsim(circ: Circuit) -> Circuit:
