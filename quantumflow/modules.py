@@ -467,6 +467,31 @@ class PauliGate(Gate):
 
 # end class PauliGate
 
+def merge_diagonal_gates(gate0: "DiagonalGate", gate1: "DiagonalGate") -> "DiagonalGate":
+    qubits = Circuit([gate0, gate1]).qubits
+    K = len(qubits)
+
+    extra_qubits0 = tuple(set(qubits) - set(gate0.qubits))
+    if extra_qubits0:
+        params = np.zeros(shape = [2]*K) + np.resize(np.asarray(gate0.params,), [2] * gate0.qubit_nb)
+        # extra_param_nb = 2**K - 2**gate0.qubit_nb
+        print(params.shape)
+        print( gate0.qubits + extra_qubits0)
+        gate0 = DiagonalGate(params.flatten(), extra_qubits0+gate0.qubits)
+        print(gate0)
+
+    gate0 = gate0.permute(qubits)
+
+    extra_qubits1 = tuple(set(qubits) - set(gate1.qubits))
+    if extra_qubits1:
+        params = np.zeros(shape = [2]*K) + np.resize(np.asarray(gate1.params,), [2] * gate1.qubit_nb)
+        gate1 = DiagonalGate(params.flatten(), extra_qubits1+ gate1.qubits)
+    gate1 = gate1.permute(qubits)
+    print(gate1)
+
+    params = (a + b for a, b in zip(gate0.params , gate1.params))
+    return DiagonalGate(params, qubits)
+
 
 class DiagonalGate(Gate):
     r"""
@@ -495,10 +520,43 @@ class DiagonalGate(Gate):
 
         assert len(self.params) == 2 ** self.qubit_nb  # FIXME
 
+    # DOCME TESTME
+    @classmethod
+    def from_gate(cls, gate: Gate) -> "DiagonalGate":
+        if isinstance(gate, DiagonalGate):
+            return gate
+
+        def is_diagonal_gate(gate: Gate) -> bool:
+            if gate.cv_tensor_structure == "diagonal":
+                return True
+            if gate.cv_tensor_structure == "identity":
+                return True
+            return np.allclose(np.diag(gate.tensor_diagonal.flatten()),
+                               gate.asoperator())
+
+        if not is_diagonal_gate(gate):
+            raise ValueError("Not a diagonal gate")
+
+        params = 1.0j * np.log(gate.tensor_diagonal.flatten())
+        return cls(params, gate.qubits)
+
+    # TESTME with symbolic
+    def permute(self, qubits: Qubits) -> "DiagonalGate":
+        """Permute the order of the qubits"""
+        qubits = tuple(qubits)
+        if self.qubits == qubits:
+            return self
+        params = np.resize(np.asarray(self.params), [2] * self.qubit_nb)
+        params = tensors.permute(params, self.qubit_indices(qubits))
+        return DiagonalGate(tuple(params.flatten()), qubits)
+
     @utils.cached_property
     def tensor(self) -> QubitTensor:
-        diags_U = np.exp(-1.0j * np.asarray(self.params))
-        return asqutensor(np.diag(diags_U))
+        return asqutensor(np.diag(self.tensor_diagonal.flatten()))
+
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
+        return asqutensor(np.exp(-1.0j * np.asarray(self.params)))
 
     @property
     def H(self) -> "DiagonalGate":
@@ -558,13 +616,18 @@ class MultiplexedRzGate(Gate):
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
+        return asqutensor(np.diag(self.tensor_diagonal.flatten()))
+
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
         diagonal = []
         for theta in self.params:
             rz = Rz(theta, 0)
             diagonal.extend(np.diag(rz.tensor))
 
         assert len(diagonal) == 2 ** self.qubit_nb
-        return tensors.asqutensor(np.diag(diagonal))
+
+        return asqutensor(diagonal)
 
     @property
     def H(self) -> "MultiplexedRzGate":

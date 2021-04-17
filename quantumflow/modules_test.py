@@ -236,6 +236,7 @@ def test_DiagonalGate() -> None:
 
     gate0 = qf.DiagonalGate([0.1, -0.1], qubits=[1])
     gate1 = qf.Rz(0.2, 1)
+    assert qf.gates_close(gate0, gate0)
     assert qf.gates_close(gate0, gate1)
     assert qf.gates_close(gate0.H, gate0 ** -1)
 
@@ -268,6 +269,51 @@ def test_DiagonalGate() -> None:
 
     # circ9 = qf.Circuit([gate8, gate0, gate2])
     assert str(gate2) == "DiagonalGate(1/10, -1/10) 1"
+
+
+def test_DiagonalGate_permute() -> None:
+    gate0 = qf.DiagonalGate([0, 1, 2, 3], qubits=[0, 1])
+    gate1 = gate0.permute([1, 0])
+    gate2 = gate0.su().permute([1, 0])
+    assert qf.gates_close(gate1, gate2)
+    assert gate1.params == (0, 2, 1, 3)
+    assert gate1.qubits == (1, 0)
+
+def test_DiagonalGate_from_gate() -> None:
+    gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
+    gate1 = qf.DiagonalGate.from_gate(gate0.su())
+    assert qf.gates_close(gate0, gate1)
+
+
+def test_merge_diagonal_gates() -> None:
+    from quantumflow.modules import merge_diagonal_gates
+
+    gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
+    gate1 = qf.DiagonalGate([0.1, 0.2, 0.3, 0.4], qubits=[1, 2])
+
+    gate2 = merge_diagonal_gates(gate0, gate1)
+    gate3 = qf.Circuit([gate0, gate1]).asgate()
+
+    assert qf.gates_close(gate2, gate3)
+
+    gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
+    gate1 = qf.DiagonalGate([0.1, 0.2], qubits=[3])
+
+    gate2 = merge_diagonal_gates(gate0, gate1)
+    gate3 = qf.Circuit([gate0, gate1]).asgate()
+
+    assert qf.gates_close(gate2, gate3)
+
+
+
+def test_merge_diagonal_gates_symbolic() -> None:
+    from quantumflow.modules import merge_diagonal_gates
+    from sympy import Symbol
+
+    gate0 = qf.DiagonalGate([Symbol('a0'), Symbol('a1'), Symbol('a2'), Symbol('a3')], qubits=[0, 1])
+    gate1 = qf.DiagonalGate([Symbol('b0'), Symbol('b1'), Symbol('b2'), Symbol('b3')], qubits=[1, 2])
+
+    _ = merge_diagonal_gates(gate0, gate1)
 
 
 def test_DiagonalGate_decomposition_count():
