@@ -247,6 +247,14 @@ class Operation(ABC):
         """
         raise NotImplementedError()
 
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
+        """
+        Returns the diagonal of the tensor representation of this operation
+        (if possible)
+        """
+        raise NotImplementedError()
+
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
         raise NotImplementedError()
