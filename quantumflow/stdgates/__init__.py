@@ -116,7 +116,10 @@ conventions. The following table maps gate names between these APIs.
 ==========================  =========== =============== =========== =========== ===========
 Description                 QF          Cirq            QASM/qsikit PyQuil      Pennylane
 ==========================  =========== =============== =========== =========== ===========
-Identity  (single qubit)    I           I               id or iden  I
+
+* One qubit gates
+Global phase                Ph          ?               ?           ?           ?
+Identity  (single qubit)    I           I               id or iden  I           ?
 Pauli-X                     X           X               x           X           PauliX
 Pauli-Y                     Y           Y               y           Y           PauliY
 Pauli-Z                     Z           Z               z           Z           PauliZ
@@ -136,7 +139,10 @@ Inv. of S                   S_H         .               sdg         .           
 Inv. of T                   T_H         .               tdg         .           .
 Sqrt of X                   V           .               .           .           .
 Inv. sqrt of X              V_H         .               .           .           .
+Sqrt of Y                   SqrtY       .               .           .           .
+Inv. sqrt of Y              SqrtY_H     .               .           .           .
 
+* Two qubit gates
 Powers of X⊗X               XX          XXPowGate       .           .           .
 Powers of Y⊗Y               YY          YYPowGate       .           .           .
 Powers of Z⊗Z               ZZ          ZZPowGate       .           .           .
@@ -163,7 +169,10 @@ Sqrt-SWAP                   SqrtSwap    .               .           .           
 Inv. of sqrt-SWAP           SqrtSwap_H  .               .           .           .
 ECP                         ECP         .               .           .           .
 W (Dual-rail Hadamard)      W           .               .           .           .
+Controlled-S                CS          .               .           .           .
+Controlled-T                CT          .               .           .           .
 
+* Three qubit gates
 Toffoli                     CCNot       CCX             ccx         CCNOT       Toffoli
 Fredkin                     CSwap       CSWAP           cswap       CSWAP       CSWAP
 Controlled-Controlled-Z     CCZ         CCZ             .           .           .
