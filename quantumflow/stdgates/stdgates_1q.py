@@ -121,7 +121,7 @@ class Ph(StdGate):
 
     Since this gate applies a global phase it technically doesn't need to
     specify qubits at all. But we instead anchor the gate to 1 specific
-    qubit so that we can keep track of the phase as when manipulate gates,
+    qubit so that we can keep track of the phase as we manipulate gates,
     circuits, and DAGCircuits.
 
     We generally don't actually care about the global phase, since it has no
