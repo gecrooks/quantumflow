@@ -237,6 +237,14 @@ class Operation(ABC):
         """
         raise NotImplementedError()
 
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
+        """
+        Returns the diagonal of the tensor representation of this operation
+        (if possible)
+        """
+        raise NotImplementedError()
+
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
         raise NotImplementedError()
@@ -356,6 +364,7 @@ class Gate(Operation):
 
     def permute(self, qubits: Qubits) -> "Gate":
         """Permute the order of the qubits"""
+        qubits = tuple(qubits)
         if self.qubits == qubits:
             return self
         if self.cv_interchangeable:
@@ -366,8 +375,14 @@ class Gate(Operation):
     def asoperator(self) -> QubitTensor:
         """Return tensor with with qubit indices flattened"""
         return tensors.flatten(self.tensor, rank=2)
-        # N = self.qubit_nb
-        # return np.reshape(self.tensor, [2**N] * 2)
+
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
+        """
+        Returns the diagonal of the tensor representation of this operation
+        (if possible)
+        """
+        return tensors.asqutensor(np.diag(self.asoperator()))
 
     def su(self) -> "Unitary":
         """Convert gate tensor to the special unitary group."""
@@ -399,16 +414,23 @@ class Gate(Operation):
 
     def run(self, ket: State) -> State:
         """Apply the action of this gate upon a state"""
-        if self.cv_tensor_structure == "identity":
-            return ket
-
         qubits = self.qubits
         indices = ket.qubit_indices(qubits)
+
+        if self.cv_tensor_structure == "identity":
+            return ket
+        elif self.cv_tensor_structure == "diagonal":
+            tensor = tensors.tensormul_diagonal(
+                self.tensor_diagonal,
+                ket.tensor,
+                tuple(indices)
+            )
+            return State(tensor, ket.qubits, ket.memory)
+
         tensor = tensors.tensormul(
             self.tensor,
             ket.tensor,
             tuple(indices),
-            self.cv_tensor_structure == "diagonal",
         )
         return State(tensor, ket.qubits, ket.memory)
 
