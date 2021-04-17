@@ -920,10 +920,43 @@ class DiagonalGate(Gate):
 
         assert len(self.params) == 2 ** self.qubit_nb  # FIXME
 
+    # DOCME TESTME
+    @classmethod
+    def from_gate(cls, gate: Gate) -> "DiagonalGate":
+        if isinstance(gate, DiagonalGate):
+            return gate
+
+        def is_diagonal_gate(gate: Gate) -> bool:
+            if gate.cv_tensor_structure == "diagonal":
+                return True
+            if gate.cv_tensor_structure == "identity":
+                return True
+            return np.allclose(np.diag(gate.tensor_diagonal.flatten()),
+                               gate.asoperator())
+
+        if not is_diagonal_gate(gate):
+            raise ValueError("Not a diagonal gate")
+
+        params = 1.0j * np.log(gate.tensor_diagonal.flatten())
+        return cls(params, gate.qubits)
+
+    # TESTME with symbolic
+    def permute(self, qubits: Qubits) -> "DiagonalGate":
+        """Permute the order of the qubits"""
+        qubits = tuple(qubits)
+        if self.qubits == qubits:
+            return self
+        params = np.resize(np.asarray(self.params), [2] * self.qubit_nb)
+        params = tensors.permute(params, self.qubit_indices(qubits))
+        return DiagonalGate(tuple(params.flatten()), qubits)
+
     @utils.cached_property
     def tensor(self) -> QubitTensor:
-        diags_U = np.exp(-1.0j * np.asarray(self.params))
-        return asqutensor(np.diag(diags_U))
+        return asqutensor(np.diag(self.tensor_diagonal.flatten()))
+
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
+        return asqutensor(np.exp(-1.0j * np.asarray(self.params)))
 
     @property
     def H(self) -> "DiagonalGate":
@@ -983,13 +1016,18 @@ class MultiplexedRzGate(Gate):
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
+        return asqutensor(np.diag(self.tensor_diagonal.flatten()))
+
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
         diagonal = []
         for theta in self.params:
             rz = Rz(theta, 0)
             diagonal.extend(np.diag(rz.tensor))
 
         assert len(diagonal) == 2 ** self.qubit_nb
-        return tensors.asqutensor(np.diag(diagonal))
+
+        return asqutensor(diagonal)
 
     @property
     def H(self) -> "MultiplexedRzGate":
