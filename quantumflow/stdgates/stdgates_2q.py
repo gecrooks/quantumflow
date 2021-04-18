@@ -33,6 +33,8 @@ __all__ = (
     "CNot",
     "CNotPow",
     "CrossResonance",
+    "CS",
+    "CT",
     "CV",
     "CV_H",
     "CY",
@@ -412,6 +414,75 @@ class CrossResonance(StdGate):
 
 
 # end class CrossResonance
+
+
+class CS(StdGate):
+    r"""A controlled-S gate
+
+    .. math::
+        \text{CS}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
+                                    0&0&1&0 \\ 0&0&0&i \end{pmatrix}
+    """
+    cv_interchangeable = True
+    cv_tensor_structure = "diagonal"
+    _diagram_labels = [CTRL, "S"]
+
+    def __init__(self, q0: Qubit, q1: Qubit) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, q1 = self.qubits
+        return CZ(q0, q1).hamiltonian / 2
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        unitary = np.asarray(
+            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1.0j]]
+        )
+        return tensors.asqutensor(unitary)
+
+    def __pow__(self, t: Variable) -> "CZPow":
+        return CZPow(t / 2, *self.qubits)
+
+
+# End class CS
+
+
+class CT(StdGate):
+    r"""A controlled-T gate
+
+    .. math::
+        \text{CT}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
+                                    0&0&1&0 \\ 0&0&0&  \end{pmatrix}
+    """
+    cv_interchangeable = True
+    cv_tensor_structure = "diagonal"
+    _diagram_labels = [CTRL, "T"]
+
+    def __init__(self, q0: Qubit, q1: Qubit) -> None:
+        super().__init__(qubits=[q0, q1])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, q1 = self.qubits
+        return CZ(q0, q1).hamiltonian / 4
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        unitary = [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, np.exp(1j * np.pi / 4.0)],
+        ]
+        return tensors.asqutensor(unitary)
+
+    def __pow__(self, t: Variable) -> "CZPow":
+        return CZPow(t / 4, *self.qubits)
+
+
+# End class CS
 
 
 class CY(StdGate):
