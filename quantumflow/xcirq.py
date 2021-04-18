@@ -92,7 +92,6 @@ CIRQ_GATES: List[Type[Gate]] = [
     FSim,
 ]
 """List of QuantumFlow gates that we know how to convert to Cirq"""
-# TODO: Perhaps should be string names, rather than classes.
 
 
 class CirqSimulator(Operation):
@@ -281,7 +280,6 @@ def circuit_to_cirq(circ: Circuit, translate: bool = False) -> cirq.Circuit:
             gate = cirq.MatrixGate(matrix).on(*qbs)
             cqc.append(gate)
         else:
-            # print(type(op))
             raise NotImplementedError(repr(op))
 
     return cqc
