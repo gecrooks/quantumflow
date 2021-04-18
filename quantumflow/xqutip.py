@@ -122,7 +122,7 @@ _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
     H: "SNOT",
     PhaseShift: "PHASEGATE",
     CY: "CY",
-    CZ: "CZ",
+    CZ: "CSIGN",
     S: "S",
     T: "T",
     X: "X",
@@ -146,7 +146,7 @@ QUTIP_GATES: List[Type[Gate]] = list(_QUTIP_GATE_NAMES.keys())
 """List of QuantumFlow gates that we know how to convert directly to QuTiP"""
 
 _QUTIP_NAME_GATES = invert_map(_QUTIP_GATE_NAMES)
-_QUTIP_NAME_GATES["CSIGN"] = CZ
+# _QUTIP_NAME_GATES["CSIGN"] = CZ
 
 
 def qutip_to_circuit(qubitcircuit: QubitCircuit) -> Circuit:
