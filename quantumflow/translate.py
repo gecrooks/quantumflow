@@ -29,6 +29,8 @@ from .stdgates import (
     CCZ,
     CH,
     CRZ,
+    CS,
+    CT,
     CU3,
     CV,
     CV_H,
@@ -1581,6 +1583,16 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
     yield Barenco(0, var.PI / 2, var.PI / 2, q0, q1)
     yield Barenco(var.PI, -var.PI / 4, theta / 2, q1, q2)
     yield Barenco(0, var.PI / 2, var.PI / 2, q0, q1)
+
+
+def translate_CS_to_CZPow(gate: CS) -> Iterator[CZPow]:
+    """Convert a controlled-S to half power of CZ gate"""
+    yield CZPow(0.5, *gate.qubits)
+
+
+def translate_CT_to_CZPow(gate: CT) -> Iterator[CZPow]:
+    """Convert a controlled-S to half power of CZ gate"""
+    yield CZPow(0.25, *gate.qubits)
 
 
 TRANSLATORS: Dict[str, Callable] = {}
