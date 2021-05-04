@@ -230,7 +230,7 @@ class Reset(Operation):
 
 
 class Initialize(Operation):
-    """ An operation that initializes the quantum state"""
+    """An operation that initializes the quantum state"""
 
     def __init__(self, ket: State):
         self._ket = ket

@@ -398,7 +398,7 @@ class Density(QuantumState):
 
     # TESTME
     def probabilities(self) -> QubitTensor:
-        """Returns: The state probabilities """
+        """Returns: The state probabilities"""
         prob = tensors.diag(self.tensor)
         return prob
 
