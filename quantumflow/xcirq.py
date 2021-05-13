@@ -215,6 +215,12 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
         elif gatetype.__name__ == "MatrixGate":
             matrix = op.gate._matrix  # type: ignore
             circ += Unitary(matrix, qbs)
+        elif gatetype.__name__ == "Rx":  # Added in cirq 0.11.0
+            circ += X(*qbs) ** t
+        elif gatetype.__name__ == "Ry":  # Added in cirq 0.11.0
+            circ += Y(*qbs) ** t
+        elif gatetype.__name__ == "Rz":  # Added in cirq 0.11.0
+            circ += Z(*qbs) ** t
         else:
             raise NotImplementedError(str(op.gate))  # pragma: no cover
 
