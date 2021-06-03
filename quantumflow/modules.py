@@ -467,29 +467,42 @@ class PauliGate(Gate):
 
 # end class PauliGate
 
-def merge_diagonal_gates(gate0: "DiagonalGate", gate1: "DiagonalGate") -> "DiagonalGate":
+
+def merge_diagonal_gates(
+    gate0: "DiagonalGate", gate1: "DiagonalGate"
+) -> "DiagonalGate":
     qubits = Circuit([gate0, gate1]).qubits
     K = len(qubits)
 
     extra_qubits0 = tuple(set(qubits) - set(gate0.qubits))
     if extra_qubits0:
-        params = np.zeros(shape = [2]*K) + np.resize(np.asarray(gate0.params,), [2] * gate0.qubit_nb)
+        params = np.zeros(shape=[2] * K) + np.resize(
+            np.asarray(
+                gate0.params,
+            ),
+            [2] * gate0.qubit_nb,
+        )
         # extra_param_nb = 2**K - 2**gate0.qubit_nb
         print(params.shape)
-        print( gate0.qubits + extra_qubits0)
-        gate0 = DiagonalGate(params.flatten(), extra_qubits0+gate0.qubits)
+        print(gate0.qubits + extra_qubits0)
+        gate0 = DiagonalGate(params.flatten(), extra_qubits0 + gate0.qubits)
         print(gate0)
 
     gate0 = gate0.permute(qubits)
 
     extra_qubits1 = tuple(set(qubits) - set(gate1.qubits))
     if extra_qubits1:
-        params = np.zeros(shape = [2]*K) + np.resize(np.asarray(gate1.params,), [2] * gate1.qubit_nb)
-        gate1 = DiagonalGate(params.flatten(), extra_qubits1+ gate1.qubits)
+        params = np.zeros(shape=[2] * K) + np.resize(
+            np.asarray(
+                gate1.params,
+            ),
+            [2] * gate1.qubit_nb,
+        )
+        gate1 = DiagonalGate(params.flatten(), extra_qubits1 + gate1.qubits)
     gate1 = gate1.permute(qubits)
     print(gate1)
 
-    params = (a + b for a, b in zip(gate0.params , gate1.params))
+    params = (a + b for a, b in zip(gate0.params, gate1.params))
     return DiagonalGate(params, qubits)
 
 
@@ -531,8 +544,9 @@ class DiagonalGate(Gate):
                 return True
             if gate.cv_tensor_structure == "identity":
                 return True
-            return np.allclose(np.diag(gate.tensor_diagonal.flatten()),
-                               gate.asoperator())
+            return np.allclose(
+                np.diag(gate.tensor_diagonal.flatten()), gate.asoperator()
+            )
 
         if not is_diagonal_gate(gate):
             raise ValueError("Not a diagonal gate")
@@ -601,6 +615,7 @@ class DiagonalGate(Gate):
             fparams = ""
 
         return f"{self.name}{fparams}{fqubits}"
+
 
 # end class DiagonalGate
 
