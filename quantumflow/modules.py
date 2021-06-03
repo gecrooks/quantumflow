@@ -931,8 +931,9 @@ class DiagonalGate(Gate):
                 return True
             if gate.cv_tensor_structure == "identity":
                 return True
-            return np.allclose(np.diag(gate.tensor_diagonal.flatten()),
-                               gate.asoperator())
+            return np.allclose(
+                np.diag(gate.tensor_diagonal.flatten()), gate.asoperator()
+            )
 
         if not is_diagonal_gate(gate):
             raise ValueError("Not a diagonal gate")
@@ -1001,6 +1002,7 @@ class DiagonalGate(Gate):
             fparams = ""
 
         return f"{self.name}{fparams}{fqubits}"
+
 
 # end class DiagonalGate
 
