@@ -202,6 +202,7 @@ def tensormul(
 
     return tensor
 
+
 # DOCME
 def tensormul_diagonal(
     tensor0_diagonal: QubitTensor,
