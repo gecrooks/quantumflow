@@ -279,6 +279,7 @@ def test_DiagonalGate_permute() -> None:
     assert gate1.params == (0, 2, 1, 3)
     assert gate1.qubits == (1, 0)
 
+
 def test_DiagonalGate_from_gate() -> None:
     gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
     gate1 = qf.DiagonalGate.from_gate(gate0.su())
@@ -305,13 +306,17 @@ def test_merge_diagonal_gates() -> None:
     assert qf.gates_close(gate2, gate3)
 
 
-
 def test_merge_diagonal_gates_symbolic() -> None:
-    from quantumflow.modules import merge_diagonal_gates
     from sympy import Symbol
 
-    gate0 = qf.DiagonalGate([Symbol('a0'), Symbol('a1'), Symbol('a2'), Symbol('a3')], qubits=[0, 1])
-    gate1 = qf.DiagonalGate([Symbol('b0'), Symbol('b1'), Symbol('b2'), Symbol('b3')], qubits=[1, 2])
+    from quantumflow.modules import merge_diagonal_gates
+
+    gate0 = qf.DiagonalGate(
+        [Symbol("a0"), Symbol("a1"), Symbol("a2"), Symbol("a3")], qubits=[0, 1]
+    )
+    gate1 = qf.DiagonalGate(
+        [Symbol("b0"), Symbol("b1"), Symbol("b2"), Symbol("b3")], qubits=[1, 2]
+    )
 
     _ = merge_diagonal_gates(gate0, gate1)
 
@@ -320,7 +325,7 @@ def test_DiagonalGate_decomposition_count():
 
     for N in range(1, 9):
         qbs = list(range(0, N))
-        params = np.random.rand(2**N)
+        params = np.random.rand(2 ** N)
         gate = qf.DiagonalGate(params, qbs)
         circ = qf.Circuit(gate.decompose())
         ops = qf.count_operations(circ)
@@ -328,7 +333,7 @@ def test_DiagonalGate_decomposition_count():
         # print(qf.circuit_to_diagram(circ))
 
         # From Shende2006a
-        if N == 3 :
+        if N == 3:
             assert ops[qf.CNot] == 6
             assert ops[qf.Rz] == 7
 
@@ -388,5 +393,6 @@ def test_MultiplexedRzGate() -> None:
     assert qf.gates_close(gate1.H, gate1 ** -1)
 
     assert str(gate1) == "MultiplexedRzGate(1/10) 2"
+
 
 # fin
