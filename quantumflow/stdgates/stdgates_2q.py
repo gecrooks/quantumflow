@@ -68,6 +68,7 @@ class A(StdGate):
 
         :cite:`Gard2020a`
     """
+
     cv_hermitian = True
 
     def __init__(self, theta: Variable, phi: Variable, q0: Qubit, q1: Qubit):
@@ -82,7 +83,8 @@ class A(StdGate):
             [1, 0, 0, 0],
             [0, np.cos(theta), np.exp(1j * phi) * np.sin(theta), 0],
             [0, np.exp(-1j * phi) * np.sin(theta), -np.cos(theta), 0],
-            [0, 0, 0, 1]]
+            [0, 0, 0, 1],
+        ]
         return tensors.asqutensor(U)
 
     @property

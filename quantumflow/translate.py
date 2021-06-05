@@ -26,7 +26,6 @@ from . import var
 from .circuits import Circuit
 from .ops import Gate
 from .stdgates import (
-    A,
     CCZ,
     CH,
     CRZ,
@@ -48,6 +47,7 @@ from .stdgates import (
     XY,
     YY,
     ZZ,
+    A,
     B,
     Barenco,
     Can,
