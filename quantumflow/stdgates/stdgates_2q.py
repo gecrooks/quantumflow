@@ -26,6 +26,7 @@ from .stdgates_1q import S_H, V_H, H, I, S, V, X, Y, Z
 # 2 qubit gates, alphabetic order
 
 __all__ = (
+    "A",
     "B",
     "Barenco",
     "Can",
@@ -56,6 +57,37 @@ __all__ = (
     "YY",
     "ZZ",
 )
+
+
+class A(StdGate):
+    """The A gate. A 2-qubit, 2-parameter gate that is locally
+    equivalent to Can(1/2, t, t)
+
+    Refs:
+        :cite:`Barkoutsos2018a`
+
+        :cite:`Gard2020a`
+    """
+    cv_hermitian = True
+
+    def __init__(self, theta: Variable, phi: Variable, q0: Qubit, q1: Qubit):
+        super().__init__(params=[theta, phi], qubits=[q0, q1])
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        phi = self.float_param("phi")
+        theta = self.float_param("theta")
+
+        U = [
+            [1, 0, 0, 0],
+            [0, np.cos(theta), np.exp(1j * phi) * np.sin(theta), 0],
+            [0, np.exp(-1j * phi) * np.sin(theta), -np.cos(theta), 0],
+            [0, 0, 0, 1]]
+        return tensors.asqutensor(U)
+
+    @property
+    def H(self) -> "A":
+        return self
 
 
 class B(StdGate):
