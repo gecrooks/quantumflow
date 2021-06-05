@@ -47,6 +47,7 @@ from .stdgates import (
     XY,
     YY,
     ZZ,
+    A,
     B,
     Barenco,
     Can,
@@ -523,7 +524,7 @@ def translate_barenco_to_xx(gate: Barenco) -> Iterator[Union[XX, YPow, ZPow]]:
 def translate_can_to_cnot(
     gate: Can,
 ) -> Iterator[Union[CNot, S, S_H, XPow, YPow, ZPow, V, Z]]:
-    """Translate canonical gate to 3 CNotS, using the Kraus-Cirac decomposition.
+    """Translate canonical gate to 3 CNots, using the Kraus-Cirac decomposition.
 
     ::
 
@@ -533,7 +534,7 @@ def translate_can_to_cnot(
 
     Ref:
         Vatan and Williams. Optimal quantum circuits for general two-qubit gates.
-        Phys. Rev. A, 69:032315, 2004. quant-ph/0308006 :cite:`Vatan2004` Fig. 6
+        Phys. Rev. A, 69:032315, 2004. quant-ph/0308006 :cite:`Vatan2004a` Fig. 6
 
         B. Kraus and J. I. Cirac, Phys. Rev. A 63, 062309 (2001).
     """  # noqa: W291, E501
@@ -1593,6 +1594,43 @@ def translate_CS_to_CZPow(gate: CS) -> Iterator[CZPow]:
 def translate_CT_to_CZPow(gate: CT) -> Iterator[CZPow]:
     """Convert a controlled-S to half power of CZ gate"""
     yield CZPow(0.25, *gate.qubits)
+
+
+def translate_a_to_cnot(gate: A) -> Iterator[Union[CNot, Rz, Ry]]:
+    """Translate the A-gate to 3 CNots.
+
+    Ref:
+        Fig. 2 :cite:`Gard2020a`
+    """
+    (q0, q1) = gate.qubits
+    (theta, phi) = gate.params
+    yield CNot(q1, q0)
+    yield Rz(-phi - var.PI, q1)
+    yield Ry(-theta - var.PI / 2, q1)
+    yield CNot(q0, q1)
+    yield Ry(theta + var.PI / 2, q1)
+    yield Rz(phi + var.PI, q1)
+    yield CNot(q1, q0)
+
+
+def translate_a_to_can(gate: A) -> Iterator[Union[Can, ZPow]]:
+    """Translate the A-gate to the canonical gate.
+
+    Ref:
+        Page 3
+        :cite:`Gard2020a`
+    """
+    (q0, q1) = gate.qubits
+    (theta, phi) = gate.params
+
+    yield ZPow(1 / 2, q0)
+    yield ZPow(-phi / var.PI, q1)
+
+    yield Can(theta / var.PI, theta / var.PI, 0.5, q0, q1)
+
+    # Note: There seems to be a sign error in the paper referenced above for
+    # this part of the expression
+    yield ZPow(phi / var.PI - 1 / 2, q1)
 
 
 TRANSLATORS: Dict[str, Callable] = {}

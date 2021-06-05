@@ -666,13 +666,27 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     return Circuit([Circuit(L) for L in layers])
 
 
+# https://stackoverflow.com/questions/48491577/printing-the-output-rounded-to-3-decimals-in-sympy
+def _round_sympy_expr(expr: sympy.Expr, num_digits: int = 4) -> sympy.Expr:
+    return expr.xreplace({n: round(n, num_digits) for n in expr.atoms(sympy.Number)})
+    # return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
+
+
+# FIXME: Refactor
 def _pretty(obj: Any, format: str = "text") -> str:
     """Pretty format an object as a text or latex string."""
     assert format in ["latex", "text"]
+
+    if isinstance(obj, sympy.Expr):
+        if format == "latex":
+            return sympy.latex(_round_sympy_expr((obj)))  # pragma: nocover  # FIXME
+        else:
+            return str(obj)
+
     if isinstance(obj, float):
         try:
             if format == "latex":
-                return sympy.latex(var.asexpression(obj))
+                return sympy.latex(_round_sympy_expr(var.asexpression(obj)))
             else:
                 return str(var.asexpression(obj)).replace("pi", "π")
         except ValueError:
