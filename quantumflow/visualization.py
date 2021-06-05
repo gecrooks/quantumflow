@@ -667,7 +667,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
 
 
 # https://stackoverflow.com/questions/48491577/printing-the-output-rounded-to-3-decimals-in-sympy
-def _round_sympy_expr(expr: sympy.Expr, num_digits: str = 4) -> sympy.Expr:
+def _round_sympy_expr(expr: sympy.Expr, num_digits: int = 4) -> sympy.Expr:
     return expr.xreplace({n: round(n, num_digits) for n in expr.atoms(sympy.Number)})
     # return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
 
