@@ -348,7 +348,7 @@ def test_DiagonalGate_permute() -> None:
 
 
 def test_merge_diagonal_gates() -> None:
-    from quantumflow.modules import merge_diagonal_gates
+    from quantumflow.multigates import merge_diagonal_gates
 
     gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
     gate1 = qf.DiagonalGate([0.1, 0.2, 0.3, 0.4], qubits=[1, 2])

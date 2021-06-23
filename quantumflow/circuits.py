@@ -176,7 +176,7 @@ class Circuit(Sequence, Operation):
         return rho
 
     def asgate(self) -> Gate:
-        from .modules import IdentityGate
+        from .multigates import IdentityGate
 
         gate: Gate = IdentityGate(self.qubits)
         for elem in self:
@@ -184,7 +184,7 @@ class Circuit(Sequence, Operation):
         return gate
 
     def aschannel(self) -> Channel:
-        from .modules import IdentityGate
+        from .multigates import IdentityGate
 
         chan = IdentityGate(self.qubits).aschannel()
         for elem in self:
@@ -372,7 +372,7 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
         circ += cgate
         gate = gate @ gate
 
-    from .modules import InvQFTGate
+    from .multigates import InvQFTGate
 
     circ += InvQFTGate(outputs).decompose()
 
