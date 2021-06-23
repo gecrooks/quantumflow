@@ -21,7 +21,7 @@ def test_translators(trans: Type[qf.StdGate]) -> None:
 
     args = [np.random.uniform(-4, 4) for _ in gatet.cv_args]
     qbs = range(10, 10 + gatet.cv_qubit_nb)  # Check that qubits are preserved
-    gate = gatet(*chain(args, qbs))
+    gate = gatet(*chain(args, qbs))  # type: ignore
 
     circ1 = qf.Circuit(trans(gate))  # type: ignore
     print(type(circ1[0]))

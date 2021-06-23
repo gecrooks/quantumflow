@@ -454,7 +454,7 @@ def graph_circuit_params(
     total = N + N * 2 * (steps + 1) + K * steps
     params = np.random.normal(loc=init_bias, scale=init_scale, size=[total])
 
-    return params
+    return tuple(params)
 
 
 def graph_circuit(

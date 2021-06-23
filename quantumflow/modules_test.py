@@ -107,7 +107,7 @@ def test_multiswapgate() -> None:
 
     N = 8
     qubits_in = list(range(N))
-    qubits_out = np.random.permutation(qubits_in)
+    qubits_out = list(np.random.permutation(qubits_in))
 
     permN = qf.MultiSwapGate(qubits_in, qubits_out)
     assert qf.gates_close(perm0.asgate(), perm1.asgate())

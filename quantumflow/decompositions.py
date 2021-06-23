@@ -377,7 +377,7 @@ def _eig_complex_symmetric(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     )  # pragma: no cover
 
 
-def _lambdas_to_coords(lambdas: Sequence[float]) -> np.ndarray:
+def _lambdas_to_coords(lambdas: np.ndarray) -> np.ndarray:
     # [2, eq.11], but using [1]s coordinates.
     l1, l2, _, l4 = lambdas
     c1 = np.real(1j * np.log(l1 * l2))
@@ -412,7 +412,7 @@ def _lambdas_to_coords(lambdas: Sequence[float]) -> np.ndarray:
 
 
 def _constrain_to_weyl(
-    lambdas: Sequence[float],
+    lambdas: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     for permutation in itertools.permutations(range(4)):
