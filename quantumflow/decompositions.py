@@ -30,16 +30,19 @@ Two-qubit gate decompositions
 
 
 import itertools
-from typing import List, Sequence, Tuple, cast
+from typing import List, Sequence, Tuple, cast, Iterator
 
 import numpy as np
+import scipy
 
 from .circuits import Circuit, euler_circuit
 from .config import ATOL
 from .info import gates_close
 from .ops import Gate, Unitary
 from .stdgates import S_H, B, Can, I, Rn, S, V, X, Y, YPow, Z, ZPow
+from .multigates import MultiplexedRzGate, MultiplexedRyGate
 from .translate import translate_can_to_cnot
+
 
 __all__ = [
     "bloch_decomposition",
@@ -51,17 +54,18 @@ __all__ = [
     "cnot_decomposition",
     "b_decomposition",
     "convert_can_to_weyl",
+    "quantum_shannon_decomposition"
 ]
 
 
 # TODO: Optionally include phase
 def bloch_decomposition(gate: Gate) -> Circuit:
     """
-    Converts a 1-qubit gate into a RN gate, a 1-qubit rotation of angle theta
+    Converts a 1-qubit gate into a Rn gate, a 1-qubit rotation of angle theta
     about axis (nx, ny, nz) in the Bloch sphere.
 
     Returns:
-        A Circuit containing a single RN gate
+        A Circuit containing a single Rn gate
     """
     if gate.qubit_nb != 1:
         raise ValueError("Expected 1-qubit gate")
@@ -174,8 +178,6 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     Uses the "Nearest Kronecker Product" algorithm. Will give erratic
     results if the gate is not the direct product of two 1-qubit gates.
     """
-    # An alternative approach would be to take partial traces, but
-    # this approach appears to be more robust.
 
     if gate.qubit_nb != 2:
         raise ValueError("Expected 2-qubit gate")
@@ -191,9 +193,6 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     u, s, vh = np.linalg.svd(R)
     A = np.sqrt(s[0]) * u[:, 0].reshape(2, 2)
     B = np.sqrt(s[0]) * vh[0, :].reshape(2, 2)
-    # print(s)
-    # A = (u[:, 0]).reshape(2, 2)
-    # B = (vh[0, :]).reshape(2, 2)
 
     q0, q1 = gate.qubits
     g0 = Unitary(A, [q0])
@@ -315,12 +314,6 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     circK2 = kronecker_decomposition(gateK2, euler)
     assert gates_close(gateK2, circK2.asgate())  # Sanity check
 
-    # Build and return circuit
-    # circ = Circuit()
-    # circ += circK2
-    # circ += canon
-    # circ += circK1
-
     circ = Circuit([circK2, canon, circK1])
 
     return circ
@@ -437,7 +430,7 @@ def _in_weyl(tx: float, ty: float, tz: float) -> bool:
 
 
 def cnot_decomposition(gate: Gate) -> Circuit:
-    """Decompose any 2-qubit gate into a circuit of three CNot gates.
+    """Decompose any 2-qubit gate into a circuit of (at most) three CNot gates.
 
     Ref:
         Optimal Quantum Circuits for General Two-Qubit Gates, Vatan & Williams
@@ -681,6 +674,67 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
     circ += Can(tx, ty, tz, q0, q1)
     circ += circ_after_q0_H.H
     circ += circ_after_q1_H.H
+
+    return circ
+
+
+def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
+    """
+    Quantum Shannon decomposition of a multi-qubit gate.
+
+    Args:
+        gate: A quantum gate to decompose
+        euler:
+            The Euler decomposition to use for 1-qubit gates. Default "ZYZ"
+    Returns:
+        A circuit containing 1-qubit gates, canonical gates, and multi-qubit
+        multiplexed Ry and Rz gates.
+    Ref:
+        https://arxiv.org/pdf/quant-ph/0406176.pdf
+    """
+    def qs_deke(gate: Gate, euler: str) -> Iterator[Gate]:
+        qubits = gate.qubits
+        N = gate.qubit_nb
+
+        if N == 1:
+            yield from euler_decomposition(gate, euler)
+            return
+        elif N == 2:
+            yield from canonical_decomposition(gate, euler)
+            return
+
+        target = qubits[0]
+        controls = qubits[1:]
+
+        U = gate.su().asoperator()
+        R = 2 ** (N - 1)
+
+        (A1, A2), halfthetas, (B1, B2) = scipy.linalg.cossin(U, p=R, q=R, separate=True)
+
+        M2 = B1 @ B2.conj().T
+        eigvals, V = np.linalg.eig(M2)
+        D = np.diag(eigvals**0.5)
+        W = D @ V.conj().T @ B2
+        thetas = np.real(np.log(eigvals) * 1j)
+
+        yield from qs_deke(Unitary(W, controls), euler)
+        yield MultiplexedRzGate(thetas, controls=controls, target=target)
+        yield from qs_deke(Unitary(V, controls), euler)
+
+        yield MultiplexedRyGate(halfthetas * 2, controls=controls, target=target)
+
+        M2 = A1 @ A2.conj().T
+        eigvals, V = np.linalg.eig(M2)
+        D = np.diag(eigvals**0.5)
+        W = D @ V.conj().T @ A2
+        thetas = np.real(np.log(eigvals) * 1j)
+
+        yield from qs_deke(Unitary(W, controls), euler)
+        yield MultiplexedRzGate(thetas, controls=controls, target=target)
+        yield from qs_deke(Unitary(V, controls), euler)
+
+    circ = Circuit(qs_deke(gate, euler))
+    assert gates_close(circ.asgate(), gate)  # Insanity check
 
     return circ
 
