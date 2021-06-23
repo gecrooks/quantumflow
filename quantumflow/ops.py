@@ -308,11 +308,14 @@ class Gate(Operation):
         identity
         diagonal
         permutation
+        swap
         monomial
         swap
 
     A permutation matrix permutes states. It has a single '1' in each row and column.
     All other entries are zero.
+
+    A swap is a permutation matrix that permutes qubits.
 
     A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.
@@ -440,6 +443,24 @@ class Gate(Operation):
 
     def specialize(self) -> "Gate":
         return self
+
+    def __str__(self) -> str:
+        def _param_format(obj: Any) -> str:
+            if isinstance(obj, float):
+                try:
+                    return str(var.asexpression(obj))
+                except ValueError:
+                    return f"{obj}"
+            return str(obj)
+
+        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
+
+        if self.params:
+            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
+        else:
+            fparams = ""
+
+        return f"{self.name}{fparams}{fqubits}"
 
 
 # End class Gate

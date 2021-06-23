@@ -12,7 +12,7 @@ import numpy as np
 from .. import tensors, utils, var
 from ..config import CTRL, SWAP_TARGET, TARGET
 from ..ops import StdGate
-from ..paulialgebra import Pauli, sX, sZ
+from ..paulialgebra import Pauli, sX, sY, sZ
 from ..qubits import Qubit
 from ..states import State
 from ..tensors import QubitTensor
@@ -21,14 +21,12 @@ from .stdgates_2q import CZ, CNot, Swap
 
 # 3-qubit gates, in alphabetic order
 
-__all__ = ("CCiX", "CCNot", "CCXPow", "CCZ", "CSwap", "Deutsch", "Margolus")
+__all__ = ("CCiX", "CCNot", "CCXPow", "CCZ", "CISwap", "CSwap", "Deutsch", "Margolus")
 
 
 class CCiX(StdGate):
     r"""
     A doubly controlled iX gate.
-
-    Equivalent to ``controlled_gate(cnot())``
 
     .. math::
         \text{CCiX}() \equiv \begin{pmatrix}
@@ -195,6 +193,128 @@ class CCXPow(StdGate):
 # end class CCXPow
 
 
+class CCZ(StdGate):
+    r"""
+    A controlled, controlled-Z.
+
+    Equivalent to ``controlled_gate(CZ())``
+
+    .. math::
+        \text{CSWAP}() \equiv \begin{pmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & -1
+            \end{pmatrix}
+    """
+    cv_interchangeable = True
+    cv_tensor_structure = "diagonal"
+    _diagram_labels = (CTRL, CTRL, CTRL)
+
+    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+        super().__init__(qubits=[q0, q1, q2])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, q1, q2 = self.qubits
+        return CZ(q1, q2).hamiltonian * (1 - sZ(q0)) / 2
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        unitary = [
+            [1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, -1],
+        ]
+        return tensors.asqutensor(unitary)
+
+    @property
+    def H(self) -> "CCZ":
+        return self  # Hermitian
+
+    # TODO: __pow__
+
+    def run(self, ket: State) -> State:
+        axes = ket.qubit_indices(self.qubits)
+        s11 = utils.multi_slice(axes, [1, 1, 1])
+        tensor = ket.tensor.copy()
+        tensor[s11] *= -1
+        return State(tensor, ket.qubits, ket.memory)
+
+
+# end class CCZ
+
+
+class CISwap(StdGate):
+    r"""
+    A controlled iSwap gate.
+
+    .. math::
+        \text{CISwap}() \equiv \begin{pmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & i & 0 \\
+                0 & 0 & 0 & 0 & 0 & i & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1
+            \end{pmatrix}
+
+
+    Refs:
+          https://arxiv.org/abs/2002.11728
+    """
+
+    cv_tensor_structure = "monomial"
+    _diagram_labels = ("─" + CTRL + "─", "iSwap", "iSwap")
+
+    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+        super().__init__(qubits=[q0, q1, q2])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, q1, q2 = self.qubits
+        return (
+            (
+                sZ(0) * sX(1) * sX(2)
+                + sZ(0) * sY(1) * sY(2)
+                - sX(1) * sX(2)
+                - sY(1) * sY(2)
+            )
+            * var.PI
+            / 8
+        )
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        unitary = np.asarray(
+            [
+                [1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1j, 0],
+                [0, 0, 0, 0, 0, 1j, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1],
+            ]
+        )
+        return tensors.asqutensor(unitary)
+
+
+# end class CISwap
+
+
 class CSwap(StdGate):
     r"""
     A 3-qubit Fredkin gate. A controlled swap.
@@ -256,68 +376,6 @@ class CSwap(StdGate):
 
 
 # end class CSWAP
-
-
-class CCZ(StdGate):
-    r"""
-    A controlled, controlled-Z.
-
-    Equivalent to ``controlled_gate(CZ())``
-
-    .. math::
-        \text{CSWAP}() \equiv \begin{pmatrix}
-                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 0 & -1
-            \end{pmatrix}
-    """
-    cv_hermitian = True
-    cv_interchangeable = True
-    cv_tensor_structure = "diagonal"
-    _diagram_labels = (CTRL, CTRL, CTRL)
-
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
-        super().__init__(qubits=[q0, q1, q2])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1, q2 = self.qubits
-        return CZ(q1, q2).hamiltonian * (1 - sZ(q0)) / 2
-
-    @utils.cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = [
-            [1, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, -1],
-        ]
-        return tensors.asqutensor(unitary)
-
-    @property
-    def H(self) -> "CCZ":
-        return self  # Hermitian
-
-    # TODO: __pow__
-
-    def run(self, ket: State) -> State:
-        axes = ket.qubit_indices(self.qubits)
-        s11 = utils.multi_slice(axes, [1, 1, 1])
-        tensor = ket.tensor.copy()
-        tensor[s11] *= -1
-        return State(tensor, ket.qubits, ket.memory)
-
-
-# end class CCZ
 
 
 # TODO: hamiltonian
