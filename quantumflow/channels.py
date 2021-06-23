@@ -183,7 +183,8 @@ class UnitaryMixture(Kraus):
     def asgate(self) -> Gate:
         """Return one of the composite Kraus operators at random with
         the appropriate weights"""
-        return np.random.choice(self.operators, p=self.weights)
+        n = np.random.choice(range(len(self.operators)), p=self.weights)
+        return self.operators[n]
 
     def run(self, ket: State) -> State:
         return self.asgate().run(ket)

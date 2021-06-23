@@ -113,7 +113,7 @@ __all__ = (
 # -- Measures on Hilbert space ---
 
 
-def fubini_study_angle(vec0: QubitTensor, vec1: QubitTensor) -> QubitTensor:
+def fubini_study_angle(vec0: QubitTensor, vec1: QubitTensor) -> float:
     """Calculate the Fubini–Study metric between elements of a Hilbert space.
 
     The Fubini–Study metric is a distance measure between vectors in a
@@ -126,10 +126,10 @@ def fubini_study_angle(vec0: QubitTensor, vec1: QubitTensor) -> QubitTensor:
     between pure states.
     """
     fs_fidelity = fubini_study_fidelity(vec0, vec1)
-    return np.arccos(fs_fidelity)
+    return float(np.arccos(fs_fidelity))
 
 
-def fubini_study_fidelity(vec0: QubitTensor, vec1: QubitTensor) -> QubitTensor:
+def fubini_study_fidelity(vec0: QubitTensor, vec1: QubitTensor) -> float:
     """
     Cosine of the Fubini–Study metric.
     """
@@ -140,7 +140,7 @@ def fubini_study_fidelity(vec0: QubitTensor, vec1: QubitTensor) -> QubitTensor:
     hs11 = tensors.inner(vec1, vec1)
     ratio = np.absolute(hs01) / np.sqrt(np.absolute(hs00 * hs11))
     fid = np.minimum(ratio, 1.0)  # Compensate for rounding errors.
-    return fid
+    return float(fid)
 
 
 def fubini_study_close(
@@ -157,14 +157,14 @@ def fubini_study_close(
 # -- Measures on pure states ---
 
 
-def state_fidelity(ket0: State, ket1: State) -> QubitTensor:
+def state_fidelity(ket0: State, ket1: State) -> float:
     """Return the quantum fidelity between pure states."""
     ket1 = ket1.permute(ket0.qubits)
     tensor = np.absolute(tensors.inner(ket0.tensor, ket1.tensor)) ** 2
-    return tensor
+    return float(tensor)
 
 
-def state_angle(ket0: State, ket1: State) -> QubitTensor:
+def state_angle(ket0: State, ket1: State) -> float:
     """The Fubini-Study angle between states.
 
     Equal to the Burrs angle for pure states.
@@ -230,7 +230,7 @@ def bures_angle(rho0: Density, rho1: Density) -> float:
     return np.arccos(np.sqrt(fidelity(rho0, rho1)))
 
 
-def density_angle(rho0: Density, rho1: Density) -> QubitTensor:
+def density_angle(rho0: Density, rho1: Density) -> float:
     """The Fubini-Study angle between density matrices"""
     rho1 = rho1.permute(rho0.qubits)
     return fubini_study_angle(rho0.tensor, rho1.tensor)
@@ -306,7 +306,7 @@ def trace_distance(rho0: Density, rho1: Density) -> float:
 # Measures on gates
 
 
-def gate_angle(gate0: Gate, gate1: Gate) -> QubitTensor:
+def gate_angle(gate0: Gate, gate1: Gate) -> float:
     """The Fubini-Study angle between gates"""
     gate1 = gate1.permute(gate0.qubits)
     return fubini_study_angle(gate0.tensor, gate1.tensor)
@@ -383,7 +383,7 @@ def circuits_close(
 # Measures on channels
 
 
-def channel_angle(chan0: Channel, chan1: Channel) -> QubitTensor:
+def channel_angle(chan0: Channel, chan1: Channel) -> float:
     """The Fubini-Study angle between channels"""
     chan1 = chan1.permute(chan0.qubits)
     return fubini_study_angle(chan0.tensor, chan1.tensor)
@@ -399,7 +399,7 @@ def channels_close(chan0: Channel, chan1: Channel, atol: float = ATOL) -> bool:
 
 
 # TESTME  multiqubits
-def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> QubitTensor:
+def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> float:
     """Return the average gate fidelity between a noisy gate (specified by a
     Kraus representation of a superoperator), and a purely unitary target gate.
 
