@@ -599,14 +599,6 @@ class CYPow(StdGate):
         (t,) = self.params
         return CYPow(e * t, *self.qubits)
 
-    def decompose(self) -> Iterator[Union[S, S_H, CNotPow]]:
-        """Convert powers of CZ gate to powers of CNOT gate"""
-        (t,) = self.params
-        q0, q1 = self.qubits
-        yield S_H(q1)
-        yield CNot(q0, q1) ** t
-        yield S(q1)
-
 
 # End class CYPow
 
@@ -626,7 +618,7 @@ class CV(StdGate):
     @cached_property
     def tensor(self) -> QubitTensor:
         q0, q1 = self.qubits
-        from ..modules import ControlGate
+        from ..multigates import ControlGate
 
         return ControlGate([q0], V(q1)).tensor
 
@@ -656,7 +648,7 @@ class CV_H(StdGate):
     @cached_property
     def tensor(self) -> QubitTensor:
         q0, q1 = self.qubits
-        from ..modules import ControlGate
+        from ..multigates import ControlGate
 
         return ControlGate([q0], V_H(q1)).tensor
 
@@ -798,7 +790,7 @@ class ECP(StdGate):
 
 
 class Exch(StdGate):
-    r"""A 2-qubit parametric gate generated from an exchange interaction.
+    r"""A 2-qubit parametric gate generated from an isotropic exchange interaction.
 
     Equivalent to Can(t,t,t)
 
