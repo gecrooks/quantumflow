@@ -4,7 +4,14 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Translate, transform, and compile circuits.
+QuantumFlow: Translate a quantum gate into an equivalent sequence of other quantum gates.
+
+These translations are all analytic, so that we can use symbolic
+parameters. Numerical decompositions can be found in the decompositions module.
+
+Translations return an Iterator over gates, rather than a Circuit, in part
+so that we can use type annotations to keep track of the source and resultant
+gates of each translation.
 """
 
 # TODO: Split into separate modules
@@ -52,6 +59,7 @@ from .stdgates import (
     CCiX,
     CCNot,
     CCXPow,
+    CISwap,
     CNot,
     CNotPow,
     CPhase,
@@ -552,10 +560,10 @@ def translate_can_to_cnot(
 
     if var.isclose(tz, 0.0):
         # If we know tz is close to zero we only need two CNot gates
-        yield V(q0)
         yield Z(q0)
-        yield V(q1)
+        yield V(q0).H
         yield Z(q1)
+        yield V(q1).H
         yield CNot(q0, q1)
         yield XPow(tx, q0)
         yield ZPow(ty, q1)
@@ -673,7 +681,11 @@ def translate_cy_to_cnot(gate: CY) -> Iterator[Union[CNot, S, S_H]]:
 
 def translate_cypow_to_cxpow(gate: CYPow) -> Iterator[Union[CNotPow, S, S_H]]:
     """Translate powers of CY to powers of CNot (CX)"""
-    yield from gate.decompose()
+    (t,) = gate.params
+    q0, q1 = gate.qubits
+    yield S_H(q1)
+    yield CNot(q0, q1) ** t
+    yield S(q1)
 
 
 def translate_cphase_to_zz(gate: CPhase) -> Iterator[Union[ZZ, ZPow]]:
@@ -685,39 +697,32 @@ def translate_cphase_to_zz(gate: CPhase) -> Iterator[Union[ZZ, ZPow]]:
     yield ZPow(-t, q1)
 
 
-def translate_cphase00_to_zz(gate: CPhase00) -> Iterator[Union[X, ZZ, ZPow]]:
-    """Convert a CPhase00 gate to a ZZ based circuit."""
-    t = -gate.param("theta") / (2 * var.PI)
+def translate_cphase00_to_cphase(gate: CPhase00) -> Iterator[Union[X, CPhase]]:
+    """Convert a CPhase00 gate to a CPhase."""
+    theta = gate.param("theta")
     q0, q1 = gate.qubits
     yield X(q0)
     yield X(q1)
-    yield ZZ(t, q0, q1)
-    yield ZPow(-t, q0)
-    yield ZPow(-t, q1)
+    yield CPhase(theta, q0, q1)
     yield X(q0)
     yield X(q1)
 
 
-def translate_cphase01_to_zz(gate: CPhase01) -> Iterator[Union[X, ZZ, ZPow]]:
-    """Convert a CPhase01 gate to a ZZ based circuit."""
-    t = -gate.param("theta") / (2 * var.PI)
+def translate_cphase01_to_cphase(gate: CPhase01) -> Iterator[Union[X, CPhase]]:
+    """Convert a CPhase01 gate to a CPhase."""
+    theta = gate.param("theta")
     q0, q1 = gate.qubits
     yield X(q0)
-    yield ZZ(t, q0, q1)
-    yield ZPow(-t, q0)
-    yield ZPow(-t, q1)
+    yield CPhase(theta, q0, q1)
     yield X(q0)
 
 
-def translate_cphase10_to_zz(gate: CPhase10) -> Iterator[Union[X, ZZ, ZPow]]:
-    """Convert a CPhase10 gate to a ZZ based circuit."""
-    t = -gate.param("theta") / (2 * var.PI)
+def translate_cphase10_to_cphase(gate: CPhase10) -> Iterator[Union[X, CPhase]]:
+    """Convert a CPhase10 gate to a CPhase."""
+    theta = gate.param("theta")
     q0, q1 = gate.qubits
-
     yield X(q1)
-    yield ZZ(t, q0, q1)
-    yield ZPow(-t, q0)
-    yield ZPow(-t, q1)
+    yield CPhase(theta, q0, q1)
     yield X(q1)
 
 
@@ -1133,6 +1138,21 @@ def translate_sycamore_to_fsim(gate: Sycamore) -> Iterator[FSim]:
     yield FSim(var.PI / 2, var.PI / 6, *gate.qubits)
 
 
+def translate_syc_to_can(gate: Sycamore) -> Iterator[FSim]:
+    """Convert a Sycamore gate to an canonical gate"""
+    q0, q1 = gate.qubits
+    yield Can(1 / 2, 1 / 2, 1 / 12, q0, q1)
+    yield Z(q0) ** (-1 / 12)
+    yield Z(q1) ** (-1 / 12)
+
+
+def translate_syc_to_cphase(gate: Sycamore) -> Iterator[FSim]:
+    """Convert a Sycamore gate to a cphase gate"""
+    q0, q1 = gate.qubits
+    yield CPhase(-var.PI / 6, q0, q1)
+    yield ISwap(q0, q1).H
+
+
 def translate_w_to_ecp(gate: W) -> Iterator[Union[ECP, H, S, S_H, T, T_H]]:
     """Translate W gate to ECP."""
     # TODO: Cite self
@@ -1295,8 +1315,6 @@ def translate_ccix_to_cnot(gate: CCiX) -> Iterator[Union[CNot, H, T, T_H]]:
         ───iX───     ───H───X───T───X───T⁺───X───T───X───T⁺───H───
 
 
-    Refs:
-         Nielsen and Chuang (Figure 4.9)
 
     """
     # Kudos: Adapted from Quipper
@@ -1531,6 +1549,15 @@ def translate_ccz_to_ccnot(gate: CCZ) -> Iterator[Union[H, CCNot]]:
     yield H(q2)
     yield CCNot(q0, q1, q2)
     yield H(q2)
+
+
+def translate_ciswap_to_ccix(gate: CISwap) -> Iterator[Union[CNot, H, T, T_H]]:
+    """Translate a controlled-iswap gate to CCiX"""
+    q0, q1, q2 = gate.qubits
+    q0, q1, q2 = gate.qubits
+    yield CNot(q2, q1)
+    yield CCiX(q0, q1, q2)
+    yield CNot(q2, q1)
 
 
 def translate_cswap_to_ccnot(gate: CSwap) -> Iterator[Union[CNot, CCNot]]:
