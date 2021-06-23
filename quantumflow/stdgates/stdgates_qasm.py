@@ -338,7 +338,7 @@ class CRz(StdGate):
         (theta,) = self.params
         q0, q1 = self.qubits
         gate = Rz(theta, q1)
-        from ..modules import ControlGate
+        from ..multigates import ControlGate
 
         return ControlGate([q0], gate).tensor
 

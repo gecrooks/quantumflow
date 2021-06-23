@@ -118,7 +118,7 @@ class FSim(StdGate):
             \begin{pmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & \cos(\theta) & -i \sin(\theta) & 0 \\
-                0 & -i sin(\theta)  & \cos(\theta) & 0 \\
+                0 & -i \sin(\theta)  & \cos(\theta) & 0 \\
                 0 & 0 & 0 & e^{-i\phi)}
             \end{pmatrix}
     """
@@ -247,15 +247,15 @@ class FSwapPow(StdGate):
 
 # End class FSwapPow
 
-
+# FIXME: Syc
 class Sycamore(StdGate):
     r"""The Sycamore gate is a two-qubit gate equivalent to
-    ``FSim(π/2, π/6)``, and locally equivalent to ``Can(1/2, 1/2, 1/6)``.
+    ``FSim(π/2, π/6)``, and locally equivalent to ``Can(1/2, 1/2, 1/12)``.
 
     This gate was used to demonstrate quantum on Google's Sycamore chip.
 
     .. math::
-        \text{Sycamore}() =
+        \operatorname{Sycamore}() =
             \begin{pmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 0& -i  & 0 \\
