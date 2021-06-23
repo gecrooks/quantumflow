@@ -22,7 +22,7 @@ from . import utils, var
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
 from .gates import P0, P1
-from .modules import IdentityGate
+from .multigates import IdentityGate
 from .ops import Gate, Operation
 from .qubits import Qubits
 from .stdgates import CZ, CSwap, Swap
@@ -66,6 +66,7 @@ LATEX_GATESET = frozenset(
         "ISwap",
         "PSwap",
         "CV",
+        "CS",
         "CV_H",
         "CPhase",
         "CH",
@@ -95,6 +96,8 @@ LATEX_GATESET = frozenset(
         "B",
         "CY",
         "ECP",
+        "Sycamore",
+        "XY",
     ]
 )
 
@@ -188,6 +191,7 @@ def circuit_to_latex(
         "XX": [r"X\!X^{{{t}}}"],
         "YY": [r"Y\!Y^{{{t}}}"],
         "ZZ": [r"Z\!Z^{{{t}}}"],
+        "XY": [r"X\!Y^{{{t}}}"],
         "ISwap": [r"\text{{iSwap}}"],
         "B": [r"\text{{B}}"],
         "SqrtISwap": [r"\sqrt{{\text{{iSwap}}}}"],
@@ -195,6 +199,8 @@ def circuit_to_latex(
         "CNot": [CTRL, TARGET],
         "CH": [CTRL, "H"],
         "CV": [CTRL, "V"],
+        "CS": [CTRL, "S"],
+        "CPhase": [CTRL, r"R_{{{theta}}}"],
         "CV_H": [CTRL, r"V^\dagger"],
         "CNotPow": [CTRL, r"X^{{{t}}}"],
         "CY": [CTRL, r"Y"],
@@ -299,8 +305,14 @@ def circuit_to_latex(
             elif (
                 gate.qubit_nb == 2
                 and gate.cv_interchangeable
-                and gate.name != "CZPow"
+                and gate.name
+                not in [
+                    "CZPow",
+                    "CPhase",
+                    "CS",
+                ]  # FIXME better approach to selecting correct gates here
                 # and gate.name not in latex_labels
+                # and (gate.name in latex_labels and len(latex_labels[gate.name]) != 1)
             ):
                 top = min(idx)
                 bot = max(idx)
@@ -668,6 +680,8 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
 
 # https://stackoverflow.com/questions/48491577/printing-the-output-rounded-to-3-decimals-in-sympy
 def _round_sympy_expr(expr: sympy.Expr, num_digits: int = 4) -> sympy.Expr:
+    return expr
+    # BROKEN. Undoes rationalizations
     return expr.xreplace({n: round(n, num_digits) for n in expr.atoms(sympy.Number)})
     # return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
 
