@@ -5,16 +5,21 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: quantumcompiler
+.. currentmodule:: multigates
 
-Gate Modules
-############
+Multi-qubit gates
+#################
 
-Larger unitary computational modules that
-can be broken up into standard gates.
+Larger unitary computational modules that can be broken up into standard gates.
 
-Danger: Gate's may have many qubits, so explicitly creating
-the gate tensor may consume huge amounts of memory. Beware.
+Danger: These multi-qubit gates have a variable, and possible large, number of qubits.
+Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
+
+.. autoclass:: UnitaryGate
+    :members:
+
+.. autoclass:: DiagonalGate
+    :members:
 
 .. autoclass:: IdentityGate
     :members:
@@ -31,16 +36,20 @@ the gate tensor may consume huge amounts of memory. Beware.
 .. autoclass:: CircularShiftGate
     :members:
 
-.. autoclass:: ControlGate
-    :members:
-
 .. autoclass:: QFTGate
     :members:
 
 .. autoclass:: InvQFTGate
     :members:
 
-.. autoclass:: DiagonalGate
+.. autoclass:: ControlGate
+    :members:
+
+
+.. autoclass:: MultiplexedGate
+    :members:
+
+.. autoclass:: ConditionalGate
     :members:
 
 .. autoclass:: MultiplexedRzGate
@@ -48,23 +57,26 @@ the gate tensor may consume huge amounts of memory. Beware.
 
 """
 
-from typing import Any, Iterable, Iterator, List, Mapping, Sequence, Union
+# TODO: Rename Unitary to Unitary Gate and document here.
+
+from typing import Iterable, Iterator, List, Mapping, Sequence, Union
 
 import networkx as nx
 import numpy as np
+import scipy
 from networkx.algorithms.approximation.steinertree import steiner_tree
 from sympy.combinatorics import Permutation
 
 from . import tensors, utils, var
 from .circuits import Circuit
 from .gates import unitary_from_hamiltonian
-from .ops import Gate, Operation
+from .ops import Gate, Operation, Unitary 
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
-from .qubits import Qubits
+from .qubits import Qubit, Qubits
 from .states import Density, State
 from .stdgates import CZ, CNot, CZPow
 from .stdgates import H as _H  # NB: Workaround for name conflict with Gate.H
-from .stdgates import I, Rz, Swap, X, XPow, Y, YPow, Z, ZPow
+from .stdgates import I, Ry, Rz, Swap, V, X, XPow, Y, YPow, Z, ZPow
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
@@ -74,11 +86,15 @@ __all__ = (
     "MultiSwapGate",
     "ReversalGate",
     "CircularShiftGate",
-    "ControlGate",
     "QFTGate",
     "InvQFTGate",
     "DiagonalGate",
+    "ControlGate",
+    "MultiplexedGate",
+    "ConditionalGate",
     "MultiplexedRzGate",
+    "MultiplexedRyGate",
+    "RandomGate",
 )
 
 
@@ -113,56 +129,6 @@ class IdentityGate(Gate):
 # end class IdentityGate
 
 
-# TESTME : axes
-# DOCME: axes
-# TODO: diagrams
-# TODO: Decompose
-# ⊖ ⊕ ⊘ ⊗ ● ○
-class ControlGate(Gate):
-    """A controlled unitary gate. Given C control qubits and a
-    gate acting on K qubits, return a gate with C+K qubits
-    """
-
-    def __init__(self, control_qubits: Qubits, gate: Gate, axes: str = None) -> None:
-        control_qubits = tuple(control_qubits)
-        qubits = tuple(control_qubits) + tuple(gate.qubits)
-        if len(set(qubits)) != len(qubits):
-            raise ValueError("Control and gate qubits overlap")
-
-        if axes is None:
-            axes = "Z" * len(control_qubits)
-        assert len(axes) == len(control_qubits)
-
-        super().__init__(qubits)
-        self.control_qubits = qubits
-        self.gate = gate
-        self.axes = axes
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        ctrlham = {
-            "X": (1 - sX(0)) / 2,
-            "x": sX(0) / 2,
-            "Y": (1 - sY(0)) / 2,
-            "y": sY(0) / 2,
-            "Z": (1 - sZ(0)) / 2,
-            "z": sZ(0) / 2,
-        }
-
-        ham = self.gate.hamiltonian
-        for q, axis in zip(self.control_qubits, self.axes):
-            ham *= ctrlham[axis].on(q)
-
-        return ham
-
-    @utils.cached_property
-    def tensor(self) -> QubitTensor:
-        return unitary_from_hamiltonian(self.hamiltonian, self.qubits).tensor
-
-
-# end class ControlGate
-
-
 class MultiSwapGate(Gate):
     """A permutation of qubits. A generalized multi-qubit Swap."""
 
@@ -192,7 +158,7 @@ class MultiSwapGate(Gate):
             elif isinstance(gate, I) or isinstance(gate, IdentityGate):
                 continue
             else:
-                raise ValueError("Swap gate must be built from swap gates")
+                raise ValueError("Swap gates must be built from swap gates")
 
         perm = list(range(N))
         for elem in circ:
@@ -506,6 +472,8 @@ def merge_diagonal_gates(
     return DiagonalGate(params, qubits)
 
 
+# TODO: Rename DiagonalUnitaryGate?
+# Add a DiagonalGate mixin
 class DiagonalGate(Gate):
     r"""
     A quantum gate whose unitary operator is diagonal in the computational basis.
@@ -594,40 +562,137 @@ class DiagonalGate(Gate):
                 phases.append((diag_phases[n] + diag_phases[n + 1]) / 2)
                 angles.append(-(diag_phases[n + 1] - diag_phases[n]))
 
-            yield from MultiplexedRzGate(angles, qbs).decompose()
+            yield from MultiplexedRzGate(angles, qbs[:-1], qbs[-1]).decompose()
             yield from DiagonalGate(phases, qbs[:-1]).decompose()
-
-    # TODO: refactor these string methods. Copied from stdgates
-    def __str__(self) -> str:
-        def _param_format(obj: Any) -> str:
-            if isinstance(obj, float):
-                try:
-                    return str(var.asexpression(obj))
-                except ValueError:
-                    return f"{obj}"
-            return str(obj)
-
-        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
-
-        if self.params:
-            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
-        else:
-            fparams = ""
-
-        return f"{self.name}{fparams}{fqubits}"
-
 
 # end class DiagonalGate
 
 
-class MultiplexedRzGate(Gate):
+# TESTME : axes
+# DOCME: axes
+# TODO: diagrams
+# TODO: Decompose
+# ⊖ ⊕ ⊘ ⊗ ● ○
+class ControlGate(Gate):
+    """A controlled unitary gate. Given C control qubits and a
+    gate acting on K qubits, return a gate with C+K qubits
+    """
+
+    def __init__(self, controls: Qubits, gate: Gate, axes: str = None) -> None:
+        controls = tuple(controls)
+        qubits = tuple(controls) + tuple(gate.qubits)
+        if len(set(qubits)) != len(qubits):
+            raise ValueError("Control and gate qubits overlap")
+
+        if axes is None:
+            axes = "Z" * len(controls)
+        assert len(axes) == len(controls)
+
+        super().__init__(qubits)
+        self.controls = qubits
+        self.gate = gate
+        self.axes = axes
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        ctrlham = {
+            "X": (1 - sX(0)) / 2,
+            "x": sX(0) / 2,
+            "Y": (1 - sY(0)) / 2,
+            "y": sY(0) / 2,
+            "Z": (1 - sZ(0)) / 2,
+            "z": sZ(0) / 2,
+        }
+
+        ham = self.gate.hamiltonian
+        for q, axis in zip(self.controls, self.axes):
+            ham *= ctrlham[axis].on(q)
+
+        return ham
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        return unitary_from_hamiltonian(self.hamiltonian, self.qubits).tensor
+
+
+# end class ControlGate
+
+
+class MultiplexedGate(Gate):
+    """A uniformly controlled (or multiplexed) gate.
+
+    Given C control qubits and 2^C gate each acting on the same K target qubits,
+    return a multiplexed gate with C+K qubits. For each possible bitstring of the
+    control bits, a different gate is applied to the target qubits.
+    """
+
+    def __init__(self, gates: Sequence[Gate], controls: Qubits) -> None:
+        controls = tuple(controls)
+        gates = tuple(gates)
+        targets = gates[0].qubits
+        qubits = controls + targets
+        if len(set(qubits)) != len(qubits):
+            raise ValueError("Control and target qubits overlap")
+
+        for gate in gates:
+            if gate.qubits != targets:
+                raise ValueError("Target qubits of all gates must be the same.")
+
+        if len(gates) != 2 ** len(controls):
+            raise ValueError("Wrong number of target gates.")
+
+        super().__init__(qubits)
+        self.controls = controls
+        self.targets = targets
+        self.gates = gates
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        blocks = [gate.asoperator() for gate in self.gates]
+        return asqutensor(scipy.linalg.block_diag(*blocks))
+
+    @property
+    def H(self) -> "MultiplexedGate":
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> "MultiplexedGate":
+        gates = [gate ** e for gate in self.gates]
+        return MultiplexedGate(gates, self.controls)
+
+    # TODO: deke to 2^N control gates
+
+# end class MultiplexedGate
+
+
+class ConditionalGate(MultiplexedGate):
+    """A conditional gate.
+
+    Perform gate A on the target qubit if the control qubit is zero,
+    else perform gate B. A multiplexed gate with only 1 control.
+    """
+
+    def __init__(
+        self, A: Gate, B: Gate, control_qubit: Qubit
+    ) -> None:
+        super().__init__(gates=[A, B], controls=(control_qubit,))
+
+
+# end class ConditionalGate
+
+
+class MultiplexedRzGate(MultiplexedGate):
     """Uniformly controlled (multiplexed) Rz gate"""
 
     cv_tensor_structure = "diagonal"
 
-    def __init__(self, thetas: Sequence[Variable], qubits: Qubits) -> None:
-        super().__init__(params=thetas, qubits=qubits)
-        assert len(self.params) == 2 ** (self.qubit_nb - 1)  # FIXME
+    def __init__(
+        self, thetas: Sequence[Variable], controls: Qubits, target: Qubit
+    ) -> None:
+
+        thetas = tuple(thetas)
+        gates = [Rz(theta, target) for theta in thetas]
+        super().__init__(gates=gates, controls=controls)
+        self._params = thetas
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -640,8 +705,6 @@ class MultiplexedRzGate(Gate):
             rz = Rz(theta, 0)
             diagonal.extend(np.diag(rz.tensor))
 
-        assert len(diagonal) == 2 ** self.qubit_nb
-
         return asqutensor(diagonal)
 
     @property
@@ -650,40 +713,24 @@ class MultiplexedRzGate(Gate):
 
     def __pow__(self, e: Variable) -> "MultiplexedRzGate":
         thetas = [e * p for p in self.params]
-        return MultiplexedRzGate(thetas, self.qubits)
-
-    def __str__(self) -> str:
-        def _param_format(obj: Any) -> str:
-            if isinstance(obj, float):
-                try:
-                    return str(var.asexpression(obj))
-                except ValueError:
-                    return f"{obj}"
-            return str(obj)
-
-        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
-
-        if self.params:
-            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
-        else:
-            fparams = ""
-
-        return f"{self.name}{fparams}{fqubits}"
+        return MultiplexedRzGate(thetas, self.controls, self.targets[0])
 
     def decompose(self, topology: nx.Graph = None) -> Iterator[Union[Rz, CNot]]:
         thetas = self.params
         N = self.qubit_nb
-        qbs = self.qubits
+        controls = self.controls
+        target = self.targets[0]
 
         if N == 1:
-            yield Rz(thetas[0], qbs[0])
+            yield Rz(thetas[0], target)
         elif N == 2:
-            yield Rz((thetas[0] + thetas[1]) / 2, qbs[1])
-            yield CNot(qbs[0], qbs[1])
-            yield Rz((thetas[0] - thetas[1]) / 2, qbs[1])
-            yield CNot(qbs[0], qbs[1])
+            yield Rz((thetas[0] + thetas[1]) / 2, target)
+            yield CNot(controls[0], target)
+            yield Rz((thetas[0] - thetas[1]) / 2, target)
+            yield CNot(controls[0], target)
         else:
-            # FIXME: Not quite optimal. There's additional cancellation of CNOTs that could happen
+            # FIXME: Not quite optimal.
+            # There's additional cancellation of CNOTs that could happen
             # See: From "Decomposition of Diagonal Hermitian Quantum Gates Using
             # Multiple-Controlled Pauli Z Gates" (2014).
 
@@ -709,17 +756,68 @@ class MultiplexedRzGate(Gate):
             theta2 = [(t0 + t1 - t2 - t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
             theta3 = [(t0 - t1 - t2 + t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
 
-            yield from MultiplexedRzGate(theta0, qbs[2:]).decompose()
-            yield CNot(qbs[1], qbs[-1])
-            yield from MultiplexedRzGate(theta1, qbs[2:]).decompose()
-            yield CNot(qbs[0], qbs[-1])
-            yield from MultiplexedRzGate(theta3, qbs[2:]).decompose()
-            yield CNot(qbs[1], qbs[-1])
-            yield from MultiplexedRzGate(theta2, qbs[2:]).decompose()
-            yield CNot(qbs[0], qbs[-1])
+            yield from MultiplexedRzGate(theta0, controls[2:], target).decompose()
+            yield CNot(controls[1], target)
+            yield from MultiplexedRzGate(theta1, controls[2:], target).decompose()
+            yield CNot(controls[0], target)
+            yield from MultiplexedRzGate(theta3, controls[2:], target).decompose()
+            yield CNot(controls[1], target)
+            yield from MultiplexedRzGate(theta2, controls[2:], target).decompose()
+            yield CNot(controls[0], target)
 
 
 # end class MultiplexedRzGate
+
+
+class MultiplexedRyGate(MultiplexedGate):
+    """Uniformly controlled (multiplexed) Ry gate"""
+
+    def __init__(
+        self, thetas: Sequence[Variable], controls: Qubits, target: Qubit
+    ) -> None:
+
+        thetas = tuple(thetas)
+        gates = [Ry(theta, target) for theta in thetas]
+        super().__init__(gates=gates, controls=controls)
+        self._params = thetas
+
+    @property
+    def H(self) -> "MultiplexedRyGate":
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> "MultiplexedRyGate":
+        thetas = [e * p for p in self.params]
+        return MultiplexedRyGate(thetas, self.controls, self.targets[0])
+
+    def decompose(
+        self, topology: nx.Graph = None
+    ) -> Iterator[Union[V, MultiplexedRzGate]]:
+        thetas = self.params
+        controls = self.controls
+        target = self.targets[0]
+
+        yield V(target)
+        yield MultiplexedRzGate(thetas, controls, target)
+        yield V(target).H
+
+
+# end class MultiplexedRyGate
+
+
+class RandomGate(Unitary):
+    r"""Returns a random unitary gate acting on the given qubits.
+
+    Ref:
+        "How to generate random matrices from the classical compact groups"
+        Francesco Mezzadri, math-ph/0609050
+    """
+
+    def __init__(self, qubits: Qubits) -> None:
+        qubits = tuple(qubits)
+        tensor = utils.unitary_ensemble(2 ** len(qubits))
+        super().__init__(tensor, qubits)
+
+# end class RandomGate
 
 
 # Fin
