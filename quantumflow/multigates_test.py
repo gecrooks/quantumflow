@@ -287,7 +287,7 @@ def test_DiagonalGate_from_gate() -> None:
 
 
 def test_merge_diagonal_gates() -> None:
-    from quantumflow.modules import merge_diagonal_gates
+    from quantumflow.multigates import merge_diagonal_gates
 
     gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
     gate1 = qf.DiagonalGate([0.1, 0.2, 0.3, 0.4], qubits=[1, 2])
@@ -347,14 +347,14 @@ def test_DiagonalGate_decomposition_count():
 
 
 def test_MultiplexedRzGate() -> None:
-    gate1 = qf.MultiplexedRzGate(thetas=[0.1], qubits=[2])
+    gate1 = qf.MultiplexedRzGate(thetas=[0.1], controls=(), target=2)
     assert gate1.qubit_nb == 1
     assert qf.gates_close(gate1, qf.Rz(0.1, 2))
 
-    gate2 = qf.MultiplexedRzGate(thetas=[0.1, 0.2], qubits=[0, 1])
+    gate2 = qf.MultiplexedRzGate(thetas=[0.1, 0.2], controls=[0], target=1)
     assert gate2.qubit_nb == 2
 
-    gate3 = qf.MultiplexedRzGate(thetas=[0, 0.2], qubits=[0, 1])
+    gate3 = qf.MultiplexedRzGate(thetas=[0, 0.2], controls=[0], target=1)
     gate4 = qf.CRZ(0.2, 0, 1)
     assert qf.gates_close(gate3, gate4)
 
@@ -367,16 +367,18 @@ def test_MultiplexedRzGate() -> None:
     circ3 = qf.Circuit(gate3.decompose())
     assert qf.gates_close(circ3.asgate(), gate3)
 
-    gate4b = qf.MultiplexedRzGate(thetas=[0.1, 0.2, 0.3, 0.4], qubits=[0, 1, 2])
+    gate4b = qf.MultiplexedRzGate(
+        thetas=[0.1, 0.2, 0.3, 0.4], controls=[0, 1], target=2
+    )
     circ4b = qf.Circuit(gate4b.decompose())
     assert qf.gates_close(circ4b.asgate(), gate4b)
 
-    gate5 = qf.MultiplexedRzGate(thetas=[0.1, 0.2, 0.3, 0.4], qubits=[2, 3, 0])
+    gate5 = qf.MultiplexedRzGate(thetas=[0.1, 0.2, 0.3, 0.4], controls=[2, 3], target=0)
     circ5 = qf.Circuit(gate5.decompose())
     assert qf.gates_close(circ5.asgate(), gate5)
 
     gate6 = qf.MultiplexedRzGate(
-        thetas=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], qubits=[0, 1, 2, 3]
+        thetas=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], controls=[0, 1, 2], target=3
     )
     circ6 = qf.Circuit(gate6.decompose())
     assert qf.gates_close(circ6.asgate(), gate6)
@@ -386,13 +388,51 @@ def test_MultiplexedRzGate() -> None:
     assert ops[qf.Rz] == 8
     print(ops)
 
-    gate7 = qf.MultiplexedRzGate(thetas=np.random.rand(16), qubits=[0, 1, 2, 3, 4])
+    gate7 = qf.MultiplexedRzGate(
+        thetas=np.random.rand(16), controls=[0, 1, 2, 3], target=4
+    )
     circ7 = qf.Circuit(gate7.decompose())
     assert qf.gates_close(circ7.asgate(), gate7)
 
     assert qf.gates_close(gate1.H, gate1 ** -1)
 
     assert str(gate1) == "MultiplexedRzGate(1/10) 2"
+
+
+def test_MultiplexedRyGate() -> None:
+    q0, q1, q2 = (0, 1, 2)
+    thetas = [0.1, 0.2]
+    gate1 = qf.MultiplexedRyGate(thetas, controls=[q0], target=q1)
+    assert gate1.qubit_nb == 2
+
+    circ1 = qf.Circuit(
+        [
+            qf.X(q0),
+            qf.ControlGate([q0], qf.Ry(thetas[0], q1)),
+            qf.X(q0),
+            qf.ControlGate([q0], qf.Ry(thetas[1], q1)),
+        ]
+    )
+    assert qf.gates_close(gate1, circ1.asgate())
+
+    gate7 = qf.MultiplexedRyGate(thetas=np.random.rand(2), controls=[0], target=4)
+    circ7 = qf.Circuit(gate7.decompose())
+    assert qf.gates_close(circ7.asgate(), gate7)
+
+    assert qf.gates_close(gate1.H, gate1 ** -1)
+    gate2 = qf.Unitary(gate1.asoperator(), gate1.qubits)
+    assert qf.gates_close(gate1.H, gate2.H)
+    assert qf.gates_close(gate1 ** 2, gate2 ** 2)
+    assert qf.gates_close(gate1 ** -1, gate2 ** -1)
+
+    # gate2 = qf.MultiplexedRzGate(thetas=[0.1, 0.2], qubits=[0, 1])
+    # assert gate2.qubit_nb == 2
+
+    # gate3 = qf.MultiplexedRzGate(thetas=[0, 0.2], qubits=[0, 1])
+    # gate4 = qf.CRZ(0.2, 0, 1)
+    # assert qf.gates_close(gate3, gate4)
+
+    # circ1 = qf.Circuit(gate1.decompose())
 
 
 # fin

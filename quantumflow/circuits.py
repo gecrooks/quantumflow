@@ -176,7 +176,7 @@ class Circuit(Sequence, Operation):
         return rho
 
     def asgate(self) -> Gate:
-        from .modules import IdentityGate
+        from .multigates import IdentityGate
 
         gate: Gate = IdentityGate(self.qubits)
         for elem in self:
@@ -184,7 +184,7 @@ class Circuit(Sequence, Operation):
         return gate
 
     def aschannel(self) -> Channel:
-        from .modules import IdentityGate
+        from .multigates import IdentityGate
 
         chan = IdentityGate(self.qubits).aschannel()
         for elem in self:
@@ -284,7 +284,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
     # Kudos: Adapted from Rigetti Grove's utility_programs.py
     # grove/utils/utility_programs.py::ControlledProgramBuilder
 
-    from .modules import ControlGate
+    from .multigates import ControlGate
 
     circ = Circuit()
     if len(controls) == 1:
@@ -362,7 +362,7 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
     0.25 0.25
 
     """
-    from .modules import ControlGate
+    from .multigates import ControlGate
 
     circ = Circuit()
     circ += map_gate(H(0), list(zip(outputs)))  # Hadamard on all output qubits
@@ -372,7 +372,7 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
         circ += cgate
         gate = gate @ gate
 
-    from .modules import InvQFTGate
+    from .multigates import InvQFTGate
 
     circ += InvQFTGate(outputs).decompose()
 
