@@ -9,7 +9,7 @@ QuantumFlow: Translate a quantum gate into an equivalent sequence of other quant
 These translations are all analytic, so that we can use symbolic
 parameters. Numerical decompositions can be found in the decompositions module.
 
-Translations return an Iterator over gates, rather than a Circuit, in part
+Translations return an Iterator over gates, rather than a Circuit,
 so that we can use type annotations to keep track of the source and resultant
 gates of each translation.
 """
