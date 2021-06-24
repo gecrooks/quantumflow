@@ -70,7 +70,7 @@ from sympy.combinatorics import Permutation
 from . import tensors, utils, var
 from .circuits import Circuit
 from .gates import unitary_from_hamiltonian
-from .ops import Gate, Operation, Unitary 
+from .ops import Gate, Operation, Unitary
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
@@ -565,6 +565,7 @@ class DiagonalGate(Gate):
             yield from MultiplexedRzGate(angles, qbs[:-1], qbs[-1]).decompose()
             yield from DiagonalGate(phases, qbs[:-1]).decompose()
 
+
 # end class DiagonalGate
 
 
@@ -661,6 +662,7 @@ class MultiplexedGate(Gate):
 
     # TODO: deke to 2^N control gates
 
+
 # end class MultiplexedGate
 
 
@@ -671,9 +673,7 @@ class ConditionalGate(MultiplexedGate):
     else perform gate B. A multiplexed gate with only 1 control.
     """
 
-    def __init__(
-        self, A: Gate, B: Gate, control_qubit: Qubit
-    ) -> None:
+    def __init__(self, A: Gate, B: Gate, control_qubit: Qubit) -> None:
         super().__init__(gates=[A, B], controls=(control_qubit,))
 
 
@@ -816,6 +816,7 @@ class RandomGate(Unitary):
         qubits = tuple(qubits)
         tensor = utils.unitary_ensemble(2 ** len(qubits))
         super().__init__(tensor, qubits)
+
 
 # end class RandomGate
 
