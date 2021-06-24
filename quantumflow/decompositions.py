@@ -30,7 +30,7 @@ Two-qubit gate decompositions
 
 
 import itertools
-from typing import List, Sequence, Tuple, cast, Iterator
+from typing import Iterator, List, Sequence, Tuple, cast
 
 import numpy as np
 import scipy
@@ -38,11 +38,10 @@ import scipy
 from .circuits import Circuit, euler_circuit
 from .config import ATOL
 from .info import gates_close
+from .multigates import MultiplexedRyGate, MultiplexedRzGate
 from .ops import Gate, Unitary
 from .stdgates import S_H, B, Can, I, Rn, S, V, X, Y, YPow, Z, ZPow
-from .multigates import MultiplexedRzGate, MultiplexedRyGate
 from .translate import translate_can_to_cnot
-
 
 __all__ = [
     "bloch_decomposition",
@@ -54,7 +53,7 @@ __all__ = [
     "cnot_decomposition",
     "b_decomposition",
     "convert_can_to_weyl",
-    "quantum_shannon_decomposition"
+    "quantum_shannon_decomposition",
 ]
 
 
@@ -692,6 +691,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     Ref:
         https://arxiv.org/pdf/quant-ph/0406176.pdf
     """
+
     def qs_deke(gate: Gate, euler: str) -> Iterator[Gate]:
         qubits = gate.qubits
         N = gate.qubit_nb
@@ -713,7 +713,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
         M2 = B1 @ B2.conj().T
         eigvals, V = np.linalg.eig(M2)
-        D = np.diag(eigvals**0.5)
+        D = np.diag(eigvals ** 0.5)
         W = D @ V.conj().T @ B2
         thetas = np.real(np.log(eigvals) * 1j)
 
@@ -725,7 +725,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
         M2 = A1 @ A2.conj().T
         eigvals, V = np.linalg.eig(M2)
-        D = np.diag(eigvals**0.5)
+        D = np.diag(eigvals ** 0.5)
         W = D @ V.conj().T @ A2
         thetas = np.real(np.log(eigvals) * 1j)
 
