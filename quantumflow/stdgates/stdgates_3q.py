@@ -45,6 +45,8 @@ class CCiX(StdGate):
     """
     # Kudos: Adapted from 1210.0974, via Quipper
 
+    # See also https://arxiv.org/pdf/1508.03273.pdf, fig 3
+
     cv_tensor_structure = "monomial"
     _diagram_labels = ("─" + CTRL + "─", "─" + CTRL + "─", "iX─")
 
@@ -211,6 +213,7 @@ class CCZ(StdGate):
                 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1
             \end{pmatrix}
     """
+    cv_hermitian = True
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
     _diagram_labels = (CTRL, CTRL, CTRL)
