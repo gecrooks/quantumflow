@@ -74,6 +74,7 @@ from .stdgates import (
     HPow,
     I,
     ISwap,
+    Margolus,
     Ph,
     PhasedX,
     PhasedXPow,
@@ -1631,6 +1632,58 @@ def translate_a_to_can(gate: A) -> Iterator[Union[Can, ZPow]]:
     # Note: There seems to be a sign error in the paper referenced above for
     # this part of the expression
     yield ZPow(phi / var.PI - 1 / 2, q1)
+
+
+def translate_margolus_to_cnot(
+    gate: Margolus,
+) -> Iterator[Union[CNot, V, V_H, T, T_H]]:
+    """Decomposition of Margolus gate to 3 CNots.
+
+    (Note that V_H T V = Ry(pi/4) up to phase)
+    ::
+
+        ─────────────────────────────────────●───────────────────────────────────
+                                             │
+        ──────────────────●──────────────────┼─────────────────●─────────────────
+                          │                  │                 │
+        ───V_H───T⁺───V───X───V_H───T⁺───V───X───V_H───T───V───X───V_H───T───V───
+    """
+    q0, q1, q2 = gate.qubits
+
+    yield V(q2).H
+    yield T(q2).H
+    yield V(q2)
+    yield CNot(q1, q2)
+    yield V(q2).H
+    yield T(q2).H
+    yield V(q2)
+    yield CNot(q0, q2)
+    yield V(q2).H
+    yield T(q2)
+    yield V(q2)
+    yield CNot(q1, q2)
+    yield V(q2).H
+    yield T(q2)
+    yield V(q2)
+
+
+def translate_ccnot_to_margolus(gate: Margolus) -> Iterator[Union[CCNot, X, CCZ]]:
+    """Decomposition of a Toffoli gate to a Margolus gate ("Simplified Toffoli")
+    plus a doubly controlled phase shift gate.
+
+    ::
+        ───────●───────Margolus_0───
+               │           │
+        ───X───●───X───Margolus_1───
+               │           │
+        ───────●───────Margolus_2───
+    """
+    q0, q1, q2 = gate.qubits
+
+    yield X(q1)
+    yield CCZ(q0, q1, q2)
+    yield X(q1)
+    yield CCNot(q0, q1, q2)
 
 
 TRANSLATORS: Dict[str, Callable] = {}
