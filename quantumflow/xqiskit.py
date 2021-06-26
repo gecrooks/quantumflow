@@ -43,6 +43,7 @@ __all__ = [
     "translate_to_qiskit",
     "circuit_to_qasm",
     "qasm_to_circuit",
+    "translate_gate_to_qiskit",  # Deprecated
 ]
 
 
