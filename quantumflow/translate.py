@@ -4,7 +4,8 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-QuantumFlow: Translate a quantum gate into an equivalent sequence of other quantum gates.
+QuantumFlow: Translate a quantum gate into an equivalent sequence of other quantum
+gates.
 
 These translations are all analytic, so that we can use symbolic
 parameters. Numerical decompositions can be found in the decompositions module.
