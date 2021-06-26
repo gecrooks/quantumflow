@@ -21,8 +21,8 @@ superclass, Operation, including other circuits.
 Quantum operations are immutable, and transformations of these operations return
 new copies. (An exception is the composite operation DAGCircuit.)
 
-The main types of Operation's are Gate, UnitaryGate, StdGate, Channel, Circuit, DAGCircuit,
-and Pauli.
+The main types of Operation's are Gate, UnitaryGate, StdGate, Channel, Circuit,
+DAGCircuit, and Pauli.
 
 .. autoclass:: Operation
     :members:
