@@ -17,7 +17,7 @@ from ..qubits import Qubit
 from ..states import State
 from ..tensors import QubitTensor
 from ..var import PI, Variable
-from .stdgates_2q import CZ, CNot, Swap
+from .stdgates_2q import CZ, CNot, Swap, ISwap
 
 # 3-qubit gates, in alphabetic order
 
@@ -287,16 +287,7 @@ class CISwap(StdGate):
     @property
     def hamiltonian(self) -> Pauli:
         q0, q1, q2 = self.qubits
-        return (
-            (
-                sZ(0) * sX(1) * sX(2)
-                + sZ(0) * sY(1) * sY(2)
-                - sX(1) * sX(2)
-                - sY(1) * sY(2)
-            )
-            * var.PI
-            / 8
-        )
+        return ISwap(q1, q2).hamiltonian * (1 - sZ(q0)) / 2
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
