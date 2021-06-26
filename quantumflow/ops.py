@@ -298,6 +298,7 @@ class Gate(Operation):
         diagonal
         permutation
         monomial
+        swap
 
     A permutation matrix permutes states. It has a single '1' in each row and column.
     All other entries are zero.
@@ -305,8 +306,8 @@ class Gate(Operation):
     A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.
 
+    A swap is a permutation matrix that swaps qubits
     """
-    # TODO: Add "swap" t roster of tensor structures
 
     # Note: Circular import hell
     from .paulialgebra import Pauli
@@ -461,7 +462,7 @@ class StdGate(Gate):
     """
 
     cv_stdgates: Dict[str, Type["StdGate"]] = {}
-    """List of all StdGate subclasses"""
+    """A dictionary between names and types for all StdGate subclasses"""
 
     def __init_subclass__(cls) -> None:
         # Note: The __init_subclass__ initializes all subclasses of a given class.

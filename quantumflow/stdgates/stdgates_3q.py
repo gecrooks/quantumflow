@@ -21,7 +21,7 @@ from .stdgates_2q import CZ, CNot, Swap
 
 # 3-qubit gates, in alphabetic order
 
-__all__ = ("CCiX", "CCNot", "CCXPow", "CCZ", "CSwap", "Deutsch")
+__all__ = ("CCiX", "CCNot", "CCXPow", "CCZ", "CSwap", "Deutsch", "Margolus")
 
 
 class CCiX(StdGate):
@@ -97,6 +97,7 @@ class CCNot(StdGate):
             \end{pmatrix}
 
     """
+    cv_hermitian = True
     cv_tensor_structure = "permutation"
     _diagram_labels = (CTRL, CTRL, TARGET)
 
@@ -275,6 +276,7 @@ class CCZ(StdGate):
                 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1
             \end{pmatrix}
     """
+    cv_hermitian = True
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
     _diagram_labels = (CTRL, CTRL, CTRL)
@@ -369,3 +371,69 @@ class Deutsch(StdGate):
 
 
 # end class Deutsch
+
+
+class Margolus(StdGate):
+    r"""
+    A "simplified" Toffoli gate.
+
+    Differs from the Toffoli only in that the |101> state picks up a -1 phase.
+    Can be implemented with 3 CNot gates.
+
+    .. math::
+        \text{CCiX}() \equiv \begin{pmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & -1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0
+            \end{pmatrix}
+
+    Refs:
+        https://arxiv.org/pdf/quant-ph/0312225.pdf
+    """
+
+    cv_hermitian = True
+    cv_tensor_structure = "monomial"
+
+    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+        super().__init__(qubits=[q0, q1, q2])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, q1, q2 = self.qubits
+        return (
+            (1 - sZ(q0))
+            * (-2 - sZ(q1) * sX(q2) + sZ(q1) * sZ(q2) + sX(q2) + sZ(q2))
+            * PI
+            / 8
+        )
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        unitary = np.asarray(
+            [
+                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+            ]
+        )
+        return tensors.asqutensor(unitary)
+
+    @property
+    def H(self) -> "Margolus":
+        return self  # Hermitian
+
+
+# end class Margolus
+
+
+# fin

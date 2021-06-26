@@ -36,7 +36,7 @@ Controlled-Z                CZ          CSIGN
 Controlled-S                .           CS
 Controlled-T                .           CT
 Swap                        Swap        SWAP
-iSwap                       ISwap      ISWAP
+iSwap                       ISwap       ISWAP
 Sqrt-iSWAP                  SqrtISwap   SQRTISWAP
 Sqrt-SWAP                   SqrtSwap    SQRTSWAP
 Controlled-RX               .           CRX
@@ -68,7 +68,7 @@ Fredkin                     CSwap       FREDKIN
 # qrot
 # QASMU
 
-from typing import Dict, List, Type, cast
+from typing import Dict, Tuple, Type, cast
 
 from qutip.qip.circuit import QubitCircuit, _ctrl_gates, _para_gates
 
@@ -105,11 +105,7 @@ from .stdgates import (  # B,; Exch,
 from .translate import circuit_translate, select_translators
 from .utils import invert_map
 
-__all__ = (
-    "qutip_to_circuit",
-    "circuit_to_qutip",
-    "translate_to_qutip",
-)
+__all__ = ("qutip_to_circuit", "circuit_to_qutip", "translate_to_qutip", "QUTIP_GATES")
 
 
 _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
@@ -142,8 +138,8 @@ _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
     # Exch: "SWAPalpha",  # Same gate, different parameterization
 }
 
-QUTIP_GATES: List[Type[Gate]] = list(_QUTIP_GATE_NAMES.keys())
-"""List of QuantumFlow gates that we know how to convert directly to QuTiP"""
+QUTIP_GATES: Tuple[Type[Gate], ...] = tuple(_QUTIP_GATE_NAMES.keys())
+"""List of QuantumFlow gates that we know how to convert directly to and from QuTiP"""
 
 _QUTIP_NAME_GATES = invert_map(_QUTIP_GATE_NAMES)
 # _QUTIP_NAME_GATES["CSIGN"] = CZ

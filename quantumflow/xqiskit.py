@@ -15,14 +15,16 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_to_qiskit
 """
 
+from typing import Tuple, Type
+
 import qiskit
 
 from .circuits import Circuit
-from .ops import Operation, StdGate
+from .ops import Gate, Operation, StdGate
 from .qubits import Qubits
 from .states import State
 from .stdops import If, Initialize
-from .translate import circuit_translate, select_translators
+from .translate import circuit_translate
 from .utils import invert_map
 
 # This module imports qiskit, so we do not include it at top level.
@@ -30,23 +32,30 @@ from .utils import invert_map
 # > from quantumflow.xqiskit import qiskit_to_circuit, circuit_to_qiskit
 #
 # Note that QASM specific gates are defined in quantumflow/stdgates/stdgates_qasm.py
-# Conceivable you might want to use those gates in QuantumFlow without loading
+# since you might want to use those gates in QuantumFlow without loading
 # qiskit
 
 __all__ = [
+    "QISKIT_GATES",
     "QiskitSimulator",
     "qiskit_to_circuit",
     "circuit_to_qiskit",
-    "translate_gates_to_qiskit",
+    "translate_to_qiskit",
+    "circuit_to_qasm",
+    "qasm_to_circuit",
+    "translate_gates_to_qiskit",  # Deprecated
 ]
+
 
 QASM_TO_QF = {
     "ccx": "CCNot",
     "ch": "CH",
-    "crz": "CRZ",
+    "crz": "CRz",
     "cswap": "CSwap",
-    "cu1": "CPhase",
+    "cu1": "CPhase",  # Legacy. Changed to 'cp'
+    "cp": "CPhase",
     "cu3": "CU3",
+    "csx": "CV",
     "cx": "CNot",
     "cy": "CY",
     "cz": "CZ",
@@ -55,15 +64,19 @@ QASM_TO_QF = {
     "rx": "Rx",
     "ry": "Ry",
     "rz": "Rz",
-    "rzz": "RZZ",
+    "rzz": "Rzz",
     "s": "S",
     "sdg": "S_H",
     "swap": "Swap",
+    "sx": "V",
+    # "sxdg": "V_H",   # Not fully supported by Aer simulator
     "t": "T",
     "tdg": "T_H",
-    "u1": "PhaseShift",
+    "u1": "PhaseShift",  # Legacy. Changed to 'p'
+    "p": "PhaseShift",
     "u2": "U2",
-    "u3": "U3",
+    "u3": "U3",  # Legacy. Changed to 'u'
+    "u": "U3",
     "x": "X",
     "y": "Y",
     "z": "Z",
@@ -73,12 +86,19 @@ QASM_TO_QF = {
 }
 """Map from qiskit operation names to QuantumFlow names"""
 
-
 NAMED_GATES = StdGate.cv_stdgates
+
+
+QISKIT_GATES: Tuple[Type[Gate], ...] = tuple(
+    set([NAMED_GATES[n] for n in QASM_TO_QF.values()])
+)
+"""Tuple of QuantumFlow gates that we can convert directly to QisKit"""
+
 
 # TODO: 'multiplexer', 'snapshot', 'unitary'
 
 
+# FIXME: *elements? in __init__? INterface should be like circuit
 class QiskitSimulator(Operation):
     def __init__(self, *elements: Operation) -> None:
         self._circuit = Circuit(*elements)
@@ -93,9 +113,12 @@ class QiskitSimulator(Operation):
             circ = Circuit(Initialize(ket)) + circ
 
         qkcircuit = circuit_to_qiskit(circ, translate=True)
-        simulator = qiskit.Aer.get_backend("statevector_simulator")
-        job = qiskit.execute(qkcircuit, simulator)
-        result = job.result()
+
+        # The call to get_backend() automagically adds the save_statevector() method to
+        # QuantumCircuit. WTF. Mutating classes!? This is a terrible design.
+        simulator = qiskit.Aer.get_backend("aer_simulator")
+        qkcircuit.save_statevector()
+        result = simulator.run(qkcircuit).result()
         tensor = result.get_statevector()
 
         res = State(tensor, list(reversed(self.qubits)))
@@ -113,13 +136,16 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
 
     circ = Circuit()
 
+    qkqbs = qkcircuit.qregs[0][:]
+
     for instruction, qargs, cargs in qkcircuit:
         name = instruction.name
         if name not in QASM_TO_QF:
             raise NotImplementedError("Unknown qiskit operation")
 
         qf_name = QASM_TO_QF[name]
-        qubits = [q.index for q in qargs]
+        qubits = [qkqbs.index(q) for q in qargs]
+
         args = [float(param) for param in instruction.params] + qubits
         gate = named_ops[qf_name](*args)  # type: ignore
 
@@ -132,9 +158,7 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
     return circ
 
 
-# TODO: Default translate to false?
-# TODO: QISKIT_GATES
-def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCircuit:
+def circuit_to_qiskit(circ: Circuit, translate: bool = False) -> qiskit.QuantumCircuit:
     """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
@@ -143,10 +167,10 @@ def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCi
     # names in QASM_TO_QF
 
     if translate:
-        circ = translate_gates_to_qiskit(circ)
+        circ = translate_to_qiskit(circ)
 
+    # Note that with multiple mappings, the second one gets priority.
     QF_TO_QASM = invert_map(QASM_TO_QF)
-    # QF_TO_QASM["I"] = "i"
 
     # We assume only one QuantumRegister. Represent qubits by index in register
     qreg = qiskit.QuantumRegister(circ.qubit_nb)
@@ -174,13 +198,24 @@ def circuit_to_qiskit(circ: Circuit, translate: bool = True) -> qiskit.QuantumCi
     return qkcircuit
 
 
-def translate_gates_to_qiskit(circ: Circuit) -> Circuit:
+def translate_to_qiskit(circ: Circuit) -> Circuit:
     """Convert QF gates to gates understood by qiskit"""
-    target_gates = list([NAMED_GATES[n] for n in QASM_TO_QF.values()])
-    trans = select_translators(target_gates)  # type: ignore
+    return circuit_translate(circ, targets=QISKIT_GATES)
 
-    circ = circuit_translate(circ, trans)
-    return circ
+
+# Deprecated
+translate_gates_to_qiskit = translate_to_qiskit
+
+
+def circuit_to_qasm(circ: Circuit, translate: bool = False) -> str:
+    """Convert a QF circuit to a QASM formatted string"""
+    return circuit_to_qiskit(circ, translate).qasm()
+
+
+def qasm_to_circuit(qasm_str: str) -> Circuit:
+    """Convert a QASM circuit to a QF circuit"""
+    qc = qiskit.QuantumCircuit.from_qasm_str(qasm_str)
+    return qiskit_to_circuit(qc)
 
 
 # fin

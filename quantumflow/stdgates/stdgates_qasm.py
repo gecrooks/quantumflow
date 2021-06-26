@@ -5,25 +5,83 @@
 
 """
 QuantumFlow: Gates specific to QASM
-"""
 
-import numpy as np
+Qiskit has two names for each gate: the name of the class object (with a "Gate" suffix)
+and the lower cased abbreviations that added as methods to the QuantumCircuit class and
+QASM files.
 
-from .. import tensors
-from ..config import CTRL
-from ..ops import StdGate
-from ..paulialgebra import Pauli, sZ
-from ..qubits import Qubit
-from ..tensors import QubitTensor
-from ..utils import cached_property
-from ..var import Variable
-from .stdgates_1q import PhaseShift, Rz
-from .stdgates_2q import CNot
-from .stdgates_forest import CPhase
+## Standard gates (as of qiskit v0.26.0)
+https://qiskit.org/documentation/apidoc/circuit_library.html
 
-__all__ = ("U3", "U2", "CU3", "CRZ", "RZZ")
+============    ============    ============    ============================================================================================================
+Qiskit          QASM            QF              Comments
+============    ============    ============    ============================================================================================================
+
+C3X                                             A triply-controlled X gate
+C3SX                                            A triply controlled V gate
+C4X                                             A quadruply-controlled not gate
+CCX             ccx             CCNot
+DCX             dcx                             A Double-CNOT
+CH              ch              CH
+CPhase          cp              CPhase
+CRX             crz             CRx
+CRY             cry             CRy
+CRZ             crz             CRz
+CSwap           cswap           CSwap
+CSX             csx             CV
+CU
+CU1             cu1             CPhase          Replaced by CPhase as of qiskit 0.16.0
+CU3             cu3             CU3             Deprecated.
+CX              cx              CNot
+CY              cy              CY
+CZ              cz              CZ
+H               h               H
+I               id              I
+MS              ms              -               Deprecated. Essentially an Rxx gate
+Phase           p               PhaseShift
+RCCX                            -               Claims to be a Margolus gate, but it ain't. Some other generic "simplified" Toffoli gate.
+RC3X                            -               A triply controlled "simplified Toffoli" style gate.
+R
+RX              rx              Rx
+RXX             rxx             Rxx
+RY              ry              Ry
+RYY             ryy             Ryy
+RZ              rz              Rz
+RZZ             rzz             Rzz
+RZX             rzx                             Special case of the cross resonance gate
+ECR             ecr                             Echoed cross-resonance gate
+S               s               S
+Sdg             sdg             S_H
+Swap            swap            Swap
+iSwap           iswap           iswap
+SX              sx              V
+SXdg            sxdg            V_H
+T               t               T
+Tdg             tdg             T_H
+U               u                               A Z-Y-Z Euler decomposition of a 1-qubit gate with different arguments
+U1              u1              PhaseShift      Replaced by Phase as of qiskit 0.16.0
+U2              u2              U2              Deprecated. Replaced by 'U'
+U3              u3              U3
+X               x               X
+Y               y               Y
+Z               z               Z
+============    ============    ============    ============================================================================================================
 
 
+## Multi-qubit gates
+MCPhase
+MCXGate
+MCXGrayCode
+NCXRecursive
+NCXVChain
+
+## Standard gate like operations
+Barrier
+Measure
+Reset
+
+
+"""  # noqa: E501
 # Is QASM's U1 gate a PhaseShift gate or an RZ gate?
 # This is very confusing. In the QASM paper U1(lam) is defined as both
 # PhaseShift(lam) (Eq. 3) and as U3(0,0, lam), which is RZ(lam) (Bottom of
@@ -40,6 +98,28 @@ __all__ = ("U3", "U2", "CU3", "CRZ", "RZZ")
 # Therefore, QASM's u1 is a PhaseShift gate, and rz is an RZ gate,
 # cu1 is a CPHASE.
 # u3 and cu3 are even more of a nightmare. See notes below.
+
+# Update: qiskit 0.16.0 renames and clarifies some of these issues.
+# U1 is now Phase or in circuits 'p' (i.e. PhaseShift gate)
+# CU1 is now CPhase or in circuits 'cp'
+
+
+import numpy as np
+
+from .. import tensors
+from ..config import CTRL
+from ..ops import StdGate
+from ..paulialgebra import Pauli, sZ
+from ..qubits import Qubit
+from ..tensors import QubitTensor
+from ..utils import cached_property
+from ..var import Variable
+from .stdgates_1q import PhaseShift, Rx, Ry, Rz
+from .stdgates_2q import XX, YY, ZZ, CNot
+from .stdgates_forest import CPhase
+
+__all__ = ("U3", "U2", "CU3", "CRZ", "RZZ", "CRx", "CRy", "CRz", "Rxx", "Ryy", "Rzz")
+
 
 U1 = PhaseShift
 CU1 = CPhase
@@ -171,8 +251,76 @@ class CU3(StdGate):
 # end class class CU3
 
 
-class CRZ(StdGate):
-    r"""A controlled RZ gate."""
+class CRx(StdGate):
+    r"""A controlled Rx gate."""
+    _diagram_labels = [CTRL, "Rx({theta})"]
+
+    def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
+        super().__init__(params=[theta], qubits=[q0, q1])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (theta,) = self.params
+        q0, q1 = self.qubits
+        return Rx(theta, q1).hamiltonian * (1 - sZ(q0)) / 2
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        (theta,) = self.params
+        q0, q1 = self.qubits
+        gate = Rx(theta, q1)
+        from ..modules import ControlGate
+
+        return ControlGate([q0], gate).tensor
+
+    @property
+    def H(self) -> "CRx":
+        return self ** -1
+
+    def __pow__(self, t: Variable) -> "CRx":
+        theta = self.param("theta")
+        return CRx(theta * t, *self.qubits)
+
+
+# end class CRx
+
+
+class CRy(StdGate):
+    r"""A controlled Ry gate."""
+    _diagram_labels = [CTRL, "Ry({theta})"]
+
+    def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
+        super().__init__(params=[theta], qubits=[q0, q1])
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (theta,) = self.params
+        q0, q1 = self.qubits
+        return Ry(theta, q1).hamiltonian * (1 - sZ(q0)) / 2
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        (theta,) = self.params
+        q0, q1 = self.qubits
+        gate = Ry(theta, q1)
+        from ..modules import ControlGate
+
+        return ControlGate([q0], gate).tensor
+
+    @property
+    def H(self) -> "CRy":
+        return self ** -1
+
+    def __pow__(self, t: Variable) -> "CRy":
+        theta = self.param("theta")
+        return CRy(theta * t, *self.qubits)
+
+
+# end class CRy
+
+
+class CRz(StdGate):
+    r"""A controlled Rz gate."""
     cv_tensor_structure = "diagonal"
     _diagram_labels = [CTRL, "Rz({theta})"]
 
@@ -195,22 +343,81 @@ class CRZ(StdGate):
         return ControlGate([q0], gate).tensor
 
     @property
-    def H(self) -> "CRZ":
+    def H(self) -> "CRz":
         return self ** -1
 
-    def __pow__(self, t: Variable) -> "CRZ":
+    def __pow__(self, t: Variable) -> "CRz":
         theta = self.param("theta")
-        return CRZ(theta * t, *self.qubits)
+        return CRz(theta * t, *self.qubits)
 
 
-# end class CRZ
+# end class CRz
 
 
-# TODO: Check proper phase, so can add Hamiltonian.
+# Legacy
+CRZ = CRz
+
+
+class Rxx(StdGate):
+    """A two-qubit XX-rotation gate, as defined by QASM.
+    Same as XX(theta/pi), up to phase.
+    """
+
+    cv_interchangeable = True
+
+    def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
+        super().__init__(params=[theta], qubits=[q0, q1])
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        q0, q1 = self.qubits
+        (theta,) = self.params
+        return XX(theta / np.pi, q0, q1).tensor
+
+    @property
+    def H(self) -> "Rxx":
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> "Rxx":
+        (theta,) = self.params
+        return Rxx(theta * e, *self.qubits)
+
+
+# end class Ryy
+
+
+class Ryy(StdGate):
+    """A two-qubit YY-rotation gate, as defined by QASM.
+    Same as YY(theta/pi)
+    """
+
+    cv_interchangeable = True
+
+    def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
+        super().__init__(params=[theta], qubits=[q0, q1])
+
+    @cached_property
+    def tensor(self) -> QubitTensor:
+        q0, q1 = self.qubits
+        (theta,) = self.params
+        return YY(theta / np.pi, q0, q1).tensor
+
+    @property
+    def H(self) -> "Ryy":
+        return self ** -1
+
+    def __pow__(self, e: Variable) -> "Ryy":
+        (theta,) = self.params
+        return Ryy(theta * e, *self.qubits)
+
+
+# end class Rxx
+
+
 # How is this different from CRZ?
-class RZZ(StdGate):
+class Rzz(StdGate):
     """A two-qubit ZZ-rotation gate, as defined by QASM.
-    Same as ZZ(theta/pi), up to phase.
+    Same as ZZ(theta/pi).
     """
 
     cv_interchangeable = True
@@ -221,23 +428,23 @@ class RZZ(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        (theta,) = self.params
         q0, q1 = self.qubits
-        from ..circuits import Circuit
-
-        circ = Circuit([CNot(q0, q1), PhaseShift(theta, q1), CNot(q0, q1)])
-        return circ.asgate().tensor
+        (theta,) = self.params
+        return ZZ(theta / np.pi, q0, q1).tensor
 
     @property
-    def H(self) -> "RZZ":
+    def H(self) -> "Rzz":
         return self ** -1
 
-    def __pow__(self, e: Variable) -> "RZZ":
+    def __pow__(self, e: Variable) -> "Rzz":
         (theta,) = self.params
-        return RZZ(theta * e, *self.qubits)
+        return Rzz(theta * e, *self.qubits)
 
 
-# end class RZZ
+# end class Rzz
+
+# Legacy
+RZZ = Rzz
 
 
 # fin

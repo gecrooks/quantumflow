@@ -51,11 +51,6 @@ jobs:
     - name: Build documentation with sphinx
       run: |
         sphinx-build -M html docs docs/_build
-    - name: Regression tests
-      run: |
-        git checkout tags/v1.0.1 'quantumflow/*_test.py' 'quantumflow/stdgates/*_test.py'
-        python -m pytest
-        git checkout HEAD quantumflow/*_test.py quantumflow/stdgates/*_test.py
     - name: Test with all supported minor versions of cirq
       run: |
         python -m pip install cirq~=0.8.0
