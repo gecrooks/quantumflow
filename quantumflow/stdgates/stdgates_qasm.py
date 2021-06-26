@@ -269,7 +269,7 @@ class CRx(StdGate):
         (theta,) = self.params
         q0, q1 = self.qubits
         gate = Rx(theta, q1)
-        from ..multigates import ControlGate
+        from ..modules import ControlGate
 
         return ControlGate([q0], gate).tensor
 
@@ -303,7 +303,7 @@ class CRy(StdGate):
         (theta,) = self.params
         q0, q1 = self.qubits
         gate = Ry(theta, q1)
-        from ..multigates import ControlGate
+        from ..modules import ControlGate
 
         return ControlGate([q0], gate).tensor
 
@@ -338,7 +338,7 @@ class CRz(StdGate):
         (theta,) = self.params
         q0, q1 = self.qubits
         gate = Rz(theta, q1)
-        from ..multigates import ControlGate
+        from ..modules import ControlGate
 
         return ControlGate([q0], gate).tensor
 

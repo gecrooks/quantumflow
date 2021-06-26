@@ -22,7 +22,7 @@ from . import utils, var
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
 from .gates import P0, P1
-from .multigates import IdentityGate
+from .modules import IdentityGate
 from .ops import Gate, Operation
 from .qubits import Qubits
 from .stdgates import CZ, CSwap, Swap
