@@ -400,7 +400,7 @@ def test_MultiplexedRzGate() -> None:
 
 
 def test_MultiplexedRyGate() -> None:
-    q0, q1, q2 = (0, 1, 2)
+    q0, q1 = (0, 1)
     thetas = [0.1, 0.2]
     gate1 = qf.MultiplexedRyGate(thetas, controls=[q0], target=q1)
     assert gate1.qubit_nb == 2
