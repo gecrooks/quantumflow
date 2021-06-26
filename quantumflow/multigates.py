@@ -482,8 +482,6 @@ def merge_diagonal_gates(
     return DiagonalGate(params, qubits)
 
 
-# TODO: Rename DiagonalUnitaryGate?
-# Add a DiagonalGate mixin
 class DiagonalGate(Gate):
     r"""
     A quantum gate whose unitary operator is diagonal in the computational basis.
