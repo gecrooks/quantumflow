@@ -5,7 +5,7 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: multigates
+.. currentmodule:: modules
 
 Multi-qubit gates
 #################
@@ -57,7 +57,7 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 """
 
-# TODO: Rename Unitary to Unitary Gate and document here.
+# TODO: Move all to gate module?
 
 from typing import Iterable, Iterator, List, Mapping, Sequence, Union
 

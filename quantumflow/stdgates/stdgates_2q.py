@@ -616,7 +616,7 @@ class CV(StdGate):
     @cached_property
     def tensor(self) -> QubitTensor:
         q0, q1 = self.qubits
-        from ..multigates import ControlGate
+        from ..modules import ControlGate
 
         return ControlGate([q0], V(q1)).tensor
 
@@ -646,7 +646,7 @@ class CV_H(StdGate):
     @cached_property
     def tensor(self) -> QubitTensor:
         q0, q1 = self.qubits
-        from ..multigates import ControlGate
+        from ..modules import ControlGate
 
         return ControlGate([q0], V_H(q1)).tensor
 
@@ -656,7 +656,6 @@ class CV_H(StdGate):
 
     def __pow__(self, t: Variable) -> "CNotPow":
         return CNotPow(-t / 2, *self.qubits)
-
 
 # end class CV_H
 
