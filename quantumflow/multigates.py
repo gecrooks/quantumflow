@@ -1223,7 +1223,7 @@ class MultiplexedRyGate(MultiplexedGate):
 # end class MultiplexedRyGate
 
 
-class RandomGate(Unitary):
+class RandomGate(UnitaryGate):
     r"""Returns a random unitary gate acting on the given qubits.
 
     Ref:
