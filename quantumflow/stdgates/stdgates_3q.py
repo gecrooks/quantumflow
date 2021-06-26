@@ -12,7 +12,7 @@ import numpy as np
 from .. import tensors, utils, var
 from ..config import CTRL, SWAP_TARGET, TARGET
 from ..ops import StdGate
-from ..paulialgebra import Pauli, sX, sY, sZ
+from ..paulialgebra import Pauli, sX, sZ
 from ..qubits import Qubit
 from ..states import State
 from ..tensors import QubitTensor
