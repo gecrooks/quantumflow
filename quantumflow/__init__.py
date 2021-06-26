@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-# Design Note:
+# Design Notes:
 #
 # We import the entire public interface to the top level so that users
 # don't need to know the internal package layout.
@@ -20,6 +20,31 @@
 # We use a star import here (which necessitates suppressing lint messages)
 # so that the public API can be specified in the individual submodules.
 # Each of these submodules should define __all__.
+#
+#
+# Import hierarchy:
+#
+#   utils
+#   config
+#   tensors
+#   var
+#   qubits
+#   states
+#   paulialgebra
+#   ops
+#   gates
+#   modules
+#   stdgates
+#   channels
+#   stdops
+#   circuits
+#   dagcircuit
+#   decompositions
+#   gradients
+#   info
+#   transform
+#   translate
+#   visualization
 
 
 from .channels import *  # noqa: F401, F403
@@ -30,7 +55,7 @@ from .decompositions import *  # noqa: F401, F403
 from .gates import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403
-from .multigates import *  # noqa: F401, F403
+from .modules import *  # noqa: F401, F403
 from .ops import *  # noqa: F401, F403
 from .paulialgebra import *  # noqa: F401, F403
 from .qubits import *  # noqa: F401, F403
