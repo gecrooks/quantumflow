@@ -32,7 +32,7 @@ from .utils import invert_map
 # > from quantumflow.xqiskit import qiskit_to_circuit, circuit_to_qiskit
 #
 # Note that QASM specific gates are defined in quantumflow/stdgates/stdgates_qasm.py
-# since ou might want to use those gates in QuantumFlow without loading
+# since you might want to use those gates in QuantumFlow without loading
 # qiskit
 
 __all__ = [

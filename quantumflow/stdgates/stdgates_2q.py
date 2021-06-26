@@ -1224,6 +1224,7 @@ class XY(StdGate):
 
     Powers of the iSWAP gate. Equivalent to ``Can(t, t, 0)``.
     """
+    # https://arxiv.org/abs/1912.04424v1
     cv_interchangeable = True
     _diagram_labels = ["XY^{t}"]
 
