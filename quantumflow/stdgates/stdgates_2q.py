@@ -7,8 +7,6 @@
 QuantumFlow: Standard two qubit gates
 """
 
-from typing import Iterator, Union
-
 import numpy as np
 
 from .. import tensors, utils, var
@@ -21,7 +19,7 @@ from ..states import State
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import PI, Variable
-from .stdgates_1q import S_H, V_H, H, I, S, V, X, Y, Z
+from .stdgates_1q import V_H, H, I, V, X, Y, Z
 
 # 2 qubit gates, alphabetic order
 
