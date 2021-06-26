@@ -28,7 +28,6 @@ from .ops import Gate
 from .stdgates import (
     CCZ,
     CH,
-    CRZ,
     CS,
     CT,
     CU3,
@@ -37,7 +36,6 @@ from .stdgates import (
     CY,
     CZ,
     ECP,
-    RZZ,
     S_H,
     T_H,
     U2,
@@ -61,6 +59,9 @@ from .stdgates import (
     CPhase01,
     CPhase10,
     CrossResonance,
+    CRx,
+    CRy,
+    CRz,
     CSwap,
     CYPow,
     CZPow,
@@ -82,8 +83,11 @@ from .stdgates import (
     PSwap,
     Rn,
     Rx,
+    Rxx,
     Ry,
+    Ryy,
     Rz,
+    Rzz,
     S,
     SqrtISwap,
     SqrtISwap_H,
@@ -752,7 +756,34 @@ def translate_cross_resonance_to_xx(
     yield XPow(t1, q0)
 
 
-def translate_crz_to_cnot(gate: CRZ) -> Iterator[Union[CNot, PhaseShift, U3]]:
+def translate_crx_to_cnotpow(gate: CRx) -> Iterator[Union[CNotPow, PhaseShift]]:
+    """Translate QASM's CRx gate to powers of a CNot gate."""
+    q0, q1 = gate.qubits
+    (theta,) = gate.params
+
+    yield CNotPow(theta / var.PI, q0, q1)
+    yield PhaseShift(-theta / 2, q0)
+
+
+def translate_cry_to_cypow(gate: CRy) -> Iterator[Union[CYPow, PhaseShift]]:
+    """Translate QASM's CRy gate to powers of a CY gate."""
+    q0, q1 = gate.qubits
+    (theta,) = gate.params
+
+    yield CYPow(theta / var.PI, q0, q1)
+    yield PhaseShift(-theta / 2, q0)
+
+
+def translate_crz_to_czpow(gate: CRz) -> Iterator[Union[CZPow, PhaseShift]]:
+    """Translate QASM's CRz gate to powers of a CZ gate."""
+    q0, q1 = gate.qubits
+    (theta,) = gate.params
+
+    yield CZPow(theta / var.PI, q0, q1)
+    yield PhaseShift(-theta / 2, q0)
+
+
+def translate_crz_to_cnot(gate: CRz) -> Iterator[Union[CNot, PhaseShift]]:
     """Translate QASM's CRZ gate to standard gates.
 
     Ref:
@@ -992,8 +1023,29 @@ def translate_pswap_to_canonical(gate: PSwap) -> Iterator[Union[Can, Y]]:
     yield Y(q1)
 
 
-def translate_rzz_to_cnot(gate: RZZ) -> Iterator[Union[CNot, PhaseShift, U3]]:
+def translate_rxx_to_xx(gate: Rxx) -> Iterator[Union[XX]]:
+    """Translate QASM's RXX gate to standard gates"""
+    q0, q1 = gate.qubits
+    (theta,) = gate.params
+    yield XX(theta / var.PI, q0, q1)
+
+
+def translate_ryy_to_yy(gate: Ryy) -> Iterator[Union[YY]]:
+    """Translate QASM's RYY gate to standard gates"""
+    q0, q1 = gate.qubits
+    (theta,) = gate.params
+    yield YY(theta / var.PI, q0, q1)
+
+
+def translate_rzz_to_zz(gate: Rzz) -> Iterator[Union[ZZ]]:
     """Translate QASM's RZZ gate to standard gates"""
+    q0, q1 = gate.qubits
+    (theta,) = gate.params
+    yield ZZ(theta / var.PI, q0, q1)
+
+
+def translate_rzz_to_cnot(gate: Rzz) -> Iterator[Union[CNot, PhaseShift, U3]]:
+    """Translate QASM's Rzz gate to standard gates"""
     q0, q1 = gate.qubits
     (theta,) = gate.params
     yield CNot(q0, q1)
@@ -1669,7 +1721,7 @@ def translate_margolus_to_cnot(
 
 def translate_ccnot_to_margolus(gate: Margolus) -> Iterator[Union[CCNot, X, CCZ]]:
     """Decomposition of a Toffoli gate to a Margolus gate ("Simplified Toffoli")
-    plus a doubly controlled phase shift gate.
+    plus a CCZ.
 
     ::
         ───────●───────Margolus_0───
