@@ -73,7 +73,7 @@ from . import tensors
 from .channels import Kraus
 from .circuits import Circuit
 from .config import ATOL
-from .multigates import IdentityGate
+from .modules import IdentityGate
 from .ops import Channel, Gate
 from .qubits import Qubits
 from .states import Density, State, random_state
