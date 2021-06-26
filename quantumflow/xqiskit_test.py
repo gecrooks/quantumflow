@@ -7,21 +7,22 @@
 Unit tests for quantumflow.xqiskit
 """
 
-import pytest
+# fmt: off
+import pytest; pytest.importorskip("qiskit")  # noqa: E702
+# fmt: on
 
-pytest.importorskip("qiskit")
 
-from qiskit import (  # noqa: E402
-    ClassicalRegister,
-    QuantumCircuit,
-    QuantumRegister,
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+
+import quantumflow as qf
+from quantumflow.xqiskit import (
+    QiskitSimulator,
+    circuit_to_qasm,
+    circuit_to_qiskit,
+    qasm_to_circuit,
+    qiskit_to_circuit,
+    translate_to_qiskit,
 )
-
-import quantumflow as qf  # noqa: E402
-from quantumflow.xqiskit import QiskitSimulator  # noqa: E402
-from quantumflow.xqiskit import circuit_to_qiskit  # noqa: E402
-from quantumflow.xqiskit import qiskit_to_circuit  # noqa: E402
-from quantumflow.xqiskit import translate_gates_to_qiskit  # noqa: E402
 
 
 def test_qiskit_to_circuit() -> None:
@@ -58,8 +59,8 @@ def test_qiskit_to_circuit() -> None:
     # and QuantumCircuit.sx
     # u3(ϴ,φ,λ) = p(φ+π) sx p(ϴ+π) sx p(λ) (2 pulses on hardware).
 
-    qc.cu1(0.1, q[0], q[1])
-    qc.cu3(0.1, 0.2, 0.3, q[0], q[1])
+    qc.cp(0.1, q[0], q[1])
+    # qc.cu3(0.1, 0.2, 0.3, q[0], q[1])
     qc.cx(q[0], q[1])
     qc.cy(q[0], q[1])
     qc.cz(q[0], q[1])
@@ -75,9 +76,8 @@ def test_qiskit_to_circuit() -> None:
     qc.swap(q[0], q[1])
     qc.t(q[1])
     qc.tdg(q[1])
-    qc.u1(0.2, q[2])
-    qc.u2(0.1, 0.2, q[2])
-    qc.u3(0.1, 0.2, 0.3, q[2])
+    qc.p(0.2, q[2])
+    qc.u(0.1, 0.2, 0.3, q[2])
     qc.x(q[0])
     qc.y(q[0])
     qc.z(q[0])
@@ -90,10 +90,9 @@ def test_qiskit_to_circuit() -> None:
         == """Circuit
     CCNot 0 1 2
     CH 0 1
-    CRZ(1/10) 0 1
+    CRz(1/10) 0 1
     CSwap 0 1 2
     CPhase(1/10) 0 1
-    CU3(1/10, 1/5, 3/10) 0 1
     CNot 0 1
     CY 0 1
     CZ 0 1
@@ -103,14 +102,13 @@ def test_qiskit_to_circuit() -> None:
     Rx(0) 0
     Ry(1/10) 1
     Rz(1/5) 2
-    RZZ(1/10) 0 1
+    Rzz(1/10) 0 1
     S 2
     S_H 2
     Swap 0 1
     T 1
     T_H 1
     PhaseShift(1/5) 2
-    U2(1/10, 1/5) 2
     U3(1/10, 1/5, 3/10) 2
     X 0
     Y 0
@@ -142,7 +140,7 @@ def test_circuit_to_qiskit() -> None:
     circ += qf.Z(2)
     circ += qf.Can(0.1, 0.2, 0.2, 0, 1)
 
-    circ1 = translate_gates_to_qiskit(circ)
+    circ1 = translate_to_qiskit(circ)
     print()
     print(qf.circuit_to_diagram(circ1))
 
@@ -160,12 +158,35 @@ def test_qiskitsimulator() -> None:
     circ += qf.Y(3)
     circ += qf.Z(2)
     circ += qf.Can(0.1, 0.2, 0.2, 0, 1)
+    circ += qf.V(0)
+    # circ += qf.V(2).H  # Gets converted, but not supported by Aer simulator!?
+    circ += qf.CV(2, 3)
 
     sim = QiskitSimulator(circ)
     assert qf.states_close(circ.run(), sim.run())
 
     ket0 = qf.random_state([0, 1, 2, 3])
     assert qf.states_close(circ.run(ket0), sim.run(ket0))
+
+
+def test_circuit_to_qasm() -> None:
+    circ = qf.Circuit()
+    circ += qf.X(0)
+    circ += qf.Y(1)
+    circ += qf.Z(2)
+    circ += qf.Can(0.1, 0.2, 0.2, 0, 1)
+
+    qc = circuit_to_qasm(circ, translate=True)
+    # print(qc)
+
+    circ2 = qasm_to_circuit(qc)
+
+    assert qf.circuits_close(circ2, circ)
+
+    circuit_to_qasm(circ2, translate=False)
+
+
+# print(qc2)
 
 
 # fin
