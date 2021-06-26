@@ -657,6 +657,7 @@ class CV_H(StdGate):
     def __pow__(self, t: Variable) -> "CNotPow":
         return CNotPow(-t / 2, *self.qubits)
 
+
 # end class CV_H
 
 
