@@ -21,7 +21,7 @@ superclass, Operation, including other circuits.
 Quantum operations are immutable, and transformations of these operations return
 new copies. (An exception is the composite operation DAGCircuit.)
 
-The main types of Operation's are Gate, Unitary, StdGate, Channel, Circuit, DAGCircuit,
+The main types of Operation's are Gate, UnitaryGate, StdGate, Channel, Circuit, DAGCircuit,
 and Pauli.
 
 .. autoclass:: Operation
@@ -57,7 +57,7 @@ from .states import Density, State
 from .tensors import QubitTensor
 from .var import Variable
 
-__all__ = ["Operation", "Gate", "StdGate", "Unitary", "Channel"]
+__all__ = ["Operation", "Gate", "StdGate", "UnitaryGate", "Channel", "Unitary"]
 
 
 OperationType = TypeVar("OperationType", bound="Operation")
@@ -363,7 +363,7 @@ class Gate(Operation):
     def __pow__(self, t: float) -> "Gate":
         """Return this gate raised to the given power."""
         matrix = matpow(self.asoperator(), t)
-        return Unitary(matrix, self.qubits)
+        return UnitaryGate(matrix, self.qubits)
 
     def permute(self, qubits: Qubits) -> "Gate":
         """Permute the order of the qubits"""
@@ -373,7 +373,7 @@ class Gate(Operation):
         if self.cv_interchangeable:
             return self.on(*qubits)
         tensor = tensors.permute(self.tensor, self.qubit_indices(qubits))
-        return Unitary(tensor, qubits)
+        return UnitaryGate(tensor, qubits)
 
     def asoperator(self) -> QubitTensor:
         """Return tensor with with qubit indices flattened"""
@@ -387,16 +387,16 @@ class Gate(Operation):
         """
         return tensors.asqutensor(np.diag(self.asoperator()))
 
-    def su(self) -> "Unitary":
+    def su(self) -> "UnitaryGate":
         """Convert gate tensor to the special unitary group."""
         rank = 2 ** self.qubit_nb
         U = self.asoperator()
         U /= np.linalg.det(U) ** (1 / rank)
-        return Unitary(U, self.qubits)
+        return UnitaryGate(U, self.qubits)
 
     @property
     def H(self) -> "Gate":
-        return Unitary(self.asoperator().conj().T, self.qubits)
+        return UnitaryGate(self.asoperator().conj().T, self.qubits)
 
     def __matmul__(self, other: "Gate") -> "Gate":
         """Apply the action of this gate upon another gate,
@@ -413,7 +413,7 @@ class Gate(Operation):
         gate1 = other
         indices = gate1.qubit_indices(gate0.qubits)
         tensor = tensors.tensormul(gate0.tensor, gate1.tensor, tuple(indices))
-        return Unitary(tensor, gate1.qubits)
+        return UnitaryGate(tensor, gate1.qubits)
 
     def run(self, ket: State) -> State:
         """Apply the action of this gate upon a state"""
@@ -466,22 +466,24 @@ class Gate(Operation):
 # End class Gate
 
 
-class Unitary(Gate):
+class UnitaryGate(Gate):
     """
     A quantum logic gate specified by an explicit unitary operator.
     """
 
     def __init__(self, tensor: ArrayLike, qubits: Qubits) -> None:
-
         tensor = tensors.asqutensor(tensor)
 
         N = np.ndim(tensor) // 2
-
         if len(tuple(qubits)) != N:
             raise ValueError("Wrong number of qubits for tensor")
 
         super().__init__(qubits=qubits)
         self._tensor = tensor
+
+    @classmethod
+    def from_gate(cls, gate: Gate) -> "UnitaryGate":
+        return UnitaryGate(gate.tensor, gate.qubits)
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -489,7 +491,11 @@ class Unitary(Gate):
         return self._tensor
 
 
-# End class Unitary
+# End class UnitaryGate
+
+
+# Deprecated Legacy
+Unitary = UnitaryGate
 
 
 # TODO: Move?

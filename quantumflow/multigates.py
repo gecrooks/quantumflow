@@ -70,7 +70,7 @@ from sympy.combinatorics import Permutation
 from . import tensors, utils, var
 from .circuits import Circuit
 from .gates import unitary_from_hamiltonian
-from .ops import Gate, Operation, Unitary
+from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
@@ -472,8 +472,6 @@ def merge_diagonal_gates(
     return DiagonalGate(params, qubits)
 
 
-# TODO: Rename DiagonalUnitaryGate?
-# Add a DiagonalGate mixin
 class DiagonalGate(Gate):
     r"""
     A quantum gate whose unitary operator is diagonal in the computational basis.

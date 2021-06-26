@@ -17,7 +17,7 @@ from ..qubits import Qubit
 from ..states import State
 from ..tensors import QubitTensor
 from ..var import PI, Variable
-from .stdgates_2q import CZ, CNot, Swap, ISwap
+from .stdgates_2q import CZ, CNot, ISwap, Swap
 
 # 3-qubit gates, in alphabetic order
 
