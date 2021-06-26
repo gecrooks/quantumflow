@@ -43,7 +43,7 @@ __all__ = [
     "translate_to_qiskit",
     "circuit_to_qasm",
     "qasm_to_circuit",
-    "translate_gate_to_qiskit",  # Deprecated
+    "translate_gates_to_qiskit",  # Deprecated
 ]
 
 
@@ -204,7 +204,7 @@ def translate_to_qiskit(circ: Circuit) -> Circuit:
 
 
 # Deprecated
-translate_gate_to_qiskit = translate_to_qiskit
+translate_gates_to_qiskit = translate_to_qiskit
 
 
 def circuit_to_qasm(circ: Circuit, translate: bool = False) -> str:
