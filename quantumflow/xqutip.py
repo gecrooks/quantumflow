@@ -138,7 +138,7 @@ _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
     # Exch: "SWAPalpha",  # Same gate, different parameterization
 }
 
-QUTIP_GATES: Tuple[Type[Gate]] = tuple(_QUTIP_GATE_NAMES.keys())
+QUTIP_GATES: Tuple[Type[Gate], ...] = tuple(_QUTIP_GATE_NAMES.keys())
 """List of QuantumFlow gates that we know how to convert directly to and from QuTiP"""
 
 _QUTIP_NAME_GATES = invert_map(_QUTIP_GATE_NAMES)

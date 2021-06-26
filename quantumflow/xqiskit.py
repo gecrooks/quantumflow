@@ -88,7 +88,7 @@ QASM_TO_QF = {
 NAMED_GATES = StdGate.cv_stdgates
 
 
-QISKIT_GATES: Tuple[Type[Gate]] = tuple(
+QISKIT_GATES: Tuple[Type[Gate], ...] = tuple(
     set([NAMED_GATES[n] for n in QASM_TO_QF.values()])
 )
 """Tuple of QuantumFlow gates that we can convert directly to QisKit"""
