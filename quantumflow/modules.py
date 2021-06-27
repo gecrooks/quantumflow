@@ -939,7 +939,7 @@ class DiagonalGate(Gate):
             raise ValueError("Not a diagonal gate")
 
         params = 1.0j * np.log(gate.tensor_diagonal.flatten())
-        return cls(params, gate.qubits)
+        return cls(list(params), gate.qubits)
 
     # TESTME with symbolic
     def permute(self, qubits: Qubits) -> "DiagonalGate":
@@ -1210,7 +1210,7 @@ class MultiplexedRyGate(MultiplexedGate):
 
     def decompose(
         self, topology: nx.Graph = None
-    ) -> Iterator[Union[V, MultiplexedRzGate]]:
+    ) -> Iterator[Union[V, V_H, MultiplexedRzGate]]:
         thetas = self.params
         controls = self.controls
         target = self.targets[0]
