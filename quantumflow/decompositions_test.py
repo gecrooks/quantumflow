@@ -270,4 +270,17 @@ def test_convert_can_to_weyl() -> None:
         assert qf.gates_close(gate0, circ.asgate())
 
 
+def test_quantum_shannon_decomposition() -> None:
+    # import time
+    for n in range(1, 6):
+        gate = qf.RandomGate(qubits=range(n))
+        # t = time.process_time()
+        circ = qf.quantum_shannon_decomposition(gate)
+        # dt = time.process_time() - t
+        # print(n, len(circ), t, qf.count_operations(circ))
+        assert qf.gates_close(gate, circ.asgate())
+
+        # circ1 = qf.circuit_translate(circ)
+        # print(n, len(circ1), qf.count_operations(circ1))
+
 # Fin
