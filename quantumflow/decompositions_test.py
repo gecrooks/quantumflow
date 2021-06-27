@@ -283,4 +283,5 @@ def test_quantum_shannon_decomposition() -> None:
         # circ1 = qf.circuit_translate(circ)
         # print(n, len(circ1), qf.count_operations(circ1))
 
+
 # Fin

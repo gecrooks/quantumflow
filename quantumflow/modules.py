@@ -74,9 +74,9 @@ from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
-from .stdgates import CZ, CNot, CZPow
+from .stdgates import CZ, V_H, CNot, CZPow
 from .stdgates import H as _H  # NB: Workaround for name conflict with Gate.H
-from .stdgates import I, Ry, Rz, Swap, V, X, XPow, Y, YPow, Z, ZPow, V_H
+from .stdgates import I, Ry, Rz, Swap, V, X, XPow, Y, YPow, Z, ZPow
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
