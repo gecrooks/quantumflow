@@ -76,7 +76,7 @@ from .qubits import Qubit, Qubits
 from .states import Density, State
 from .stdgates import CZ, CNot, CZPow
 from .stdgates import H as _H  # NB: Workaround for name conflict with Gate.H
-from .stdgates import I, Ry, Rz, Swap, V, X, XPow, Y, YPow, Z, ZPow
+from .stdgates import I, Ry, Rz, Swap, V, X, XPow, Y, YPow, Z, ZPow, V_H
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
@@ -449,10 +449,10 @@ def merge_diagonal_gates(
             [2] * gate0.qubit_nb,
         )
         # extra_param_nb = 2**K - 2**gate0.qubit_nb
-        print(params.shape)
-        print(gate0.qubits + extra_qubits0)
-        gate0 = DiagonalGate(params.flatten(), extra_qubits0 + gate0.qubits)
-        print(gate0)
+        # print(params.shape)
+        # print(gate0.qubits + extra_qubits0)
+        gate0 = DiagonalGate(params.flatten(), extra_qubits0 + tuple(gate0.qubits))
+        # print(gate0)
 
     gate0 = gate0.permute(qubits)
 
@@ -464,9 +464,9 @@ def merge_diagonal_gates(
             ),
             [2] * gate1.qubit_nb,
         )
-        gate1 = DiagonalGate(params.flatten(), extra_qubits1 + gate1.qubits)
+        gate1 = DiagonalGate(params.flatten(), extra_qubits1 + tuple(gate1.qubits))
     gate1 = gate1.permute(qubits)
-    print(gate1)
+    # print(gate1)
 
     params = (a + b for a, b in zip(gate0.params, gate1.params))
     return DiagonalGate(params, qubits)
@@ -518,7 +518,7 @@ class DiagonalGate(Gate):
             raise ValueError("Not a diagonal gate")
 
         params = 1.0j * np.log(gate.tensor_diagonal.flatten())
-        return cls(params, gate.qubits)
+        return cls(list(params), gate.qubits)
 
     # TESTME with symbolic
     def permute(self, qubits: Qubits) -> "DiagonalGate":
@@ -789,7 +789,7 @@ class MultiplexedRyGate(MultiplexedGate):
 
     def decompose(
         self, topology: nx.Graph = None
-    ) -> Iterator[Union[V, MultiplexedRzGate]]:
+    ) -> Iterator[Union[V, V_H, MultiplexedRzGate]]:
         thetas = self.params
         controls = self.controls
         target = self.targets[0]
