@@ -681,6 +681,14 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     """
     Quantum Shannon decomposition of a multi-qubit gate.
 
+    Note that deke time grows rapidly with qubit count: e.g. an 8 qubit gate can be
+    deked in 20s on a laptop, whereas 9 qubit gates require around 90s.
+
+    To fully deke into a circuit of CNots and 1-qubit gates, use the translate
+    function
+
+        circ = qf.translate(qf.quantum_shannon_decomposition(gate))
+
     Args:
         gate: A quantum gate to decompose
         euler:
@@ -709,6 +717,10 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
         U = gate.su().asoperator()
         R = 2 ** (N - 1)
 
+        # cosine-sine decomposition
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cossin.html
+        # Note that the cosine-sine thetas are half our thetas due to standard
+        # quantum  convections.
         (A1, A2), halfthetas, (B1, B2) = scipy.linalg.cossin(U, p=R, q=R, separate=True)
 
         M2 = B1 @ B2.conj().T
