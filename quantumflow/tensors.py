@@ -172,10 +172,7 @@ def partial_trace(
 
 # DOCME
 def tensormul(
-    tensor0: QubitTensor,
-    tensor1: QubitTensor,
-    indices: Tuple[int, ...],
-    diagonal: bool = False,
+    tensor0: QubitTensor, tensor1: QubitTensor, indices: Tuple[int, ...]
 ) -> QubitTensor:
     N = np.ndim(tensor1)
     K = np.ndim(tensor0) // 2
@@ -190,12 +187,7 @@ def tensormul(
     tensor = np.transpose(tensor, perm)
     tensor = np.reshape(tensor, [2 ** K, 2 ** (N - K)])
 
-    if diagonal:
-        tensor = np.transpose(tensor)
-        tensor = tensor * np.diag(gate)
-        tensor = np.transpose(tensor)
-    else:
-        tensor = np.matmul(gate, tensor)
+    tensor = np.matmul(gate, tensor)
 
     tensor = np.reshape(tensor, [2] * N)
     tensor = np.transpose(tensor, inv_perm)

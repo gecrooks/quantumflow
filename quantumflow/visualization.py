@@ -682,7 +682,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
 def _round_sympy_expr(expr: sympy.Expr, num_digits: int = 4) -> sympy.Expr:
     return expr
     # BROKEN. Undoes rationalizations
-    return expr.xreplace({n: round(n, num_digits) for n in expr.atoms(sympy.Number)})
+    # return expr.xreplace({n: round(n, num_digits) for n in expr.atoms(sympy.Number)})
     # return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
 
 
@@ -693,7 +693,7 @@ def _pretty(obj: Any, format: str = "text") -> str:
 
     if isinstance(obj, sympy.Expr):
         if format == "latex":
-            return sympy.latex(_round_sympy_expr((obj)))  # pragma: nocover  # FIXME
+            return sympy.latex(_round_sympy_expr((obj)))  # pragma: no cover  # FIXME
         else:
             return str(obj)
 

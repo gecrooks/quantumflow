@@ -19,7 +19,7 @@ sequence. Circuits can contain any instance of the abstract quantum operation
 superclass, Operation, including other circuits.
 
 Quantum operations are immutable, and transformations of these operations return
-new copies. (An exception is the composite operation DAGCircuit.)
+new copies. (With the exception of the composite operations Circuit and DAGCircuit.)
 
 The main types of Operation's are Gate, UnitaryGate, StdGate, Channel, Circuit,
 DAGCircuit, and Pauli.
@@ -149,14 +149,14 @@ class Operation(ABC):
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
 
-    def qubit_indices(self, qubits: Qubits) -> List[int]:
+    def qubit_indices(self, qubits: Qubits) -> Tuple[int, ...]:
         """Convert qubits to index positions.
 
         Raises:
             ValueError: If argument qubits are not found in operation's qubits
         """
         try:
-            return [self.qubits.index(q) for q in qubits]
+            return tuple(self.qubits.index(q) for q in qubits)
         except ValueError:
             raise ValueError("Incommensurate qubits")
 
@@ -445,18 +445,12 @@ class Gate(Operation):
         return self
 
     def __str__(self) -> str:
-        def _param_format(obj: Any) -> str:
-            if isinstance(obj, float):
-                try:
-                    return str(var.asexpression(obj))
-                except ValueError:
-                    return f"{obj}"
-            return str(obj)
-
         fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
 
         if self.params:
-            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
+            fparams = (
+                "(" + ", ".join(str(var.asexpression(p)) for p in self.params) + ")"
+            )
         else:
             fparams = ""
 
@@ -498,7 +492,6 @@ class UnitaryGate(Gate):
 Unitary = UnitaryGate
 
 
-# TODO: Move?
 class StdGate(Gate):
     """
     A standard gate. Standard gates have a name, a fixed number of real
