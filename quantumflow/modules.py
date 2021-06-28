@@ -927,7 +927,9 @@ class DiagonalGate(Gate):
             return gate
 
         def is_diagonal_gate(gate: Gate) -> bool:
+            print(gate.cv_tensor_structure)
             if gate.cv_tensor_structure == "diagonal":
+                print("here")
                 return True
             if gate.cv_tensor_structure == "identity":
                 return True
@@ -1050,7 +1052,7 @@ class MultiplexedGate(Gate):
         controls = tuple(controls)
         gates = tuple(gates)
         targets = gates[0].qubits
-        qubits = controls + targets
+        qubits = tuple(controls) + tuple(targets)
         if len(set(qubits)) != len(qubits):
             raise ValueError("Control and target qubits overlap")
 
