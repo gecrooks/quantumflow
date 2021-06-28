@@ -566,6 +566,7 @@ class DiagonalGate(Gate):
 # end class DiagonalGate
 
 
+# TODO: Redo _diagram_labels
 # TESTME : axes
 # DOCME: axes
 # TODO: diagrams
