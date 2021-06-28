@@ -705,10 +705,10 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
         N = gate.qubit_nb
 
         if N == 1:
-            yield from euler_decomposition(gate, euler)
+            yield from euler_decomposition(gate, euler)  # type: ignore  # FIXME
             return
         elif N == 2:
-            yield from canonical_decomposition(gate, euler)
+            yield from canonical_decomposition(gate, euler)  # type: ignore  # FIXME
             return
 
         target = qubits[0]

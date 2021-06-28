@@ -433,7 +433,7 @@ class PauliGate(Gate):
 
 # end class PauliGate
 
-
+# TODO: Move
 def merge_diagonal_gates(
     gate0: "DiagonalGate", gate1: "DiagonalGate"
 ) -> "DiagonalGate":
@@ -448,11 +448,7 @@ def merge_diagonal_gates(
             ),
             [2] * gate0.qubit_nb,
         )
-        # extra_param_nb = 2**K - 2**gate0.qubit_nb
-        # print(params.shape)
-        # print(gate0.qubits + extra_qubits0)
         gate0 = DiagonalGate(params.flatten(), extra_qubits0 + tuple(gate0.qubits))
-        # print(gate0)
 
     gate0 = gate0.permute(qubits)
 
@@ -466,7 +462,6 @@ def merge_diagonal_gates(
         )
         gate1 = DiagonalGate(params.flatten(), extra_qubits1 + tuple(gate1.qubits))
     gate1 = gate1.permute(qubits)
-    # print(gate1)
 
     params = (a + b for a, b in zip(gate0.params, gate1.params))
     return DiagonalGate(params, qubits)
@@ -494,8 +489,10 @@ class DiagonalGate(Gate):
     """
     cv_tensor_structure = "diagonal"
 
-    def __init__(self, diag_hamiltonian: Sequence[Variable], qubits: Qubits) -> None:
-        super().__init__(qubits=qubits, params=diag_hamiltonian)
+    def __init__(
+        self, diag_hamiltonian: Union[np.ndarray, Sequence[Variable]], qubits: Qubits
+    ) -> None:
+        super().__init__(qubits=qubits, params=tuple(diag_hamiltonian))
 
         assert len(self.params) == 2 ** self.qubit_nb  # FIXME
 
@@ -506,7 +503,9 @@ class DiagonalGate(Gate):
             return gate
 
         def is_diagonal_gate(gate: Gate) -> bool:
+            print(gate.cv_tensor_structure)
             if gate.cv_tensor_structure == "diagonal":
+                print("here")
                 return True
             if gate.cv_tensor_structure == "identity":
                 return True
@@ -629,7 +628,7 @@ class MultiplexedGate(Gate):
         controls = tuple(controls)
         gates = tuple(gates)
         targets = gates[0].qubits
-        qubits = controls + targets
+        qubits = tuple(controls) + tuple(targets)
         if len(set(qubits)) != len(qubits):
             raise ValueError("Control and target qubits overlap")
 
