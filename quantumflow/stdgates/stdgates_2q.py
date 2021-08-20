@@ -346,6 +346,7 @@ class CNot(StdGate):
 
 
 # FIXME: matrix in docs looks wrong?
+# FIXME: docs, controlled_gate
 class CNotPow(StdGate):
     r"""Powers of the CNot gate.
 
@@ -616,9 +617,9 @@ class CV(StdGate):
     @cached_property
     def tensor(self) -> QubitTensor:
         q0, q1 = self.qubits
-        from ..modules import ControlGate
+        from ..modules import ControlledGate
 
-        return ControlGate([q0], V(q1)).tensor
+        return ControlledGate(V(q1), [q0]).tensor
 
     @property
     def H(self) -> "CV_H":
@@ -646,9 +647,9 @@ class CV_H(StdGate):
     @cached_property
     def tensor(self) -> QubitTensor:
         q0, q1 = self.qubits
-        from ..modules import ControlGate
+        from ..modules import ControlledGate
 
-        return ControlGate([q0], V_H(q1)).tensor
+        return ControlledGate(V_H(q1), [q0]).tensor
 
     @property
     def H(self) -> "CV":

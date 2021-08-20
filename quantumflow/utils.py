@@ -204,7 +204,12 @@ def bitlist_to_int(bitlist: Sequence[int]) -> int:
     >>> bitlist_to_int([1, 0, 0])
     4
     """
-    return int("".join([str(d) for d in bitlist]), 2)
+    # return int("".join([str(d) for d in bitlist]), 2)
+
+    out = 0
+    for bit in bitlist:
+        out = (out << 1) | bit
+    return out
 
 
 def int_to_bitlist(x: int, pad: int = None) -> List[int]:

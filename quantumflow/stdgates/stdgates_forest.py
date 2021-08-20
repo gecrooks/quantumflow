@@ -29,7 +29,7 @@ class CPhase(StdGate):
     """
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["A", "B"]
+    _diagram_labels = ["CTRL", "P({{theta}})"]
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])

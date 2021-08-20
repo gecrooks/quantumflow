@@ -50,7 +50,7 @@ class CCiX(StdGate):
     cv_tensor_structure = "monomial"
     _diagram_labels = ("─" + CTRL + "─", "─" + CTRL + "─", "iX─")
 
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
     @property
@@ -77,6 +77,37 @@ class CCiX(StdGate):
 
 # end class CCiX
 
+# from abc import ABC, abstractmethod
+# from scipy.linalg import block_diag
+# class CtrlStdGate(ABC):
+
+#     @property
+#     @abstractmethod
+#     def gate(self) -> Gate:
+#         ...
+
+
+#     @property
+#     def targets(self) -> Qubits:
+#         return self.gate.qubits
+
+#     @property
+#     def controls(self) -> Qubits:
+#         return self.qubits[:-len(self.gate.qubits)]
+
+#     @utils.cached_property
+#     def hamiltonian(self) -> Pauli:
+#         ham = self.gate.hamiltonian
+#         for q in self.controls:
+#             ham *= (1 - sZ(q)) / 2
+#         return ham
+
+#     @utils.cached_property
+#     def tensor(self) -> QubitTensor:
+#         C = np.eye(2**len(self.controls))
+#         T = self.gate.tensor
+#         return block_diag(C, T)
+
 
 class CCNot(StdGate):
     r"""
@@ -101,7 +132,7 @@ class CCNot(StdGate):
     cv_tensor_structure = "permutation"
     _diagram_labels = (CTRL, CTRL, TARGET)
 
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
     @property
@@ -155,9 +186,7 @@ class CCXPow(StdGate):
     """
     _diagram_labels = (CTRL, CTRL, "X^{t}")
 
-    def __init__(
-        self, t: Variable, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2
-    ) -> None:
+    def __init__(self, t: Variable, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1, q2])
 
     @property
@@ -218,7 +247,7 @@ class CCZ(StdGate):
     cv_tensor_structure = "diagonal"
     _diagram_labels = (CTRL, CTRL, CTRL)
 
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
     @property
@@ -281,7 +310,7 @@ class CISwap(StdGate):
     cv_tensor_structure = "monomial"
     _diagram_labels = ("─" + CTRL + "─", "iSwap", "iSwap")
 
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
     @property
@@ -331,7 +360,7 @@ class CSwap(StdGate):
     cv_tensor_structure = "permutation"
     _diagram_labels = (CTRL, SWAP_TARGET, SWAP_TARGET)
 
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
     @property
@@ -398,9 +427,7 @@ class Deutsch(StdGate):
     """
     _diagram_labels = (CTRL, CTRL, "iRx({theta})^2")
 
-    def __init__(
-        self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2
-    ) -> None:
+    def __init__(self, theta: Variable, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0, q1, q2])
 
     @utils.cached_property
@@ -451,7 +478,7 @@ class Margolus(StdGate):
     cv_hermitian = True
     cv_tensor_structure = "monomial"
 
-    def __init__(self, q0: Qubit = 0, q1: Qubit = 1, q2: Qubit = 2) -> None:
+    def __init__(self, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(qubits=[q0, q1, q2])
 
     @property
