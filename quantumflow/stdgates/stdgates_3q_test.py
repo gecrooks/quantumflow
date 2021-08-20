@@ -44,7 +44,7 @@ def test_ccz() -> None:
     qf.print_state(ket)
     assert np.isclose(ket.tensor[1, 1, 1], 1.0)
 
-    gate0 = qf.CCZ()
+    gate0 = qf.CCZ(0, 1, 2)
     assert gate0.H is gate0
 
 
