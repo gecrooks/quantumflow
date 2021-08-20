@@ -58,7 +58,7 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 # TODO: Move all to gate module?
 
-from typing import Iterable, Iterator, List, Mapping, Sequence, Union
+from typing import Iterable, Iterator, List, Mapping, Sequence, Union, cast
 
 import networkx as nx
 import numpy as np
@@ -81,8 +81,8 @@ from .stdgates import (
     I,
     Ry,
     Rz,
-    SqrtY,
-    SqrtY_H,
+    # SqrtY,
+    # SqrtY_H,
     Swap,
     V,
     X,
@@ -644,35 +644,36 @@ class ControlledGate(Gate):
 
         return ham
 
-    # TODO: Rename? Maybe specialize?
-    def standardize(
-        self,
-    ) -> Iterator[Union["ControlledGate", X, V, V_H, SqrtY, SqrtY_H]]:
-        """Yield an equivalent controlled gate with standard z-axis controls, pre- and
-        post-pended with additional 1-qubit gates as necessary"""
+    # # TODO: Rename? Maybe specialize?
+    # def standardize(
+    #     self,
+    # ) -> Iterator[Union["ControlledGate", X, V, V_H, SqrtY, SqrtY_H]]:
+    #     """Yield an equivalent controlled gate with standard z-axis controls, pre- and
+    #     post-pended with additional 1-qubit gates as necessary"""
 
-        transforms = {
-            "X": SqrtY(0).H,
-            "x": SqrtY(0),
-            "Y": V(0),
-            "y": V(0).H,
-            "Z": I(0),
-            "z": X(0),
-        }
+    #     transforms = {
+    #         "X": SqrtY(0).H,
+    #         "x": SqrtY(0),
+    #         "Y": V(0),
+    #         "y": V(0).H,
+    #         "Z": I(0),
+    #         "z": X(0),
+    #     }
 
-        for q, axis in zip(self.controls, self.axes):
-            if axis != "Z":
-                yield transforms[axis].on(q)
+    #     for q, axis in zip(self.controls, self.axes):
+    #         if axis != "Z":
+    #             yield transforms[axis].on(q)
 
-        yield type(self)(self.gate, self.controls)
+    #     yield type(self)(self.gate, self.controls)
 
-        for q, axis in zip(self.controls, self.axes):
-            if axis != "Z":
-                yield transforms[axis].H.on(q)
+    #     for q, axis in zip(self.controls, self.axes):
+    #         if axis != "Z":
+    #             yield transforms[axis].H.on(q)
 
     # Testme
     def resolve(self, subs: Mapping[str, float]) -> "Gate":
         gate = self.gate.resolve(subs)
+        assert isinstance(gate, Gate)
         return type(self)(gate, self.controls, self.axes)
 
     @utils.cached_property
@@ -730,7 +731,7 @@ class MultiplexedGate(Gate):
 
     # Testme
     def resolve(self, subs: Mapping[str, float]) -> "Gate":
-        gates = [gate.resolve(subs) for gate in self.gates]
+        gates = cast(Sequence[Gate], [gate.resolve(subs) for gate in self.gates])
         return type(self)(gates, self.controls)
 
 
