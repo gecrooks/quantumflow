@@ -462,12 +462,18 @@ class Gate(Operation):
         return self
 
     def __str__(self) -> str:
+        def _param_format(obj: Any) -> str:
+            if isinstance(obj, float):
+                try:
+                    return str(var.asexpression(obj))
+                except ValueError:
+                    return f"{obj}"
+            return str(obj)
+
         fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
 
         if self.params:
-            fparams = (
-                "(" + ", ".join(str(var.asexpression(p)) for p in self.params) + ")"
-            )
+            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
         else:
             fparams = ""
 
