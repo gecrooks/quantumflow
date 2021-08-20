@@ -37,7 +37,7 @@ import scipy
 
 from .circuits import Circuit, euler_circuit
 from .config import ATOL
-from .info import gates_close
+from .info import almost_unitary, gates_close
 from .modules import MultiplexedRyGate, MultiplexedRzGate
 from .ops import Gate, Unitary
 from .stdgates import S_H, B, Can, I, Rn, S, V, X, Y, YPow, Z, ZPow
@@ -258,7 +258,9 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
     q0, q1 = gate.qubits
 
+    assert almost_unitary(gate)  # Sanity check
     U = gate.asoperator()
+
     rank = 2 ** gate.qubit_nb
     U /= np.linalg.det(U) ** (1 / rank)  # U is in SU(4) so det U = 1
 
@@ -266,7 +268,7 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     M = U_mb.transpose() @ U_mb  # Construct M matrix [1, (eq. 22)]
 
     # Diagonalize symmetric complex matrix
-    eigvals, eigvecs = _eig_complex_symmetric(M)
+    eigvals, eigvecs = _orthogonal_diagonalization(M)
 
     lambdas = np.sqrt(eigvals)  # Eigenvalues of F
     # Lambdas only fixed up to a sign. So make sure det F = 1 as it should
@@ -315,15 +317,25 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
     circ = Circuit([circK2, canon, circK1])
 
+    assert gates_close(circ.asgate(), gate)  # Sanity check
+
     return circ
 
 
-def _eig_complex_symmetric(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Diagonalize a complex symmetric  matrix. The eigenvalues are
-    complex, and the eigenvectors form an orthogonal matrix.
+def _orthogonal_diagonalization(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Orthogonal diagonalization of a complex symmetric  matrix
+
+    The matrix should have the structure M = O D O^T, where O is
+    orthogonal and D is diagonal matrix of complex eigenvalues. This
+    structure implies that M is complex symmetric, M=M^T, but
+    not every complex symmetric matrix is diagonalizable by orthogonal
+    matrices.
+
 
     Returns:
         eigenvalues, eigenvectors
+    Raises:
+        ValueError: if M is not orthogonally diagonalizable.
     """
     if not np.allclose(M, M.transpose()):
         raise np.linalg.LinAlgError("Not a symmetric matrix")
@@ -363,10 +375,7 @@ def _eig_complex_symmetric(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         if np.allclose(M, reconstructed):
             return eigvals, eigvecs
 
-    # Should never happen. Hopefully.
-    raise np.linalg.LinAlgError(
-        "Cannot diagonalize complex symmetric matrix."
-    )  # pragma: no cover
+    raise np.linalg.LinAlgError("Matrix is not orthogonally diagonalizable")
 
 
 def _lambdas_to_coords(lambdas: np.ndarray) -> np.ndarray:
@@ -713,6 +722,8 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
         target = qubits[0]
         controls = qubits[1:]
+
+        assert almost_unitary(gate)  # Sanity check
 
         U = gate.su().asoperator()
         R = 2 ** (N - 1)

@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 
 import sympy
 from PIL import Image
@@ -22,10 +22,10 @@ from . import utils, var
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
 from .gates import P0, P1
-from .modules import IdentityGate
+from .modules import ControlledGate, IdentityGate
 from .ops import Gate, Operation
 from .qubits import Qubits
-from .stdgates import CZ, CSwap, Swap
+from .stdgates import CZ, CSwap, Swap, X
 from .stdops import Reset
 
 __all__ = (
@@ -98,6 +98,7 @@ LATEX_GATESET = frozenset(
         "ECP",
         "Sycamore",
         "XY",
+        "ControlledGate",
     ]
 )
 
@@ -139,6 +140,8 @@ def circuit_to_latex(
     options: str = None,
     scale: float = 0.75,
     qubit_labels: bool = True,
+    left_labels: Sequence[str] = None,  # DOCME TESTME
+    right_labels: Sequence[str] = None,  # DOCME TESTME
 ) -> str:
     """
     Create an image of a quantum circuit in LaTeX.
@@ -200,7 +203,7 @@ def circuit_to_latex(
         "CH": [CTRL, "H"],
         "CV": [CTRL, "V"],
         "CS": [CTRL, "S"],
-        "CPhase": [CTRL, r"R_{{{theta}}}"],
+        "CPhase": [CTRL, r"P({theta})"],
         "CV_H": [CTRL, r"V^\dagger"],
         "CNotPow": [CTRL, r"X^{{{t}}}"],
         "CY": [CTRL, r"Y"],
@@ -229,6 +232,10 @@ def circuit_to_latex(
 
     if qubit_labels:
         code = [r"\lstick{%s}" % q for q in qubits]
+        layer_code.append(code)
+
+    if left_labels:
+        code = [r"\lstick{%s}" % L for L in left_labels]
         layer_code.append(code)
 
     for layer in layers:
@@ -369,13 +376,26 @@ def circuit_to_latex(
             elif gate.qubit_nb == 1:
                 code[idx[0]] = r"\gate{" + text_labels[0] + "}"
 
+            # DOCME TESTME
+            # Currently only implemented for multi-controlled X gates
+            elif isinstance(gate, ControlledGate):
+                assert isinstance(gate.gate, X)
+                for i in range(len(gate.controls)):
+                    code[idx[i]] = r"\ctrl{" + str(idx[i + 1] - idx[i]) + "}"
+                code[idx[i + 1]] = r"\targ{}"
+
             else:
+                print(name)
                 raise NotImplementedError(str(gate))
 
         layer_code.append(code)
 
     code = [r"\qw"] * N
     layer_code.append(code)
+
+    if right_labels:
+        code = [r"\rstick{%s}" % L for L in right_labels]
+        layer_code.append(code)
 
     latex_lines = [""] * N
 

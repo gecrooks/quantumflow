@@ -68,7 +68,7 @@ def _specialize_gate(
     #     if variable_is_symbolic(p):
     #         return gate
 
-    params = [p % pd for p, pd in zip(params, periods)]
+    params = [var.asfloat(p) % pd for p, pd in zip(params, periods)]
 
     for values, gatetype in opts.items():
         if np.isclose(params, values):
@@ -427,6 +427,7 @@ class PhaseShift(StdGate):
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
     cv_tensor_structure = "diagonal"
+    _diagram_labels = ["P({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0])

@@ -178,6 +178,7 @@ class Operation(ABC):
 
         return self._params[idx]
 
+    # rename? param_asfloat? Then use where needed.
     def float_param(self, name: str, subs: Mapping[str, float] = None) -> float:
         """Return a a named parameters of this Operation as a float.
 
@@ -235,6 +236,7 @@ class Operation(ABC):
         """
         Returns the tensor representation of this operation (if possible)
         """
+
         raise NotImplementedError()
 
     @utils.cached_property
@@ -258,6 +260,7 @@ class Operation(ABC):
     def __lt__(self, other: Any) -> bool:
         return id(self) < id(other)
 
+    # TODO: rename? standardize?
     def specialize(self) -> "Operation":
         """For parameterized operations, return appropriate special cases
         for particular parameters. Else return the original Operation.
@@ -285,6 +288,12 @@ class Operation(ABC):
         from .circuits import Circuit
 
         return Circuit(self)._repr_html_()
+
+    # TODO: Replacement (or supplement) for _diagram_labels class variable
+    def _diagram_labels_(self) -> Optional[List[str]]:
+        """Labels for circuit diagrams, one label per qubit.
+        Used by visualization.circuit_to_diagram"""
+        return type(self)._diagram_labels
 
 
 # End class Operation
@@ -445,12 +454,18 @@ class Gate(Operation):
         return self
 
     def __str__(self) -> str:
+        def _param_format(obj: Any) -> str:
+            if isinstance(obj, float):
+                try:
+                    return str(var.asexpression(obj))
+                except ValueError:
+                    return f"{obj}"
+            return str(obj)
+
         fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
 
         if self.params:
-            fparams = (
-                "(" + ", ".join(str(var.asexpression(p)) for p in self.params) + ")"
-            )
+            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
         else:
             fparams = ""
 
@@ -517,12 +532,13 @@ class StdGate(Gate):
         args = tuple(s for s in names if s[0] != "q" and s != "return")
         qubit_nb = len(names) - len(args)
         if "return" in names:
-            # For unknown reasons, "return" is often, but not always in names.
+            # For unknown reasons, "return" is often (but not always) in names.
             qubit_nb -= 1
 
         cls.cv_args = args
         cls.cv_qubit_nb = qubit_nb
 
+        # TODO: Throw error if gate name reused?
         cls.cv_stdgates[cls.__name__] = cls  # Subclass registration
 
     def __repr__(self) -> str:
