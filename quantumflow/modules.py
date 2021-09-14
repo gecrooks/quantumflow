@@ -73,16 +73,14 @@ from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
-from .stdgates import CZ, V_H, CNot, CZPow
+from .stdgates import CZ, V_H, CNot, CZPow  # SqrtY,; SqrtY_H,
 from .stdgates import (
     H as H_,
 )  # NB: Workaround for name conflict with Gate.H   # FIXME:  needed?
-from .stdgates import (
+from .stdgates import (  # SqrtY,; SqrtY_H,
     I,
     Ry,
     Rz,
-    # SqrtY,
-    # SqrtY_H,
     Swap,
     V,
     X,
