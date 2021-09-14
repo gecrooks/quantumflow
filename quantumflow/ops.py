@@ -301,7 +301,7 @@ class Operation(ABC):
     def _diagram_labels_(self) -> Optional[Sequence[str]]:
         """Labels for circuit diagrams, one label per qubit.
         Used by visualization.circuit_to_diagram"""
-        return type(self)._diagram_labels
+        return type(self)._diagram_labels     # pragma: nocover  # FIXME
 
 
 # End class Operation
@@ -468,7 +468,7 @@ class Gate(Operation):
                     return str(var.asexpression(obj))
                 except ValueError:
                     return f"{obj}"
-            return str(obj)
+            return str(obj)  # pragma: nocover
 
         fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
 
