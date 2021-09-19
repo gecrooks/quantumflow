@@ -298,10 +298,10 @@ class Operation(ABC):
         return Circuit(self)._repr_html_()
 
     # TODO: Replacement (or supplement) for _diagram_labels class variable
-    def _diagram_labels_(self) -> Optional[Sequence[str]]:
+    def _diagram_labels_(self) -> Optional[List[str]]:
         """Labels for circuit diagrams, one label per qubit.
         Used by visualization.circuit_to_diagram"""
-        return type(self)._diagram_labels     # pragma: nocover  # FIXME
+        return type(self)._diagram_labels
 
 
 # End class Operation
@@ -404,6 +404,14 @@ class Gate(Operation):
         """
         return tensors.asqutensor(np.diag(self.asoperator()))
 
+    @utils.cached_property
+    def tensor_diagonal(self) -> QubitTensor:
+        """
+        Returns the diagonal of the tensor representation of this operation
+        (if possible)
+        """
+        return tensors.asqutensor(np.diag(self.asoperator()))
+
     def su(self) -> "UnitaryGate":
         """Convert gate tensor to the special unitary group."""
         rank = 2 ** self.qubit_nb
@@ -441,7 +449,9 @@ class Gate(Operation):
             return ket
         elif self.cv_tensor_structure == "diagonal":
             tensor = tensors.tensormul_diagonal(
-                self.tensor_diagonal, ket.tensor, tuple(indices)
+                self.tensor_diagonal,
+                ket.tensor,
+                tuple(indices)
             )
             return State(tensor, ket.qubits, ket.memory)
 
@@ -468,7 +478,7 @@ class Gate(Operation):
                     return str(var.asexpression(obj))
                 except ValueError:
                     return f"{obj}"
-            return str(obj)  # pragma: nocover
+            return str(obj)
 
         fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
 

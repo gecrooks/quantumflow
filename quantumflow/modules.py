@@ -1299,5 +1299,4 @@ class RandomGate(UnitaryGate):
 
 # end class RandomGate
 
-
 # Fin
