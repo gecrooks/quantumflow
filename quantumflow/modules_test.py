@@ -538,10 +538,16 @@ def test_MultiplexedGate() -> None:
 
 def test_MultiplexedGate_resolve() -> None:
     gate0 = qf.MultiplexedGate(
-        [qf.Rz(Symbol('a'), 2), qf.Rz(Symbol('b'), 2), qf.Rz(Symbol('c'), 2), qf.Rz(Symbol('d'), 2)], [0, 1]
+        [
+            qf.Rz(Symbol("a"), 2),
+            qf.Rz(Symbol("b"), 2),
+            qf.Rz(Symbol("c"), 2),
+            qf.Rz(Symbol("d"), 2),
+        ],
+        [0, 1],
     )
 
-    gate1 = gate0.resolve({'a': 0.1, 'b': 0.2, 'c': 0.3, 'd': 0.4})
+    gate1 = gate0.resolve({"a": 0.1, "b": 0.2, "c": 0.3, "d": 0.4})
     gate2 = qf.MultiplexedRzGate([0.1, 0.2, 0.3, 0.4], [0, 1], 2)
     assert qf.gates_close(gate1, gate2)
 
