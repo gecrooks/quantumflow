@@ -39,6 +39,9 @@ the gate tensor may consume huge amounts of memory. Beware.
 
 .. autoclass:: InvQFTGate
     :members:
+
+.. autoclass:: RandomGate
+    :members:
 """
 
 from typing import Iterable, Iterator, List, Mapping, Union
@@ -51,7 +54,7 @@ from sympy.combinatorics import Permutation
 from . import tensors, utils, var
 from .circuits import Circuit
 from .gates import unitary_from_hamiltonian
-from .ops import Gate, Operation
+from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
 from .qubits import Qubits
 from .states import Density, State
@@ -70,6 +73,7 @@ __all__ = (
     "ControlGate",
     "QFTGate",
     "InvQFTGate",
+    "RandomGate",
 )
 
 
@@ -458,5 +462,20 @@ class PauliGate(Gate):
 
 # end class PauliGate
 
+
+class RandomGate(UnitaryGate):
+    r"""Returns a random unitary gate acting on the given qubits.
+    Ref:
+        "How to generate random matrices from the classical compact groups"
+        Francesco Mezzadri, math-ph/0609050
+    """
+
+    def __init__(self, qubits: Qubits) -> None:
+        qubits = tuple(qubits)
+        tensor = utils.unitary_ensemble(2 ** len(qubits))
+        super().__init__(tensor, qubits)
+
+
+# end class RandomGate
 
 # Fin
