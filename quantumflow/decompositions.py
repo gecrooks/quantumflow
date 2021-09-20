@@ -30,13 +30,15 @@ Two-qubit gate decompositions
 
 
 import itertools
-from typing import List, Sequence, Tuple, cast
+from typing import Iterator, List, Sequence, Tuple, cast
 
 import numpy as np
+import scipy
 
 from .circuits import Circuit, euler_circuit
 from .config import ATOL
-from .info import gates_close
+from .info import almost_unitary, gates_close
+from .modules import MultiplexedRyGate, MultiplexedRzGate
 from .ops import Gate, Unitary
 from .stdgates import S_H, B, Can, I, Rn, S, V, X, Y, YPow, Z, ZPow
 from .translate import translate_can_to_cnot
@@ -51,17 +53,18 @@ __all__ = [
     "cnot_decomposition",
     "b_decomposition",
     "convert_can_to_weyl",
+    "quantum_shannon_decomposition",
 ]
 
 
 # TODO: Optionally include phase
 def bloch_decomposition(gate: Gate) -> Circuit:
     """
-    Converts a 1-qubit gate into a RN gate, a 1-qubit rotation of angle theta
+    Converts a 1-qubit gate into a Rn gate, a 1-qubit rotation of angle theta
     about axis (nx, ny, nz) in the Bloch sphere.
 
     Returns:
-        A Circuit containing a single RN gate
+        A Circuit containing a single Rn gate
     """
     if gate.qubit_nb != 1:
         raise ValueError("Expected 1-qubit gate")
@@ -174,8 +177,6 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     Uses the "Nearest Kronecker Product" algorithm. Will give erratic
     results if the gate is not the direct product of two 1-qubit gates.
     """
-    # An alternative approach would be to take partial traces, but
-    # this approach appears to be more robust.
 
     if gate.qubit_nb != 2:
         raise ValueError("Expected 2-qubit gate")
@@ -191,9 +192,6 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     u, s, vh = np.linalg.svd(R)
     A = np.sqrt(s[0]) * u[:, 0].reshape(2, 2)
     B = np.sqrt(s[0]) * vh[0, :].reshape(2, 2)
-    # print(s)
-    # A = (u[:, 0]).reshape(2, 2)
-    # B = (vh[0, :]).reshape(2, 2)
 
     q0, q1 = gate.qubits
     g0 = Unitary(A, [q0])
@@ -260,7 +258,9 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
     q0, q1 = gate.qubits
 
+    assert almost_unitary(gate)  # Sanity check
     U = gate.asoperator()
+
     rank = 2 ** gate.qubit_nb
     U /= np.linalg.det(U) ** (1 / rank)  # U is in SU(4) so det U = 1
 
@@ -268,7 +268,7 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     M = U_mb.transpose() @ U_mb  # Construct M matrix [1, (eq. 22)]
 
     # Diagonalize symmetric complex matrix
-    eigvals, eigvecs = _eig_complex_symmetric(M)
+    eigvals, eigvecs = _orthogonal_diagonalization(M)
 
     lambdas = np.sqrt(eigvals)  # Eigenvalues of F
     # Lambdas only fixed up to a sign. So make sure det F = 1 as it should
@@ -315,23 +315,27 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     circK2 = kronecker_decomposition(gateK2, euler)
     assert gates_close(gateK2, circK2.asgate())  # Sanity check
 
-    # Build and return circuit
-    # circ = Circuit()
-    # circ += circK2
-    # circ += canon
-    # circ += circK1
-
     circ = Circuit([circK2, canon, circK1])
+
+    assert gates_close(circ.asgate(), gate)  # Sanity check
 
     return circ
 
 
-def _eig_complex_symmetric(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Diagonalize a complex symmetric  matrix. The eigenvalues are
-    complex, and the eigenvectors form an orthogonal matrix.
+def _orthogonal_diagonalization(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Orthogonal diagonalization of a complex symmetric  matrix
+
+    The matrix should have the structure M = O D O^T, where O is
+    orthogonal and D is diagonal matrix of complex eigenvalues. This
+    structure implies that M is complex symmetric, M=M^T, but
+    not every complex symmetric matrix is diagonalizable by orthogonal
+    matrices.
+
 
     Returns:
         eigenvalues, eigenvectors
+    Raises:
+        ValueError: if M is not orthogonally diagonalizable.
     """
     if not np.allclose(M, M.transpose()):
         raise np.linalg.LinAlgError("Not a symmetric matrix")
@@ -371,10 +375,7 @@ def _eig_complex_symmetric(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         if np.allclose(M, reconstructed):
             return eigvals, eigvecs
 
-    # Should never happen. Hopefully.
-    raise np.linalg.LinAlgError(
-        "Cannot diagonalize complex symmetric matrix."
-    )  # pragma: no cover
+    raise np.linalg.LinAlgError("Matrix is not orthogonally diagonalizable")
 
 
 def _lambdas_to_coords(lambdas: np.ndarray) -> np.ndarray:
@@ -437,7 +438,7 @@ def _in_weyl(tx: float, ty: float, tz: float) -> bool:
 
 
 def cnot_decomposition(gate: Gate) -> Circuit:
-    """Decompose any 2-qubit gate into a circuit of three CNot gates.
+    """Decompose any 2-qubit gate into a circuit of (at most) three CNot gates.
 
     Ref:
         Optimal Quantum Circuits for General Two-Qubit Gates, Vatan & Williams
@@ -681,6 +682,82 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
     circ += Can(tx, ty, tz, q0, q1)
     circ += circ_after_q0_H.H
     circ += circ_after_q1_H.H
+
+    return circ
+
+
+def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
+    """
+    Quantum Shannon decomposition of a multi-qubit gate.
+
+    Note that deke time grows rapidly with qubit count: e.g. an 8 qubit gate can be
+    deked in 20s on a laptop, whereas 9 qubit gates require around 90s.
+
+    To fully deke into a circuit of CNots and 1-qubit gates, use the translate
+    function
+
+        circ = qf.translate(qf.quantum_shannon_decomposition(gate))
+
+    Args:
+        gate: A quantum gate to decompose
+        euler:
+            The Euler decomposition to use for 1-qubit gates. Default "ZYZ"
+    Returns:
+        A circuit containing 1-qubit gates, canonical gates, and multi-qubit
+        multiplexed Ry and Rz gates.
+    Ref:
+        https://arxiv.org/pdf/quant-ph/0406176.pdf
+    """
+
+    def qs_deke(gate: Gate, euler: str) -> Iterator[Gate]:
+        qubits = gate.qubits
+        N = gate.qubit_nb
+
+        if N == 1:
+            yield from euler_decomposition(gate, euler)  # type: ignore  # FIXME
+            return
+        elif N == 2:
+            yield from canonical_decomposition(gate, euler)  # type: ignore  # FIXME
+            return
+
+        target = qubits[0]
+        controls = qubits[1:]
+
+        assert almost_unitary(gate)  # Sanity check
+
+        U = gate.su().asoperator()
+        R = 2 ** (N - 1)
+
+        # cosine-sine decomposition
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cossin.html
+        # Note that the cosine-sine thetas are half our thetas due to standard
+        # quantum  convections.
+        (A1, A2), halfthetas, (B1, B2) = scipy.linalg.cossin(U, p=R, q=R, separate=True)
+
+        M2 = B1 @ B2.conj().T
+        eigvals, V = np.linalg.eig(M2)
+        D = np.diag(eigvals ** 0.5)
+        W = D @ V.conj().T @ B2
+        thetas = np.real(np.log(eigvals) * 1j)
+
+        yield from qs_deke(Unitary(W, controls), euler)
+        yield MultiplexedRzGate(thetas, controls=controls, target=target)
+        yield from qs_deke(Unitary(V, controls), euler)
+
+        yield MultiplexedRyGate(halfthetas * 2, controls=controls, target=target)
+
+        M2 = A1 @ A2.conj().T
+        eigvals, V = np.linalg.eig(M2)
+        D = np.diag(eigvals ** 0.5)
+        W = D @ V.conj().T @ A2
+        thetas = np.real(np.log(eigvals) * 1j)
+
+        yield from qs_deke(Unitary(W, controls), euler)
+        yield MultiplexedRzGate(thetas, controls=controls, target=target)
+        yield from qs_deke(Unitary(V, controls), euler)
+
+    circ = Circuit(qs_deke(gate, euler))
+    assert gates_close(circ.asgate(), gate)  # Insanity check
 
     return circ
 

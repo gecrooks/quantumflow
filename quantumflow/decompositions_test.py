@@ -14,7 +14,7 @@ import scipy.stats
 from numpy import pi
 
 import quantumflow as qf
-from quantumflow.decompositions import _eig_complex_symmetric
+from quantumflow.decompositions import _orthogonal_diagonalization
 
 from .config_test import REPS
 
@@ -222,7 +222,7 @@ def test_decomp_sqrtswap_sandwich() -> None:
     assert qf.gates_close(gate0, gate1)
 
 
-def test_eig_complex_symmetric() -> None:
+def test_orthogonal_diagonalization() -> None:
     samples = 100
     for _ in range(samples):
 
@@ -233,13 +233,19 @@ def test_eig_complex_symmetric() -> None:
         ) / np.sqrt(2.0)
         M = orthoganal @ np.diag(eigvals) @ orthoganal.T
 
-        eigvals, eigvecs = _eig_complex_symmetric(M)
+        eigvals, eigvecs = _orthogonal_diagonalization(M)
         assert np.allclose(M, eigvecs @ np.diag(eigvals) @ eigvecs.T)
 
 
 def test_eigcs_errors() -> None:
     with pytest.raises(np.linalg.LinAlgError):
-        _eig_complex_symmetric(np.random.normal(size=(4, 4)))
+        _orthogonal_diagonalization(np.random.normal(size=(4, 4)))
+
+    with pytest.raises(np.linalg.LinAlgError):
+        A = np.random.normal(size=(4, 4))
+        B = np.random.normal(size=(4, 4))
+        M = A + A.T + 1.0j * (B + B.T)
+        _orthogonal_diagonalization(M)
 
 
 def test_b_decomposition() -> None:
@@ -268,6 +274,20 @@ def test_convert_can_to_weyl() -> None:
         circ = qf.convert_can_to_weyl(gate0, euler="XYX")
 
         assert qf.gates_close(gate0, circ.asgate())
+
+
+def test_quantum_shannon_decomposition() -> None:
+    # import time
+    for n in range(1, 6):
+        gate = qf.RandomGate(qubits=range(n))
+        # t = time.process_time()
+        circ = qf.quantum_shannon_decomposition(gate)
+        # dt = time.process_time() - t
+        # print(n, len(circ), t, qf.count_operations(circ))
+        assert qf.gates_close(gate, circ.asgate())
+
+        # circ1 = qf.circuit_translate(circ)
+        # print(n, len(circ1), qf.count_operations(circ1))
 
 
 # Fin
