@@ -15,9 +15,9 @@ from .ops import Gate, Unitary
 from .paulialgebra import Pauli
 from .qubits import Qubit, Qubits
 from .tensors import QubitTensor
+from .utils import deprecated
 
 __all__ = (
-    "RandomGate",
     "join_gates",
     "print_gate",
     "P0",
@@ -27,26 +27,8 @@ __all__ = (
 )
 
 
-# DOCME: Explain cv_interchangeable
-class RandomGate(Unitary):
-    r"""Returns a random unitary gate on K qubits.
-
-    Ref:
-        "How to generate random matrices from the classical compact groups"
-        Francesco Mezzadri, math-ph/0609050
-    """
-    cv_interchangeable = True
-
-    def __init__(self, qubits: Qubits) -> None:
-        qubits = tuple(qubits)
-        tensor = utils.unitary_ensemble(2 ** len(qubits))
-        super().__init__(tensor, qubits)
-
-
-# end class RandomGate
-
-
 # DOCME: Can also use circuit.asgate()
+# Deprecate. No longer used anywhere?
 def join_gates(gate0: Gate, gate1: Gate) -> Unitary:
     """Direct product of gates. Qubit count is the sum of each gate's
     bit count."""
@@ -109,6 +91,7 @@ class P1(Gate):
         return tensors.asqutensor([[0, 0], [0, 1]])
 
 
+# Move to Pauli
 def unitary_from_hamiltonian(hamiltonian: Pauli, qubits: Qubits) -> Unitary:
     """Create a Unitary gate U from a Pauli operator H, U = exp(-i H)"""
     # Note: Can't be a classmethod constructor on Unitary due to circular
@@ -118,10 +101,13 @@ def unitary_from_hamiltonian(hamiltonian: Pauli, qubits: Qubits) -> Unitary:
     return Unitary(U, qubits)
 
 
-# TODO: Replace with class
+@deprecated
 def conditional_gate(control: Qubit, gate0: Gate, gate1: Gate) -> Unitary:
     """Return a conditional unitary gate. Do gate0 on bit 1 if bit 0 is zero,
-    else do gate1 on 1"""
+    else do gate1 on 1
+
+    Deprecated: Use the ConditionalGate class instead.
+    """
     assert gate0.qubits == gate1.qubits  # FIXME
 
     tensor = join_gates(P0(control), gate0).tensor
