@@ -245,6 +245,7 @@ class Operation(ABC):
         Returns the diagonal of the tensor representation of this operation
         (if possible)
         """
+<<<<<<< HEAD
         raise NotImplementedError()
 
     @utils.cached_property
@@ -253,6 +254,8 @@ class Operation(ABC):
         Returns the diagonal of the tensor representation of this operation
         (if possible)
         """
+=======
+>>>>>>> master
         raise NotImplementedError()
 
     def run(self, ket: State) -> State:
@@ -404,14 +407,6 @@ class Gate(Operation):
         """
         return tensors.asqutensor(np.diag(self.asoperator()))
 
-    @utils.cached_property
-    def tensor_diagonal(self) -> QubitTensor:
-        """
-        Returns the diagonal of the tensor representation of this operation
-        (if possible)
-        """
-        return tensors.asqutensor(np.diag(self.asoperator()))
-
     def su(self) -> "UnitaryGate":
         """Convert gate tensor to the special unitary group."""
         rank = 2 ** self.qubit_nb
@@ -449,9 +444,13 @@ class Gate(Operation):
             return ket
         elif self.cv_tensor_structure == "diagonal":
             tensor = tensors.tensormul_diagonal(
+<<<<<<< HEAD
                 self.tensor_diagonal,
                 ket.tensor,
                 tuple(indices)
+=======
+                self.tensor_diagonal, ket.tensor, tuple(indices)
+>>>>>>> master
             )
             return State(tensor, ket.qubits, ket.memory)
 
@@ -566,24 +565,6 @@ class StdGate(Gate):
         fargs = ", ".join(args)
 
         return f"{self.name}({fargs})"
-
-    def __str__(self) -> str:
-        def _param_format(obj: Any) -> str:
-            if isinstance(obj, float):
-                try:
-                    return str(var.asexpression(obj))
-                except ValueError:
-                    return f"{obj}"
-            return str(obj)
-
-        fqubits = " " + " ".join([str(qubit) for qubit in self.qubits])
-
-        if self.params:
-            fparams = "(" + ", ".join(_param_format(p) for p in self.params) + ")"
-        else:
-            fparams = ""
-
-        return f"{self.name}{fparams}{fqubits}"
 
     def decompose(self) -> Iterator["StdGate"]:
         from .translate import TRANSLATORS, translation_source_gate
