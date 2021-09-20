@@ -74,6 +74,50 @@ def test_control_gate_resolve() -> None:
     assert qf.gates_close(gate1, gate2)
 
 
+# def test_controlled_gate_axes() -> None:
+
+#     gate0 = qf.ControlGate(qf.Z(1), [0], axes="z")
+#     gate1 = qf.Circuit([qf.X(0), qf.CZ(0, 1), qf.X(0)]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="ZZ")
+#     gate1 = qf.CCNot(0, 1, 2)
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="zZ")
+#     gate1 = qf.Circuit([qf.X(0), qf.CCNot(0, 1, 2), qf.X(0)]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="Zz")
+#     gate1 = qf.Circuit([qf.X(1), qf.CCNot(0, 1, 2), qf.X(1)]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="YZ")
+#     gate1 = qf.Circuit([qf.V(0), qf.CCNot(0, 1, 2), qf.V(0).H]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="yZ")
+#     gate1 = qf.Circuit([qf.V(0).H, qf.CCNot(0, 1, 2), qf.V(0)]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="XZ")
+#     gate1 = qf.Circuit([qf.SqrtY(0).H, qf.CCNot(0, 1, 2), qf.SqrtY(0)]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="xZ")
+#     gate1 = qf.Circuit([qf.SqrtY(0), qf.CCNot(0, 1, 2), qf.SqrtY(0).H]).asgate()
+#     assert qf.gates_close(gate0, gate1)
+#     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
+
+
 def test_qftgate() -> None:
     circ = qf.Circuit()
     circ += qf.X(2)
@@ -244,6 +288,274 @@ def test_PauliGate_pow() -> None:
 
     s = str(gate0)
     print(s)
+
+
+def test_DiagonalGate() -> None:
+
+    gate0 = qf.DiagonalGate([0.1, -0.1], qubits=[1])
+    gate1 = qf.Rz(0.2, 1)
+    assert qf.gates_close(gate0, gate0)
+    assert qf.gates_close(gate0, gate1)
+    assert qf.gates_close(gate0.H, gate0 ** -1)
+
+    gate2 = qf.DiagonalGate([0.1, -0.1], qubits=[1])
+    gate3 = qf.ZPow(0.2 / np.pi, 1)
+    assert qf.gates_close(gate2, gate3)
+
+    gate4 = qf.DiagonalGate([0, 0, 0, -np.pi], qubits=[0, 1])
+    gate5 = qf.CZ(0, 1)
+    assert qf.gates_close(gate4, gate5)
+    assert qf.gates_close(gate4 ** 0.1, gate5 ** 0.1)
+
+    circ0 = qf.Circuit(gate0.decompose())
+    assert qf.gates_close(gate0, circ0.asgate())
+
+    circ4 = qf.Circuit(gate4.decompose())
+    assert qf.gates_close(gate4, circ4.asgate())
+
+    gate6 = gate4 ** 0.2
+    circ6 = qf.Circuit(gate6.decompose())
+    assert qf.gates_close(gate6, circ6.asgate())
+
+    gate7 = qf.DiagonalGate([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], qubits=[0, 1, 2])
+    circ7 = qf.Circuit(gate7.decompose())
+    assert qf.gates_close(gate7, circ7.asgate())
+
+    gate8 = qf.DiagonalGate(tuple(np.random.rand(32)), qubits=[0, 1, 2, 3, 4])
+    circ8 = qf.Circuit(gate8.decompose())
+    assert qf.gates_close(circ8.asgate(), gate8)
+
+    # circ9 = qf.Circuit([gate8, gate0, gate2])
+    assert str(gate2) == "DiagonalGate(1/10, -1/10) 1"
+
+
+def test_DiagonalGate_from_gate() -> None:
+    gate1 = qf.DiagonalGate(tuple(np.random.rand(32)), qubits=[0, 1, 2, 3, 4])
+    gate2 = qf.DiagonalGate.from_gate(gate1)
+    assert qf.gates_close(gate1, gate2)
+
+    gate3 = qf.ZPow(0.2 / np.pi, 1)
+    gate4 = qf.DiagonalGate.from_gate(gate3)
+    assert qf.gates_close(gate3, gate4)
+
+    gate5 = qf.Unitary.from_gate(gate1)
+    gate6 = qf.DiagonalGate.from_gate(gate5)
+    assert qf.gates_close(gate5, gate6)
+
+    gate7 = qf.Swap(0, 1)
+    with pytest.raises(ValueError):
+        _ = qf.DiagonalGate.from_gate(gate7)
+
+    gate8 = qf.IdentityGate([0, 1, 4])
+    gate9 = qf.DiagonalGate.from_gate(gate8)
+    assert qf.gates_close(gate8, gate9)
+
+
+def test_DiagonalGate_permute() -> None:
+    gate0 = qf.DiagonalGate([0, 1, 2, 3], qubits=[0, 1])
+    gate1 = gate0.permute([1, 0])
+    gate2 = gate0.su().permute([1, 0])
+    assert qf.gates_close(gate1, gate2)
+    assert gate1.params == (0, 2, 1, 3)
+    assert gate1.qubits == (1, 0)
+
+
+def test_merge_diagonal_gates() -> None:
+    from quantumflow.modules import merge_diagonal_gates
+
+    gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
+    gate1 = qf.DiagonalGate([0.1, 0.2, 0.3, 0.4], qubits=[1, 2])
+
+    gate2 = merge_diagonal_gates(gate0, gate1)
+    gate3 = qf.Circuit([gate0, gate1]).asgate()
+
+    assert qf.gates_close(gate2, gate3)
+
+    gate0 = qf.DiagonalGate([0.01, 0.02, 0.03, 0.04], qubits=[0, 1])
+    gate1 = qf.DiagonalGate([0.1, 0.2], qubits=[3])
+
+    gate2 = merge_diagonal_gates(gate0, gate1)
+    gate3 = qf.Circuit([gate0, gate1]).asgate()
+
+    assert qf.gates_close(gate2, gate3)
+
+
+def test_merge_diagonal_gates_symbolic() -> None:
+    from sympy import Symbol
+
+    from quantumflow.modules import merge_diagonal_gates
+
+    gate0 = qf.DiagonalGate(
+        [Symbol("a0"), Symbol("a1"), Symbol("a2"), Symbol("a3")], qubits=[0, 1]
+    )
+    gate1 = qf.DiagonalGate(
+        [Symbol("b0"), Symbol("b1"), Symbol("b2"), Symbol("b3")], qubits=[1, 2]
+    )
+
+    _ = merge_diagonal_gates(gate0, gate1)
+
+
+def test_DiagonalGate_decomposition_count() -> None:
+
+    for N in range(1, 9):
+        qbs = list(range(0, N))
+        params = np.random.rand(2 ** N)
+        gate = qf.DiagonalGate(params, qbs)
+        circ = qf.Circuit(gate.decompose())
+        ops = qf.count_operations(circ)
+        print(N, ops)
+        # print(qf.circuit_to_diagram(circ))
+
+        # From Shende2006a
+        if N == 3:
+            assert ops[qf.CNot] == 6
+            assert ops[qf.Rz] == 7
+
+        # # From "Decomposition of Diagonal Hermitian Quantum Gates Using
+        # # Multiple-Controlled Pauli Z Gates"
+        # # (2014).
+        # # FIXME: Not optimal yet.
+        # if N == 4 :
+        #     assert ops[qf.CNot] == 14
+        #     assert ops[qf.Rz] == 15
+
+
+def test_MultiplexedRzGate() -> None:
+    gate1 = qf.MultiplexedRzGate(thetas=[0.1], controls=(), target=2)
+    assert gate1.qubit_nb == 1
+    assert qf.gates_close(gate1, qf.Rz(0.1, 2))
+
+    gate2 = qf.MultiplexedRzGate(thetas=[0.1, 0.2], controls=[0], target=1)
+    assert gate2.qubit_nb == 2
+
+    gate3 = qf.MultiplexedRzGate(thetas=[0, 0.2], controls=[0], target=1)
+    gate4 = qf.CRZ(0.2, 0, 1)
+    assert qf.gates_close(gate3, gate4)
+
+    circ1 = qf.Circuit(gate1.decompose())
+    assert qf.gates_close(circ1.asgate(), gate1)
+
+    circ2 = qf.Circuit(gate2.decompose())
+    assert qf.gates_close(circ2.asgate(), gate2)
+
+    circ3 = qf.Circuit(gate3.decompose())
+    assert qf.gates_close(circ3.asgate(), gate3)
+
+    gate4b = qf.MultiplexedRzGate(
+        thetas=[0.1, 0.2, 0.3, 0.4], controls=[0, 1], target=2
+    )
+    circ4b = qf.Circuit(gate4b.decompose())
+    assert qf.gates_close(circ4b.asgate(), gate4b)
+
+    gate5 = qf.MultiplexedRzGate(thetas=[0.1, 0.2, 0.3, 0.4], controls=[2, 3], target=0)
+    circ5 = qf.Circuit(gate5.decompose())
+    assert qf.gates_close(circ5.asgate(), gate5)
+
+    gate6 = qf.MultiplexedRzGate(
+        thetas=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], controls=[0, 1, 2], target=3
+    )
+    circ6 = qf.Circuit(gate6.decompose())
+    assert qf.gates_close(circ6.asgate(), gate6)
+
+    ops = qf.count_operations(circ6)
+    assert ops[qf.CNot] == 12
+    assert ops[qf.Rz] == 8
+    print(ops)
+
+    gate7 = qf.MultiplexedRzGate(
+        thetas=tuple(np.random.rand(16)), controls=[0, 1, 2, 3], target=4
+    )
+    circ7 = qf.Circuit(gate7.decompose())
+    assert qf.gates_close(circ7.asgate(), gate7)
+
+    assert qf.gates_close(gate1.H, gate1 ** -1)
+
+    assert str(gate1) == "MultiplexedRzGate(1/10) 2"
+
+
+def test_MultiplexedRzGate_str() -> None:
+    gate1 = qf.MultiplexedRzGate(thetas=[0.1324], controls=(), target=2)
+    s = str(gate1)
+    print(s)
+    assert s == "MultiplexedRzGate(0.1324) 2"
+
+
+def test_MultiplexedRyGate() -> None:
+    q0, q1 = (0, 1)
+    thetas = [0.1, 0.2]
+    gate1 = qf.MultiplexedRyGate(thetas, controls=[q0], target=q1)
+    assert gate1.qubit_nb == 2
+
+    circ1 = qf.Circuit(
+        [
+            qf.X(q0),
+            qf.ControlGate(qf.Ry(thetas[0], q1), [q0]),
+            qf.X(q0),
+            qf.ControlGate(qf.Ry(thetas[1], q1), [q0]),
+        ]
+    )
+    assert qf.gates_close(gate1, circ1.asgate())
+
+    gate7 = qf.MultiplexedRyGate(
+        thetas=tuple(np.random.rand(2)), controls=[0], target=4
+    )
+    circ7 = qf.Circuit(gate7.decompose())
+    assert qf.gates_close(circ7.asgate(), gate7)
+
+    assert qf.gates_close(gate1.H, gate1 ** -1)
+    gate2 = qf.Unitary(gate1.asoperator(), gate1.qubits)
+    assert qf.gates_close(gate1.H, gate2.H)
+    assert qf.gates_close(gate1 ** 2, gate2 ** 2)
+    assert qf.gates_close(gate1 ** -1, gate2 ** -1)
+
+
+def test_MultiplexedGate() -> None:
+    gate1 = qf.MultiplexedGate(
+        [qf.Rz(0.1, 2), qf.Rz(0.2, 2), qf.Rz(0.3, 2), qf.Rz(0.4, 2)], [0, 1]
+    )
+    gate2 = qf.MultiplexedRzGate([0.1, 0.2, 0.3, 0.4], [0, 1], 2)
+    assert qf.gates_close(gate1, gate2)
+
+    with pytest.raises(ValueError):
+        _ = qf.MultiplexedGate(
+            [qf.Rz(0.1, 2), qf.Rz(0.2, 2), qf.Rz(0.3, 2), qf.Rz(0.4, 2)], [0, 2]
+        )
+
+    with pytest.raises(ValueError):
+        _ = qf.MultiplexedGate(
+            [qf.Rz(0.1, 2), qf.Rz(0.2, 2), qf.Rz(0.3, 2), qf.Rz(0.4, 2)], [0, 1, 3]
+        )
+
+    with pytest.raises(ValueError):
+        _ = qf.MultiplexedGate(
+            [qf.Rz(0.1, 2), qf.Rz(0.2, 2), qf.Rz(0.3, 2), qf.Rz(0.4, 3)], [0, 1]
+        )
+
+    gate3 = gate1.H
+    gate4 = qf.UnitaryGate.from_gate(gate1).H
+    assert qf.gates_close(gate3, gate4)
+
+
+def test_MultiplexedGate_resolve() -> None:
+    gate0 = qf.MultiplexedGate(
+        [
+            qf.Rz(Symbol("a"), 2),
+            qf.Rz(Symbol("b"), 2),
+            qf.Rz(Symbol("c"), 2),
+            qf.Rz(Symbol("d"), 2),
+        ],
+        [0, 1],
+    )
+
+    gate1 = gate0.resolve({"a": 0.1, "b": 0.2, "c": 0.3, "d": 0.4})
+    gate2 = qf.MultiplexedRzGate([0.1, 0.2, 0.3, 0.4], [0, 1], 2)
+    assert qf.gates_close(gate1, gate2)
+
+
+def test_ConditionalGate() -> None:
+    gate1 = qf.ConditionalGate(qf.H(1), qf.X(1), 0)
+    circ2 = qf.Circuit([qf.X(0), qf.CH(0, 1), qf.X(0), qf.CNot(0, 1)])
+    assert qf.gates_close(gate1, circ2.asgate())
 
 
 # fin

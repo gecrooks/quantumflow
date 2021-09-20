@@ -78,6 +78,7 @@ class Moment(Sequence, Operation):
     """
 
     def __init__(self, *elements: Union[Iterable[Operation], Operation]) -> None:
+        # FIXME
         if len(elements) == 1 and isinstance(elements[0], Iterable):
             elements = elements[0]  # type: ignore
 
