@@ -75,16 +75,15 @@ from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
-from .stdgates import CZ, V_H, CNot, CZPow  # SqrtY,; SqrtY_H,
 from .stdgates import (
-    H as H_,
-)  # NB: Workaround for name conflict with Gate.H   # FIXME:  needed?
-from .stdgates import (  # SqrtY,; SqrtY_H,
+    CZ,
+    V_H,
+    CNot,
+    CZPow,
+    H,
     I,
     Ry,
     Rz,
-    SqrtY,
-    SqrtY_H,
     Swap,
     V,
     X,
@@ -96,6 +95,8 @@ from .stdgates import (  # SqrtY,; SqrtY_H,
 )
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
+
+H_ = H  # NB: Workaround for name conflict with Gate.H
 
 __all__ = (
     "IdentityGate",
@@ -857,22 +858,6 @@ class MultiplexedRyGate(MultiplexedGate):
 class RandomGate(UnitaryGate):
     r"""Returns a random unitary gate acting on the given qubits.
 
-    Ref:
-        "How to generate random matrices from the classical compact groups"
-        Francesco Mezzadri, math-ph/0609050
-    """
-
-    def __init__(self, qubits: Qubits) -> None:
-        qubits = tuple(qubits)
-        tensor = utils.unitary_ensemble(2 ** len(qubits))
-        super().__init__(tensor, qubits)
-
-
-# end class RandomGate
-
-
-class RandomGate(UnitaryGate):
-    r"""Returns a random unitary gate acting on the given qubits.
     Ref:
         "How to generate random matrices from the classical compact groups"
         Francesco Mezzadri, math-ph/0609050
