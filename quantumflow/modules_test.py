@@ -8,6 +8,7 @@ import networkx as nx
 import numpy as np
 import pytest
 import scipy.linalg
+from sympy import Symbol
 
 import quantumflow as qf
 
@@ -61,6 +62,16 @@ def test_control_gate() -> None:
     gate11 = qf.ControlGate(qf.Swap(1, 2), [0])
     gate12 = qf.CSwap(0, 1, 2)
     assert qf.gates_close(gate11, gate12)
+
+    assert str(gate11) == "ControlGate(Swap 1 2) 0"
+
+
+def test_control_gate_resolve() -> None:
+    theta = Symbol("theta")
+    gate0 = qf.ControlGate(qf.Rx(theta, 1), [0])
+    gate1 = gate0.resolve({theta: 2.3})
+    gate2 = qf.ControlGate(qf.Rx(2.3, 1), [0])
+    assert qf.gates_close(gate1, gate2)
 
 
 # def test_controlled_gate_axes() -> None:

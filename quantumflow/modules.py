@@ -146,6 +146,86 @@ class IdentityGate(Gate):
 # end class IdentityGate
 
 
+# TODO: Redo _diagram_labels
+# TODO: diagrams
+# TODO: Decompose
+# ⊖ ⊕ ⊘ ⊗ ● ○
+# TODO: resolution of variables
+class ControlGate(Gate):
+    """A controlled unitary gate. Given C control qubits and a
+    gate acting on K qubits, return a controlled gate with C+K qubits.
+    The optional axes argument specifies the basis of the control
+    qubits. The length of the sting should be the same as the number of control
+    qubits. The default axis 'Z' is standard control in the standard 'z'
+    (computational) basis. Anti-control, where the gate is activated with the zero
+    state, is specified by 'z'
+        ==== ====== ======  ============
+        Axis Symbol Basis
+        ==== ====== ====================
+         X     ⊖    x-axis anti-control
+         x     ⊕    x-basis control
+         Y     ⊘    y-axis anti-control
+         y     ⊗    y-basis control
+         z     ○    z-basis anti-control
+         Z     ●    z-axis control
+        ==== ====== ====================
+    The symbols are used in circuit diagrams. Z-basis control '●' and anti-control '○'
+    symbols are standard, the rest are adapted from quirk.
+    """
+
+    def __init__(self, gate: Gate, controls: Qubits, axes: str = None) -> None:
+        controls = tuple(controls)
+        qubits = tuple(controls) + tuple(gate.qubits)
+        if len(set(qubits)) != len(qubits):
+            raise ValueError("Control and gate qubits overlap")
+
+        if axes is None:
+            axes = "Z" * len(controls)
+        assert len(axes) == len(controls)
+
+        super().__init__(qubits)
+        self.controls = controls
+        self.gate = gate
+        self.axes = axes
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        ctrlham = {
+            "X": (1 - sX(0)) / 2,
+            "x": (1 + sX(0)) / 2,
+            "Y": (1 - sY(0)) / 2,
+            "y": (1 + sY(0)) / 2,
+            "Z": (1 - sZ(0)) / 2,
+            "z": (1 + sZ(0)) / 2,
+        }
+
+        ham = self.gate.hamiltonian
+        for q, axis in zip(self.controls, self.axes):
+            ham *= ctrlham[axis].on(q)
+
+        return ham
+
+    # Testme
+    def resolve(self, subs: Mapping[str, float]) -> "Gate":
+        gate = self.gate.resolve(subs)
+        assert isinstance(gate, Gate)
+        return type(self)(gate, self.controls, self.axes)
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        # FIXME: This approach generates a tensor with unnecessary numerical noise.
+        return unitary_from_hamiltonian(self.hamiltonian, self.qubits).tensor
+
+    def __str__(self) -> str:
+        fqubits = " " + " ".join([str(qubit) for qubit in self.controls])
+        fparams = str(self.gate)
+        # FIXME: Axes
+        return f"{self.name}({fparams}){fqubits}"
+
+
+# end class ControlGate
+
+
 class MultiSwapGate(Gate):
     """A permutation of qubits. A generalized multi-qubit Swap."""
 
@@ -580,111 +660,6 @@ class DiagonalGate(Gate):
 
 
 # end class DiagonalGate
-
-
-# TODO: Redo _diagram_labels
-# TODO: diagrams
-# TODO: Decompose
-# ⊖ ⊕ ⊘ ⊗ ● ○
-# TODO: resolution of variables
-class ControlGate(Gate):
-    """A controlled unitary gate. Given C control qubits and a
-    gate acting on K qubits, return a controlled gate with C+K qubits.
-
-
-    The optional axes argument specifies the basis of the control
-    qubits. The length of the sting should be the same as the numebr of control
-    qubits. The default axis 'Z' is standard control in the standard 'z'
-    (computational) basis. Anti-control, where the gate is activated with the zero
-    state, is specified by 'z'
-
-        ==== ====== ======  ============
-        Axis Symbol Basis
-        ==== ====== ====================
-         X     ⊖    x-axis anti-control
-         x     ⊕    x-basis control
-         Y     ⊘    y-axis anti-control
-         y     ⊗    y-basis control
-         z     ○    z-basis anti-control
-         Z     ●    z-axis control
-        ==== ====== ====================
-
-    The symbols are used in circuit diagrams. Z-basis control '●' and anti-control '○'
-    symbols are standard, the rest are adapted from quirk.
-
-    """
-
-    def __init__(self, gate: Gate, controls: Qubits, axes: str = None) -> None:
-        controls = tuple(controls)
-        qubits = tuple(controls) + tuple(gate.qubits)
-        if len(set(qubits)) != len(qubits):
-            raise ValueError("Control and gate qubits overlap")
-
-        if axes is None:
-            axes = "Z" * len(controls)
-        assert len(axes) == len(controls)
-
-        super().__init__(qubits)
-        self.controls = controls
-        self.gate = gate
-        self.axes = axes
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        ctrlham = {
-            "X": (1 - sX(0)) / 2,
-            "x": (1 + sX(0)) / 2,
-            "Y": (1 - sY(0)) / 2,
-            "y": (1 + sY(0)) / 2,
-            "Z": (1 - sZ(0)) / 2,
-            "z": (1 + sZ(0)) / 2,
-        }
-
-        ham = self.gate.hamiltonian
-        for q, axis in zip(self.controls, self.axes):
-            ham *= ctrlham[axis].on(q)
-
-        return ham
-
-    # # TODO: Rename? Maybe specialize?
-    # def standardize(
-    #     self,
-    # ) -> Iterator[Union["ControlGate", X, V, V_H, SqrtY, SqrtY_H]]:
-    #     """Yield an equivalent controlled gate with standard z-axis controls, pre- and
-    #     post-pended with additional 1-qubit gates as necessary"""
-
-    #     transforms = {
-    #         "X": SqrtY(0).H,
-    #         "x": SqrtY(0),
-    #         "Y": V(0),
-    #         "y": V(0).H,
-    #         "Z": I(0),
-    #         "z": X(0),
-    #     }
-
-    #     for q, axis in zip(self.controls, self.axes):
-    #         if axis != "Z":
-    #             yield transforms[axis].on(q)
-
-    #     yield type(self)(self.gate, self.controls)
-
-    #     for q, axis in zip(self.controls, self.axes):
-    #         if axis != "Z":
-    #             yield transforms[axis].H.on(q)
-
-    # Testme
-    def resolve(self, subs: Mapping[str, float]) -> "Gate":
-        gate = self.gate.resolve(subs)
-        assert isinstance(gate, Gate)
-        return type(self)(gate, self.controls, self.axes)
-
-    @utils.cached_property
-    def tensor(self) -> QubitTensor:
-        # FIXME: This approach generates a tensor with unnecessary numerical noise.
-        return unitary_from_hamiltonian(self.hamiltonian, self.qubits).tensor
-
-
-# end class ControlGate
 
 
 # TODO: resolution of variables
