@@ -7,8 +7,6 @@
 QuantumFlow: Standard two qubit gates
 """
 
-from typing import Iterator, Union
-
 import numpy as np
 
 from .. import tensors, utils, var
@@ -21,7 +19,7 @@ from ..states import State
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import PI, Variable
-from .stdgates_1q import S_H, V_H, H, I, S, V, X, Y, Z
+from .stdgates_1q import V_H, H, I, V, X, Y, Z
 
 # 2 qubit gates, alphabetic order
 
@@ -348,6 +346,7 @@ class CNot(StdGate):
 
 
 # FIXME: matrix in docs looks wrong?
+# FIXME: docs, controlled_gate
 class CNotPow(StdGate):
     r"""Powers of the CNot gate.
 
@@ -599,14 +598,6 @@ class CYPow(StdGate):
         (t,) = self.params
         return CYPow(e * t, *self.qubits)
 
-    def decompose(self) -> Iterator[Union[S, S_H, CNotPow]]:
-        """Convert powers of CZ gate to powers of CNOT gate"""
-        (t,) = self.params
-        q0, q1 = self.qubits
-        yield S_H(q1)
-        yield CNot(q0, q1) ** t
-        yield S(q1)
-
 
 # End class CYPow
 
@@ -798,7 +789,7 @@ class ECP(StdGate):
 
 
 class Exch(StdGate):
-    r"""A 2-qubit parametric gate generated from an exchange interaction.
+    r"""A 2-qubit parametric gate generated from an isotropic exchange interaction.
 
     Equivalent to Can(t,t,t)
 

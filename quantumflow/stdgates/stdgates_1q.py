@@ -68,7 +68,7 @@ def _specialize_gate(
     #     if variable_is_symbolic(p):
     #         return gate
 
-    params = [p % pd for p, pd in zip(params, periods)]
+    params = [var.asfloat(p) % pd for p, pd in zip(params, periods)]
 
     for values, gatetype in opts.items():
         if np.isclose(params, values):
@@ -121,7 +121,7 @@ class Ph(StdGate):
 
     Since this gate applies a global phase it technically doesn't need to
     specify qubits at all. But we instead anchor the gate to 1 specific
-    qubit so that we can keep track of the phase as when manipulate gates,
+    qubit so that we can keep track of the phase as we manipulate gates,
     circuits, and DAGCircuits.
 
     We generally don't actually care about the global phase, since it has no
@@ -427,6 +427,7 @@ class PhaseShift(StdGate):
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
     cv_tensor_structure = "diagonal"
+    _diagram_labels = ["P({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0])

@@ -92,7 +92,6 @@ def test_can_to_cnot() -> None:
 
     gate = qf.Can(0.3, 0.23, 0.0, 0, 1)
     circ = qf.Circuit(qf.translate_can_to_cnot(gate))  # type: ignore
-    print(qf.canonical_decomposition(circ.asgate()))
     assert qf.gates_close(gate, circ.asgate())
 
 

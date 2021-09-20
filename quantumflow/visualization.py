@@ -679,7 +679,7 @@ def _pretty(obj: Any, format: str = "text") -> str:
 
     if isinstance(obj, sympy.Expr):
         if format == "latex":
-            return sympy.latex(_round_sympy_expr((obj)))  # pragma: nocover  # FIXME
+            return sympy.latex(_round_sympy_expr((obj)))  # pragma: no cover  # FIXME
         else:
             return str(obj)
 
