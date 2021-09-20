@@ -385,7 +385,6 @@ def circuit_to_latex(
                 code[idx[i + 1]] = r"\targ{}"
 
             else:
-                print(name)
                 raise NotImplementedError(str(gate))
 
         layer_code.append(code)
