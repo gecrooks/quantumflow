@@ -54,6 +54,8 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 .. autoclass:: MultiplexedRzGate
     :members:
 
+.. autoclass:: RandomGate
+    :members:
 """
 
 # TODO: Move all to gate module?
@@ -893,5 +895,20 @@ class RandomGate(UnitaryGate):
 
 # end class RandomGate
 
+
+class RandomGate(UnitaryGate):
+    r"""Returns a random unitary gate acting on the given qubits.
+    Ref:
+        "How to generate random matrices from the classical compact groups"
+        Francesco Mezzadri, math-ph/0609050
+    """
+
+    def __init__(self, qubits: Qubits) -> None:
+        qubits = tuple(qubits)
+        tensor = utils.unitary_ensemble(2 ** len(qubits))
+        super().__init__(tensor, qubits)
+
+
+# end class RandomGate
 
 # Fin
