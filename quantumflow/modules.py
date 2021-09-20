@@ -84,8 +84,6 @@ from .stdgates import (
     I,
     Ry,
     Rz,
-    SqrtY,
-    SqrtY_H,
     Swap,
     V,
     X,
