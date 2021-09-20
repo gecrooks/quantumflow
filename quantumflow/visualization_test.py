@@ -440,4 +440,27 @@ def test_gate3_to_diagrams() -> None:
         qf.latex_to_image(latex).show()
 
 
+def test_ControlGate_to_latex() -> None:
+    circ = qf.Circuit()
+    circ += qf.ControlGate(qf.X(3), [0, 1, 2])
+
+    latex = qf.circuit_to_latex(circ)
+    if os.environ.get("QF_VIZTEST"):
+        qf.latex_to_image(latex).show()
+
+
+def test_latex_labels() -> None:
+    circ = qf.Circuit()
+    circ += qf.CCNot(0, 1, 2)
+
+    latex = qf.circuit_to_latex(
+        circ,
+        qubit_labels=False,
+        left_labels=["c0", "c1", "c2", "t"],
+        right_labels=["this", "that", "other", "nother"],
+    )
+    if os.environ.get("QF_VIZTEST"):
+        qf.latex_to_image(latex).show()
+
+
 # fin
