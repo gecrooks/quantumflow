@@ -245,17 +245,6 @@ class Operation(ABC):
         Returns the diagonal of the tensor representation of this operation
         (if possible)
         """
-<<<<<<< HEAD
-        raise NotImplementedError()
-
-    @utils.cached_property
-    def tensor_diagonal(self) -> QubitTensor:
-        """
-        Returns the diagonal of the tensor representation of this operation
-        (if possible)
-        """
-=======
->>>>>>> master
         raise NotImplementedError()
 
     def run(self, ket: State) -> State:
@@ -444,13 +433,9 @@ class Gate(Operation):
             return ket
         elif self.cv_tensor_structure == "diagonal":
             tensor = tensors.tensormul_diagonal(
-<<<<<<< HEAD
                 self.tensor_diagonal,
                 ket.tensor,
                 tuple(indices)
-=======
-                self.tensor_diagonal, ket.tensor, tuple(indices)
->>>>>>> master
             )
             return State(tensor, ket.qubits, ket.memory)
 
