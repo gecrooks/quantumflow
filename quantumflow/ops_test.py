@@ -9,6 +9,17 @@ from sympy import Symbol
 
 import quantumflow as qf
 
+
+def test_operation_incommensurate_qubits() -> None:
+
+    gate1 = qf.CCNot("a", "c", "b")
+    indices = gate1.qubit_indices(["a", "b", "c"])
+    assert indices == (0, 2, 1)
+
+    with pytest.raises(ValueError):
+        _ = gate1.qubit_indices(["a", "b", "x"])
+
+
 # == test Gate ==
 
 
@@ -138,6 +149,12 @@ def test_unitary_exceptions() -> None:
 
     with pytest.raises(ValueError):
         qf.Unitary(tensor, [0, 1, 2])
+
+
+def test_unitary_from_gate() -> None:
+    gate0 = qf.CCNot(1, 0, 2)
+    gate1 = qf.Unitary.from_gate(gate0)
+    assert qf.gates_close(gate0, gate1)
 
 
 # fin
