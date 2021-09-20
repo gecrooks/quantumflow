@@ -332,7 +332,7 @@ def gates_phase_close(gate0: Gate, gate1: Gate, atol: float = ATOL) -> bool:
         return False
     N = gate0.qubit_nb
     phase = np.trace((gate1 @ gate0.H).asoperator()) / 2 ** N
-    return bool(np.isclose(phase, 1.0))
+    return bool(np.isclose(phase, 1.0, atol=atol))
 
 
 # TESTME
