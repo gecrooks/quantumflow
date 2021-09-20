@@ -292,7 +292,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
         if isinstance(gate, X):
             circ += CNot(q0, gate.qubits[0])
         else:
-            cgate = ControlGate([q0], gate)
+            cgate = ControlGate(gate, [q0])
             circ += cgate
     else:
         circ += control_circuit(controls[-1:], gate ** 0.5)
@@ -368,7 +368,7 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
     circ += map_gate(H(0), list(zip(outputs)))  # Hadamard on all output qubits
 
     for cq in reversed(outputs):
-        cgate = ControlGate([cq], gate)
+        cgate = ControlGate(gate, [cq])
         circ += cgate
         gate = gate @ gate
 

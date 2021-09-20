@@ -619,7 +619,7 @@ class CV(StdGate):
         q0, q1 = self.qubits
         from ..modules import ControlGate
 
-        return ControlGate([q0], V(q1)).tensor
+        return ControlGate(V(q1), [q0]).tensor
 
     @property
     def H(self) -> "CV_H":
@@ -649,7 +649,7 @@ class CV_H(StdGate):
         q0, q1 = self.qubits
         from ..modules import ControlGate
 
-        return ControlGate([q0], V_H(q1)).tensor
+        return ControlGate(V_H(q1), [q0]).tensor
 
     @property
     def H(self) -> "CV":
