@@ -289,12 +289,6 @@ class Operation(ABC):
 
         return Circuit(self)._repr_html_()
 
-    # TODO: Replacement (or supplement) for _diagram_labels class variable
-    def _diagram_labels_(self) -> Optional[List[str]]:
-        """Labels for circuit diagrams, one label per qubit.
-        Used by visualization.circuit_to_diagram"""
-        return type(self)._diagram_labels
-
 
 # End class Operation
 

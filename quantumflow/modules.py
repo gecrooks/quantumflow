@@ -42,7 +42,7 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 .. autoclass:: InvQFTGate
     :members:
 
-.. autoclass:: ControlledGate
+.. autoclass:: ControlGate
     :members:
 
 .. autoclass:: MultiplexedGate
@@ -104,7 +104,7 @@ __all__ = (
     "QFTGate",
     "InvQFTGate",
     "DiagonalGate",
-    "ControlledGate",
+    "ControlGate",
     "MultiplexedGate",
     "ConditionalGate",
     "MultiplexedRzGate",
@@ -585,7 +585,7 @@ class DiagonalGate(Gate):
 # TODO: Decompose
 # ⊖ ⊕ ⊘ ⊗ ● ○
 # TODO: resolution of variables
-class ControlledGate(Gate):
+class ControlGate(Gate):
     """A controlled unitary gate. Given C control qubits and a
     gate acting on K qubits, return a controlled gate with C+K qubits.
 
@@ -647,7 +647,7 @@ class ControlledGate(Gate):
     # # TODO: Rename? Maybe specialize?
     # def standardize(
     #     self,
-    # ) -> Iterator[Union["ControlledGate", X, V, V_H, SqrtY, SqrtY_H]]:
+    # ) -> Iterator[Union["ControlGate", X, V, V_H, SqrtY, SqrtY_H]]:
     #     """Yield an equivalent controlled gate with standard z-axis controls, pre- and
     #     post-pended with additional 1-qubit gates as necessary"""
 
@@ -682,7 +682,7 @@ class ControlledGate(Gate):
         return unitary_from_hamiltonian(self.hamiltonian, self.qubits).tensor
 
 
-# end class ControlledGate
+# end class ControlGate
 
 
 # TODO: resolution of variables

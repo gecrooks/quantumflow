@@ -31,77 +31,77 @@ def test_identitygate() -> None:
 
 
 def test_control_gate() -> None:
-    gate0 = qf.ControlledGate(qf.X(1), [0])
+    gate0 = qf.ControlGate(qf.X(1), [0])
     gate1 = qf.CNot(0, 1)
     assert qf.gates_close(gate0, gate1)
 
-    gateb = qf.ControlledGate(qf.X(0), [1])
+    gateb = qf.ControlGate(qf.X(0), [1])
     gate2 = qf.CNot(1, 0)
     assert qf.gates_close(gateb, gate2)
 
-    gate3 = qf.ControlledGate(qf.Y(1), [0])
+    gate3 = qf.ControlGate(qf.Y(1), [0])
     gate4 = qf.CY(0, 1)
     assert qf.gates_close(gate3, gate4)
 
-    gate5 = qf.ControlledGate(qf.Z(1), [0])
+    gate5 = qf.ControlGate(qf.Z(1), [0])
     gate6 = qf.CZ(0, 1)
     assert qf.gates_close(gate5, gate6)
 
-    gate7 = qf.ControlledGate(qf.H(1), [0])
+    gate7 = qf.ControlGate(qf.H(1), [0])
     gate8 = qf.CH(0, 1)
     assert qf.gates_close(gate7, gate8)
 
-    gate9 = qf.ControlledGate(
+    gate9 = qf.ControlGate(
         qf.X(2),
         [0, 1],
     )
     gate10 = qf.CCNot(0, 1, 2)
     assert qf.gates_close(gate9, gate10)
 
-    gate11 = qf.ControlledGate(qf.Swap(1, 2), [0])
+    gate11 = qf.ControlGate(qf.Swap(1, 2), [0])
     gate12 = qf.CSwap(0, 1, 2)
     assert qf.gates_close(gate11, gate12)
 
 
 # def test_controlled_gate_axes() -> None:
 
-#     gate0 = qf.ControlledGate(qf.Z(1), [0], axes="z")
+#     gate0 = qf.ControlGate(qf.Z(1), [0], axes="z")
 #     gate1 = qf.Circuit([qf.X(0), qf.CZ(0, 1), qf.X(0)]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="ZZ")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="ZZ")
 #     gate1 = qf.CCNot(0, 1, 2)
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="zZ")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="zZ")
 #     gate1 = qf.Circuit([qf.X(0), qf.CCNot(0, 1, 2), qf.X(0)]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="Zz")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="Zz")
 #     gate1 = qf.Circuit([qf.X(1), qf.CCNot(0, 1, 2), qf.X(1)]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="YZ")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="YZ")
 #     gate1 = qf.Circuit([qf.V(0), qf.CCNot(0, 1, 2), qf.V(0).H]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="yZ")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="yZ")
 #     gate1 = qf.Circuit([qf.V(0).H, qf.CCNot(0, 1, 2), qf.V(0)]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="XZ")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="XZ")
 #     gate1 = qf.Circuit([qf.SqrtY(0).H, qf.CCNot(0, 1, 2), qf.SqrtY(0)]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
 
-#     gate0 = qf.ControlledGate(qf.X(2), [0, 1], axes="xZ")
+#     gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="xZ")
 #     gate1 = qf.Circuit([qf.SqrtY(0), qf.CCNot(0, 1, 2), qf.SqrtY(0).H]).asgate()
 #     assert qf.gates_close(gate0, gate1)
 #     assert qf.gates_close(gate0, qf.Circuit(gate0.standardize()).asgate())
@@ -478,9 +478,9 @@ def test_MultiplexedRyGate() -> None:
     circ1 = qf.Circuit(
         [
             qf.X(q0),
-            qf.ControlledGate(qf.Ry(thetas[0], q1), [q0]),
+            qf.ControlGate(qf.Ry(thetas[0], q1), [q0]),
             qf.X(q0),
-            qf.ControlledGate(qf.Ry(thetas[1], q1), [q0]),
+            qf.ControlGate(qf.Ry(thetas[1], q1), [q0]),
         ]
     )
     assert qf.gates_close(gate1, circ1.asgate())

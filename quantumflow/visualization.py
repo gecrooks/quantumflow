@@ -22,7 +22,7 @@ from . import utils, var
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
 from .gates import P0, P1
-from .modules import ControlledGate, IdentityGate
+from .modules import ControlGate, IdentityGate
 from .ops import Gate, Operation
 from .qubits import Qubits
 from .stdgates import CZ, CSwap, Swap, X
@@ -98,7 +98,7 @@ LATEX_GATESET = frozenset(
         "ECP",
         "Sycamore",
         "XY",
-        "ControlledGate",
+        "ControlGate",
     ]
 )
 
@@ -378,7 +378,7 @@ def circuit_to_latex(
 
             # DOCME TESTME
             # Currently only implemented for multi-controlled X gates
-            elif isinstance(gate, ControlledGate):
+            elif isinstance(gate, ControlGate):
                 assert isinstance(gate.gate, X)
                 for i in range(len(gate.controls)):
                     code[idx[i]] = r"\ctrl{" + str(idx[i + 1] - idx[i]) + "}"

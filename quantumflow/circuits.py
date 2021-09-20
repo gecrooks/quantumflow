@@ -284,7 +284,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
     # Kudos: Adapted from Rigetti Grove's utility_programs.py
     # grove/utils/utility_programs.py::ControlledProgramBuilder
 
-    from .modules import ControlledGate
+    from .modules import ControlGate
 
     circ = Circuit()
     if len(controls) == 1:
@@ -292,7 +292,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
         if isinstance(gate, X):
             circ += CNot(q0, gate.qubits[0])
         else:
-            cgate = ControlledGate(gate, [q0])
+            cgate = ControlGate(gate, [q0])
             circ += cgate
     else:
         circ += control_circuit(controls[-1:], gate ** 0.5)
@@ -362,13 +362,13 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
     0.25 0.25
 
     """
-    from .modules import ControlledGate
+    from .modules import ControlGate
 
     circ = Circuit()
     circ += map_gate(H(0), list(zip(outputs)))  # Hadamard on all output qubits
 
     for cq in reversed(outputs):
-        cgate = ControlledGate(gate, [cq])
+        cgate = ControlGate(gate, [cq])
         circ += cgate
         gate = gate @ gate
 

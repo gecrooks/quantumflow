@@ -86,7 +86,7 @@ def test_CNotPow() -> None:
     for _ in range(REPS):
         t = random.uniform(-4, +4)
         gate0 = qf.CNotPow(t, q0, q1)
-        gate1 = qf.ControlledGate(qf.XPow(t, q1), [q0])
+        gate1 = qf.ControlGate(qf.XPow(t, q1), [q0])
         gate2 = qf.CNot(q0, q1) ** t
         gate3 = qf.CNotPow(1, q0, q1) ** t
 
