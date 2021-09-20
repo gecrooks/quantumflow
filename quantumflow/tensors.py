@@ -221,32 +221,4 @@ def tensormul_diagonal(
 
     return tensor
 
-
-# DOCME
-def tensormul_diagonal(
-    tensor0_diagonal: QubitTensor,
-    tensor1: QubitTensor,
-    indices: Tuple[int, ...],
-) -> QubitTensor:
-    N = np.ndim(tensor1)
-    K = np.ndim(tensor0_diagonal)
-    assert K == len(indices)
-
-    perm = list(indices) + [n for n in range(N) if n not in indices]
-    inv_perm = np.argsort(perm)
-
-    tensor = tensor1
-    tensor = np.transpose(tensor, perm)
-    tensor = np.reshape(tensor, [2 ** K, 2 ** (N - K)])
-
-    tensor = np.transpose(tensor)
-    tensor = tensor * tensor0_diagonal.flatten()
-    tensor = np.transpose(tensor)
-
-    tensor = np.reshape(tensor, [2] * N)
-    tensor = np.transpose(tensor, inv_perm)
-
-    return tensor
-
-
 # fin
