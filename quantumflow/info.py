@@ -323,7 +323,6 @@ def gates_close(gate0: Gate, gate1: Gate, atol: float = ATOL) -> bool:
 
 
 # TESTME
-# FIXME ATOL
 def gates_phase_close(gate0: Gate, gate1: Gate, atol: float = ATOL) -> bool:
     """Returns: True if gates are almost identical and
     have almost the same phase.
