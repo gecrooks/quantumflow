@@ -77,37 +77,6 @@ class CCiX(StdGate):
 
 # end class CCiX
 
-# from abc import ABC, abstractmethod
-# from scipy.linalg import block_diag
-# class CtrlStdGate(ABC):
-
-#     @property
-#     @abstractmethod
-#     def gate(self) -> Gate:
-#         ...
-
-
-#     @property
-#     def targets(self) -> Qubits:
-#         return self.gate.qubits
-
-#     @property
-#     def controls(self) -> Qubits:
-#         return self.qubits[:-len(self.gate.qubits)]
-
-#     @utils.cached_property
-#     def hamiltonian(self) -> Pauli:
-#         ham = self.gate.hamiltonian
-#         for q in self.controls:
-#             ham *= (1 - sZ(q)) / 2
-#         return ham
-
-#     @utils.cached_property
-#     def tensor(self) -> QubitTensor:
-#         C = np.eye(2**len(self.controls))
-#         T = self.gate.tensor
-#         return block_diag(C, T)
-
 
 class CCNot(StdGate):
     r"""
