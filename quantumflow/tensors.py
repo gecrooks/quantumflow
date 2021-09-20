@@ -221,4 +221,5 @@ def tensormul_diagonal(
 
     return tensor
 
+
 # fin

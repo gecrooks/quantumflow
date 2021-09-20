@@ -77,12 +77,12 @@ from .stdgates import CZ, V_H, CNot, CZPow  # SqrtY,; SqrtY_H,
 from .stdgates import (
     H as H_,
 )  # NB: Workaround for name conflict with Gate.H   # FIXME:  needed?
-from .stdgates import (
-    SqrtY,
-    SqrtY_H,
+from .stdgates import (  # SqrtY,; SqrtY_H,
     I,
     Ry,
     Rz,
+    SqrtY,
+    SqrtY_H,
     Swap,
     V,
     X,

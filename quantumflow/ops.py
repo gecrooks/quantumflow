@@ -433,9 +433,7 @@ class Gate(Operation):
             return ket
         elif self.cv_tensor_structure == "diagonal":
             tensor = tensors.tensormul_diagonal(
-                self.tensor_diagonal,
-                ket.tensor,
-                tuple(indices)
+                self.tensor_diagonal, ket.tensor, tuple(indices)
             )
             return State(tensor, ket.qubits, ket.memory)
 
