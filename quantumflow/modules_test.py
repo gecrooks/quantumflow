@@ -8,6 +8,7 @@ import networkx as nx
 import numpy as np
 import pytest
 import scipy.linalg
+from sympy import Symbol
 
 import quantumflow as qf
 
@@ -31,33 +32,46 @@ def test_identitygate() -> None:
 
 
 def test_control_gate() -> None:
-    gate0 = qf.ControlGate([0], qf.X(1))
+    gate0 = qf.ControlGate(qf.X(1), [0])
     gate1 = qf.CNot(0, 1)
     assert qf.gates_close(gate0, gate1)
 
-    gateb = qf.ControlGate([1], qf.X(0))
+    gateb = qf.ControlGate(qf.X(0), [1])
     gate2 = qf.CNot(1, 0)
     assert qf.gates_close(gateb, gate2)
 
-    gate3 = qf.ControlGate([0], qf.Y(1))
+    gate3 = qf.ControlGate(qf.Y(1), [0])
     gate4 = qf.CY(0, 1)
     assert qf.gates_close(gate3, gate4)
 
-    gate5 = qf.ControlGate([0], qf.Z(1))
+    gate5 = qf.ControlGate(qf.Z(1), [0])
     gate6 = qf.CZ(0, 1)
     assert qf.gates_close(gate5, gate6)
 
-    gate7 = qf.ControlGate([0], qf.H(1))
+    gate7 = qf.ControlGate(qf.H(1), [0])
     gate8 = qf.CH(0, 1)
     assert qf.gates_close(gate7, gate8)
 
-    gate9 = qf.ControlGate([0, 1], qf.X(2))
+    gate9 = qf.ControlGate(
+        qf.X(2),
+        [0, 1],
+    )
     gate10 = qf.CCNot(0, 1, 2)
     assert qf.gates_close(gate9, gate10)
 
-    gate11 = qf.ControlGate([0], qf.Swap(1, 2))
+    gate11 = qf.ControlGate(qf.Swap(1, 2), [0])
     gate12 = qf.CSwap(0, 1, 2)
     assert qf.gates_close(gate11, gate12)
+
+    assert str(gate11) == "ControlGate(Swap 1 2) 0"
+
+
+def test_control_gate_resolve() -> None:
+    theta = Symbol("theta")
+    gate0 = qf.ControlGate(qf.Rx(theta, 1), [0])
+    gate1 = gate0.resolve({theta: 2.3})
+    gate2 = qf.ControlGate(qf.Rx(2.3, 1), [0])
+    assert qf.gates_close(gate1, gate2)
 
 
 def test_qftgate() -> None:

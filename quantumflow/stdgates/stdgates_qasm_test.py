@@ -55,7 +55,7 @@ def test_CU3() -> None:
     ).asgate()
     assert qf.almost_identity(gate)
 
-    cgate = qf.ControlGate([0], qf.U3(theta, phi, lam, 1))
+    cgate = qf.ControlGate(qf.U3(theta, phi, lam, 1), [0])
     assert qf.gates_close(qf.CU3(theta, phi, lam, 0, 1), cgate)
 
 

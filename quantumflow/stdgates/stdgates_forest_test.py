@@ -16,7 +16,7 @@ def test_CPhase_gates() -> None:
     for _ in range(REPS):
         theta = random.uniform(-4 * np.pi, +4 * np.pi)
 
-        gate11 = qf.ControlGate([0], qf.PhaseShift(theta, 1))
+        gate11 = qf.ControlGate(qf.PhaseShift(theta, 1), [0])
         assert qf.gates_close(gate11, qf.CPhase(theta, 0, 1))
 
         gate00 = qf.X(0) @ qf.IdentityGate([0, 1])
