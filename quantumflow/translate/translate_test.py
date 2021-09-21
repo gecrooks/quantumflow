@@ -15,10 +15,6 @@ from quantumflow.translate.translations import translation_source_gate
 from quantumflow.visualization import kwarg_to_symbol
 
 
-def test_this():
-    set(list(qf.StdGate.cv_stdgates.values()))
-
-
 @pytest.mark.parametrize("trans", qf.TRANSLATIONS)  # type: ignore
 def test_translators(trans: Type[qf.StdGate]) -> None:
     gatet = translation_source_gate(trans)
