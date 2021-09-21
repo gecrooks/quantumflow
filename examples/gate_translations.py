@@ -25,7 +25,7 @@ def _check_circuit_translations():
     # functionally identical.
     concrete = {name: np.random.uniform(-4, 4) for name in syms.values()}
 
-    for name, trans in qf.TRANSLATORS.items():
+    for trans in qf.TRANSLATIONS:
         gatet = translation_source_gate(trans)
         args = [syms[a] for a in gatet.cv_args]
 

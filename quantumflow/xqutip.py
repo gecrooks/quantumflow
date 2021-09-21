@@ -102,7 +102,7 @@ from .stdgates import (  # B,; Exch,
     Y,
     Z,
 )
-from .translate import circuit_translate, select_translators
+from .translate import circuit_translate, select_translations
 from .utils import invert_map
 
 __all__ = ("qutip_to_circuit", "circuit_to_qutip", "translate_to_qutip", "QUTIP_GATES")
@@ -224,7 +224,7 @@ def circuit_to_qutip(circ: Circuit, translate: bool = False) -> QubitCircuit:
 def translate_to_qutip(circ: Circuit) -> Circuit:
     """Convert QF gates to gates understood by qutip"""
     target_gates = QUTIP_GATES
-    trans = select_translators(target_gates)
+    trans = select_translations(target_gates)
     circ = circuit_translate(circ, trans)
     return circ
 

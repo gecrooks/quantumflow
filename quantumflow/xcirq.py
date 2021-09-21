@@ -57,7 +57,7 @@ from .stdgates import (
     Z,
     ZPow,
 )
-from .translate import circuit_translate, select_translators
+from .translate.translations import circuit_translate, select_translators
 
 __all__ = (
     "from_cirq_qubit",
@@ -65,6 +65,7 @@ __all__ = (
     "cirq_to_circuit",
     "circuit_to_cirq",
     "CirqSimulator",
+    "CIRQ_GATES",
 )
 
 

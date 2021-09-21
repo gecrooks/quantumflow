@@ -39,7 +39,7 @@ from .stdgates import (
     Z,
     ZPow,
 )
-from .translate import circuit_translate, select_translators
+from .translate import circuit_translate, select_translations
 from .xcirq import circuit_to_cirq
 
 # Note missing Swap, ...
@@ -78,6 +78,6 @@ class QSimSimulator(Operation):
 
 def translate_circuit_to_qsim(circ: Circuit) -> Circuit:
     """Convert QF gates to gates supported by qsim"""
-    trans = select_translators(QSIM_GATES)
+    trans = select_translations(QSIM_GATES)
     circ = circuit_translate(circ, trans)
     return circ

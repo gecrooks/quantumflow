@@ -544,14 +544,14 @@ class StdGate(Gate):
         return f"{self.name}({fargs})"
 
     def decompose(self) -> Iterator["StdGate"]:
-        from .translate import TRANSLATORS, translation_source_gate
+        from .translate import TRANSLATIONS, translation_source_gate
 
         # Terminal gates
         if self.name in ("I", "Ph", "X", "Y", "Z", "XPow", "YPow", "ZPow", "CNot"):
             yield self
             return
 
-        for trans in TRANSLATORS.values():
+        for trans in TRANSLATIONS:
             from_gate = translation_source_gate(trans)
             if isinstance(self, from_gate):
                 yield from trans(self)
