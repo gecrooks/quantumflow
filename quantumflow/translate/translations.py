@@ -42,7 +42,7 @@ def translation_target_gates(trans: Callable) -> Tuple[Type[Gate]]:
 
     try:
         ret = trans.__annotations__["return"].__args__[0]
-    except KeyError:
+    except KeyError:  # pragma: no cover   # FIXME
         raise ValueError("Translation missing return type annotation")
 
     if hasattr(ret, "__args__"):  # Union
