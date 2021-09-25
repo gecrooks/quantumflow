@@ -21,6 +21,7 @@ def test_identitygate() -> None:
     assert qf.states_close(ket0, ket1)
 
     circ = qf.Circuit(gate.decompose())
+    print(circ)
     assert len(circ) == 6
 
     for n in range(1, 6):
@@ -237,6 +238,14 @@ def test_PauliGate() -> None:
     top4 = nx.DiGraph()
     nx.add_path(top4, [3, 2, 1, 0])
     _ = qf.Circuit(qf.PauliGate(pauli3, alpha).decompose(top4))
+
+
+def test_PauliIdentity() -> None:
+    alpha = 1.0
+    gate = qf.PauliGate(qf.sI(0), alpha)
+    assert gate.element.is_identity()
+    circ = qf.Circuit(gate.decompose())
+    assert len(circ) == 0
 
 
 def test_PauliGate_more() -> None:

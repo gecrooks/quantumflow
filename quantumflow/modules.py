@@ -65,34 +65,15 @@ from typing import Iterable, Iterator, List, Mapping, Sequence, Union, cast
 import networkx as nx
 import numpy as np
 import scipy
-from networkx.algorithms.approximation.steinertree import steiner_tree
-from sympy.combinatorics import Permutation
 
 from . import tensors, utils, var
 from .circuits import Circuit
 from .gates import unitary_from_hamiltonian
 from .ops import Gate, Operation, UnitaryGate
-from .paulialgebra import Pauli, pauli_commuting_sets, sX, sY, sZ
+from .paulialgebra import Pauli, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
-from .stdgates import (
-    CZ,
-    V_H,
-    CNot,
-    CZPow,
-    H,
-    I,
-    Ry,
-    Rz,
-    Swap,
-    V,
-    X,
-    XPow,
-    Y,
-    YPow,
-    Z,
-    ZPow,
-)
+from .stdgates import CNot, H, I, Ry, Rz, Swap, XPow, YPow, ZPow
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
@@ -138,10 +119,6 @@ class IdentityGate(Gate):
     @property
     def H(self) -> "IdentityGate":
         return self
-
-    def decompose(self) -> Iterator[I]:  # noqa: E741
-        for q in self.qubits:
-            yield I(q)
 
 
 # end class IdentityGate
@@ -311,17 +288,6 @@ class MultiSwapGate(Gate):
         U = np.transpose(U, perm)
         return tensors.asqutensor(U)
 
-    def decompose(self) -> Iterator[Swap]:
-        """
-        Returns a swap network for this permutation, assuming all-to-all
-        connectivity.
-        """
-        qubits = self.qubits
-
-        perm = [self.qubits.index(q) for q in self.qubits_out]
-        for idx0, idx1 in Permutation(perm).transpositions():
-            yield Swap(qubits[idx0], qubits[idx1])
-
 
 # end class MultiSwapGate
 
@@ -331,11 +297,6 @@ class ReversalGate(MultiSwapGate):
 
     def __init__(self, qubits: Qubits) -> None:
         super().__init__(qubits, tuple(reversed(qubits)))
-
-    def decompose(self) -> Iterator[Swap]:
-        qubits = self.qubits
-        for idx in range(self.qubit_nb // 2):
-            yield Swap(qubits[idx], qubits[-idx - 1])
 
 
 # end class ReversalGate
@@ -356,7 +317,7 @@ class CircularShiftGate(MultiSwapGate):
 
 
 class QFTGate(Gate):
-    """The Quantum Fourier Transform circuit.
+    """The Quantum Fourier Transform.
 
     For 3-qubits
     ::
@@ -373,17 +334,6 @@ class QFTGate(Gate):
     @property
     def H(self) -> "InvQFTGate":
         return InvQFTGate(self.qubits)
-
-    def decompose(self) -> Iterator[Union[H_, CZPow, Swap]]:
-        qubits = self.qubits
-        N = len(qubits)
-        for n0 in range(N):
-            q0 = qubits[n0]
-            yield H_(q0)
-            for n1 in range(n0 + 1, N):
-                q1 = qubits[n1]
-                yield CZ(q1, q0) ** (1 / 2 ** (n1 - n0))
-        yield from ReversalGate(qubits).decompose()
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -402,10 +352,6 @@ class InvQFTGate(Gate):
     @property
     def H(self) -> "QFTGate":
         return QFTGate(self.qubits)
-
-    def decompose(self) -> Iterator[Union[H_, CZPow, Swap]]:
-        gates = list(QFTGate(self.qubits).decompose())
-        yield from (gate.H for gate in gates[::-1])
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -449,7 +395,6 @@ class PauliGate(Gate):
             return PauliGate(self.element, alpha)
         return self
 
-    # TODO: Move main logic to pauli algebra?
     def decompose(
         self, topology: nx.Graph = None
     ) -> Iterator[Union[CNot, XPow, YPow, ZPow]]:
@@ -460,69 +405,9 @@ class PauliGate(Gate):
         If a qubit topology is provided then the returned circuit will
         respect the qubit connectivity, adding swaps as necessary.
         """
-        # Kudos: Adapted from pyquil. The topological network is novel.
+        from .translate import translate_PauliGate
 
-        circ = Circuit()
-        element = self.element
-        alpha = self.alpha
-
-        if element.is_identity() or element.is_zero():
-            return circ  # pragma: no cover  # TESTME
-
-        # Check that all terms commute
-        groups = pauli_commuting_sets(element)
-        if len(groups) != 1:
-            raise ValueError("Pauli terms do not all commute")
-
-        for qbs, ops, coeff in element:
-            if not np.isclose(complex(coeff).imag, 0.0):
-                raise ValueError("Pauli term coefficients must be real")
-            theta = complex(coeff).real * alpha
-
-            if len(ops) == 0:
-                continue
-
-            # TODO: 1-qubit terms special case
-
-            active_qubits = set()
-            change_to_z_basis = Circuit()
-            for qubit, op in zip(qbs, ops):
-                active_qubits.add(qubit)
-                if op == "X":
-                    change_to_z_basis += Y(qubit) ** -0.5
-                elif op == "Y":
-                    change_to_z_basis += X(qubit) ** 0.5
-
-            if topology is not None:
-                if not nx.is_directed(topology) or not nx.is_arborescence(topology):
-                    # An 'arborescence' is a directed tree
-                    active_topology = steiner_tree(topology, active_qubits)
-                    center = nx.center(active_topology)[0]
-                    active_topology = nx.dfs_tree(active_topology, center)
-                else:
-                    active_topology = topology
-            else:
-                active_topology = nx.DiGraph()
-                nx.add_path(active_topology, reversed(list(active_qubits)))
-
-            cnot_seq = Circuit()
-            order = list(reversed(list(nx.topological_sort(active_topology))))
-            for q0 in order[:-1]:
-                q1 = list(active_topology.pred[q0])[0]
-                if q1 not in active_qubits:
-                    cnot_seq += Swap(q0, q1)
-                    active_qubits.add(q1)
-                else:
-                    cnot_seq += CNot(q0, q1)
-
-            circ += change_to_z_basis
-            circ += cnot_seq
-            circ += Z(order[-1]) ** (2 * theta / np.pi)
-            circ += cnot_seq.H
-            circ += change_to_z_basis.H
-        # end term loop
-
-        yield from circ  # type: ignore
+        yield from translate_PauliGate(self, topology)
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -642,23 +527,6 @@ class DiagonalGate(Gate):
         params = [p * e for p in self.params]
         return DiagonalGate(params, self.qubits)
 
-    def decompose(self, topology: nx.Graph = None) -> Iterator[Union[Rz, CNot]]:
-        diag_phases = self.params
-        N = self.qubit_nb
-        qbs = self.qubits
-
-        if N == 1:
-            yield Rz((diag_phases[0] - diag_phases[1]), qbs[0])
-        else:
-            phases = []
-            angles = []
-            for n in range(0, len(diag_phases), 2):
-                phases.append((diag_phases[n] + diag_phases[n + 1]) / 2)
-                angles.append(-(diag_phases[n + 1] - diag_phases[n]))
-
-            yield from MultiplexedRzGate(angles, qbs[:-1], qbs[-1]).decompose()
-            yield from DiagonalGate(phases, qbs[:-1]).decompose()
-
 
 # end class DiagonalGate
 
@@ -730,7 +598,7 @@ class ConditionalGate(MultiplexedGate):
 # end class ConditionalGate
 
 
-# FIXME: resolve wont work
+# FIXME: resolve won't work
 class MultiplexedRzGate(MultiplexedGate):
     """Uniformly controlled (multiplexed) Rz gate"""
 
@@ -766,56 +634,6 @@ class MultiplexedRzGate(MultiplexedGate):
         thetas = [e * p for p in self.params]
         return MultiplexedRzGate(thetas, self.controls, self.targets[0])
 
-    def decompose(self, topology: nx.Graph = None) -> Iterator[Union[Rz, CNot]]:
-        thetas = self.params
-        N = self.qubit_nb
-        controls = self.controls
-        target = self.targets[0]
-
-        if N == 1:
-            yield Rz(thetas[0], target)
-        elif N == 2:
-            yield Rz((thetas[0] + thetas[1]) / 2, target)
-            yield CNot(controls[0], target)
-            yield Rz((thetas[0] - thetas[1]) / 2, target)
-            yield CNot(controls[0], target)
-        else:
-            # FIXME: Not quite optimal.
-            # There's additional cancellation of CNOTs that could happen
-            # See: From "Decomposition of Diagonal Hermitian Quantum Gates Using
-            # Multiple-Controlled Pauli Z Gates" (2014).
-
-            # Note that we lop off 2 qubits with each recursion.
-            # This allows us to cancel two cnots by reordering the second
-            # deke.
-
-            # If we lopped off one at a time the deke would look like this:
-            # t0 = thetas[0: len(thetas) // 2]
-            # t1 = thetas[len(thetas) // 2:]
-            # thetas0 = [(a + b) / 2 for a, b in zip(t0, t1)]
-            # thetas1 = [(a - b) / 2 for a, b in zip(t0, t1)]
-            # yield from MultiplexedRzGate(thetas0, qbs[1:]).decompose()
-            # yield CNot(qbs[0], qbs[-1])
-            # yield from MultiplexedRzGate(thetas1, qbs[1:]).decompose()
-            # yield CNot(qbs[0], qbs[-1])
-
-            M = len(thetas) // 4
-            quarters = list(thetas[i : i + M] for i in range(0, len(thetas), M))
-
-            theta0 = [(t0 + t1 + t2 + t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
-            theta1 = [(t0 - t1 + t2 - t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
-            theta2 = [(t0 + t1 - t2 - t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
-            theta3 = [(t0 - t1 - t2 + t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
-
-            yield from MultiplexedRzGate(theta0, controls[2:], target).decompose()
-            yield CNot(controls[1], target)
-            yield from MultiplexedRzGate(theta1, controls[2:], target).decompose()
-            yield CNot(controls[0], target)
-            yield from MultiplexedRzGate(theta3, controls[2:], target).decompose()
-            yield CNot(controls[1], target)
-            yield from MultiplexedRzGate(theta2, controls[2:], target).decompose()
-            yield CNot(controls[0], target)
-
 
 # end class MultiplexedRzGate
 
@@ -839,17 +657,6 @@ class MultiplexedRyGate(MultiplexedGate):
     def __pow__(self, e: Variable) -> "MultiplexedRyGate":
         thetas = [e * p for p in self.params]
         return MultiplexedRyGate(thetas, self.controls, self.targets[0])
-
-    def decompose(
-        self, topology: nx.Graph = None
-    ) -> Iterator[Union[V, V_H, MultiplexedRzGate]]:
-        thetas = self.params
-        controls = self.controls
-        target = self.targets[0]
-
-        yield V(target)
-        yield MultiplexedRzGate(thetas, controls, target)
-        yield V(target).H
 
 
 # end class MultiplexedRyGate

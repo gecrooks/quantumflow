@@ -25,6 +25,7 @@ gates of each translation.
 # gates of each translation.
 
 
+from .translate_gates import *  # noqa: F401, F403
 from .translate_stdgates_1q import *  # noqa: F401, F403
 from .translate_stdgates_2q import *  # noqa: F401, F403
 from .translate_stdgates_3q import *  # noqa: F401, F403
