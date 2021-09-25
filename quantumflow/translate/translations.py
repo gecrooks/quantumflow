@@ -23,7 +23,7 @@ TRANSLATIONS: List[Callable] = []
 """A list of all registered gate translations"""
 
 
-def register_translation(translation):
+def register_translation(translation: Callable) -> Callable:
     """A function decorator used to register gate translations.
 
     All registered translations are listed in TRANSLATIONS
