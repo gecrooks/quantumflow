@@ -5,7 +5,7 @@
 
 
 from itertools import chain
-from typing import List, Set, Type
+from typing import Callable, List, Set, Type
 
 import numpy as np
 import pytest
@@ -14,9 +14,15 @@ import quantumflow as qf
 from quantumflow.translate.translations import translation_source_gate
 from quantumflow.visualization import kwarg_to_symbol
 
+STD_TRANSLATIONS = [
+    trans
+    for trans in qf.TRANSLATIONS
+    if issubclass(translation_source_gate(trans), qf.StdGate)
+]
 
-@pytest.mark.parametrize("trans", qf.TRANSLATIONS)  # type: ignore
-def test_translators(trans: Type[qf.StdGate]) -> None:
+
+@pytest.mark.parametrize("trans", STD_TRANSLATIONS)  # type: ignore
+def test_stdgate_translators(trans: Callable) -> None:
     gatet = translation_source_gate(trans)
 
     args = [np.random.uniform(-4, 4) for _ in gatet.cv_args]
@@ -40,8 +46,8 @@ def test_translators(trans: Type[qf.StdGate]) -> None:
 concrete = {n: np.random.uniform(-4, 4) for n in kwarg_to_symbol.values()}
 
 
-@pytest.mark.parametrize("trans", qf.TRANSLATIONS)  # type: ignore
-def test_translators_symbolic(trans: Type[qf.StdGate]) -> None:
+@pytest.mark.parametrize("trans", STD_TRANSLATIONS)  # type: ignore
+def test_std_gate_translators_symbolic(trans: Callable) -> None:
     """Check that translations can handle symbolic arguments"""
     gatet = translation_source_gate(trans)
     args = [kwarg_to_symbol[a] for a in gatet.cv_args]

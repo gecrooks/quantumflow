@@ -465,6 +465,24 @@ class Gate(Operation):
 
         return f"{self.name}{fparams}{fqubits}"
 
+    def decompose(self) -> Iterator["StdGate"]:
+        from .translate import TRANSLATIONS, translation_source_gate
+
+        # Terminal gates  # FIXME: Move elsewhere?
+        if self.name in ("I", "Ph", "X", "Y", "Z", "XPow", "YPow", "ZPow", "CNot"):
+            yield self  # type: ignore
+            return
+
+        # Reversed so we favor translations added latter.
+        for trans in reversed(TRANSLATIONS):
+            from_gate = translation_source_gate(trans)
+            if isinstance(self, from_gate):
+                yield from trans(self)
+                return
+
+        # FIXME, deke
+        assert False
+
 
 # End class Gate
 
@@ -542,22 +560,6 @@ class StdGate(Gate):
         fargs = ", ".join(args)
 
         return f"{self.name}({fargs})"
-
-    def decompose(self) -> Iterator["StdGate"]:
-        from .translate import TRANSLATIONS, translation_source_gate
-
-        # Terminal gates
-        if self.name in ("I", "Ph", "X", "Y", "Z", "XPow", "YPow", "ZPow", "CNot"):
-            yield self
-            return
-
-        for trans in TRANSLATIONS:
-            from_gate = translation_source_gate(trans)
-            if isinstance(self, from_gate):
-                yield from trans(self)
-                return
-
-        yield self  # fall back  # pragma: no cover
 
 
 # End class StdGate

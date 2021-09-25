@@ -11,16 +11,12 @@ from typing import Iterator, Union
 from .. import var
 from ..stdgates import (
     CCZ,
-    CS,
-    CT,
     CV,
     CV_H,
     S_H,
     T_H,
     V_H,
-    A,
     Barenco,
-    Can,
     CCiX,
     CCNot,
     CCXPow,
@@ -28,17 +24,13 @@ from ..stdgates import (
     CNot,
     CNotPow,
     CSwap,
-    CZPow,
     Deutsch,
     H,
     Margolus,
-    Ry,
-    Rz,
     S,
     T,
     V,
     X,
-    ZPow,
 )
 from .translations import register_translation
 
@@ -418,57 +410,6 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
     yield Barenco(0, var.PI / 2, var.PI / 2, q0, q1)
     yield Barenco(var.PI, -var.PI / 4, theta / 2, q1, q2)
     yield Barenco(0, var.PI / 2, var.PI / 2, q0, q1)
-
-
-@register_translation
-def translate_CS_to_CZPow(gate: CS) -> Iterator[CZPow]:
-    """Convert a controlled-S to half power of CZ gate"""
-    yield CZPow(0.5, *gate.qubits)
-
-
-@register_translation
-def translate_CT_to_CZPow(gate: CT) -> Iterator[CZPow]:
-    """Convert a controlled-S to half power of CZ gate"""
-    yield CZPow(0.25, *gate.qubits)
-
-
-@register_translation
-def translate_a_to_cnot(gate: A) -> Iterator[Union[CNot, Rz, Ry]]:
-    """Translate the A-gate to 3 CNots.
-
-    Ref:
-        Fig. 2 :cite:`Gard2020a`
-    """
-    (q0, q1) = gate.qubits
-    (theta, phi) = gate.params
-    yield CNot(q1, q0)
-    yield Rz(-phi - var.PI, q1)
-    yield Ry(-theta - var.PI / 2, q1)
-    yield CNot(q0, q1)
-    yield Ry(theta + var.PI / 2, q1)
-    yield Rz(phi + var.PI, q1)
-    yield CNot(q1, q0)
-
-
-@register_translation
-def translate_a_to_can(gate: A) -> Iterator[Union[Can, ZPow]]:
-    """Translate the A-gate to the canonical gate.
-
-    Ref:
-        Page 3
-        :cite:`Gard2020a`
-    """
-    (q0, q1) = gate.qubits
-    (theta, phi) = gate.params
-
-    yield ZPow(1 / 2, q0)
-    yield ZPow(-phi / var.PI, q1)
-
-    yield Can(theta / var.PI, theta / var.PI, 0.5, q0, q1)
-
-    # Note: There seems to be a sign error in the paper referenced above for
-    # this part of the expression
-    yield ZPow(phi / var.PI - 1 / 2, q1)
 
 
 @register_translation

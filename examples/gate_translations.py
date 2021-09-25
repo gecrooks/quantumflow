@@ -27,6 +27,8 @@ def _check_circuit_translations():
 
     for trans in qf.TRANSLATIONS:
         gatet = translation_source_gate(trans)
+        if not issubclass(gatet, qf.StdGate):
+            continue
         args = [syms[a] for a in gatet.cv_args]
 
         gate = gatet(*args, *range(gatet.cv_qubit_nb))
