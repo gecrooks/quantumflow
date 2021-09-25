@@ -11,11 +11,11 @@ import numpy as np
 import pytest
 
 import quantumflow as qf
-from quantumflow.translate import translation_source_gate
+from quantumflow.translate.translations import translation_source_gate
 from quantumflow.visualization import kwarg_to_symbol
 
 
-@pytest.mark.parametrize("trans", qf.TRANSLATORS.values())  # type: ignore
+@pytest.mark.parametrize("trans", qf.TRANSLATIONS)  # type: ignore
 def test_translators(trans: Type[qf.StdGate]) -> None:
     gatet = translation_source_gate(trans)
 
@@ -40,7 +40,7 @@ def test_translators(trans: Type[qf.StdGate]) -> None:
 concrete = {n: np.random.uniform(-4, 4) for n in kwarg_to_symbol.values()}
 
 
-@pytest.mark.parametrize("trans", qf.TRANSLATORS.values())  # type: ignore
+@pytest.mark.parametrize("trans", qf.TRANSLATIONS)  # type: ignore
 def test_translators_symbolic(trans: Type[qf.StdGate]) -> None:
     """Check that translations can handle symbolic arguments"""
     gatet = translation_source_gate(trans)
@@ -113,12 +113,13 @@ def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
     gates: Set[Type[qf.StdGate]] = {qf.XPow, qf.ZPow, qf.I, qf.Ph}
 
     gates.add(term_gate)
-    trans = qf.select_translators(gates, qf.TRANSLATORS.values())  # type: ignore
+    trans = qf.select_translations(gates, qf.TRANSLATIONS)  # type: ignore
     for t in trans:
         gatet = translation_source_gate(t)
         gates.add(gatet)  # type: ignore
 
-    missing = set(qf.StdGate.cv_stdgates.values()) - gates
+    missing = set(list(qf.StdGate.cv_stdgates.values())) - gates
+
     if len(missing) != 0:
         print("Missing gates:", missing)
         assert len(missing) == 0
