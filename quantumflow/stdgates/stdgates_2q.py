@@ -1170,7 +1170,7 @@ class XX(StdGate):
     """
     # TODO: Is XX(1/2) MS gate, or is it XX(-1/2)???
     cv_interchangeable = True
-    _cv_sdiagram_labels = ["XX^{t}"]
+    _diagram_labels = ["XX^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
