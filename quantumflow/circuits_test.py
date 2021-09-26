@@ -349,17 +349,6 @@ def test_graph_state_circuit() -> None:
     _ = qf.graph_state_circuit(graph)
 
 
-def test_circuit_flat() -> None:
-    circ0 = qf.Circuit([qf.X(0), qf.X(1)])
-    circ1 = qf.Circuit([qf.Y(0), qf.Y(1)])
-    circ2 = qf.Circuit([circ1, qf.Z(0), qf.Z(1)])
-    circ = qf.Circuit([circ0, circ2])
-
-    flat = qf.Circuit(circ.flat())
-    assert len(flat) == 6
-    assert flat[2].name == "Y"
-
-
 def test_circuit_params() -> None:
     circ = qf.Circuit()
     circ += qf.X(0) ** 0.3
@@ -370,3 +359,35 @@ def test_circuit_params() -> None:
 
     with pytest.raises(ValueError):
         _ = circ.param("theta")
+
+
+def test_circuit_qubits() -> None:
+    circ = qf.Circuit([qf.X(1), qf.Z(3)], qubits=[0, 1, 3, 2])
+    assert circ.qubit_nb == 4
+    assert circ.qubits == (0, 1, 3, 2)
+
+    with pytest.raises(ValueError):
+        _ = qf.Circuit([qf.X(1), qf.Z(4)], qubits=[0, 1, 3, 2])
+
+
+def test_circuit_flat() -> None:
+    circ0 = qf.Circuit(qf.X(0), qf.X(1))
+    circ1 = qf.Circuit(qf.Y(0), qf.Y(1))
+    circ2 = qf.Circuit(circ1, qf.Z(0), qf.Z(1))
+    circ = qf.Circuit(circ0, circ2)
+    assert len(circ) == 2
+
+    flat = qf.Circuit(circ.flat())
+    assert len(flat) == 6
+    assert flat[2].name == "Y"
+
+
+def test_circuit_flat_lists() -> None:
+    circ0 = qf.Circuit([qf.X(0), qf.X(1)])
+    circ1 = qf.Circuit([qf.Y(0), qf.Y(1)])
+    circ2 = qf.Circuit([circ1, qf.Z(0), qf.Z(1)])
+    circ = qf.Circuit([circ0, circ2])
+
+    flat = qf.Circuit(circ.flat())
+    assert len(flat) == 6
+    assert flat[2].name == "Y"

@@ -87,13 +87,34 @@ class Circuit(Sequence, Operation):
     These can be any quantum Operation, including other circuits.
     """
 
-    def __init__(self, elements: Iterable[Operation] = ()) -> None:
-        elements = tuple(elements)
-        qbs = [q for elem in elements for q in elem.qubits]  # gather
-        qbs = list(set(qbs))  # unique
-        qbs = sorted(qbs)  # sort
+    # def __init__(self, *elements: Union[Iterable[Operation], Operation]) -> None:
+    #     # Legacy interface (TODO: Raise warning)
+    #     if len(elements) == 1 and isinstance(elements[0], Iterable):
+    #         elements = elements[0]  # type: ignore
 
-        super().__init__(qubits=qbs)
+    def __init__(
+        self, *elements: Union[Iterable[Operation], Operation], qubits: Qubits = None
+    ) -> None:
+
+        elements = tuple(elements)
+
+        if len(elements) == 1 and isinstance(elements[0], Iterable):
+            # Legacy interface
+            elements = tuple(elements[0])  # type: ignore
+
+        qbs = [q for elem in elements for q in elem.qubits]  # gather
+        qbs = set(qbs)  # unique
+
+        if qubits is None:
+            qubits = sorted(list(qbs))  # sort
+        else:
+            if not qbs.issubset(qubits):
+                raise ValueError(
+                    f"Incommensurate qubits: Expected {list(qubits)}"
+                    "but received {list(qbs)}"
+                )
+
+        super().__init__(qubits=qubits)
         self._elements: Tuple[Operation, ...] = elements
 
     # Methods for Sequence

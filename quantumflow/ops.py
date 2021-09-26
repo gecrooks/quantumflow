@@ -19,7 +19,7 @@ sequence. Circuits can contain any instance of the abstract quantum operation
 superclass, Operation, including other circuits.
 
 Quantum operations are immutable, and transformations of these operations return
-new copies. (With the exception of the composite operations Circuit and DAGCircuit.)
+new copies. (With the exception of the composite operation DAGCircuit.)
 
 The main types of Operation's are Gate, UnitaryGate, StdGate, Channel, Circuit,
 DAGCircuit, and Pauli.
