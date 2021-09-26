@@ -11,8 +11,7 @@ import numpy as np
 
 from .. import tensors, utils, var
 from ..config import CONJ, CTRL, SQRT, SWAP_TARGET, TARGET
-from ..gates import unitary_from_hamiltonian
-from ..ops import StdGate
+from ..ops import StdGate, UnitaryGate
 from ..paulialgebra import Pauli, sX, sY, sZ
 from ..qubits import Qubit
 from ..states import State
@@ -433,7 +432,7 @@ class CrossResonance(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
-        U = unitary_from_hamiltonian(self.hamiltonian, self.qubits)
+        U = UnitaryGate.from_hamiltonian(self.hamiltonian, self.qubits)
         return tensors.asqutensor(U.tensor)
 
     @property

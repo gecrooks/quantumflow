@@ -60,7 +60,7 @@ import numpy as np
 from scipy import linalg
 
 from . import tensors, utils
-from .ops import Channel, Gate, Operation, Unitary
+from .ops import Channel, Gate, Operation, UnitaryGate
 from .qubits import Qubit, Qubits
 from .states import Density, State
 from .stdgates import I, X, Y, Z
@@ -105,7 +105,7 @@ class Kraus(Operation):
         """Returns: Action of Kraus operators as a superoperator Channel"""
         qubits = self.qubits
         N = len(qubits)
-        ident = Unitary(np.eye(2 ** N), qubits).aschannel()
+        ident = UnitaryGate(np.eye(2 ** N), qubits).aschannel()
 
         tensors = [(op.aschannel() @ ident).tensor for op in self.operators]
         if self.weights is not None:
@@ -214,8 +214,8 @@ class Damping(Kraus):
     """
 
     def __init__(self, prob: float, q0: Qubit) -> None:
-        kraus0 = Unitary([[1.0, 0.0], [0.0, np.sqrt(1 - prob)]], [q0])
-        kraus1 = Unitary([[0.0, np.sqrt(prob)], [0.0, 0.0]], [q0])
+        kraus0 = UnitaryGate([[1.0, 0.0], [0.0, np.sqrt(1 - prob)]], [q0])
+        kraus1 = UnitaryGate([[0.0, np.sqrt(prob)], [0.0, 0.0]], [q0])
         super().__init__([kraus0, kraus1])
 
 
@@ -260,7 +260,7 @@ def channel_to_kraus(chan: Channel) -> "Kraus":
     for i in range(2 ** (2 * N)):
         if not np.isclose(values[i], 0.0):
             mat = np.reshape(evecs[i], (2 ** N, 2 ** N)) * values[i]
-            g = Unitary(mat, qubits)
+            g = UnitaryGate(mat, qubits)
             ops.append(g)
 
     return Kraus(ops)
@@ -273,13 +273,13 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
     qubits = kraus.qubits
     N = kraus.qubit_nb
 
-    ident = Unitary(np.eye(2 ** N), qubits)
+    ident = UnitaryGate(np.eye(2 ** N), qubits)
 
     tensors = [(op.H @ op @ ident).asoperator() for op in kraus.operators]
     tensors = [t * w for t, w in zip(tensors, kraus.weights)]
 
     tensor = reduce(np.add, tensors)
-    res = Unitary(tensor, qubits)
+    res = UnitaryGate(tensor, qubits)
 
     N = res.qubit_nb
     return np.allclose(res.asoperator(), np.eye(2 ** N))
