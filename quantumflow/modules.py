@@ -68,7 +68,6 @@ import scipy
 
 from . import tensors, utils, var
 from .circuits import Circuit
-from .gates import unitary_from_hamiltonian
 from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, sX, sY, sZ
 from .qubits import Qubit, Qubits
@@ -192,7 +191,7 @@ class ControlGate(Gate):
     @utils.cached_property
     def tensor(self) -> QubitTensor:
         # FIXME: This approach generates a tensor with unnecessary numerical noise.
-        return unitary_from_hamiltonian(self.hamiltonian, self.qubits).tensor
+        return UnitaryGate.from_hamiltonian(self.hamiltonian, self.qubits).tensor
 
     def __str__(self) -> str:
         fqubits = " " + " ".join([str(qubit) for qubit in self.controls])
