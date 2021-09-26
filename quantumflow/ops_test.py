@@ -167,6 +167,4 @@ def test_gate_decompose() -> None:
     assert qf.gates_close(gate0, circ0.asgate())
 
 
-
-
 # fin

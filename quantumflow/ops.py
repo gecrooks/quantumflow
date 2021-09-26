@@ -490,6 +490,7 @@ class Gate(Operation):
         # If we don't know how to perform an analytic translation, resort to a
         # numerical decomposition. Will fail for gates with symbolic parameters.
         from .decompositions import quantum_shannon_decomposition
+
         circ = quantum_shannon_decomposition(self)
         for gate in circ:
             yield from gate.decompose()
