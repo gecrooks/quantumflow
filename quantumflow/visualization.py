@@ -12,8 +12,9 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, TextIO
 
+import numpy as np
 import sympy
 from PIL import Image
 from sympy import Symbol
@@ -34,6 +35,7 @@ __all__ = (
     "latex_to_image",
     "circuit_to_image",
     "circuit_to_diagram",
+    "print_gate",
 )
 
 
@@ -766,6 +768,26 @@ unicode_ascii.update(dict(zip(STD_BOX_CHARS, ASCII_BOX_CHARS)))
 
 def _unicode_to_ascii(text: str) -> str:
     return "".join(unicode_ascii.get(c, c) for c in text)
+
+
+def print_gate(gate: Gate, ndigits: int = 2, file: TextIO = None) -> None:
+    """Pretty print a gate tensor
+
+    Args:
+        gate:
+        ndigits:
+        file: Stream to which to write. Defaults to stdout
+    """
+    N = gate.qubit_nb
+    gate_tensor = gate.tensor
+    lines = []
+    for index, amplitude in np.ndenumerate(gate_tensor):
+        ket = "".join([str(n) for n in index[0:N]])
+        bra = "".join([str(index[n]) for n in range(N, 2 * N)])
+        if round(abs(amplitude) ** 2, ndigits) > 0.0:
+            lines.append(f"{bra} -> {ket} : {amplitude}")
+    lines.sort(key=lambda x: int(x[0:N]))
+    print("\n".join(lines), file=file)
 
 
 # fin

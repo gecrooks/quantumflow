@@ -45,6 +45,7 @@
 #   transform
 #   translate
 #   visualization
+#   deprecated
 
 
 from .channels import *  # noqa: F401, F403
@@ -52,6 +53,7 @@ from .circuits import *  # noqa: F401, F403
 from .config import *  # noqa: F401, F403
 from .dagcircuit import *  # noqa: F401, F403
 from .decompositions import *  # noqa: F401, F403
+from .deprecated import *  # noqa: F401, F403
 from .gates import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403
