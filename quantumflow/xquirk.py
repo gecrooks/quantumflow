@@ -21,8 +21,10 @@ import webbrowser
 from typing import Dict, List, cast
 
 from .circuits import Circuit
+from .gatesets import QUIRK_GATES
+from .translate import circuit_translate
 
-__all__ = "circuit_to_quirk", "quirk_url", "open_quirk_webserver"
+__all__ = "circuit_to_quirk", "quirk_url", "open_quirk_webserver", "QUIRK_GATES"
 
 
 # TODOs
@@ -78,10 +80,13 @@ quirk_formulaic = {
 }
 
 
-def circuit_to_quirk(circ: Circuit) -> str:
+def circuit_to_quirk(circ: Circuit, translate: bool = False) -> str:
     """Convert a QuantumFlow Circuit to a quirk circuit (represented as a
     JSON formatted string).
     """
+
+    if translate:
+        circ = translate_to_quirk(circ)
 
     # Relabel qubits to consecutive integers
     N = circ.qubit_nb
@@ -141,6 +146,12 @@ def open_quirk_webserver(circ: Circuit) -> None:  # pragma: no cover
     quirk = circuit_to_quirk(circ)
     url = quirk_url(quirk, escape=True)
     webbrowser.open(url)
+
+
+def translate_to_quirk(circ: Circuit) -> Circuit:
+    """Convert QF gates to gates understood by cirq"""
+    circ = circuit_translate(circ, targets=QUIRK_GATES)
+    return circ
 
 
 # fin

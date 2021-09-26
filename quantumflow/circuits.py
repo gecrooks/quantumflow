@@ -102,20 +102,19 @@ class Circuit(Sequence, Operation):
             # Legacy interface
             elements = tuple(elements[0])  # type: ignore
 
-        qbs = [q for elem in elements for q in elem.qubits]  # gather
-        qbs = set(qbs)  # unique
+        qbs = [q for elem in elements for q in elem.qubits]  # type: ignore
 
         if qubits is None:
-            qubits = sorted(list(qbs))  # sort
+            qubits = sorted(list(set(qbs)))  # unique and sort
         else:
-            if not qbs.issubset(qubits):
+            if not set(qbs).issubset(qubits):
                 raise ValueError(
                     f"Incommensurate qubits: Expected {list(qubits)}"
                     "but received {list(qbs)}"
                 )
 
         super().__init__(qubits=qubits)
-        self._elements: Tuple[Operation, ...] = elements
+        self._elements: Tuple[Operation, ...] = elements  # type: ignore
 
     # Methods for Sequence
     @overload

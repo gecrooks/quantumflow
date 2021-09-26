@@ -14,15 +14,23 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: qiskit_to_circuit
 .. autofunction:: circuit_to_qiskit
 """
-from typing import Tuple, Type
 
 import numpy as np
-from braket.circuits import Circuit as bkCircuit
-from braket.circuits.angled_gate import AngledGate as bkAngledGate
-from braket.devices import LocalSimulator as bkLocalSimulator
+
+try:
+    from braket.circuits import Circuit as bkCircuit
+    from braket.circuits.angled_gate import AngledGate as bkAngledGate
+    from braket.devices import LocalSimulator as bkLocalSimulator
+except ModuleNotFoundError as err:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "External dependency 'braket' not installed. Install"
+        "with 'pip install amazon-braket-sdk'"
+    ) from err
+
 
 from .circuits import Circuit
-from .ops import Gate, Operation, StdGate
+from .gatesets import BRAKET_GATES
+from .ops import Operation, StdGate
 from .qubits import Qubits
 from .states import State
 from .translate import circuit_translate
@@ -71,10 +79,11 @@ BRAKET_TO_QF = {
 }
 """Map from braket operation names to QuantumFlow names"""
 
-BRAKET_GATES: Tuple[Type[Gate], ...] = tuple(
-    set([StdGate.cv_stdgates[n] for n in BRAKET_TO_QF.values()])
-)
-"""Tuple of QuantumFlow gates that we can convert directly to braket"""
+# TODO: use as test
+# BRAKET_GATES: Tuple[Type[Gate], ...] = tuple(
+#     set([StdGate.cv_stdgates[n] for n in BRAKET_TO_QF.values()])
+# )
+# """Tuple of QuantumFlow gates that we can convert directly to braket"""
 
 # TODO: Unitary
 

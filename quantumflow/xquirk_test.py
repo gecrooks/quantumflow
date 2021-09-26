@@ -8,7 +8,7 @@ import urllib
 import pytest
 
 import quantumflow as qf
-from quantumflow.xquirk import circuit_to_quirk, quirk_url
+from quantumflow.xquirk import circuit_to_quirk, quirk_url, translate_to_quirk
 
 
 def test_circuit_to_quirk() -> None:
@@ -81,6 +81,17 @@ def test_fail() -> None:
 def test_url_escape() -> None:
     circ = qf.Circuit([qf.X(0)])
     quirk_url(circuit_to_quirk(circ), escape=True)
+
+
+def test_translate_to_quirk() -> None:
+    circ0 = qf.Circuit([qf.Can(0.2, 0.3, 0.1, 0, 1)])
+    circ1 = translate_to_quirk(circ0)
+    assert qf.circuits_close(circ0, circ1)
+
+
+def test_circuit_to_quirk_translate() -> None:
+    circ0 = qf.Circuit([qf.Can(0.2, 0.3, 0.1, 0, 1)])
+    _ = circuit_to_quirk(circ0, translate=True)
 
 
 # fin

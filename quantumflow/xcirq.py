@@ -24,14 +24,19 @@ Interface between Google's Cirq and QuantumFlow
 # Conventions
 # cqc: Abbreviation for Cirq circuit
 
-from typing import List, Type
+try:
+    import cirq
+except ModuleNotFoundError as err:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "External dependency 'cirq' not installed. Install with" " 'pip install cirq'"
+    ) from err
 
-import cirq
 import numpy as np
 
 from . import var
 from .circuits import Circuit
-from .ops import Gate, Operation, Unitary
+from .gatesets import CIRQ_GATES
+from .ops import Operation, Unitary
 from .qubits import Qubit, Qubits
 from .states import State, zero_state
 from .stdgates import (
@@ -57,7 +62,7 @@ from .stdgates import (
     Z,
     ZPow,
 )
-from .translate.translations import circuit_translate, select_translators
+from .translate.translations import circuit_translate
 
 __all__ = (
     "from_cirq_qubit",
@@ -67,32 +72,6 @@ __all__ = (
     "CirqSimulator",
     "CIRQ_GATES",
 )
-
-
-CIRQ_GATES: List[Type[Gate]] = [
-    I,
-    X,
-    Y,
-    Z,
-    S,
-    T,
-    H,
-    XPow,
-    YPow,
-    ZPow,
-    CZ,
-    Swap,
-    ISwap,
-    CNot,
-    XX,
-    YY,
-    ZZ,
-    CCNot,
-    CSwap,
-    CCZ,
-    FSim,
-]
-"""List of QuantumFlow gates that we know how to convert to Cirq"""
 
 
 class CirqSimulator(Operation):
@@ -294,9 +273,7 @@ def circuit_to_cirq(circ: Circuit, translate: bool = False) -> cirq.Circuit:
 
 def translate_to_cirq(circ: Circuit) -> Circuit:
     """Convert QF gates to gates understood by cirq"""
-    target_gates = CIRQ_GATES
-    trans = select_translators(target_gates)
-    circ = circuit_translate(circ, trans)
+    circ = circuit_translate(circ, targets=CIRQ_GATES)
     return circ
 
 

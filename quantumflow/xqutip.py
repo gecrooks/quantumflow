@@ -68,12 +68,19 @@ Fredkin                     CSwap       FREDKIN
 # qrot
 # QASMU
 
-from typing import Dict, Tuple, Type, cast
+from typing import Dict, Type, cast
 
-from qutip.qip.circuit import QubitCircuit, _ctrl_gates, _para_gates
+try:
+    from qutip.qip.circuit import QubitCircuit, _ctrl_gates, _para_gates
+except ModuleNotFoundError as err:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "External dependency 'qutip' not installed. Install" "with 'pip install qutip'"
+    ) from err
+
 
 from . import var
 from .circuits import Circuit
+from .gatesets import QUTIP_GATES
 from .ops import Gate
 from .stdgates import (  # B,; Exch,
     CS,
@@ -102,7 +109,7 @@ from .stdgates import (  # B,; Exch,
     Y,
     Z,
 )
-from .translate import circuit_translate, select_translations
+from .translate import circuit_translate
 from .utils import invert_map
 
 __all__ = ("qutip_to_circuit", "circuit_to_qutip", "translate_to_qutip", "QUTIP_GATES")
@@ -138,8 +145,8 @@ _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
     # Exch: "SWAPalpha",  # Same gate, different parameterization
 }
 
-QUTIP_GATES: Tuple[Type[Gate], ...] = tuple(_QUTIP_GATE_NAMES.keys())
-"""List of QuantumFlow gates that we know how to convert directly to and from QuTiP"""
+# QUTIP_GATES: Tuple[Type[Gate], ...] = tuple(_QUTIP_GATE_NAMES.keys())
+# """List of QuantumFlow gates that we know how to convert directly to and from QuTiP"""
 
 _QUTIP_NAME_GATES = invert_map(_QUTIP_GATE_NAMES)
 # _QUTIP_NAME_GATES["CSIGN"] = CZ
@@ -223,9 +230,7 @@ def circuit_to_qutip(circ: Circuit, translate: bool = False) -> QubitCircuit:
 
 def translate_to_qutip(circ: Circuit) -> Circuit:
     """Convert QF gates to gates understood by qutip"""
-    target_gates = QUTIP_GATES
-    trans = select_translations(target_gates)
-    circ = circuit_translate(circ, trans)
+    circ = circuit_translate(circ, targets=QUTIP_GATES)
     return circ
 
 

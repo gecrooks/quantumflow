@@ -45,4 +45,11 @@ def test_circuit_to_pyquil() -> None:
     assert qf.circuits_close(circ, new_circ)
 
 
+def test_circuit_to_pyquil_translate() -> None:
+    circ0 = qf.Circuit([qf.Can(0.2, 0.3, 0.1, 0, 1)])
+    cqc = xforest.circuit_to_pyquil(circ0, translate=True)
+    circ2 = xforest.pyquil_to_circuit(cqc)
+    assert qf.circuits_close(circ0, circ2)
+
+
 # fin

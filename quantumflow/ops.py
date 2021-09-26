@@ -493,7 +493,7 @@ class Gate(Operation):
 
         circ = quantum_shannon_decomposition(self)
         for gate in circ:
-            yield from gate.decompose()
+            yield from gate.decompose()  # type: ignore
 
 
 # End class Gate

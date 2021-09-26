@@ -18,19 +18,29 @@ Interface to pyQuil and the Rigetti Forest.
 
 from itertools import chain
 
-from pyquil.quil import Program as pqProgram
-from pyquil.quilbase import Declare as pqDeclare
-from pyquil.quilbase import Gate as pqGate
-from pyquil.quilbase import Halt as pqHalt
-from pyquil.quilbase import Measurement as pqMeasurement
-from pyquil.quilbase import Pragma as pqPragma
+try:
+    from pyquil.quil import Program as pqProgram
+    from pyquil.quilbase import Declare as pqDeclare
+    from pyquil.quilbase import Gate as pqGate
+    from pyquil.quilbase import Halt as pqHalt
+    from pyquil.quilbase import Measurement as pqMeasurement
+    from pyquil.quilbase import Pragma as pqPragma
+except ModuleNotFoundError as err:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "External dependency 'pyquil' not installed. Install"
+        "with 'pip install pyquil'"
+    ) from err
+
 
 from . import utils
 from .circuits import Circuit
+from .gatesets import QUIL_GATES
 from .ops import Gate, StdGate
 from .stdops import Measure
+from .translate import circuit_translate
 
 __all__ = [
+    "QUIL_GATES",
     "QUIL_TO_QF",
     "circuit_to_pyquil",
     "pyquil_to_circuit",
@@ -64,12 +74,15 @@ QUIL_TO_QF = {
 """Map from QUIL operation names to QuantumFlow names"""
 
 
-def circuit_to_pyquil(circuit: Circuit) -> pqProgram:
+def circuit_to_pyquil(circ: Circuit, translate: bool = False) -> pqProgram:
     """Convert a QuantumFlow circuit to a pyQuil program"""
+    if translate:
+        circ = translate_to_pyquil(circ)
+
     prog = pqProgram()
 
     QF_TO_QUIL = utils.invert_map(QUIL_TO_QF)
-    for elem in circuit:
+    for elem in circ:
         if isinstance(elem, Gate) and elem.name in QF_TO_QUIL:
             params = list(elem.params)
             name = QF_TO_QUIL[elem.name]
@@ -103,6 +116,12 @@ def pyquil_to_circuit(program: pqProgram) -> Circuit:
         else:
             raise ValueError("PyQuil program is not protoquil")  # pragma: no cover
 
+    return circ
+
+
+def translate_to_pyquil(circ: Circuit) -> Circuit:
+    """Convert a circuit to gates understood by pyquil"""
+    circ = circuit_translate(circ, targets=QUIL_GATES)
     return circ
 
 

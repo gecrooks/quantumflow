@@ -39,6 +39,7 @@
 #   stdops
 #   circuits
 #   dagcircuit
+#   gatesets
 #   decompositions
 #   gradients
 #   info
@@ -55,6 +56,7 @@ from .dagcircuit import *  # noqa: F401, F403
 from .decompositions import *  # noqa: F401, F403
 from .deprecated import *  # noqa: F401, F403
 from .gates import *  # noqa: F401, F403
+from .gatesets import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403
 from .modules import *  # noqa: F401, F403

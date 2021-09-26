@@ -11,39 +11,26 @@ Interface to qsim
 
 https://github.com/quantumlib/qsim
 
-Note that `qsim` and the python binding `qsimcirq` are not
-installed by default, since installation via pip currently only works on Linux.
-For details on how to install qsim on Mac or Windows, see qsim's githib issues.
 """
 
 
-import qsimcirq
+try:
+    import qsimcirq
+except ModuleNotFoundError as err:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "External dependency 'qsimcirq' not installed. Install"
+        "with 'pip install qsimcirq'"
+    ) from err
 
 from .circuits import Circuit
+from .gatesets import QSIM_GATES
 from .ops import Operation
 from .qubits import Qubits
 from .states import State
-from .stdgates import (
-    CZ,
-    CNot,
-    FSim,
-    H,
-    I,
-    ISwap,
-    S,
-    T,
-    X,
-    XPow,
-    Y,
-    YPow,
-    Z,
-    ZPow,
-)
-from .translate import circuit_translate, select_translations
+from .translate import circuit_translate
 from .xcirq import circuit_to_cirq
 
-# Note missing Swap, ...
-QSIM_GATES = (I, X, Y, Z, S, T, H, XPow, YPow, ZPow, CZ, ISwap, CNot, FSim)
+__all__ = ["QSimSimulator", "translate_circuit_to_qsim", "QSIM_GATES"]
 
 
 class QSimSimulator(Operation):
@@ -78,6 +65,5 @@ class QSimSimulator(Operation):
 
 def translate_circuit_to_qsim(circ: Circuit) -> Circuit:
     """Convert QF gates to gates supported by qsim"""
-    trans = select_translations(QSIM_GATES)
-    circ = circuit_translate(circ, trans)
+    circ = circuit_translate(circ, targets=QSIM_GATES)
     return circ

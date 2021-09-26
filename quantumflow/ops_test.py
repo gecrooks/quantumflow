@@ -162,9 +162,9 @@ def test_gate_decompose() -> None:
     circ0 = qf.Circuit(*gate0.decompose())
     assert qf.gates_close(gate0, circ0.asgate())
 
-    gate0 = qf.RandomGate([1, 0, 2])
-    circ0 = qf.Circuit(*gate0.decompose())
-    assert qf.gates_close(gate0, circ0.asgate())
+    gate1 = qf.RandomGate([1, 0, 2])
+    circ1 = qf.Circuit(*gate1.decompose())
+    assert qf.gates_close(gate1, circ1.asgate())
 
 
 # fin

@@ -39,7 +39,7 @@ __all__ = (
 )
 
 
-# TODO: Should be set of types to match GATESET in stdgates?
+# FIXME: Use gateset.LATEX_GATES
 LATEX_GATESET = frozenset(
     [
         "I",

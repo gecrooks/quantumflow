@@ -15,12 +15,18 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_to_qiskit
 """
 
-from typing import Tuple, Type
+try:
+    import qiskit
+except ModuleNotFoundError as err:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "External dependency 'qiskit' not installed. Install"
+        "with 'pip install qiskit'"
+    ) from err
 
-import qiskit
 
 from .circuits import Circuit
-from .ops import Gate, Operation, StdGate
+from .gatesets import QISKIT_GATES
+from .ops import Operation, StdGate
 from .qubits import Qubits
 from .states import State
 from .stdops import If, Initialize
@@ -89,10 +95,10 @@ QASM_TO_QF = {
 NAMED_GATES = StdGate.cv_stdgates
 
 
-QISKIT_GATES: Tuple[Type[Gate], ...] = tuple(
-    set([NAMED_GATES[n] for n in QASM_TO_QF.values()])
-)
-"""Tuple of QuantumFlow gates that we can convert directly to QisKit"""
+# QISKIT_GATES: Tuple[Type[Gate], ...] = tuple(
+#     set([NAMED_GATES[n] for n in QASM_TO_QF.values()])
+# )
+# """Tuple of QuantumFlow gates that we can convert directly to QisKit"""
 
 
 # TODO: 'multiplexer', 'snapshot', 'unitary'

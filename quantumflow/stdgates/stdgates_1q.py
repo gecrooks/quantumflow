@@ -897,7 +897,7 @@ class ZPow(StdGate):
         return ZPow(t * self.param("t"), *self.qubits)
 
     def run(self, ket: State) -> State:
-        (t,) = self.params
+        t = var.asfloat(self.param("t"))
         axes = ket.qubit_indices(self.qubits)
         s1 = utils.multi_slice(axes, [1])
         tensor = ket.tensor.copy()

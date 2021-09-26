@@ -116,7 +116,7 @@ select_translators = select_translations
 def circuit_translate(
     circ: Circuit,
     translators: Sequence = None,
-    targets: Sequence[Type[Gate]] = None,
+    targets: Iterable[Type[Gate]] = None,
     recurse: bool = True,
 ) -> Circuit:
     """Apply a collection of translations to each gate in a circuit.
@@ -131,7 +131,7 @@ def circuit_translate(
 
     if translators is None:
         if targets is None:
-            targets = [CNot, YPow, ZPow, I, Ph, H, T, S, T_H, S_H]
+            targets = [CNot, YPow, ZPow, I, Ph, H, T, S, T_H, S_H]  # FIXME
         translators = select_translations(targets)
 
     # Use type annotations to do dynamic dispatch
