@@ -60,7 +60,7 @@ from .tensors import QubitTensor
 from .var import Variable
 
 if TYPE_CHECKING:
-    from .paulialgebra import Pauli
+    from .paulialgebra import Pauli  # pragma: no cover
 
 
 __all__ = ["Operation", "Gate", "StdGate", "UnitaryGate", "Channel", "Unitary"]
