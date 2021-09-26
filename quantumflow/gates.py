@@ -5,10 +5,6 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import TextIO
-
-import numpy as np
-
 from . import tensors, utils
 from .ops import Gate, Unitary
 from .qubits import Qubit
