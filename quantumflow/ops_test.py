@@ -157,4 +157,16 @@ def test_unitary_from_gate() -> None:
     assert qf.gates_close(gate0, gate1)
 
 
+def test_gate_decompose() -> None:
+    gate0 = qf.CCNot(1, 0, 2)
+    circ0 = qf.Circuit(*gate0.decompose())
+    assert qf.gates_close(gate0, circ0.asgate())
+
+    gate0 = qf.RandomGate([1, 0, 2])
+    circ0 = qf.Circuit(*gate0.decompose())
+    assert qf.gates_close(gate0, circ0.asgate())
+
+
+
+
 # fin

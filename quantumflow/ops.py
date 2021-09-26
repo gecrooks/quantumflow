@@ -471,6 +471,7 @@ class Gate(Operation):
 
         return f"{self.name}{fparams}{fqubits}"
 
+    # TODO: Move logic elsewhere
     def decompose(self) -> Iterator["StdGate"]:
         from .translate import TRANSLATIONS, translation_source_gate
 
@@ -486,8 +487,12 @@ class Gate(Operation):
                 yield from trans(self)
                 return
 
-        # FIXME, deke
-        assert False
+        # If we don't know how to perform an analytic translation, resort to a
+        # numerical decomposition. Will fail for gates with symbolic parameters.
+        from .decompositions import quantum_shannon_decomposition
+        circ = quantum_shannon_decomposition(self)
+        for gate in circ:
+            yield from gate.decompose()
 
 
 # End class Gate
