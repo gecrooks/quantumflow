@@ -8,6 +8,7 @@
 Unit tests for quantumflow.visualization
 """
 
+import io
 import os
 import shutil
 from math import pi
@@ -154,6 +155,17 @@ def test_stdgates_latex_to_image(gatename: str) -> None:
     img = qf.latex_to_image(latex)
     if os.environ.get("QF_VIZTEST"):
         img.show()
+
+
+@pytest.mark.parametrize("gatename", qf.StdGate.cv_stdgates.keys())
+def test_circuit_to_diagram_stdgates(gatename: str) -> None:
+    gatet = qf.StdGate.cv_stdgates[gatename]
+    gate = _randomize_gate(gatet)
+    circ = qf.Circuit(gate)
+    diag = qf.circuit_to_diagram(circ)
+    print(gatename)
+    print(diag)
+    print()
 
 
 @skip_unless_pdflatex
@@ -461,6 +473,21 @@ def test_latex_labels() -> None:
     )
     if os.environ.get("QF_VIZTEST"):
         qf.latex_to_image(latex).show()
+
+
+def test_print_gate() -> None:
+    stream = io.StringIO()
+
+    qf.print_gate(qf.CNot(0, 1), file=stream)
+    s = stream.getvalue()
+    ref = (
+        "00 -> 00 : (1+0j)\n"
+        + "01 -> 01 : (1+0j)\n"
+        + "10 -> 11 : (1+0j)\n"
+        + "11 -> 10 : (1+0j)\n"
+    )
+
+    assert s == ref
 
 
 # fin

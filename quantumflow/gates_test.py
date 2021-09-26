@@ -4,7 +4,6 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
-import io
 from typing import Type
 
 import numpy as np
@@ -144,34 +143,6 @@ def test_projectors() -> None:
 def test_not_unitary() -> None:
     assert not qf.almost_unitary(qf.P0())
     assert not qf.almost_unitary(qf.P1())
-
-
-# FIXME, add conditional gate
-def test_conditional_gate() -> None:
-    controlled_gate = qf.conditional_gate(0, qf.X(1), qf.Y(1))
-
-    state = qf.zero_state(2)
-    state = controlled_gate.run(state)
-    assert state.tensor[0, 1] == 1.0
-
-    state = qf.X(0).run(state)
-    state = controlled_gate.run(state)
-    assert 1.0j * state.tensor[1, 0] == 1.0
-
-
-def test_print_gate() -> None:
-    stream = io.StringIO()
-
-    qf.print_gate(qf.CNot(0, 1), file=stream)
-    s = stream.getvalue()
-    ref = (
-        "00 -> 00 : (1+0j)\n"
-        + "01 -> 01 : (1+0j)\n"
-        + "10 -> 11 : (1+0j)\n"
-        + "11 -> 10 : (1+0j)\n"
-    )
-
-    assert s == ref
 
 
 def test_inverse_random() -> None:
