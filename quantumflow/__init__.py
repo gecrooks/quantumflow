@@ -47,6 +47,7 @@
 #   translate
 #   visualization
 #   deprecated
+#   transpile
 
 
 from .channels import *  # noqa: F401, F403
@@ -69,6 +70,7 @@ from .stdops import *  # noqa: F401, F403
 from .tensors import *  # noqa: F401, F403
 from .transform import *  # noqa: F401, F403
 from .translate import *  # noqa: F401, F403
+from .transpile import *  # noqa: F401, F403
 from .var import *  # noqa: F401, F403
 from .visualization import *  # noqa: F401, F403
 
