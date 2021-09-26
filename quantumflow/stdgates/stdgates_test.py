@@ -151,7 +151,7 @@ def test_hamiltonians(gatet: Type[qf.StdGate]) -> None:
     qbs = gate0.qubits
     ham = gate0.hamiltonian
 
-    gate1 = qf.unitary_from_hamiltonian(ham, qbs)
+    gate1 = qf.UnitaryGate.from_hamiltonian(ham, qbs)
 
     assert qf.gates_close(gate0, gate1)
     assert qf.gates_phase_close(gate0, gate1)

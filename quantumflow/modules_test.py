@@ -292,7 +292,7 @@ def test_PauliGate_pow() -> None:
     assert qf.gates_close(gate1, gate2)
     assert qf.gates_close(gate1.H, gate2 ** -1)
 
-    gate3 = qf.unitary_from_hamiltonian(gate0.hamiltonian, qubits=gate0.qubits)
+    gate3 = qf.UnitaryGate.from_hamiltonian(gate0.hamiltonian, qubits=gate0.qubits)
     assert qf.gates_close(gate0, gate3)
 
     s = str(gate0)

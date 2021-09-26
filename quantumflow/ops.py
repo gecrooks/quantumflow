@@ -33,6 +33,7 @@ from abc import ABC  # Abstract Base Class
 from copy import copy
 from functools import total_ordering
 from typing import (
+    TYPE_CHECKING,
     Any,
     ClassVar,
     Dict,
@@ -47,6 +48,7 @@ from typing import (
 )
 
 import numpy as np
+import scipy
 from numpy.typing import ArrayLike
 from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
@@ -56,6 +58,10 @@ from .qubits import Qubit, Qubits
 from .states import Density, State
 from .tensors import QubitTensor
 from .var import Variable
+
+if TYPE_CHECKING:
+    from .paulialgebra import Pauli  # pragma: no cover
+
 
 __all__ = ["Operation", "Gate", "StdGate", "UnitaryGate", "Channel", "Unitary"]
 
@@ -504,7 +510,14 @@ class UnitaryGate(Gate):
 
     @classmethod
     def from_gate(cls, gate: Gate) -> "UnitaryGate":
-        return UnitaryGate(gate.tensor, gate.qubits)
+        return cls(gate.tensor, gate.qubits)
+
+    @classmethod
+    def from_hamiltonian(cls, hamiltonian: "Pauli", qubits: Qubits) -> "UnitaryGate":
+        """Create a Unitary gate U from a Pauli operator H, U = exp(-i H)"""
+        op = hamiltonian.asoperator(qubits)
+        U = scipy.linalg.expm(-1j * op)
+        return cls(U, qubits)
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
@@ -513,7 +526,6 @@ class UnitaryGate(Gate):
 
 
 # End class UnitaryGate
-
 
 # Deprecated Legacy
 Unitary = UnitaryGate
@@ -711,5 +723,6 @@ class Channel(Operation):
 
 
 # end class Channel
+
 
 # fin

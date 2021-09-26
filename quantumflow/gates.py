@@ -8,12 +8,10 @@
 from typing import TextIO
 
 import numpy as np
-import scipy
 
 from . import tensors, utils
 from .ops import Gate, Unitary
-from .paulialgebra import Pauli
-from .qubits import Qubit, Qubits
+from .qubits import Qubit
 from .tensors import QubitTensor
 from .utils import deprecated
 
@@ -22,7 +20,6 @@ __all__ = (
     "print_gate",
     "P0",
     "P1",
-    "unitary_from_hamiltonian",
     "conditional_gate",
 )
 
@@ -89,16 +86,6 @@ class P1(Gate):
     @utils.cached_property
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[0, 0], [0, 1]])
-
-
-# Move to Pauli
-def unitary_from_hamiltonian(hamiltonian: Pauli, qubits: Qubits) -> Unitary:
-    """Create a Unitary gate U from a Pauli operator H, U = exp(-i H)"""
-    # Note: Can't be a classmethod constructor on Unitary due to circular
-    # imports. (???)
-    op = hamiltonian.asoperator(qubits)
-    U = scipy.linalg.expm(-1j * op)
-    return Unitary(U, qubits)
 
 
 @deprecated
