@@ -6,7 +6,7 @@
 import pytest
 
 import quantumflow as qf
-from quantumflow import xbraket, xcirq, xforest, xqiskit
+from quantumflow import xbraket, xcirq, xforest, xqiskit, xqutip
 from quantumflow.transpile import _guess_format, transpile
 
 
@@ -34,8 +34,21 @@ def test_guess_format() -> None:
     f4 = _guess_format(c4)
     assert f4 == "qasm"
 
+    c4 = xqutip.circuit_to_qutip(circ)
+    f4 = _guess_format(c4)
+    assert f4 == "qutip"
 
-circuit_formats = ["quantumflow", "cirq", "braket", "pyquil", "qiskit", "qasm"]
+
+circuit_formats = [
+    "quantumflow",
+    "cirq",
+    "braket",
+    "pyquil",
+    "qiskit",
+    "qasm",
+    "qsim",
+    "qutip",
+]
 
 
 @pytest.mark.parametrize("circuit_format", circuit_formats)
@@ -87,7 +100,3 @@ def test_transpile_errors() -> None:
     circ0 = qf.Circuit(qf.Margolus(0, 1, 2))
     with pytest.raises(ValueError):
         _ = transpile(circ0, output_format="NOT_A_FORMAT")
-
-    circ0 = qf.Circuit(qf.Margolus(0, 1, 2))
-    with pytest.raises(NotImplementedError):
-        _ = transpile(circ0, "cirq", literal=True)
