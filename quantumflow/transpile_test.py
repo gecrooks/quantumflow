@@ -87,3 +87,7 @@ def test_transpile_errors() -> None:
     circ0 = qf.Circuit(qf.Margolus(0, 1, 2))
     with pytest.raises(ValueError):
         _ = transpile(circ0, output_format="NOT_A_FORMAT")
+
+    circ0 = qf.Circuit(qf.Margolus(0, 1, 2))
+    with pytest.raises(NotImplementedError):
+        _ = transpile(circ0, "cirq", literal=True)

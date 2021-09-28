@@ -59,6 +59,7 @@ from .states import Density, State
 from .tensors import QubitTensor
 from .var import Variable
 
+# standard workaround to avoid circular imports from type hints
 if TYPE_CHECKING:
     from .paulialgebra import Pauli  # pragma: no cover
 
