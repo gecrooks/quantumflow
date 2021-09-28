@@ -6,9 +6,8 @@
 # Implementation Note:
 #
 # We defer import of modules that access eXternal dependences.
-# The submodules are responsible for raising an exception with an information
+# The submodules are responsible for raising an exception with an informative
 # error message if the required dependency isn't installed.
-#
 
 
 from typing import Any
@@ -177,7 +176,6 @@ def _transpile_to(circuit: Circuit, output_format: str) -> Any:
         from . import xcirq, xqsim
 
         circuit = xqsim.translate_circuit_to_qsim(circuit)
-        print(circuit)
         return xcirq.circuit_to_cirq(circuit)
 
     if output_format == "quirk":
