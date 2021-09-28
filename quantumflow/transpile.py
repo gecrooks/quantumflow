@@ -3,13 +3,30 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+# Implementation Note:
+#
+# We defer import of modules that access eXternal dependences.
+# The submodules are responsible for raising an exception with an information
+# error message if the required dependency isn't installed.
+#
+
+
 from typing import Any
 
 from .circuits import Circuit
 
 __all__ = "transpile", "TRANSPILE_FORMATS"
 
-TRANSPILE_FORMATS = "qasm", "cirq", "braket", "pyquil", "qiskit", "quirk", "quantumflow"
+TRANSPILE_FORMATS = (
+    "qasm",
+    "cirq",
+    "braket",
+    "pyquil",
+    "qiskit",
+    "quirk",
+    "quantumflow",
+    "qutip",
+)
 
 
 def transpile(
@@ -32,7 +49,8 @@ def transpile(
             A native QuantumFlow Circuit.
         quirk:
             A quirk JSON formatted string. (Currently only supported for output)
-
+        qutip::
+            A qutip QubitCircuit
 
     Args:
         circuit: A quantum circuit. The input format is inferred from the type
@@ -95,6 +113,11 @@ def _transpile_from(circuit: Any) -> Circuit:
 
         return xqiskit.qasm_to_circuit(circuit)
 
+    if input_format == "qutip":
+        from . import xqutip
+
+        return xqutip.qutip_to_circuit(circuit)
+
     raise ValueError(f"Unknown input format: {input_format}")  # pragma: no cover
 
 
@@ -118,6 +141,9 @@ def _guess_format(circuit: Any) -> str:
 
     if isinstance(circuit, str) and "OPENQASM" in circuit:
         return "qasm"
+
+    if "qutip" in typestr and "QubitCircuit" in typestr:
+        return "qutip"
 
     raise ValueError(f"Unknown source format for circuit: {typestr}")
 
@@ -157,5 +183,10 @@ def _transpile_to(circuit: Circuit, output_format: str, literal: bool) -> Any:
         from . import xquirk
 
         return xquirk.circuit_to_quirk(circuit, translate=True)
+
+    if output_format == "qutip":
+        from . import xqutip
+
+        return xqutip.circuit_to_qutip(circuit, translate=True)
 
     raise ValueError(f"Unknown output format: {output_format}")
