@@ -39,7 +39,16 @@ def test_guess_format() -> None:
     assert f4 == "qutip"
 
 
-circuit_formats = ["quantumflow", "cirq", "braket", "pyquil", "qiskit", "qasm", "qutip"]
+circuit_formats = [
+    "quantumflow",
+    "cirq",
+    "braket",
+    "pyquil",
+    "qiskit",
+    "qasm",
+    "qsim",
+    "qutip",
+]
 
 
 @pytest.mark.parametrize("circuit_format", circuit_formats)
@@ -91,7 +100,3 @@ def test_transpile_errors() -> None:
     circ0 = qf.Circuit(qf.Margolus(0, 1, 2))
     with pytest.raises(ValueError):
         _ = transpile(circ0, output_format="NOT_A_FORMAT")
-
-    circ0 = qf.Circuit(qf.Margolus(0, 1, 2))
-    with pytest.raises(NotImplementedError):
-        _ = transpile(circ0, "cirq", literal=True)
