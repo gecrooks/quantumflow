@@ -33,15 +33,28 @@ Actions on states
 
 from abc import ABC
 from math import sqrt
-from typing import Any, Dict, List, Mapping, TextIO, Tuple, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Mapping,
+    TextIO,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 import opt_einsum
-from numpy.typing import ArrayLike
 
 from . import tensors, utils
 from .qubits import Qubit, Qubits
 from .tensors import QubitTensor
+
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike  # pragma: no cover
+
 
 __all__ = [
     "State",
@@ -65,7 +78,7 @@ QuantumStateType = TypeVar("QuantumStateType", bound="QuantumState")
 
 class QuantumState(ABC):
     def __init__(
-        self, tensor: ArrayLike, qubits: Qubits, memory: Mapping = None
+        self, tensor: "ArrayLike", qubits: Qubits, memory: Mapping = None
     ) -> None:
         """
         Abstract base class for representations of a quantum state.
@@ -109,7 +122,7 @@ class QuantumState(ABC):
     def replace(
         self: QuantumStateType,
         *,
-        tensor: ArrayLike = None,
+        tensor: "ArrayLike" = None,
         qubits: Qubits = None,
         memory: Mapping = None,
     ) -> QuantumStateType:
@@ -170,7 +183,7 @@ class State(QuantumState):
     """
 
     def __init__(
-        self, tensor: ArrayLike, qubits: Qubits = None, memory: Mapping = None
+        self, tensor: "ArrayLike", qubits: Qubits = None, memory: Mapping = None
     ) -> None:
         """Create a new State from a tensor of qubit amplitudes
 
@@ -213,7 +226,9 @@ class State(QuantumState):
         res = res.reshape(probs.shape)
         return res
 
-    def expectation(self, diag_hermitian: ArrayLike, trials: int = None) -> QubitTensor:
+    def expectation(
+        self, diag_hermitian: "ArrayLike", trials: int = None
+    ) -> QubitTensor:
         """Return the expectation of a measurement. Since we can only measure
         our computer in the computational basis, we only require the diagonal
         of the Hermitian in that basis.
@@ -375,7 +390,7 @@ class Density(QuantumState):
     """A density matrix representation of a mixed quantum state"""
 
     def __init__(
-        self, tensor: ArrayLike, qubits: Qubits = None, memory: Mapping = None
+        self, tensor: "ArrayLike", qubits: Qubits = None, memory: Mapping = None
     ) -> None:
         tensor = tensors.asqutensor(tensor)
 

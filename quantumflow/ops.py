@@ -49,7 +49,6 @@ from typing import (
 
 import numpy as np
 import scipy
-from numpy.typing import ArrayLike
 from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
 
@@ -61,6 +60,8 @@ from .var import Variable
 
 # standard workaround to avoid circular imports from type hints
 if TYPE_CHECKING:
+    from numpy.typing import ArrayLike  # pragma: no cover
+
     from .paulialgebra import Pauli  # pragma: no cover
 
 
@@ -320,7 +321,6 @@ class Gate(Operation):
         permutation
         swap
         monomial
-        swap
 
     A permutation matrix permutes states. It has a single '1' in each row and column.
     All other entries are zero.
@@ -330,11 +330,7 @@ class Gate(Operation):
     A monomial matrix is a product of a diagonal and a permutation matrix.
     Only 1 entry in each row and column is non-zero.
 
-    A swap is a permutation matrix that swaps qubits
     """
-
-    # Note: Circular import hell
-    from .paulialgebra import Pauli
 
     @property
     def hamiltonian(self) -> "Pauli":
@@ -505,7 +501,7 @@ class UnitaryGate(Gate):
     A quantum logic gate specified by an explicit unitary operator.
     """
 
-    def __init__(self, tensor: ArrayLike, qubits: Qubits) -> None:
+    def __init__(self, tensor: "ArrayLike", qubits: Qubits) -> None:
         tensor = tensors.asqutensor(tensor)
 
         N = np.ndim(tensor) // 2
@@ -589,7 +585,7 @@ class Channel(Operation):
 
     def __init__(
         self,
-        tensor: ArrayLike,
+        tensor: "ArrayLike",
         qubits: Qubits,
         params: Sequence[var.Variable] = None,
         name: str = None,  # FIXME
@@ -661,7 +657,7 @@ class Channel(Operation):
         return np.reshape(self.sharp.tensor, [2 ** (N * 2)] * 2)
 
     @classmethod
-    def from_choi(cls, tensor: ArrayLike, qubits: Qubits) -> "Channel":
+    def from_choi(cls, tensor: "ArrayLike", qubits: Qubits) -> "Channel":
         """Return a Channel from a Choi matrix"""
         return cls(tensor, qubits).sharp
 

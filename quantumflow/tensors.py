@@ -6,10 +6,13 @@
 # DOCME
 
 import string
-from typing import List, Sequence, Tuple
+from typing import TYPE_CHECKING, List, Sequence, Tuple
 
 import numpy as np
-from numpy.typing import ArrayLike
+
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike  # pragma: no cover
+
 
 __all__ = ("QubitTensor", "asqutensor")
 
@@ -22,7 +25,7 @@ QubitTensor = np.ndarray
 QubitTensor arrays have complex data type, and all axes have length 2."""
 
 
-def asqutensor(array: ArrayLike) -> QubitTensor:
+def asqutensor(array: "ArrayLike") -> QubitTensor:
     """Converts a tensor like object to a numpy array object with complex data
     type, and reshapes to [2]*N (So the number of elements must be a power of 2)
     """

@@ -240,6 +240,12 @@ class Circuit(Sequence, Operation):
         """Specialize all of the elements of this circuit"""
         return Circuit([elem.specialize() for elem in self])
 
+    # TESTME
+    def decompose(self) -> Iterator["Operation"]:
+        from .translate import circuit_translate
+
+        yield from circuit_translate(self)
+
     def _repr_png_(self) -> Optional[bytes]:  # pragma: no cover
         """Jupyter/IPython rich display"""
         from .visualization import circuit_to_image
