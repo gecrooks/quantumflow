@@ -296,7 +296,6 @@ def translate_ccz_to_ccnot(gate: CCZ) -> Iterator[Union[H, CCNot]]:
 def translate_ciswap_to_ccix(gate: CISwap) -> Iterator[Union[CNot, CCiX]]:
     """Translate a controlled-iswap gate to CCiX"""
     q0, q1, q2 = gate.qubits
-    q0, q1, q2 = gate.qubits
     yield CNot(q2, q1)
     yield CCiX(q0, q1, q2)
     yield CNot(q2, q1)
@@ -446,24 +445,25 @@ def translate_margolus_to_cnot(
     yield V(q2)
 
 
-@register_translation
-def translate_ccnot_to_margolus(gate: Margolus) -> Iterator[Union[CCNot, X, CCZ]]:
-    """Decomposition of a Toffoli gate to a Margolus gate ("Simplified Toffoli")
-    plus a CCZ.
+# FIXME
+# @register_translation
+# def translate_ccnot_to_margolus(gate: Margolus) -> Iterator[Union[CCNot, X, CCZ]]:
+#     """Decomposition of a Toffoli gate to a Margolus gate ("Simplified Toffoli")
+#     plus a CCZ.
 
-    ::
-        ───────●───────Margolus_0───
-               │           │
-        ───X───●───X───Margolus_1───
-               │           │
-        ───────●───────Margolus_2───
-    """
-    q0, q1, q2 = gate.qubits
+#     ::
+#         ───────●───────Margolus_0───
+#                │           │
+#         ───X───●───X───Margolus_1───
+#                │           │
+#         ───────●───────Margolus_2───
+#     """
+#     q0, q1, q2 = gate.qubits
 
-    yield X(q1)
-    yield CCZ(q0, q1, q2)
-    yield X(q1)
-    yield CCNot(q0, q1, q2)
+#     yield X(q1)
+#     yield CCZ(q0, q1, q2)
+#     yield X(q1)
+#     yield CCNot(q0, q1, q2)
 
 
 # fin
