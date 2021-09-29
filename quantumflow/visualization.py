@@ -463,6 +463,7 @@ QUANTIKZ_FOOTER_ = r"""
 # TODO: Handle unicode via xelatex?
 # TODO: Use psflatex python package
 
+
 def latex_to_image(latex: str) -> Image:  # pragma: no cover
     """
     Convert a single page LaTeX document into an image.

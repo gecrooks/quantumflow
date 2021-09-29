@@ -243,6 +243,7 @@ class Circuit(Sequence, Operation):
     # TESTME
     def decompose(self) -> Iterator["Operation"]:
         from .translate import circuit_translate
+
         yield from circuit_translate(self)
 
     def _repr_png_(self) -> Optional[bytes]:  # pragma: no cover
