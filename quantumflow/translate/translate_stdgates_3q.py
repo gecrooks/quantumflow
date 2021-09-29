@@ -30,7 +30,6 @@ from ..stdgates import (
     S,
     T,
     V,
-    X,
 )
 from .translations import register_translation
 
