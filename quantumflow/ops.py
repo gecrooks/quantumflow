@@ -85,15 +85,19 @@ OperationType = TypeVar("OperationType", bound="Operation")
 GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
-_EXCLUDED_OPERATIONS = set(["In", "Out", "NoWire"])
 
-OPERATIONS: Dict[str, "Operation"] = {}
+_EXCLUDED_OPERATIONS = set(["Operation", "Gate", "StdGate", "In", "Out", "NoWire"])
+# Names of operations to exclude from registration. Includes (effectively) abstract base
+# classes and internal operations.
+
+
+OPERATIONS: Dict[str, "Type[Operation]"] = {}
 """All quantum operations (All non-abstract subclasses of Operation)"""
 
-GATES: Dict[str, "Gate"] = {}
+GATES: Dict[str, "Type[Gate]"] = {}
 """All gates (All non-abstract subclasses of Gate)"""
 
-STDGATES: Dict[str, "StdGates"] = {}
+STDGATES: Dict[str, "Type[StdGate]"] = {}
 """All standard gates (All non-abstract subclasses of StdGate)"""
 
 
@@ -134,9 +138,6 @@ class Operation(ABC):
     def __init_subclass__(cls) -> None:
         # Note: The __init_subclass__ initializes all subclasses of a given class.
         # see https://www.python.org/dev/peps/pep-0487/
-
-        if inspect.isabstract(cls):
-            return
 
         name = cls.__name__
         if name not in _EXCLUDED_OPERATIONS:
@@ -272,10 +273,7 @@ class Operation(ABC):
             "This operation does not support Hermitian conjugate"
         )  # pragma: no cover
 
-    # NB: This abstract method makes abstract base classes abstract.
-    # In concrete sub-classes without tensors override and raise NotImplementedError()
     @property
-    @abstractmethod
     def tensor(self) -> QubitTensor:
         """
         Returns the tensor representation of this operation (if possible)
@@ -290,7 +288,6 @@ class Operation(ABC):
         """
         raise NotImplementedError()
 
-    @abstractmethod
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
         raise NotImplementedError()
@@ -380,7 +377,6 @@ class Gate(Operation):
         name = cls.__name__
         if name not in _EXCLUDED_OPERATIONS:
             GATES[name] = cls
-
 
     @property
     def hamiltonian(self) -> "Pauli":

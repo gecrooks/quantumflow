@@ -45,6 +45,7 @@ class In(Operation):
     def run(self, ket: State) -> State:
         raise NotImplementedError()
 
+
 # DOCME
 class Out(Operation):
     def __init__(self, q0: Qubit):
@@ -62,6 +63,7 @@ class Out(Operation):
 
     def run(self, ket: State) -> State:
         raise NotImplementedError()
+
 
 # FIXME: Design flaw!?
 # DAGCircuit fails if we try to add multi instances of the same gate
