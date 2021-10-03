@@ -64,6 +64,7 @@ from .ops import Channel, Gate, Operation
 from .qubits import Qubit, Qubits
 from .states import Density, State, zero_state
 from .stdgates import CZ, ZZ, CCNot, CNot, H, X, XPow, YPow, ZPow
+from .tensors import QubitTensor
 from .var import Variable
 
 __all__ = [
@@ -261,6 +262,10 @@ class Circuit(Sequence, Operation):
 
         diag = circuit_to_diagram(self)
         return '<pre style="line-height: 90%">' + diag + "</pre>"
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 # End class Circuit

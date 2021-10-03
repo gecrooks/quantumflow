@@ -355,6 +355,10 @@ class Pauli(Operation):
 
         return pauli_sum(*paulis)
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # End class Pauli
 

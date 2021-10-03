@@ -27,6 +27,7 @@ from .gatesets import QSIM_GATES
 from .ops import Operation
 from .qubits import Qubits
 from .states import State
+from .tensors import QubitTensor
 from .translate import circuit_translate
 from .xcirq import circuit_to_cirq
 
@@ -61,6 +62,10 @@ class QSimSimulator(Operation):
         res = sim.simulate(self._qsim_circuit)
         tensor = res.state_vector()
         return State(tensor, self.qubits)
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 def translate_circuit_to_qsim(circ: Circuit) -> Circuit:

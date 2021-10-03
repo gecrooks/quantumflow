@@ -133,6 +133,10 @@ class Moment(Sequence, Operation):
     def param(self, name: str) -> Variable:
         raise ValueError("Cannot lookup parameters by name for composite operations")
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # end class Moment
 
@@ -182,6 +186,10 @@ class Measure(Operation):
             rho = rho.store({self.cbit: 1})
         return rho
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # FIXME: Can't have zero qubits
 # Having no qubits specified screws up visualization
@@ -228,6 +236,10 @@ class Reset(Operation):
         if self.qubits:
             return "Reset " + " ".join([str(q) for q in self.qubits])
         return "Reset"
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 class Initialize(Operation):
@@ -277,6 +289,10 @@ class Barrier(Operation):
     def __str__(self) -> str:
         return self.name + " " + " ".join(str(q) for q in self.qubits)
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # FIXME: Does not work as written?
 class Projection(Operation):
@@ -305,6 +321,10 @@ class Projection(Operation):
     def H(self) -> "Projection":
         return self  # pragma: no cover  # TESTME
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # end class Projection
 
@@ -322,6 +342,10 @@ class Store(Operation):
 
     def evolve(self, rho: Density) -> Density:
         return rho.store({self.key: self.value})
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 # end class Store
@@ -349,6 +373,10 @@ class If(Operation):
             rho = self.element.evolve(rho)
         return rho
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # end class If
 
@@ -371,6 +399,10 @@ class Display(Operation):
 
     def evolve(self, rho: Density) -> Density:
         return rho.store({self.key: self.action(rho)})
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 # end class Display

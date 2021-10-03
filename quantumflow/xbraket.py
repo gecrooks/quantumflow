@@ -33,6 +33,7 @@ from .gatesets import BRAKET_GATES
 from .ops import Operation, StdGate
 from .qubits import Qubits
 from .states import State
+from .tensors import QubitTensor
 from .translate import circuit_translate
 from .utils import invert_map
 
@@ -189,6 +190,10 @@ class BraketSimulator(Operation):
         res = State(tensor, self.qubits)
 
         return res
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 # fin

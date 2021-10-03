@@ -29,7 +29,8 @@ DAGCircuit, and Pauli.
 
 """
 
-from abc import ABC  # Abstract Base Class
+import inspect
+from abc import ABC, abstractmethod  # Abstract Base Class
 from copy import copy
 from functools import total_ordering
 from typing import (
@@ -65,7 +66,17 @@ if TYPE_CHECKING:
     from .paulialgebra import Pauli  # pragma: no cover
 
 
-__all__ = ["Operation", "Gate", "StdGate", "UnitaryGate", "Channel", "Unitary"]
+__all__ = [
+    "Operation",
+    "Gate",
+    "StdGate",
+    "UnitaryGate",
+    "Channel",
+    "Unitary",
+    "STDGATES",
+    "OPERATIONS",
+    "GATES",
+]
 
 
 OperationType = TypeVar("OperationType", bound="Operation")
@@ -73,6 +84,16 @@ OperationType = TypeVar("OperationType", bound="Operation")
 
 GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
+
+
+OPERATIONS: Dict[str, "Operation"] = {}
+"""All quantum operations (All non-abstract subclasses of Operation)"""
+
+GATES: Dict[str, "Gate"] = {}
+"""All gates (All non-abstract subclasses of Gate)"""
+
+STDGATES: Dict[str, "StdGates"] = {}
+"""All standard gates (All non-abstract subclasses of StdGate)"""
 
 
 @total_ordering
@@ -108,6 +129,13 @@ class Operation(ABC):
     _diagram_noline: ClassVar[bool] = False
     """Override default to not draw a line between qubit wires for multi-qubit
     operations. See visualizations.circuit_to_diagram()"""
+
+    def __init_subclass__(cls) -> None:
+        # Note: The __init_subclass__ initializes all subclasses of a given class.
+        # see https://www.python.org/dev/peps/pep-0487/
+
+        if not inspect.isabstract(cls):
+            OPERATIONS[cls.__name__] = cls
 
     def __init__(
         self,
@@ -239,15 +267,17 @@ class Operation(ABC):
             "This operation does not support Hermitian conjugate"
         )  # pragma: no cover
 
-    @utils.cached_property
+    # NB: This abstract method makes abstract base classes abstract.
+    # In concrete sub-classes without tensors override and raise NotImplementedError()
+    @property
+    @abstractmethod
     def tensor(self) -> QubitTensor:
         """
         Returns the tensor representation of this operation (if possible)
         """
-
         raise NotImplementedError()
 
-    @utils.cached_property
+    @property
     def tensor_diagonal(self) -> QubitTensor:
         """
         Returns the diagonal of the tensor representation of this operation
@@ -331,6 +361,16 @@ class Gate(Operation):
     Only 1 entry in each row and column is non-zero.
 
     """
+
+    def __init_subclass__(cls) -> None:
+        # Note: The __init_subclass__ initializes all subclasses of a given class.
+        # see https://www.python.org/dev/peps/pep-0487/
+
+        if inspect.isabstract(cls):
+            return
+
+        super().__init_subclass__()
+        GATES[cls.__name__] = cls
 
     @property
     def hamiltonian(self) -> "Pauli":
@@ -546,12 +586,19 @@ class StdGate(Gate):
     expression), and qubits have type Qubit (Any hashable python type).
     """
 
+    # deprecated. Use STDGATES
     cv_stdgates: Dict[str, Type["StdGate"]] = {}
     """A dictionary between names and types for all StdGate subclasses"""
 
     def __init_subclass__(cls) -> None:
         # Note: The __init_subclass__ initializes all subclasses of a given class.
         # see https://www.python.org/dev/peps/pep-0487/
+
+        if inspect.isabstract(cls):
+            return  # pragma: no cover
+
+        super().__init_subclass__()
+        STDGATES[cls.__name__] = cls  # Subclass registration
 
         # Parse the Gate arguments and number of qubits from the arguments to __init__
         # Convention is that qubit names start with "q", but arguments do not.
@@ -565,7 +612,7 @@ class StdGate(Gate):
         cls.cv_args = args
         cls.cv_qubit_nb = qubit_nb
 
-        # TODO: Throw error if gate name reused?
+        # deprecated
         cls.cv_stdgates[cls.__name__] = cls  # Subclass registration
 
     def __repr__(self) -> str:

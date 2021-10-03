@@ -64,6 +64,7 @@ from .ops import Channel, Gate, Operation, UnitaryGate
 from .qubits import Qubit, Qubits
 from .states import Density, State
 from .stdgates import I, X, Y, Z
+from .tensors import QubitTensor
 
 __all__ = [
     "Kraus",
@@ -152,6 +153,10 @@ class Kraus(Operation):
         """Return the complex conjugate of this Kraus operation"""
         operators = [op.H for op in self.operators]
         return Kraus(operators, self.weights)
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()  # FIXME
 
 
 # End class Kraus

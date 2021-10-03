@@ -22,6 +22,7 @@ from .ops import Channel, Gate, Operation, Unitary
 from .qubits import Qubit, Qubits
 from .states import Density, State
 from .stdops import Moment
+from .tensors import QubitTensor
 
 __all__ = ("DAGCircuit",)
 
@@ -37,6 +38,10 @@ class In(Operation):
     def __hash__(self) -> int:
         return hash(self.qubits)
 
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
 
 # DOCME
 class Out(Operation):
@@ -48,6 +53,10 @@ class Out(Operation):
 
     def __hash__(self) -> int:
         return hash(self.qubits)
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 # FIXME: Design flaw!?
@@ -283,6 +292,10 @@ class DAGCircuit(Operation):
         circ_str = "\n".join([str(elem) for elem in self])
         circ_str = textwrap.indent(circ_str, " " * CIRCUIT_INDENT)
         return "\n".join([self.name, circ_str])
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 # End class DAGCircuit

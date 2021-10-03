@@ -30,6 +30,7 @@ from .ops import Operation, StdGate
 from .qubits import Qubits
 from .states import State
 from .stdops import If, Initialize
+from .tensors import QubitTensor
 from .translate import circuit_translate
 from .utils import invert_map
 
@@ -132,6 +133,10 @@ class QiskitSimulator(Operation):
         if ket is not None:
             res = res.permute(ket.qubits)
         return res
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
 
 
 def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
