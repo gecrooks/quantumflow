@@ -105,7 +105,7 @@ from .translate import circuit_translate
 from .utils import invert_map
 
 if TYPE_CHECKING:
-    import QubitCircuit
+    import QubitCircuit  # pragma: no cover
 
 __all__ = ("qutip_to_circuit", "circuit_to_qutip", "translate_to_qutip", "QUTIP_GATES")
 
