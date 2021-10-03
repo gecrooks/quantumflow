@@ -167,4 +167,10 @@ def test_gate_decompose() -> None:
     assert qf.gates_close(gate1, circ1.asgate())
 
 
+def test_registration() -> None:
+    assert set(qf.GATES).issubset(set(qf.OPERATIONS))
+    assert set(qf.STDGATES).issubset(set(qf.GATES))
+    assert set(qf.STDGATES).issubset(set(qf.OPERATIONS))
+
+
 # fin
