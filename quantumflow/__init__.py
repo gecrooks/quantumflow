@@ -48,6 +48,7 @@
 #   visualization
 #   deprecated
 #   transpile
+#   ext
 
 
 from .channels import *  # noqa: F401, F403
@@ -73,5 +74,12 @@ from .translate import *  # noqa: F401, F403
 from .transpile import *  # noqa: F401, F403
 from .var import *  # noqa: F401, F403
 from .visualization import *  # noqa: F401, F403
+from .xbraket import *  # noqa: F401, F403  *  # noqa: F401, F403
+from .xcirq import *  # noqa: F401, F403
+from .xforest import *  # noqa: F401, F403
+from .xqiskit import *  # noqa: F401, F403
+from .xqsim import *  # noqa: F401, F403
+from .xquirk import *  # noqa: F401, F403
+from .xqutip import *  # noqa: F401, F403
 
 # fin

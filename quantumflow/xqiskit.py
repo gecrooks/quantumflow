@@ -15,31 +15,26 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_to_qiskit
 """
 
-try:
-    import qiskit
-except ModuleNotFoundError as err:  # pragma: no cover
-    raise ModuleNotFoundError(
-        "External dependency 'qiskit' not installed. Install"
-        "with 'pip install qiskit'"
-    ) from err
+# Note: Installation of qiskit is optional, so we defer import
 
-
-from .circuits import Circuit
-from .gatesets import QISKIT_GATES
-from .ops import Operation, StdGate
-from .qubits import Qubits
-from .states import State
-from .stdops import If, Initialize
-from .translate import circuit_translate
-from .utils import invert_map
-
-# This module imports qiskit, so we do not include it at top level.
-# Must be imported explicitly. e.g.
-# > from quantumflow.xqiskit import qiskit_to_circuit, circuit_to_qiskit
-#
 # Note that QASM specific gates are defined in quantumflow/stdgates/stdgates_qasm.py
 # since you might want to use those gates in QuantumFlow without loading
 # qiskit
+
+
+from typing import TYPE_CHECKING
+
+from .circuits import Circuit
+from .gatesets import QISKIT_GATES
+from .ops import STDGATES
+from .states import State
+from .stdops import If, Initialize, Simulator
+from .translate import circuit_translate
+from .utils import invert_map
+
+if TYPE_CHECKING:
+    import qiskit  # pragma: no cover
+
 
 __all__ = [
     "QISKIT_GATES",
@@ -51,6 +46,9 @@ __all__ = [
     "qasm_to_circuit",
     "translate_gates_to_qiskit",  # Deprecated
 ]
+
+_IMPORT_ERROR_MSG = """External dependency 'qiskit' not installed. Install
+with 'pip install qiskit'"""
 
 
 QASM_TO_QF = {
@@ -92,29 +90,18 @@ QASM_TO_QF = {
 }
 """Map from qiskit operation names to QuantumFlow names"""
 
-NAMED_GATES = StdGate.cv_stdgates
-
-
-# QISKIT_GATES: Tuple[Type[Gate], ...] = tuple(
-#     set([NAMED_GATES[n] for n in QASM_TO_QF.values()])
-# )
-# """Tuple of QuantumFlow gates that we can convert directly to QisKit"""
-
 
 # TODO: 'multiplexer', 'snapshot', 'unitary'
 
 
-# FIXME: *elements? in __init__? INterface should be like circuit
-class QiskitSimulator(Operation):
-    def __init__(self, *elements: Operation) -> None:
-        self._circuit = Circuit(*elements)
-
-    @property
-    def qubits(self) -> Qubits:
-        return self._circuit.qubits
-
+class QiskitSimulator(Simulator):
     def run(self, ket: State = None) -> State:
-        circ = self._circuit
+        try:
+            import qiskit
+        except ModuleNotFoundError as err:  # pragma: no cover
+            raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
+        circ = self.circuit
         if ket is not None:
             circ = Circuit(Initialize(ket)) + circ
 
@@ -134,11 +121,9 @@ class QiskitSimulator(Operation):
         return res
 
 
-def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
+def qiskit_to_circuit(qkcircuit: "qiskit.QuantumCircuit") -> Circuit:
     """Convert a qsikit QuantumCircuit to QuantumFlow's Circuit"""
     # We assume that there is only one quantum register of qubits.
-
-    named_ops = dict(StdGate.cv_stdgates)
 
     circ = Circuit()
 
@@ -153,7 +138,7 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
         qubits = [qkqbs.index(q) for q in qargs]
 
         args = [float(param) for param in instruction.params] + qubits
-        gate = named_ops[qf_name](*args)  # type: ignore
+        gate = STDGATES[qf_name](*args)  # type: ignore
 
         if instruction.condition is None:
             circ += gate
@@ -164,13 +149,20 @@ def qiskit_to_circuit(qkcircuit: qiskit.QuantumCircuit) -> Circuit:
     return circ
 
 
-def circuit_to_qiskit(circ: Circuit, translate: bool = False) -> qiskit.QuantumCircuit:
+def circuit_to_qiskit(
+    circ: Circuit, translate: bool = False
+) -> "qiskit.QuantumCircuit":
     """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
     # monkey patched onto QuantumCircuit which will create that gate and
     # append it to the circuit. The method names correspond to the qasm
     # names in QASM_TO_QF
+
+    try:
+        import qiskit
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
     if translate:
         circ = translate_to_qiskit(circ)
@@ -220,6 +212,11 @@ def circuit_to_qasm(circ: Circuit, translate: bool = False) -> str:
 
 def qasm_to_circuit(qasm_str: str) -> Circuit:
     """Convert a QASM circuit to a QF circuit"""
+    try:
+        import qiskit
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
     qc = qiskit.QuantumCircuit.from_qasm_str(qasm_str)
     return qiskit_to_circuit(qc)
 

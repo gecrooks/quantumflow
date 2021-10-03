@@ -4,15 +4,11 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-Unit tests for quantumflow.xqiskit
+Unit tests for quantumflow.xbraket
 """
 
-# fmt: off
-import pytest; pytest.importorskip("braket")  # noqa: E702
-# fmt: on
-
 import numpy as np
-from braket.circuits import Circuit as bkCircuit
+import pytest
 
 import quantumflow as qf
 from quantumflow.xbraket import (
@@ -21,8 +17,11 @@ from quantumflow.xbraket import (
     circuit_to_braket,
 )
 
+pytest.importorskip("braket")
+
 
 def test_braket_to_circuit() -> None:
+    from braket.circuits import Circuit as bkCircuit
 
     bkcirc = bkCircuit().h(0).cnot(0, 1)
 

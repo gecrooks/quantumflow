@@ -17,20 +17,7 @@ Interface to pyQuil and the Rigetti Forest.
 """
 
 from itertools import chain
-
-try:
-    from pyquil.quil import Program as pqProgram
-    from pyquil.quilbase import Declare as pqDeclare
-    from pyquil.quilbase import Gate as pqGate
-    from pyquil.quilbase import Halt as pqHalt
-    from pyquil.quilbase import Measurement as pqMeasurement
-    from pyquil.quilbase import Pragma as pqPragma
-except ModuleNotFoundError as err:  # pragma: no cover
-    raise ModuleNotFoundError(
-        "External dependency 'pyquil' not installed. Install"
-        "with 'pip install pyquil'"
-    ) from err
-
+from typing import TYPE_CHECKING
 
 from . import utils
 from .circuits import Circuit
@@ -39,12 +26,18 @@ from .ops import Gate, StdGate
 from .stdops import Measure
 from .translate import circuit_translate
 
+if TYPE_CHECKING:
+    from pyquil.quil import Program as pqProgram  # pragma: no cover
+
 __all__ = [
     "QUIL_GATES",
     "QUIL_TO_QF",
     "circuit_to_pyquil",
     "pyquil_to_circuit",
 ]
+
+_IMPORT_ERROR_MSG = """External dependency 'pyquil' not installed. Install
+with 'pip install pyquil'"""
 
 
 QUIL_TO_QF = {
@@ -74,8 +67,14 @@ QUIL_TO_QF = {
 """Map from QUIL operation names to QuantumFlow names"""
 
 
-def circuit_to_pyquil(circ: Circuit, translate: bool = False) -> pqProgram:
+def circuit_to_pyquil(circ: Circuit, translate: bool = False) -> "pqProgram":
     """Convert a QuantumFlow circuit to a pyQuil program"""
+
+    try:
+        from pyquil.quil import Program as pqProgram
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
     if translate:
         circ = translate_to_pyquil(circ)
 
@@ -93,8 +92,16 @@ def circuit_to_pyquil(circ: Circuit, translate: bool = False) -> pqProgram:
     return prog
 
 
-def pyquil_to_circuit(program: pqProgram) -> Circuit:
+def pyquil_to_circuit(program: "pqProgram") -> Circuit:
     """Convert a protoquil pyQuil program to a QuantumFlow Circuit"""
+    try:
+        from pyquil.quilbase import Declare as pqDeclare
+        from pyquil.quilbase import Gate as pqGate
+        from pyquil.quilbase import Halt as pqHalt
+        from pyquil.quilbase import Measurement as pqMeasurement
+        from pyquil.quilbase import Pragma as pqPragma
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
     circ = Circuit()
     for inst in program.instructions:

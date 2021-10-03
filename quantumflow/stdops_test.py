@@ -183,4 +183,18 @@ def test_reset() -> None:
         reset.aschannel()
 
 
+def test_simulator() -> None:
+    circ = qf.Circuit(qf.H(0), qf.CNot(0, 1), qf.CNot(1, 2))
+    ket0 = qf.random_state([0, 1, 2])
+
+    ket1 = circ.run(ket0)
+    ket2 = qf.QFSimulator(circ).run(ket0)
+    assert qf.states_close(ket1, ket2)
+
+    rho0 = qf.random_density([0, 1, 2])
+    rho1 = circ.evolve(rho0)
+    rho2 = qf.QFSimulator(circ).evolve(rho0)
+    assert qf.densities_close(rho1, rho2)
+
+
 # fin

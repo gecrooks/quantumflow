@@ -13,27 +13,21 @@ https://github.com/quantumlib/qsim
 
 """
 
-
-try:
-    import qsimcirq
-except ModuleNotFoundError as err:  # pragma: no cover
-    raise ModuleNotFoundError(
-        "External dependency 'qsimcirq' not installed. Install"
-        "with 'pip install qsimcirq'"
-    ) from err
-
 from .circuits import Circuit
 from .gatesets import QSIM_GATES
-from .ops import Operation
-from .qubits import Qubits
 from .states import State
+from .stdops import Simulator
 from .translate import circuit_translate
 from .xcirq import circuit_to_cirq
 
 __all__ = ["QSimSimulator", "translate_circuit_to_qsim", "QSIM_GATES"]
 
 
-class QSimSimulator(Operation):
+_IMPORT_ERROR_MSG = """External dependency 'qsimcirq' not installed. Install
+with 'pip install qsimcirq'"""
+
+
+class QSimSimulator(Simulator):
     """Interface to the qsim quantum simulator. Adapts a QF Circuit (or
     other sequence of Operations).
 
@@ -41,19 +35,25 @@ class QSimSimulator(Operation):
         https://github.com/quantumlib/qsim
     """
 
-    def __init__(self, *elements: Operation, translate: bool = False) -> None:
-        circ = Circuit(*elements)
-        if translate:
-            circ = translate_circuit_to_qsim(circ)
-        self._circuit = circ
-        self._cirq = circuit_to_cirq(self._circuit)
+    def __init__(self, circ: Circuit) -> None:
+
+        try:
+            import qsimcirq
+        except ModuleNotFoundError as err:  # pragma: no cover
+            raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
+        circ = translate_circuit_to_qsim(circ)
+        super().__init__(circ)
+        self._cirq = circuit_to_cirq(self.circuit)
         self._qsim_circuit = qsimcirq.QSimCircuit(self._cirq)
 
-    @property
-    def qubits(self) -> Qubits:
-        return self._circuit.qubits
-
     def run(self, ket: State = None) -> State:
+
+        try:
+            import qsimcirq
+        except ModuleNotFoundError as err:  # pragma: no cover
+            raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
         if ket is not None:
             raise NotImplementedError("Not yet supported")
 

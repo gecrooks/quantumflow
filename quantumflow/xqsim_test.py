@@ -73,8 +73,7 @@ def test_qsim_translate() -> None:
     circ0 += qf.Swap(q0, q1)
 
     ket1 = circ0.run()
-    sim = QSimSimulator(circ0, translate=True)
-    # print(sim._circuit)
+    sim = QSimSimulator(circ0)
     ket2 = sim.run()
 
     assert qf.states_close(ket1, ket2)

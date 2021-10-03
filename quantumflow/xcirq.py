@@ -24,20 +24,15 @@ Interface between Google's Cirq and QuantumFlow
 # Conventions
 # cqc: Abbreviation for Cirq circuit
 
-try:
-    import cirq
-except ModuleNotFoundError as err:  # pragma: no cover
-    raise ModuleNotFoundError(
-        "External dependency 'cirq' not installed. Install with" " 'pip install cirq'"
-    ) from err
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from . import var
 from .circuits import Circuit
 from .gatesets import CIRQ_GATES
-from .ops import Operation, Unitary
-from .qubits import Qubit, Qubits
+from .ops import Unitary
+from .qubits import Qubit
 from .states import State, zero_state
 from .stdgates import (
     CCZ,
@@ -62,7 +57,11 @@ from .stdgates import (
     Z,
     ZPow,
 )
+from .stdops import Simulator
 from .translate.translations import circuit_translate
+
+if TYPE_CHECKING:
+    import cirq  # pragma: no cover
 
 __all__ = (
     "from_cirq_qubit",
@@ -74,7 +73,11 @@ __all__ = (
 )
 
 
-class CirqSimulator(Operation):
+_IMPORT_ERROR_MSG = """External dependency 'cirq' not installed. Install
+with 'pip install cirq'"""
+
+
+class CirqSimulator(Simulator):
     """Interface to the Cirq quantum simulator. Adapts a QF Circuit (or
     other sequence of Operations). Can itself be included in Circuits,
     like any other Operation.
@@ -83,17 +86,16 @@ class CirqSimulator(Operation):
     results will not be as accurate.
     """
 
-    def __init__(self, *elements: Operation) -> None:
-        self._circuit = Circuit(*elements)
-        self._cirq = circuit_to_cirq(self._circuit)
-
-        # TODO: Translate gates
-
-    @property
-    def qubits(self) -> Qubits:
-        return self._circuit.qubits
+    def __init__(self, circ: Circuit) -> None:
+        super().__init__(circ)
+        self._cqc = circuit_to_cirq(self.circuit, translate=True)
 
     def run(self, ket: State = None) -> State:
+        try:
+            import cirq
+        except ModuleNotFoundError as err:  # pragma: no cover
+            raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
         if ket is None:
             qubits = self.qubits
             ket = zero_state(qubits=qubits)
@@ -101,17 +103,22 @@ class CirqSimulator(Operation):
         tensor = ket.tensor.flatten()
         tensor = np.asarray(tensor, dtype=np.complex64)
         sim = cirq.Simulator()
-        res = sim.simulate(self._cirq, initial_state=tensor)
+        res = sim.simulate(self._cqc, initial_state=tensor)
         tensor = res.state_vector()  # type:ignore  # Needed for cirq <0.10.0
         return State(tensor, ket.qubits, ket.memory)
 
 
-def from_cirq_qubit(qb: cirq.Qid) -> Qubit:
+def from_cirq_qubit(qb: "cirq.Qid") -> Qubit:
     """
     Convert a cirq qubit (a subtype of Qid) into regular python type.
     A ``LineQubit`` becomes an int, a ``GridQubit`` becomes a tuple of two
     integers, and ``NamedQubit`` (and anything else) becomes a string
     """
+    try:
+        import cirq
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
     if isinstance(qb, cirq.LineQubit):
         return qb.x
     elif isinstance(qb, cirq.GridQubit):
@@ -121,12 +128,17 @@ def from_cirq_qubit(qb: cirq.Qid) -> Qubit:
     return str(qb)  # pragma: no cover
 
 
-def to_cirq_qubit(qubit: Qubit) -> cirq.Qid:
+def to_cirq_qubit(qubit: Qubit) -> "cirq.Qid":
     """Convert qubit names (any python object) into
     cirq qubits (subtypes of Qid). Returns either
     a LineQubit (for integers), GridQubit (for tuples of row and column),
     or a NamedQubit for all other objects.
     """
+    try:
+        import cirq
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
     if isinstance(qubit, int):
         return cirq.LineQubit(qubit)
     elif (
@@ -139,8 +151,12 @@ def to_cirq_qubit(qubit: Qubit) -> cirq.Qid:
     return cirq.NamedQubit(str(qubit))
 
 
-def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
+def cirq_to_circuit(cqc: "cirq.Circuit") -> Circuit:
     """Convert a Cirq circuit to a QuantumFlow circuit"""
+    try:
+        import cirq
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
     simple_gates = {
         cirq.CSwapGate: CSwap,
@@ -209,8 +225,12 @@ def cirq_to_circuit(cqc: cirq.Circuit) -> Circuit:
     return circ
 
 
-def circuit_to_cirq(circ: Circuit, translate: bool = False) -> cirq.Circuit:
+def circuit_to_cirq(circ: Circuit, translate: bool = False) -> "cirq.Circuit":
     """Convert a QuantumFlow circuit to a Cirq circuit."""
+    try:
+        import cirq
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
     if translate:
         circ = translate_to_cirq(circ)
