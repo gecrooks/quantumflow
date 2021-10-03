@@ -105,7 +105,7 @@ class DAGCircuit(Operation):
             G.add_edge(elem, qout, key=qubit)
 
     @property
-    def qubits(self) -> Qubits: 
+    def qubits(self) -> Qubits:
         return sorted_qubits(list(self._qubits_in.keys()))
 
     @property
