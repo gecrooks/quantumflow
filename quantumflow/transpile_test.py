@@ -9,6 +9,12 @@ import quantumflow as qf
 from quantumflow import xbraket, xcirq, xforest, xqiskit, xqutip
 from quantumflow.transpile import _guess_format, transpile
 
+pytest.importorskip("pyquil")  # noqa: 402
+pytest.importorskip("qsimcirq")  # noqa: 402
+pytest.importorskip("braket")  # noqa: 402
+pytest.importorskip("cirq")  # noqa: 402
+pytest.importorskip("qiskit")  # noqa: 402
+
 
 def test_guess_format() -> None:
 
