@@ -2,9 +2,9 @@
 
 ## Tutorial
 
-### Introductions: Gates, States, and Circuits
+1. Introductions: Gates, States, and Circuits
 
-### Translating between gate sets
+2. [Translating between gate sets](https://github.com/gecrooks/quantumflow-dev/blob/colab/notebooks/qf-tutorial-translate.ipynb)
 
-### Transpiling between quantum libraries
+3. [Transpiling between quantum libraries](https://github.com/gecrooks/quantumflow-dev/blob/colab/notebooks/qf-tutorial-transpile.ipynb)
 
