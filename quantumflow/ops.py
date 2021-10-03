@@ -290,6 +290,7 @@ class Operation(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def run(self, ket: State) -> State:
         """Apply the action of this operation upon a pure state"""
         raise NotImplementedError()

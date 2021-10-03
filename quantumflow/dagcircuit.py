@@ -42,6 +42,8 @@ class In(Operation):
     def tensor(self) -> QubitTensor:
         raise NotImplementedError()
 
+    def run(self, ket: State) -> State:
+        raise NotImplementedError()
 
 # DOCME
 class Out(Operation):
@@ -58,6 +60,8 @@ class Out(Operation):
     def tensor(self) -> QubitTensor:
         raise NotImplementedError()
 
+    def run(self, ket: State) -> State:
+        raise NotImplementedError()
 
 # FIXME: Design flaw!?
 # DAGCircuit fails if we try to add multi instances of the same gate
