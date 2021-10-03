@@ -49,7 +49,7 @@ import numpy as np
 import opt_einsum
 
 from . import tensors, utils
-from .qubits import Qubit, Qubits
+from .qubits import Qubit, Qubits, sorted_qubits
 from .tensors import QubitTensor
 
 if TYPE_CHECKING:
@@ -157,7 +157,7 @@ class QuantumState(ABC):
         ordering isn't supplied, we put qubits in sorted order.
         """
         if qubits is None:
-            qubits = sorted(self.qubits)
+            qubits = sorted_qubits(self.qubits)
         tensor = tensors.permute(self.tensor, self.qubit_indices(qubits))
         return self.replace(tensor=tensor, qubits=qubits)
 

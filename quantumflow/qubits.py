@@ -23,14 +23,12 @@ from typing import Any, Sequence
 
 from typing_extensions import Protocol  # py 3.7 compatibility.
 
-__all__ = ("Qubit", "Qubits")
+__all__ = ("Qubit", "Qubits", "sorted_qubits")
 
 
 class Qubit(Protocol):
     """Type for qubits. Any sortable and hashable python object.
     e.g. strings, integers, tuples of strings and integers, etc.
-    Qubits must be mutually sortable, so don't mix different types, e.g. integers
-    and strings.
     """
 
     def __lt__(self, other: Any) -> bool:
@@ -42,6 +40,15 @@ class Qubit(Protocol):
 
 Qubits = Sequence[Qubit]
 """Type for sequence of qubits"""
+
+
+def sorted_qubits(qbs: Qubits) -> Qubits:
+    """Return a sorted list of unique qubits in canonical order.
+
+    Qubits can be of different types, so we sort first by type (as a string),
+    then within types.
+    """
+    return tuple(sorted(list(set(qbs)), key=lambda x: (str(type(x)), x)))
 
 
 # fin
