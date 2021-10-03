@@ -62,7 +62,6 @@ from .stdgates import (
     Z,
     ZPow,
 )
-from .tensors import QubitTensor
 from .translate.translations import circuit_translate
 
 __all__ = (
@@ -105,10 +104,6 @@ class CirqSimulator(Operation):
         res = sim.simulate(self._cirq, initial_state=tensor)
         tensor = res.state_vector()  # type:ignore  # Needed for cirq <0.10.0
         return State(tensor, ket.qubits, ket.memory)
-
-    @property
-    def tensor(self) -> QubitTensor:
-        raise NotImplementedError()
 
 
 def from_cirq_qubit(qb: cirq.Qid) -> Qubit:
