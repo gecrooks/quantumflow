@@ -195,21 +195,21 @@ def cirq_to_circuit(cqc: "cirq.Circuit") -> Circuit:
             for q in qbs:
                 circ += I(q)
         elif gatetype in simple_gates:
-            circ += simple_gates[gatetype](*qbs)
+            circ += simple_gates[gatetype](*qbs)  # type: ignore
         elif gatetype in exponent_gates:
-            gate = exponent_gates[gatetype](*qbs)
+            gate = exponent_gates[gatetype](*qbs)  # type: ignore
             if t != 1:
                 gate **= t
             circ += gate
         elif gatetype in parity_gates:
-            circ += parity_gates[gatetype](t, *qbs)
+            circ += parity_gates[gatetype](t, *qbs)  # type: ignore
         elif gatetype.__name__ in decomposable_gates:
-            subcqc = cirq.Circuit(op._decompose_())
+            subcqc = cirq.Circuit(op._decompose_())  # type: ignore
             circ += cirq_to_circuit(subcqc)
         elif gatetype.__name__ == "FSimGate":
-            circ += FSim(op.gate.theta, op.gate.phi, *qbs)
+            circ += FSim(op.gate.theta, op.gate.phi, *qbs)  # type: ignore
         elif gatetype.__name__ == "MatrixGate":
-            matrix = op.gate._matrix
+            matrix = op.gate._matrix  # type: ignore
             circ += Unitary(matrix, qbs)
         elif gatetype.__name__ == "Rx":  # Added in cirq 0.11.0
             circ += X(*qbs) ** t
