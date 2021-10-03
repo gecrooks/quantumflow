@@ -85,6 +85,7 @@ OperationType = TypeVar("OperationType", bound="Operation")
 GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
+_EXCLUDED_OPERATIONS = set(["In", "Out", "NoWire"])
 
 OPERATIONS: Dict[str, "Operation"] = {}
 """All quantum operations (All non-abstract subclasses of Operation)"""
@@ -134,8 +135,12 @@ class Operation(ABC):
         # Note: The __init_subclass__ initializes all subclasses of a given class.
         # see https://www.python.org/dev/peps/pep-0487/
 
-        if not inspect.isabstract(cls):
-            OPERATIONS[cls.__name__] = cls
+        if inspect.isabstract(cls):
+            return
+
+        name = cls.__name__
+        if name not in _EXCLUDED_OPERATIONS:
+            OPERATIONS[name] = cls
 
     def __init__(
         self,
@@ -370,7 +375,11 @@ class Gate(Operation):
             return
 
         super().__init_subclass__()
-        GATES[cls.__name__] = cls
+
+        name = cls.__name__
+        if name not in _EXCLUDED_OPERATIONS:
+            GATES[name] = cls
+
 
     @property
     def hamiltonian(self) -> "Pauli":
@@ -598,7 +607,8 @@ class StdGate(Gate):
             return  # pragma: no cover
 
         super().__init_subclass__()
-        STDGATES[cls.__name__] = cls  # Subclass registration
+        if cls.__name__ not in _EXCLUDED_OPERATIONS:
+            STDGATES[cls.__name__] = cls  # Subclass registration
 
         # Parse the Gate arguments and number of qubits from the arguments to __init__
         # Convention is that qubit names start with "q", but arguments do not.
