@@ -186,7 +186,4 @@ def test_circuit_to_qasm() -> None:
     circuit_to_qasm(circ2, translate=False)
 
 
-# print(qc2)
-
-
 # fin

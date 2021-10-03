@@ -30,7 +30,9 @@ channels, circuits, or DAGCircuit's.
 
 """
 
+import inspect
 import textwrap
+from abc import abstractmethod
 from typing import (
     Any,
     Callable,
@@ -40,6 +42,7 @@ from typing import (
     Iterator,
     Sequence,
     Tuple,
+    Type,
     Union,
 )
 
@@ -49,7 +52,7 @@ from . import tensors, utils
 from .circuits import Circuit
 from .config import CIRCUIT_INDENT
 from .gates import P0, P1
-from .ops import Channel, Gate, Operation, Unitary
+from .ops import _EXCLUDED_OPERATIONS, Channel, Gate, Operation, Unitary
 from .qubits import Qubit, Qubits
 from .states import Density, State
 from .tensors import QubitTensor
@@ -68,6 +71,8 @@ __all__ = [
     "ProbabilityDisplay",
     "DensityDisplay",
     "Projection",
+    "Simulator",
+    "QFSimulator",
 ]
 
 
@@ -405,5 +410,55 @@ class DensityDisplay(Display):
     def __init__(self, key: Hashable, qubits: Qubits) -> None:
         super().__init__(key, lambda state: state.asdensity(qubits), qubits=qubits)
 
+
+SIMULATORS: Dict[str, Type["Simulator"]] = {}
+"""All quantum circuit simulators (All non-abstract subclasses of Simulator)"""
+
+
+class Simulator(Operation):
+    """A simulator of a quantum circuit.
+
+    Note that this is an abstract base class. Concrete subclasses must implement
+    run()
+    """
+
+    def __init_subclass__(cls) -> None:
+        name = cls.__name__
+        if inspect.isabstract(cls) or name in _EXCLUDED_OPERATIONS:
+            return  # pragma: no cover
+
+        super().__init_subclass__()
+        SIMULATORS[name] = cls
+
+    def __init__(self, circ: Circuit) -> None:
+        self.circuit = circ
+
+    @property
+    def qubits(self) -> Qubits:
+        return self.circuit.qubits
+
+    @property
+    def tensor(self) -> QubitTensor:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def run(self, ket: State = None) -> State:
+        raise NotImplementedError()
+
+
+# end class Simulator
+
+
+class QFSimulator(Simulator):
+    """Our standard QuantumnFlow quantum circuit simulator as a Simulator subclass."""
+
+    def run(self, ket: State = None) -> State:
+        return self.circuit.run(ket)
+
+    def evolve(self, rho: Density = None) -> Density:
+        return self.circuit.evolve(rho)
+
+
+# end class QFSimulator
 
 # fin

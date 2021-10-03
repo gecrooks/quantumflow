@@ -15,26 +15,21 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_to_qiskit
 """
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-
-try:
-    from braket.circuits import Circuit as bkCircuit
-    from braket.circuits.angled_gate import AngledGate as bkAngledGate
-    from braket.devices import LocalSimulator as bkLocalSimulator
-except ModuleNotFoundError as err:  # pragma: no cover
-    raise ModuleNotFoundError(
-        "External dependency 'braket' not installed. Install"
-        "with 'pip install amazon-braket-sdk'"
-    ) from err
-
 
 from .circuits import Circuit
 from .gatesets import BRAKET_GATES
-from .ops import Operation, StdGate
-from .qubits import Qubits
+from .ops import StdGate
 from .states import State
+from .stdops import Simulator
 from .translate import circuit_translate
 from .utils import invert_map
+
+if TYPE_CHECKING:
+    from braket.circuits import Circuit as bkCircuit  # pragma: no cover
+
 
 __all__ = [
     "BRAKET_GATES",
@@ -42,6 +37,10 @@ __all__ = [
     "circuit_to_braket",
     "translate_to_braket",
 ]
+
+
+_IMPORT_ERROR_MSG = """External dependency 'braket' not installed. Install
+with 'pip install amazon-braket-sdk'"""
 
 
 BRAKET_TO_QF = {
@@ -88,8 +87,13 @@ BRAKET_TO_QF = {
 # TODO: Unitary
 
 
-def braket_to_circuit(bkcircuit: bkCircuit) -> Circuit:
+def braket_to_circuit(bkcircuit: "bkCircuit") -> Circuit:
     """Convert a braket.Circuit to QuantumFlow's Circuit"""
+
+    try:
+        from braket.circuits.angled_gate import AngledGate as bkAngledGate
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
     circ = Circuit()
 
@@ -125,7 +129,7 @@ def braket_to_circuit(bkcircuit: bkCircuit) -> Circuit:
     return circ
 
 
-def circuit_to_braket(circ: Circuit, translate: bool = False) -> bkCircuit:
+def circuit_to_braket(circ: Circuit, translate: bool = False) -> "bkCircuit":
     """Convert a QuantumFlow's Circuit to a braket Circuit.
 
     Qubits are converted to contiguous integers if necessary.
@@ -135,7 +139,12 @@ def circuit_to_braket(circ: Circuit, translate: bool = False) -> bkCircuit:
     # is defined as a class, and then for each class a method is monkey patched onto
     # Circuit which will create that gate and append it to the circuit.
 
-    bkcircuit = bkCircuit()
+    try:
+        from braket.circuits import Circuit as braketCircuit
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
+    bkcircuit = braketCircuit()
     qbs = circ.qubits
 
     new_qbs = list(range(len(qbs)))
@@ -164,25 +173,22 @@ def translate_to_braket(circ: Circuit) -> Circuit:
     return circuit_translate(circ, targets=BRAKET_GATES)
 
 
-# FIXME: *elements? in __init__? Interface should be like circuit
-class BraketSimulator(Operation):
-    def __init__(self, *elements: Operation) -> None:
-        self._circuit = Circuit(*elements)
-
-    @property
-    def qubits(self) -> Qubits:
-        return self._circuit.qubits
-
+class BraketSimulator(Simulator):
     def run(self, ket: State = None) -> State:
+        try:
+            from braket.devices import LocalSimulator
+        except ModuleNotFoundError as err:  # pragma: no cover
+            raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
         if ket is not None:
             raise NotImplementedError("Initial ket not supported")
 
-        circ = self._circuit
+        circ = self.circuit
 
         bkcircuit = circuit_to_braket(circ, translate=True)
         bkcircuit.state_vector()
 
-        device = bkLocalSimulator()
+        device = LocalSimulator()
         result = device.run(bkcircuit).result()
         tensor = result.values[0]
 
