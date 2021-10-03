@@ -10,7 +10,6 @@ Unit tests for quantumflow.xbraket
 import numpy as np
 import pytest
 
-
 import quantumflow as qf
 from quantumflow.xbraket import (
     BraketSimulator,
