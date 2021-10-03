@@ -68,15 +68,7 @@ Fredkin                     CSwap       FREDKIN
 # qrot
 # QASMU
 
-from typing import Dict, Type, cast
-
-try:
-    from qutip.qip.circuit import QubitCircuit, _ctrl_gates, _para_gates
-except ModuleNotFoundError as err:  # pragma: no cover
-    raise ModuleNotFoundError(
-        "External dependency 'qutip' not installed. Install" "with 'pip install qutip'"
-    ) from err
-
+from typing import TYPE_CHECKING, Dict, Type, cast
 
 from . import var
 from .circuits import Circuit
@@ -112,7 +104,14 @@ from .stdgates import (  # B,; Exch,
 from .translate import circuit_translate
 from .utils import invert_map
 
+if TYPE_CHECKING:
+    import QubitCircuit
+
 __all__ = ("qutip_to_circuit", "circuit_to_qutip", "translate_to_qutip", "QUTIP_GATES")
+
+
+_IMPORT_ERROR_MSG = """External dependency 'qutip' not installed. Install
+with 'pip install qutip'"""
 
 
 _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
@@ -152,7 +151,7 @@ _QUTIP_NAME_GATES = invert_map(_QUTIP_GATE_NAMES)
 # _QUTIP_NAME_GATES["CSIGN"] = CZ
 
 
-def qutip_to_circuit(qubitcircuit: QubitCircuit) -> Circuit:
+def qutip_to_circuit(qubitcircuit: "QubitCircuit") -> Circuit:
     """Convert a QuTiP circuit to a QuantumFlow circuit"""
     QUTIP_NAME_GATES = invert_map(_QUTIP_GATE_NAMES)
     circ = Circuit()
@@ -184,8 +183,12 @@ def qutip_to_circuit(qubitcircuit: QubitCircuit) -> Circuit:
     return circ
 
 
-def circuit_to_qutip(circ: Circuit, translate: bool = False) -> QubitCircuit:
+def circuit_to_qutip(circ: Circuit, translate: bool = False) -> "QubitCircuit":
     """Convert a QuantumFlow circuit to a QuTiP circuit."""
+    try:
+        from qutip.qip.circuit import QubitCircuit, _ctrl_gates, _para_gates
+    except ModuleNotFoundError as err:  # pragma: no cover
+        raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
     if translate:
         circ = translate_to_qutip(circ)
