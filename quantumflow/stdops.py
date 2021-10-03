@@ -53,7 +53,7 @@ from .circuits import Circuit
 from .config import CIRCUIT_INDENT
 from .gates import P0, P1
 from .ops import _EXCLUDED_OPERATIONS, Channel, Gate, Operation, Unitary
-from .qubits import Qubit, Qubits
+from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State
 from .tensors import QubitTensor
 from .var import Variable
@@ -292,9 +292,8 @@ class Projection(Operation):
     def __init__(self, states: Sequence[State]):
         self.states = states
 
-        qbs = [q for state in self.states for q in state.qubits]  # gather
-        qbs = list(set(qbs))  # unique
-        qbs = sorted(qbs)  # sort
+        # gather, unique, and sort
+        qbs = sorted_qubits(list([q for state in self.states for q in state.qubits]))
 
         super().__init__(qbs)
 

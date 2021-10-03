@@ -19,7 +19,7 @@ from . import utils
 from .circuits import Circuit
 from .config import CIRCUIT_INDENT
 from .ops import Channel, Gate, Operation, Unitary
-from .qubits import Qubit, Qubits
+from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State
 from .stdops import Moment
 
@@ -105,10 +105,8 @@ class DAGCircuit(Operation):
             G.add_edge(elem, qout, key=qubit)
 
     @property
-    def qubits(self) -> Qubits:
-        qbs = list(self._qubits_in.keys())
-        qbs = sorted(qbs)
-        return tuple(qbs)
+    def qubits(self) -> Qubits: 
+        return sorted_qubits(list(self._qubits_in.keys()))
 
     @property
     def qubit_nb(self) -> int:

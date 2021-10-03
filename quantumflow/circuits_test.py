@@ -131,10 +131,9 @@ def test_implicit_state() -> None:
     ket = circ.run()  # Implicit state
     assert len(ket.qubits) == 2
 
-    with pytest.raises(TypeError):
-        # Should fail because qubits aren't sortable, so no standard ordering
-        circ += qf.YPow(1 / 2, "namedqubit")
-        circ.qubits
+    # Mixed qubits types are now fine.
+    circ += qf.YPow(1 / 2, "namedqubit")
+    circ.qubits
 
 
 def test_elements() -> None:

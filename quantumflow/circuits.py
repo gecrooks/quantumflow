@@ -61,7 +61,7 @@ import numpy as np
 
 from .config import CIRCUIT_INDENT
 from .ops import Channel, Gate, Operation
-from .qubits import Qubit, Qubits
+from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State, zero_state
 from .stdgates import CZ, ZZ, CCNot, CNot, H, X, XPow, YPow, ZPow
 from .var import Variable
@@ -87,11 +87,6 @@ class Circuit(Sequence, Operation):
     These can be any quantum Operation, including other circuits.
     """
 
-    # def __init__(self, *elements: Union[Iterable[Operation], Operation]) -> None:
-    #     # Legacy interface (TODO: Raise warning)
-    #     if len(elements) == 1 and isinstance(elements[0], Iterable):
-    #         elements = elements[0]  # type: ignore
-
     def __init__(
         self, *elements: Union[Iterable[Operation], Operation], qubits: Qubits = None
     ) -> None:
@@ -105,7 +100,7 @@ class Circuit(Sequence, Operation):
         qbs = [q for elem in elements for q in elem.qubits]  # type: ignore
 
         if qubits is None:
-            qubits = sorted(list(set(qbs)))  # unique and sort
+            qubits = sorted_qubits(list(set(qbs)))  # unique and sort
         else:
             if not set(qbs).issubset(qubits):
                 raise ValueError(

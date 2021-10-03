@@ -61,7 +61,7 @@ from scipy import linalg
 
 from . import tensors, utils
 from .ops import Channel, Gate, Operation, UnitaryGate
-from .qubits import Qubit, Qubits
+from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State
 from .stdgates import I, X, Y, Z
 
@@ -142,10 +142,9 @@ class Kraus(Operation):
         Raises:
             TypeError: If qubits cannot be sorted into unique order.
         """
-        qbs = [q for elem in self.operators for q in elem.qubits]  # gather
-        qbs = list(set(qbs))  # unique
-        qbs = sorted(qbs)  # sort
-        return tuple(qbs)
+        # gather, unique, and sort
+        qbs = sorted_qubits(list(q for elem in self.operators for q in elem.qubits))
+        return qbs
 
     @property
     def H(self) -> "Kraus":
