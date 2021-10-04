@@ -51,6 +51,9 @@ jobs:
     - name: Build documentation with sphinx
       run: |
         sphinx-build -M html docs docs/_build
+    - name: Test notebooks (against master)
+      run: |
+        pytest --nbmake tutorial
     - name: Test with all supported minor versions of cirq
       run: |
         python -m pip install cirq~=0.8.0
