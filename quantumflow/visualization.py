@@ -464,7 +464,7 @@ QUANTIKZ_FOOTER_ = r"""
 # TODO: Use psflatex python package
 
 
-def latex_to_image(latex: str) -> Image:  # pragma: no cover
+def latex_to_image(latex: str) -> Image:
     """
     Convert a single page LaTeX document into an image.
 
@@ -509,7 +509,7 @@ def latex_to_image(latex: str) -> Image:  # pragma: no cover
     return img
 
 
-def circuit_to_image(circ: Circuit, qubits: Qubits = None) -> Image:  # pragma: no cover
+def circuit_to_image(circ: Circuit, qubits: Qubits = None) -> Image:
     """Create an image of a quantum circuit.
 
     A convenience function that calls circuit_to_latex() and latex_to_image().
