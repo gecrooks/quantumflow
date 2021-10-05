@@ -124,8 +124,9 @@ class Operation(ABC):
     cv_qubit_nb: ClassVar[int] = None
     """The number of qubits, for operations with a fixed number of qubits"""
 
-    cv_args: Tuple[str, ...] = ()
-    """The names of the parameters for this operation"""
+    cv_args: ClassVar[Optional[Tuple[str, ...]]] = None
+    """The names of the parameters for this operation (For operations with a fixed number
+    of float parameters)"""
 
     _diagram_labels: ClassVar[Optional[Sequence[str]]] = None
     """Override default labels for drawing text circuit diagrams.
