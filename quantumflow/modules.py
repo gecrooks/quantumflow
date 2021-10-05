@@ -76,7 +76,6 @@ from .stdgates import CNot, I, Ry, Rz, Swap, XPow, YPow, ZPow
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
-
 __all__ = (
     "IdentityGate",
     "PauliGate",
