@@ -11,12 +11,12 @@ import numpy as np
 
 from .. import tensors, var
 from ..config import SWAP_TARGET
-from ..ops import StdGate
 from ..paulialgebra import Pauli
 from ..qubits import Qubit
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import Variable
+from .stdgate import StdGate
 from .stdgates_1q import I, X, XPow, ZPow
 from .stdgates_2q import CZ, Swap
 

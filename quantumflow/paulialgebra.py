@@ -305,9 +305,7 @@ class Pauli(Operation):
 
         # Late import to prevent circular imports
         from .modules import IdentityGate
-        from .ops import StdGate
-
-        NAMED_GATES = StdGate.cv_stdgates
+        from .stdgates import STDGATES as NAMED_GATES
 
         qubits = self.qubits if qubits is None else qubits
         if self.is_zero():
@@ -326,9 +324,7 @@ class Pauli(Operation):
 
     # TESTME
     def run(self, ket: State) -> State:
-        from .ops import StdGate
-
-        NAMED_GATES = StdGate.cv_stdgates
+        from .stdgates import STDGATES as NAMED_GATES
 
         resultants = []
         for qbs, ops, coeff in self.terms:

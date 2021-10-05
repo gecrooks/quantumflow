@@ -22,7 +22,8 @@ from typing import TYPE_CHECKING
 from . import utils
 from .circuits import Circuit
 from .gatesets import QUIL_GATES
-from .ops import Gate, StdGate
+from .ops import Gate
+from .stdgates import StdGate
 from .stdops import Measure
 from .translate import circuit_translate
 

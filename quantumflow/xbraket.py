@@ -21,8 +21,8 @@ import numpy as np
 
 from .circuits import Circuit
 from .gatesets import BRAKET_GATES
-from .ops import StdGate
 from .states import State
+from .stdgates import STDGATES
 from .stdops import Simulator
 from .translate import circuit_translate
 from .utils import invert_map
@@ -122,7 +122,7 @@ def braket_to_circuit(bkcircuit: "bkCircuit") -> Circuit:
         else:
             args = qubits
 
-        gate = StdGate.cv_stdgates[qf_name](*args)
+        gate = STDGATES[qf_name](*args)
 
         circ += gate
 

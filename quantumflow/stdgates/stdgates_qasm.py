@@ -108,12 +108,12 @@ import numpy as np
 
 from .. import tensors
 from ..config import CTRL
-from ..ops import StdGate
 from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import Variable
+from .stdgate import StdGate
 from .stdgates_1q import PhaseShift, Rx, Ry, Rz
 from .stdgates_2q import XX, YY, ZZ, CNot
 from .stdgates_forest import CPhase

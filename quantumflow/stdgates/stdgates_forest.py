@@ -11,12 +11,12 @@ import numpy as np
 
 from .. import tensors, var
 from ..config import CTRL, NCTRL
-from ..ops import StdGate
 from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import Variable
+from .stdgate import StdGate
 
 __all__ = ("CPhase", "CPhase00", "CPhase01", "CPhase10", "PSwap")
 

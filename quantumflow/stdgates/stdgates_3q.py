@@ -11,12 +11,12 @@ import numpy as np
 
 from .. import tensors, utils, var
 from ..config import CTRL, SWAP_TARGET, TARGET
-from ..ops import StdGate
 from ..paulialgebra import Pauli, sX, sZ
 from ..qubits import Qubit
 from ..states import State
 from ..tensors import QubitTensor
 from ..var import PI, Variable
+from .stdgate import StdGate
 from .stdgates_2q import CZ, CNot, ISwap, Swap
 
 # 3-qubit gates, in alphabetic order

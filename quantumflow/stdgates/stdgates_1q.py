@@ -13,12 +13,12 @@ import numpy as np
 
 from .. import tensors, utils, var
 from ..config import CONJ, SQRT
-from ..ops import StdGate
 from ..paulialgebra import Pauli, sI, sX, sY, sZ
 from ..qubits import Qubit
 from ..states import Density, State
 from ..tensors import QubitTensor
 from ..var import PI, Variable
+from .stdgate import StdGate
 
 __all__ = (
     "I",

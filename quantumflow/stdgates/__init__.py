@@ -4,10 +4,6 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-# Standard Gates
-
-# FIXME: Ordering of gates in docs
-
 """
 .. contents:: :local:
 .. currentmodule:: quantumflow
@@ -15,6 +11,11 @@
 
 Standard gates
 ##############
+
+In QuantumFlow a gate is a unitary operator acting on a specific collection of qubits.
+A standard gate (subclasses of `StdGate`) are gates with a name, with zero or more
+parameters, acting on a fixed number of qubits.
+
 
 .. autoclass:: StdGate
     :members:
@@ -216,6 +217,7 @@ products of single qubit gates.
 # Note: see comments in gates_qasm.py to understand the QASM gate mappings.
 
 
+from .stdgate import *  # noqa: F401, F403
 from .stdgates_1q import *  # noqa: F401, F403
 from .stdgates_2q import *  # noqa: F401, F403
 from .stdgates_3q import *  # noqa: F401, F403
