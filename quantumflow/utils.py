@@ -7,6 +7,9 @@
 Useful routines not necessarily intended to be part of the public API.
 """
 
+import os
+import subprocess
+import tempfile
 import warnings
 from fractions import Fraction
 from functools import wraps
@@ -27,6 +30,7 @@ from typing import (
 
 import networkx as nx
 import numpy as np
+from PIL import Image
 
 __all__ = (
     # Future
@@ -50,6 +54,8 @@ __all__ = (
     "spanning_tree_count",
     "octagonal_tiling_graph",
     "truncated_grid_2d_graph",
+    # Other
+    "latex_to_image",
 )
 
 
@@ -387,6 +393,60 @@ def truncated_grid_2d_graph(m: int, n: int, t: int = None) -> nx.Graph:
             G.remove_node((mm, n - nn - 1))
             G.remove_node((m - mm - 1, n - nn - 1))
     return G
+
+
+# -- Other --
+
+
+def latex_to_image(latex: str) -> Image:
+    """
+    Convert a single page LaTeX document into an image.
+
+    To display the returned image, `img.show()`
+
+
+    Required external dependencies: `pdflatex`,
+    and `poppler` (for `pdftocairo`).
+
+    Args:
+        A LaTeX document as a string.
+
+    Returns:
+        A PIL Image
+
+    Raises:
+        OSError: If an external dependency is not installed.
+    """
+    # NB: There is a python pdflatex wrapper but it seems to be abandoned
+    # TODO: Handle unicode via xelatex?
+
+    tmpfilename = "circ"
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        tmppath = os.path.join(tmpdirname, tmpfilename)
+        with open(tmppath + ".tex", "w") as latex_file:
+            latex_file.write(latex)
+
+        subprocess.run(
+            [
+                "pdflatex",
+                "-halt-on-error",
+                f"-output-directory={tmpdirname}",
+                f"{tmpfilename}.tex",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+
+        subprocess.run(
+            ["pdftocairo", "-singlefile", "-png", "-q", tmppath + ".pdf", tmppath]
+        )
+        img = Image.open(tmppath + ".png")
+
+    return img
+
+
+# end latex_to_image
 
 
 # fin
