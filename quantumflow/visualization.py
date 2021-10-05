@@ -8,14 +8,13 @@
 QuantumFlow: Visualizations of quantum circuits,
 """
 
-import os
 import re
-import subprocess
-import tempfile
 from typing import Any, Dict, List, Sequence, TextIO
 
 import numpy as np
+import pdf2image
 import sympy
+from pdflatex import PDFLaTeX
 from PIL import Image
 from sympy import Symbol
 
@@ -461,8 +460,6 @@ QUANTIKZ_FOOTER_ = r"""
 
 
 # TODO: Handle unicode via xelatex?
-# TODO: Use psflatex python package
-
 
 def latex_to_image(latex: str) -> Image:
     """
@@ -471,7 +468,7 @@ def latex_to_image(latex: str) -> Image:
     To display the returned image, `img.show()`
 
 
-    Required external dependencies: `pdflatex` (with `qcircuit` package),
+    Required external dependencies: `pdflatex` (with `quantikz` package),
     and `poppler` (for `pdftocairo`).
 
     Args:
@@ -483,30 +480,11 @@ def latex_to_image(latex: str) -> Image:
     Raises:
         OSError: If an external dependency is not installed.
     """
-    tmpfilename = "circ"
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        tmppath = os.path.join(tmpdirname, tmpfilename)
-        with open(tmppath + ".tex", "w") as latex_file:
-            latex_file.write(latex)
 
-        subprocess.run(
-            [
-                "pdflatex",
-                "-halt-on-error",
-                f"-output-directory={tmpdirname}",
-                f"{tmpfilename}.tex",
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            check=True,
-        )
-
-        subprocess.run(
-            ["pdftocairo", "-singlefile", "-png", "-q", tmppath + ".pdf", tmppath]
-        )
-        img = Image.open(tmppath + ".png")
-
-    return img
+    pdf, _, _ = PDFLaTeX.from_binarystring(latex.encode(), "circuit").create_pdf()
+    images = pdf2image.convert_from_bytes(pdf)
+    assert len(images) == 1
+    return images[0]
 
 
 def circuit_to_image(circ: Circuit, qubits: Qubits = None) -> Image:
