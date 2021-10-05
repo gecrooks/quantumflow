@@ -31,7 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         python -m pip install .[dev]  # install package + test dependencies   
-        sudo apt-get install texlive texlive-latex-extra latexmk
+        sudo apt-get install texlive texlive-latex-extra latexmk pdflatex
         mkdir -p ~/texmf/tex/latex
         wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex -P ~/texmf/tex/latex  
     - name: About
