@@ -72,11 +72,10 @@ from .ops import Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
-from .stdgates import CNot, H, I, Ry, Rz, Swap, XPow, YPow, ZPow
+from .stdgates import CNot, I, Ry, Rz, Swap, XPow, YPow, ZPow
 from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
-H_ = H  # NB: Workaround for name conflict with Gate.H
 
 __all__ = (
     "IdentityGate",
