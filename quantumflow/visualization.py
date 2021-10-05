@@ -8,7 +8,10 @@
 QuantumFlow: Visualizations of quantum circuits,
 """
 
+import os
 import re
+import subprocess
+import tempfile
 from typing import Any, Dict, List, Sequence, TextIO
 
 import numpy as np
@@ -29,6 +32,7 @@ from .stdops import Reset
 __all__ = (
     "LATEX_GATESET",
     "circuit_to_latex",
+    "latex_to_image",
     "circuit_to_image",
     "circuit_to_diagram",
     "print_gate",
@@ -456,18 +460,19 @@ QUANTIKZ_FOOTER_ = r"""
 """
 
 
-def circuit_to_image(circ: Circuit) -> Image:
-    """Create an image of a quantum circuit.
+# TODO: Handle unicode via xelatex?
+# TODO: Use psflatex python package
+
+
+def latex_to_image(latex: str) -> Image:
+    """
+    Convert a single page LaTeX document into an image.
 
     To display the returned image, `img.show()`
 
 
-    Requires a LaTeX installation with `pdflatex`, `quantikz`,
-    and `poppler`. These can be installed as follows:
-
-        $ sudo apt-get install texlive texlive-latex-extra latexmk poppler-utils
-        $ mkdir -p ~/texmf/tex/latex
-        $ wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex -P ~/texmf/tex/latex
+    Required external dependencies: `pdflatex` (with `qcircuit` package),
+    and `poppler` (for `pdftocairo`).
 
     Args:
         A LaTeX document as a string.
@@ -477,7 +482,37 @@ def circuit_to_image(circ: Circuit) -> Image:
 
     Raises:
         OSError: If an external dependency is not installed.
+    """
+    tmpfilename = "circ"
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        tmppath = os.path.join(tmpdirname, tmpfilename)
+        with open(tmppath + ".tex", "w") as latex_file:
+            latex_file.write(latex)
 
+        subprocess.run(
+            [
+                "pdflatex",
+                "-halt-on-error",
+                f"-output-directory={tmpdirname}",
+                f"{tmpfilename}.tex",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+
+        subprocess.run(
+            ["pdftocairo", "-singlefile", "-png", "-q", tmppath + ".pdf", tmppath]
+        )
+        img = Image.open(tmppath + ".png")
+
+    return img
+
+
+def circuit_to_image(circ: Circuit, qubits: Qubits = None) -> Image:
+    """Create an image of a quantum circuit.
+
+    A convenience function that calls circuit_to_latex() and latex_to_image().
 
     Args:
         circ:       A quantum Circuit
@@ -489,11 +524,9 @@ def circuit_to_image(circ: Circuit) -> Image:
     Raises:
         NotImplementedError: For unsupported gates.
         OSError: If an external dependency is not installed.
-    """  # noqa: E501
-    # Kudos: LaTeX installation instructions adapted from tket
-
-    latex = circuit_to_latex(circ)
-    img = utils.latex_to_image(latex)
+    """
+    latex = circuit_to_latex(circ, qubits)
+    img = latex_to_image(latex)
     return img
 
 
