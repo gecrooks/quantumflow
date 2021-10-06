@@ -78,12 +78,6 @@ BRAKET_TO_QF = {
 }
 """Map from braket operation names to QuantumFlow names"""
 
-# TODO: use as test
-# BRAKET_GATES: Tuple[Type[Gate], ...] = tuple(
-#     set([StdGate.cv_stdgates[n] for n in BRAKET_TO_QF.values()])
-# )
-# """Tuple of QuantumFlow gates that we can convert directly to braket"""
-
 # TODO: Unitary
 
 

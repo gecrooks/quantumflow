@@ -46,12 +46,7 @@ class StdGate(Gate):
     expression), and qubits have type Qubit (Any hashable python type).
     """
 
-    # deprecated. Use STDGATES
-    cv_stdgates: ClassVar[Dict[str, Type["StdGate"]]] = {}
-    """A dictionary between names and types for all StdGate subclasses"""
-
     def __init_subclass__(cls) -> None:
-
         super().__init_subclass__()
 
         if cls.__name__ not in _EXCLUDED_OPERATIONS:
@@ -63,14 +58,11 @@ class StdGate(Gate):
         args = tuple(s for s in names if s[0] != "q" and s != "return")
         qubit_nb = len(names) - len(args)
         if "return" in names:
-            # For unknown reasons, "return" is often (but not always) in names.
+            # For unclear reasons, "return" is often (but not always?) in names.
             qubit_nb -= 1
 
         cls.cv_args = args
         cls.cv_qubit_nb = qubit_nb
-
-        # deprecated
-        cls.cv_stdgates[cls.__name__] = cls  # Subclass registration
 
     def __repr__(self) -> str:
         args: List[str] = []

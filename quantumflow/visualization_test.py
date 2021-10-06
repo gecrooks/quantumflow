@@ -158,7 +158,7 @@ def test_stdgates_latex_to_image(gatename: str) -> None:
     if gatename not in qf.LATEX_GATESET:
         print("Latex not supported:", gatename)
         return
-    gatet = qf.StdGate.cv_stdgates[gatename]
+    gatet = qf.STDGATES[gatename]
     gate = _randomize_gate(gatet)
     circ = qf.Circuit(gate)
     latex = qf.circuit_to_latex(circ)
@@ -169,7 +169,7 @@ def test_stdgates_latex_to_image(gatename: str) -> None:
 
 @pytest.mark.parametrize("gatename", qf.STDGATES.keys())
 def test_circuit_to_diagram_stdgates(gatename: str) -> None:
-    gatet = qf.StdGate.cv_stdgates[gatename]
+    gatet = qf.STDGATES[gatename]
     gate = _randomize_gate(gatet)
     circ = qf.Circuit(gate)
     diag = qf.circuit_to_diagram(circ)

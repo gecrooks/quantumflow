@@ -258,8 +258,8 @@ class Initialize(Operation):
     # TODO: aschannel? __str___?
 
 
-# TODO: Could be a Gate
 # FIXME: Interface
+# FIXME: make interface standard for Barrier and other ops
 class Barrier(Operation):
     """An operation that prevents reordering of operations across the barrier.
     Has no effect on the quantum state."""
