@@ -1,6 +1,6 @@
 # This workflow will install the python package and dependencies, and run tests against a variety of Python versions
 
-name: Build
+name: test-notebooks
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.7']  # python 3.7 becuase that's what colab has
 
     steps:
     - uses: actions/checkout@v2
