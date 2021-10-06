@@ -11,12 +11,25 @@ A module for obsolete functions and classes, where they can live out
 their pitiful existence of quite desperation.
 """
 
-from .gates import P0, P1, join_gates
-from .ops import Gate, UnitaryGate
+from . import tensors
+from .ops import Gate, Unitary, UnitaryGate
 from .qubits import Qubit
+from .stdops import Project0, Project1
 from .utils import deprecated
 
-__all__ = ("conditional_gate",)
+__all__ = (
+    "join_gates",
+    "conditional_gate",
+)
+
+
+# DOCME: Can also use circuit.asgate()
+# Deprecate. No longer used anywhere?
+def join_gates(gate0: Gate, gate1: Gate) -> Unitary:
+    """Direct product of gates. Qubit count is the sum of each gate's
+    bit count."""
+    tensor = tensors.outer(gate0.tensor, gate1.tensor, rank=2)
+    return Unitary(tensor, tuple(gate0.qubits) + tuple(gate1.qubits))
 
 
 # Replaced by ConditionalGate
@@ -29,8 +42,8 @@ def conditional_gate(control: Qubit, gate0: Gate, gate1: Gate) -> UnitaryGate:
     """
     assert gate0.qubits == gate1.qubits  # FIXME
 
-    tensor = join_gates(P0(control), gate0).tensor
-    tensor += join_gates(P1(control), gate1).tensor
+    tensor = join_gates(Project0(control), gate0).tensor
+    tensor += join_gates(Project1(control), gate1).tensor
     gate = UnitaryGate(tensor, (control,) + tuple(gate0.qubits))
     return gate
 

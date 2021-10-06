@@ -42,7 +42,7 @@ __all__ = "circuit_to_quirk", "quirk_url", "open_quirk_webserver", "QUIRK_GATES"
 #
 # Displays
 #
-# P0, P1
+# Project0, Project1
 #
 # Add QUIRK_OPS
 # TODO: Docs

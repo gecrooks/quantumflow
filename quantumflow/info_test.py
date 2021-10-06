@@ -158,7 +158,7 @@ def test_bures_distance(repeat: int) -> None:
 
 def test_bures_angle() -> None:
     rho = qf.random_density(4)
-    assert np.isclose(qf.bures_angle(rho, rho), 0.0, atol=ATOL * 10)
+    assert np.isclose(qf.bures_angle(rho, rho), 0.0, atol=ATOL * 20)
 
     rho1 = qf.random_density(4)
     qf.bures_angle(rho, rho1)

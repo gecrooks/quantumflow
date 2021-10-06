@@ -1,4 +1,5 @@
-# Copyright 2020-, Gavin E. Crooks and contributors
+# Copyright 2019-, Gavin E. Crooks and contributors
+# Copyright 2016-2018, Rigetti Computing
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
@@ -19,7 +20,7 @@ sequence. Circuits can contain any instance of the abstract quantum operation
 superclass, Operation, including other circuits.
 
 Quantum operations are immutable, and transformations of these operations return
-new copies. (With the exception of the composite operation DAGCircuit.)
+new copies.
 
 The main types of Operation's are Gate, UnitaryGate, StdGate, Channel, Circuit,
 DAGCircuit, and Pauli.
@@ -64,16 +65,15 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike  # pragma: no cover
 
     from .paulialgebra import Pauli  # pragma: no cover
+    from .stdgates import StdGate  # noqa:F401  # pragma: no cover
 
 
 __all__ = [
     "Operation",
     "Gate",
-    "StdGate",
     "UnitaryGate",
     "Channel",
     "Unitary",
-    "STDGATES",
     "OPERATIONS",
     "GATES",
 ]
@@ -86,19 +86,18 @@ GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
 
-_EXCLUDED_OPERATIONS = set(["Operation", "Gate", "StdGate", "In", "Out", "NoWire"])
+_EXCLUDED_OPERATIONS = set(
+    ["Operation", "Gate", "StdGate", "StdCtrlGate", "In", "Out", "NoWire"]
+)
 # Names of operations to exclude from registration. Includes (effectively) abstract base
 # classes and internal operations.
 
 
-OPERATIONS: Dict[str, "Type[Operation]"] = {}
+OPERATIONS: Dict[str, Type["Operation"]] = {}
 """All quantum operations (All non-abstract subclasses of Operation)"""
 
-GATES: Dict[str, "Type[Gate]"] = {}
+GATES: Dict[str, Type["Gate"]] = {}
 """All gates (All non-abstract subclasses of Gate)"""
-
-STDGATES: Dict[str, "Type[StdGate]"] = {}
-"""All standard gates (All non-abstract subclasses of StdGate)"""
 
 
 @total_ordering
@@ -124,16 +123,9 @@ class Operation(ABC):
     cv_qubit_nb: ClassVar[int] = None
     """The number of qubits, for operations with a fixed number of qubits"""
 
-    cv_args: Tuple[str, ...] = ()
-    """The names of the parameters for this operation"""
-
-    _diagram_labels: ClassVar[Optional[Sequence[str]]] = None
-    """Override default labels for drawing text circuit diagrams.
-    See visualizations.circuit_to_diagram()"""
-
-    _diagram_noline: ClassVar[bool] = False
-    """Override default to not draw a line between qubit wires for multi-qubit
-    operations. See visualizations.circuit_to_diagram()"""
+    cv_args: ClassVar[Optional[Tuple[str, ...]]] = None
+    """The names of the parameters for this operation (For operations with a fixed number
+    of float parameters)"""
 
     def __init_subclass__(cls) -> None:
         # Note: The __init_subclass__ initializes all subclasses of a given class.
@@ -233,7 +225,7 @@ class Operation(ABC):
         """
         return var.asfloat(self.param(name), subs)
 
-    def resolve(self, subs: Mapping[str, float]) -> "Operation":
+    def resolve(self: OperationType, subs: Mapping[str, float]) -> OperationType:
         """Resolve symbolic parameters"""
         # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
@@ -329,6 +321,24 @@ class Operation(ABC):
         from .circuits import Circuit
 
         return Circuit(self)._repr_html_()
+
+    def _diagram_labels_(self) -> List[str]:
+        """Labels for text-based circuit diagrams.
+
+
+        Multi-qubit operations should either return one label per
+        qubit (which are then connected with vertical lines) or a
+        single label, which will be replicated onto all qubits and
+        not connected with vertical lines.
+        """
+        N = self.qubit_nb
+        labels = [self.name] * N
+        if N != 1 and not self.cv_interchangeable:
+            # If not interchangeable, we have to label connections
+            for i in range(N):
+                labels[i] = labels[i] + "_%s" % i
+
+        return labels
 
 
 # End class Operation
@@ -576,64 +586,11 @@ class UnitaryGate(Gate):
 
 # End class UnitaryGate
 
-# Deprecated Legacy
+# Deprecated. Renamed to UnitaryGate
 Unitary = UnitaryGate
 
 
-class StdGate(Gate):
-    """
-    A standard gate. Standard gates have a name, a fixed number of real
-    parameters, and act upon a fixed number of qubits.
-
-    e.g. Rx(theta, q0), CNot(q0, q1), Can(tx, ty, tz, q0, q1, q2)
-
-    In the argument list, parameters are first, then qubits. Parameters
-    have type Variable (either a concrete floating point number, or a symbolic
-    expression), and qubits have type Qubit (Any hashable python type).
-    """
-
-    # deprecated. Use STDGATES
-    cv_stdgates: Dict[str, Type["StdGate"]] = {}
-    """A dictionary between names and types for all StdGate subclasses"""
-
-    def __init_subclass__(cls) -> None:
-        # Note: The __init_subclass__ initializes all subclasses of a given class.
-        # see https://www.python.org/dev/peps/pep-0487/
-
-        if inspect.isabstract(cls):
-            return  # pragma: no cover
-
-        super().__init_subclass__()
-        if cls.__name__ not in _EXCLUDED_OPERATIONS:
-            STDGATES[cls.__name__] = cls  # Subclass registration
-
-        # Parse the Gate arguments and number of qubits from the arguments to __init__
-        # Convention is that qubit names start with "q", but arguments do not.
-        names = getattr(cls, "__init__").__annotations__.keys()
-        args = tuple(s for s in names if s[0] != "q" and s != "return")
-        qubit_nb = len(names) - len(args)
-        if "return" in names:
-            # For unknown reasons, "return" is often (but not always) in names.
-            qubit_nb -= 1
-
-        cls.cv_args = args
-        cls.cv_qubit_nb = qubit_nb
-
-        # deprecated
-        cls.cv_stdgates[cls.__name__] = cls  # Subclass registration
-
-    def __repr__(self) -> str:
-        args: List[str] = []
-        args.extend(str(p) for p in self.params)
-        args.extend(str(qubit) for qubit in self.qubits)
-        fargs = ", ".join(args)
-
-        return f"{self.name}({fargs})"
-
-
-# End class StdGate
-
-
+# FIXME, more like UnitaryGate, with a 'Channel' superclass that's like Gate
 class Channel(Operation):
     """A quantum channel"""
 

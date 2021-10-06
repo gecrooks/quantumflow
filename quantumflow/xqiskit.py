@@ -26,8 +26,8 @@ from typing import TYPE_CHECKING
 
 from .circuits import Circuit
 from .gatesets import QISKIT_GATES
-from .ops import STDGATES
 from .states import State
+from .stdgates import STDGATES
 from .stdops import If, Initialize, Simulator
 from .translate import circuit_translate
 from .utils import invert_map

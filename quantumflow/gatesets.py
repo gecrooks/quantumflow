@@ -20,7 +20,6 @@ Collections of gates and operations
 
 from typing import Set, Type
 
-from .gates import P0, P1
 from .modules import ControlGate
 from .ops import Gate, Operation
 from .stdgates import (
@@ -89,7 +88,7 @@ from .stdgates import (
     Z,
     ZPow,
 )
-from .stdops import Measure, Reset
+from .stdops import Measure, Project0, Project1, Reset
 
 __all__ = (
     "CIRQ_GATES",
@@ -211,8 +210,8 @@ LATEX_OPERATIONS: Set[Type[Operation]] = set(
         YY,
         ZZ,
         Can,
-        P0,
-        P1,
+        Project0,
+        Project1,
         Reset,
         #     NoWire,  # FIXME
         Measure,

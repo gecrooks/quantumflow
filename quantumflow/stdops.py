@@ -40,6 +40,7 @@ from typing import (
     Hashable,
     Iterable,
     Iterator,
+    List,
     Sequence,
     Tuple,
     Type,
@@ -51,7 +52,6 @@ import numpy as np
 from . import tensors, utils
 from .circuits import Circuit
 from .config import CIRCUIT_INDENT
-from .gates import P0, P1
 from .ops import _EXCLUDED_OPERATIONS, Channel, Gate, Operation, Unitary
 from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State
@@ -73,6 +73,8 @@ __all__ = [
     "Projection",
     "Simulator",
     "QFSimulator",
+    "Project0",
+    "Project1",
 ]
 
 
@@ -145,8 +147,6 @@ class Moment(Sequence, Operation):
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
 
-    _diagram_labels = ["M({cbit})"]
-
     def __init__(self, qubit: Qubit, cbit: Hashable = None) -> None:
         if cbit is None:
             cbit = qubit
@@ -161,20 +161,20 @@ class Measure(Operation):
         return f"{self.name} {self.qubit}"
 
     def run(self, ket: State) -> State:
-        prob_zero = P0(self.qubit).run(ket).norm()
+        prob_zero = Project0(self.qubit).run(ket).norm()
 
         # generate random number to 'roll' for measurement
         if np.random.random() < prob_zero:
-            ket = P0(self.qubit).run(ket).normalize()
+            ket = Project0(self.qubit).run(ket).normalize()
             ket = ket.store({self.cbit: 0})
         else:  # measure one
-            ket = P1(self.qubit).run(ket).normalize()
+            ket = Project1(self.qubit).run(ket).normalize()
             ket = ket.store({self.cbit: 1})
         return ket
 
     def evolve(self, rho: Density) -> Density:
-        p0 = P0(self.qubit).aschannel()
-        p1 = P1(self.qubit).aschannel()
+        p0 = Project0(self.qubit).aschannel()
+        p1 = Project1(self.qubit).aschannel()
 
         prob_zero = p0.evolve(rho).norm()
 
@@ -187,6 +187,9 @@ class Measure(Operation):
             rho = rho.store({self.cbit: 1})
         return rho
 
+    def _diagram_labels_(self) -> List[str]:
+        return [f"M({self.cbit})"]
+
 
 # FIXME: Can't have zero qubits
 # Having no qubits specified screws up visualization
@@ -195,9 +198,6 @@ class Reset(Operation):
     r"""An operation that resets qubits to zero irrespective of the
     initial state.
     """
-
-    _diagram_labels = ["┤ ⟨0|"]
-    _diagram_noline = True
 
     def __init__(self, *qubits: Qubit) -> None:
         if not qubits:
@@ -234,6 +234,9 @@ class Reset(Operation):
             return "Reset " + " ".join([str(q) for q in self.qubits])
         return "Reset"
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["┤ ⟨0|"]
+
 
 class Initialize(Operation):
     """An operation that initializes the quantum state"""
@@ -256,15 +259,13 @@ class Initialize(Operation):
     # TODO: aschannel? __str___?
 
 
-# TODO: Could be a Gate
 # FIXME: Interface
+# FIXME: make interface standard for Barrier and other ops
 class Barrier(Operation):
     """An operation that prevents reordering of operations across the barrier.
     Has no effect on the quantum state."""
 
     interchangable = True
-    _diagram_labels = ["┼"]
-    _diagram_noline = True
 
     def __init__(self, *qubits: Qubit) -> None:
         super().__init__(qubits=qubits)
@@ -281,6 +282,9 @@ class Barrier(Operation):
 
     def __str__(self) -> str:
         return self.name + " " + " ".join(str(q) for q in self.qubits)
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["┼"]
 
 
 # FIXME: Does not work as written?
@@ -312,7 +316,7 @@ class Projection(Operation):
 
 # end class Projection
 
-
+# FIXME: no zero qubit ops?
 class Store(Operation):
     """Store a value in the classical memory of the state."""
 
@@ -430,6 +434,7 @@ class Simulator(Operation):
         SIMULATORS[name] = cls
 
     def __init__(self, circ: Circuit) -> None:
+        super().__init__(qubits=circ.qubits)
         self.circuit = circ
 
     @property
@@ -459,5 +464,42 @@ class QFSimulator(Simulator):
 
 
 # end class QFSimulator
+
+
+class Project0(Gate):
+    r"""Project a qubit to zero.
+
+    A non-unitary operation that represents the effect of a measurement. The norm
+    of the resultant state is multiplied by the probability of observing 0.
+    """
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        return tensors.asqutensor([[1, 0], [0, 0]])
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["|0⟩⟨0|"]
+
+
+class Project1(Gate):
+    r"""Project a qubit to one.
+
+    A non-unitary operation that represents the effect of a measurement. The norm
+    of the resultant state is multiplied by the probability of observing 1.
+    """
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        return tensors.asqutensor([[0, 0], [0, 1]])
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["|1⟩⟨1|"]
+
 
 # fin

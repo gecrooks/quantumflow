@@ -12,13 +12,12 @@ from typing import Dict, List, Type
 import numpy as np
 
 from .. import tensors, utils, var
-from ..config import CONJ, SQRT
-from ..ops import StdGate
 from ..paulialgebra import Pauli, sI, sX, sY, sZ
 from ..qubits import Qubit
 from ..states import Density, State
 from ..tensors import QubitTensor
 from ..var import PI, Variable
+from .stdgates import StdGate
 
 __all__ = (
     "I",
@@ -136,7 +135,6 @@ class Ph(StdGate):
     # Ref: Barenco
 
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["Ph({phi})"]
 
     def __init__(self, phi: float, q0: Qubit) -> None:
         super().__init__(params=[phi], qubits=[q0])
@@ -427,7 +425,6 @@ class PhaseShift(StdGate):
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["P({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0])
@@ -463,6 +460,9 @@ class PhaseShift(StdGate):
         gate1 = gate0.specialize()
         return gate1
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["P({theta})"]
+
 
 # end class PhaseShift
 
@@ -479,7 +479,6 @@ class Rx(StdGate):
     Args:
         theta: Angle of rotation in Bloch sphere
     """
-    _diagram_labels = ["Rx({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0])
@@ -531,8 +530,6 @@ class Ry(StdGate):
         theta: Angle of rotation in Bloch sphere
     """
 
-    _diagram_labels = ["Ry({theta})"]
-
     def __init__(self, theta: Variable, q0: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0])
 
@@ -583,7 +580,6 @@ class Rz(StdGate):
         theta: Angle of rotation in Bloch sphere
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["Rz({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0])
@@ -635,7 +631,6 @@ class S_H(StdGate):
 
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["S" + CONJ]
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(qubits=[q0])
@@ -673,7 +668,6 @@ class T_H(StdGate):
         \begin{pmatrix} 1 & 0 \\ 0 & e^{-i \pi / 4} \end{pmatrix}
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["T" + CONJ]
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(qubits=[q0])
@@ -713,7 +707,6 @@ class Rn(StdGate):
         theta: Angle of rotation on Block sphere
         (nx, ny, nz): A three-dimensional real unit vector
     """
-    _diagram_labels = ["Rn({theta}, {nx}, {ny}, {nz})"]
 
     def __init__(
         self, theta: Variable, nx: Variable, ny: Variable, nz: Variable, q0: Qubit
@@ -774,8 +767,6 @@ class XPow(StdGate):
         t: Number of half turns (quarter cycles) on Block sphere
     """
 
-    _diagram_labels = ["X^{t}"]
-
     def __init__(self, t: Variable, q0: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0])
 
@@ -822,7 +813,6 @@ class YPow(StdGate):
         t: Number of half turns (quarter cycles) on Block sphere
 
     """
-    _diagram_labels = ["Y^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0])
@@ -868,7 +858,6 @@ class ZPow(StdGate):
         t: Number of half turns (quarter cycles) on Block sphere
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["Z^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0])
@@ -925,7 +914,6 @@ class HPow(StdGate):
             \cos(\tfrac{t}{2}) -\tfrac{i}{\sqrt{2}} \sin(\frac{t}{2})
         \end{pmatrix}
     """
-    _diagram_labels = ("H^{t}",)
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0])
@@ -1027,7 +1015,6 @@ class SqrtY(StdGate):
     r"""
     Principal square root of the Y gate.
     """
-    _diagram_labels = [SQRT + "Y"]
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(qubits=[q0])
@@ -1056,7 +1043,6 @@ class SqrtY_H(StdGate):
     r"""
     Complex conjugate of the np.sqrtY gate.
     """
-    _diagram_labels = [SQRT + "Y" + CONJ]
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(qubits=[q0])

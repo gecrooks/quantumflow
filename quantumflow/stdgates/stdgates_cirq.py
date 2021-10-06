@@ -7,16 +7,18 @@
 QuantumFlow: Gates peculiar to Cirq
 """
 
+from typing import List
+
 import numpy as np
 
 from .. import tensors, var
 from ..config import SWAP_TARGET
-from ..ops import StdGate
 from ..paulialgebra import Pauli
 from ..qubits import Qubit
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import Variable
+from .stdgates import StdGate
 from .stdgates_1q import I, X, XPow, ZPow
 from .stdgates_2q import CZ, Swap
 
@@ -32,7 +34,6 @@ class PhasedX(StdGate):
     """
     # Kudos: Adapted from Cirq
 
-    _diagram_labels = ["PhX({p})"]
     cv_tensor_structure = "monomial"
 
     def __init__(self, p: Variable, q0: Qubit) -> None:
@@ -72,8 +73,6 @@ class PhasedXPow(StdGate):
 
     # Kudos: Adapted from Cirq
 
-    _diagram_labels = ["PhX({p})^{t}"]
-
     def __init__(self, p: Variable, t: Variable, q0: Qubit) -> None:
         super().__init__(params=[p, t], qubits=[q0])
 
@@ -100,6 +99,9 @@ class PhasedXPow(StdGate):
         if np.isclose(p, 0.0):
             return XPow(t, *qbs).specialize()
         return self
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["PhX({p})^{t}"]
 
 
 # end class PhasedXPow
@@ -178,7 +180,6 @@ class FSwap(StdGate):
 
     cv_interchangable = True
     cv_tensor_structure = "monomial"
-    _diagram_labels = [SWAP_TARGET + "ᶠ", SWAP_TARGET + "ᶠ"]
 
     def __init__(self, q0: Qubit, q1: Qubit):
         super().__init__(qubits=[q0, q1])
@@ -199,6 +200,9 @@ class FSwap(StdGate):
     def __pow__(self, t: Variable) -> "FSwapPow":
         return FSwapPow(t, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [SWAP_TARGET + "ᶠ"] * 2
+
 
 # End class FSwap
 
@@ -211,7 +215,6 @@ class FSwapPow(StdGate):
     """
 
     cv_interchangable = True
-    _diagram_labels = [SWAP_TARGET + "ᶠ^{t}", SWAP_TARGET + "ᶠ^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit):
         super().__init__(params=[t], qubits=[q0, q1])
@@ -243,6 +246,9 @@ class FSwapPow(StdGate):
     def __pow__(self, e: Variable) -> "FSwapPow":
         (t,) = self.params
         return FSwapPow(e * t, *self.qubits)
+
+    def _diagram_labels_(self) -> List[str]:
+        return [SWAP_TARGET + "ᶠ^{t}"] * 2
 
 
 # End class FSwapPow

@@ -153,11 +153,11 @@ def test_measurement() -> None:
     rho = qf.zero_state(2).asdensity()
     chan = qf.H(0).aschannel()
     rho = chan.evolve(rho)
-    rho = qf.Kraus([qf.P0(0), qf.P1(0)]).aschannel().evolve(rho)
-    K = qf.Kraus([qf.P0(1), qf.P1(1)])
+    rho = qf.Kraus([qf.Project0(0), qf.Project1(0)]).aschannel().evolve(rho)
+    K = qf.Kraus([qf.Project0(1), qf.Project1(1)])
     _ = K.aschannel()
 
-    rho = qf.Kraus([qf.P0(1), qf.P1(1)]).aschannel().evolve(rho)
+    rho = qf.Kraus([qf.Project0(1), qf.Project1(1)]).aschannel().evolve(rho)
     prob = rho.probabilities()
     assert np.allclose(prob, [[0.5, 0], [0.5, 0]])
     assert np.isclose(prob[0, 0] * 2, 1.0)
@@ -232,7 +232,7 @@ def test_depolarizing() -> None:
 
 
 def test_kruas_qubits() -> None:
-    rho = qf.Kraus([qf.P0(0), qf.P1(1)])
+    rho = qf.Kraus([qf.Project0(0), qf.Project1(1)])
     assert rho.qubits == (0, 1)
     assert rho.qubit_nb == 2
 

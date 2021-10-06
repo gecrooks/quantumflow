@@ -32,7 +32,6 @@
 #   states
 #   paulialgebra
 #   ops
-#   gates
 #   modules
 #   stdgates
 #   channels
@@ -57,7 +56,6 @@ from .config import *  # noqa: F401, F403
 from .dagcircuit import *  # noqa: F401, F403
 from .decompositions import *  # noqa: F401, F403
 from .deprecated import *  # noqa: F401, F403
-from .gates import *  # noqa: F401, F403
 from .gatesets import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403

@@ -22,7 +22,8 @@ from typing import TYPE_CHECKING
 from . import utils
 from .circuits import Circuit
 from .gatesets import QUIL_GATES
-from .ops import Gate, StdGate
+from .ops import Gate
+from .stdgates import STDGATES
 from .stdops import Measure
 from .translate import circuit_translate
 
@@ -116,7 +117,7 @@ def pyquil_to_circuit(program: "pqProgram") -> Circuit:
             circ += Measure(inst.qubit.index)
         elif isinstance(inst, pqGate):
             name = QUIL_TO_QF[inst.name]
-            defgate = StdGate.cv_stdgates[name]
+            defgate = STDGATES[name]
             qubits = [q.index for q in inst.qubits]
             gate = defgate(*chain(inst.params, qubits))  # type: ignore
             circ += gate

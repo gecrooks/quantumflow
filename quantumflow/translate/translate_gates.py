@@ -43,8 +43,6 @@ from ..stdgates import (
 )
 from .translations import register_translation
 
-H_ = H
-
 
 @register_translation
 def translate_IdentityGate_to_I(gate: IdentityGate) -> Iterator[I]:  # noqa: E741
@@ -78,12 +76,12 @@ def translate_ReversalGate_to_swap_network(gate: ReversalGate) -> Iterator[Swap]
 
 
 @register_translation
-def translate_QFTGate(gate: QFTGate) -> Iterator[Union[H_, CZPow, Swap]]:
+def translate_QFTGate(gate: QFTGate) -> Iterator[Union[H, CZPow, Swap]]:
     qubits = gate.qubits
     N = len(qubits)
     for n0 in range(N):
         q0 = qubits[n0]
-        yield H_(q0)
+        yield H(q0)
         for n1 in range(n0 + 1, N):
             q1 = qubits[n1]
             yield CZ(q1, q0) ** (1 / 2 ** (n1 - n0))
@@ -91,7 +89,7 @@ def translate_QFTGate(gate: QFTGate) -> Iterator[Union[H_, CZPow, Swap]]:
 
 
 @register_translation
-def translate_InvQFTGate(gate: InvQFTGate) -> Iterator[Union[H_, CZPow, Swap]]:
+def translate_InvQFTGate(gate: InvQFTGate) -> Iterator[Union[H, CZPow, Swap]]:
 
     gates = list(translate_QFTGate(QFTGate(gate.qubits)))
     yield from (gate.H for gate in gates[::-1])
