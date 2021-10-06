@@ -1,6 +1,6 @@
 # This workflow will install the python package and dependencies, and run tests against a variety of Python versions
 
-name: Build
+name: Test-Externals
 
 on:
   push:
