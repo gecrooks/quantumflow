@@ -4,11 +4,27 @@ A cross-compiler for gate based models of quantum computing
 
 ![Build Status](https://github.com/gecrooks/quantumflow-dev/workflows/Build/badge.svg) [![Documentation Status](https://readthedocs.org/projects/quantumflow/badge/?version=latest)](https://quantumflow.readthedocs.io/en/latest/?badge=latest) [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/gecrooks/quantumflow-dev.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/gecrooks/quantumflow-dev/context:python) [![PyPi version](https://img.shields.io/pypi/v/quantumflow?color=brightgreen)](https://pypi.org/project/quantumflow/)
 
-[Source](https://github.com/gecrooks/quantumflow)
+
+* [Tutorial](https://github.com/gecrooks/quantumflow-dev/tree/master/tutorial)
+* [Source Code](https://github.com/gecrooks/quantumflow)
+* [Issue Tracker](https://github.com/gecrooks/quantumflow-dev/issues)
+* [API Documentation](https://quantumflow.readthedocs.io/)
 
 
-## Installation for development
+## Installation
 
+To install the latest stable release:
+```
+$ pip install quantumflow
+```
+
+In addition, install all of the additional external quantum libraries that QuantumFlow can interact with (such as cirq, qiskit, braket, ect.):
+```
+$ pip install quantumflow[ext]
+```
+
+
+To install the latest code from github ready for development:
 ```
 $ git clone https://github.com/gecrooks/quantumflow.git
 $ cd quantumflow
