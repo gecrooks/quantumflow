@@ -33,10 +33,7 @@ jobs:
     - name: About
       run: |
         python -m $(python -Wi setup.py --name).about
-        echo
-        pdflatex --version
-        pdftocairo -v
-    - name: Test base with pytest
+    - name: Test base with pytest (Tests should still pass without externals)
       run: |
         python -m pytest
     - name: Test with all supported minor versions of cirq
