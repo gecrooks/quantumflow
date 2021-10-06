@@ -14,6 +14,7 @@ import quantumflow as qf
 from quantumflow.visualization import kwarg_to_symbol
 
 
+# TODO: Move to gates?
 def _randomize_gate(gatet: Type[qf.StdGate]) -> qf.StdGate:
     """Given a StdGate subclass, return an instance with randomly initialized
     parameters and qubits"""
@@ -52,7 +53,7 @@ def test_repr() -> None:
     assert repr(g2) == "CNot(0, 1)"
 
 
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_stdgates_repr(gatet: Type[qf.StdGate]) -> None:
 
     gate0 = _randomize_gate(gatet)
@@ -62,7 +63,7 @@ def test_stdgates_repr(gatet: Type[qf.StdGate]) -> None:
     assert qf.gates_close(gate0, gate1)
 
 
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_stdgates(gatet: Type[qf.StdGate]) -> None:
 
     # Test creation
@@ -119,7 +120,7 @@ def _tensor_structure(tensor: qf.QubitTensor) -> "str":
     return None
 
 
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_tensor_properties(gatet: Type[qf.StdGate]) -> None:
 
     gate = _randomize_gate(gatet)
@@ -143,7 +144,7 @@ def test_tensor_properties(gatet: Type[qf.StdGate]) -> None:
         assert qf.gates_close(gate, perm_gate)
 
 
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_hamiltonians(gatet: Type[qf.StdGate]) -> None:
 
     gate0 = _randomize_gate(gatet)
@@ -157,7 +158,7 @@ def test_hamiltonians(gatet: Type[qf.StdGate]) -> None:
     assert qf.gates_phase_close(gate0, gate1)
 
 
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     if len(gatet.cv_args) == 0:
         return
@@ -177,12 +178,56 @@ def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     gate0.tensor
 
 
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_decompose(gatet: Type[qf.StdGate]) -> None:
     gate0 = _randomize_gate(gatet)
     circ = qf.Circuit(gate0.decompose())
     gate1 = circ.asgate()
     assert qf.gates_close(gate0, gate1)
+
+
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
+def test_gate_run(gatet: Type[qf.StdGate]) -> None:
+    gate0 = _randomize_gate(gatet)
+
+    gate1 = qf.Unitary(gate0.tensor, gate0.qubits)
+    ket = qf.random_state(gate0.qubits)
+
+    ket0 = gate0.run(ket)
+    ket1 = gate1.run(ket)
+    assert qf.states_close(ket0, ket1)
+
+
+@pytest.mark.parametrize("gatet", qf.STDGATES.values())
+def test_gate_evolve(gatet: Type[qf.StdGate]) -> None:
+    gate0 = _randomize_gate(gatet)
+
+    gate1 = qf.Unitary(gate0.tensor, gate0.qubits)
+    rho = qf.random_density(gate0.qubits)
+
+    rho0 = gate0.evolve(rho)
+    rho1 = gate1.evolve(rho)
+    assert qf.densities_close(rho0, rho1)
+
+
+def test_diagram_labels() -> None:
+    for gatetype in qf.STDGATES.values():
+        gate = _randomize_gate(gatetype)
+        labels = gate._diagram_labels_()
+        assert len(labels) == gate.qubit_nb
+        print(f"{gate.name:<16} {str(labels):<50}")
+
+
+@pytest.mark.parametrize("gatetype", qf.STDCTRLGATES.values())
+def test_StdCtrlGate_tensor_structure(gatetype: Type[qf.StdCtrlGate]) -> None:
+    struct = gatetype.cv_target.cv_tensor_structure
+
+    if struct == "swap":
+        assert gatetype.cv_tensor_structure == "permutation"
+    else:
+        assert gatetype.cv_target.cv_tensor_structure == gatetype.cv_tensor_structure
+
+    assert gatetype.cv_hermitian == gatetype.cv_target.cv_hermitian
 
 
 # fin

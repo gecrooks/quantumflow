@@ -40,6 +40,7 @@ from typing import (
     ClassVar,
     Dict,
     Iterator,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -85,7 +86,9 @@ GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
 
-_EXCLUDED_OPERATIONS = set(["Operation", "Gate", "StdGate", "In", "Out", "NoWire"])
+_EXCLUDED_OPERATIONS = set(
+    ["Operation", "Gate", "StdGate", "StdCtrlGate", "In", "Out", "NoWire"]
+)
 # Names of operations to exclude from registration. Includes (effectively) abstract base
 # classes and internal operations.
 
@@ -123,14 +126,6 @@ class Operation(ABC):
     cv_args: ClassVar[Optional[Tuple[str, ...]]] = None
     """The names of the parameters for this operation (For operations with a fixed number
     of float parameters)"""
-
-    _diagram_labels: ClassVar[Optional[Sequence[str]]] = None
-    """Override default labels for drawing text circuit diagrams.
-    See visualizations.circuit_to_diagram()"""
-
-    _diagram_noline: ClassVar[bool] = False
-    """Override default to not draw a line between qubit wires for multi-qubit
-    operations. See visualizations.circuit_to_diagram()"""
 
     def __init_subclass__(cls) -> None:
         # Note: The __init_subclass__ initializes all subclasses of a given class.
@@ -230,7 +225,7 @@ class Operation(ABC):
         """
         return var.asfloat(self.param(name), subs)
 
-    def resolve(self, subs: Mapping[str, float]) -> "Operation":
+    def resolve(self: OperationType, subs: Mapping[str, float]) -> OperationType:
         """Resolve symbolic parameters"""
         # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
@@ -326,6 +321,24 @@ class Operation(ABC):
         from .circuits import Circuit
 
         return Circuit(self)._repr_html_()
+
+    def _diagram_labels_(self) -> List[str]:
+        """Labels for text-based circuit diagrams.
+
+
+        Multi-qubit operations should either return one label per
+        qubit (which are then connected with vertical lines) or a
+        single label, which will be replicated onto all qubits and
+        not connected with vertical lines.
+        """
+        N = self.qubit_nb
+        labels = [self.name] * N
+        if N != 1 and not self.cv_interchangeable:
+            # If not interchangeable, we have to label connections
+            for i in range(N):
+                labels[i] = labels[i] + "_%s" % i
+
+        return labels
 
 
 # End class Operation

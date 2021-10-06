@@ -5,6 +5,8 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
+from typing import List
+
 from . import tensors, utils
 from .ops import Gate, Unitary
 from .qubits import Qubit
@@ -35,7 +37,6 @@ class P0(Gate):
     A non-unitary gate that represents the effect of a measurement. The norm
     of the resultant state is multiplied by the probability of observing 0.
     """
-    text_labels = ["|0><0|"]
 
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
@@ -44,6 +45,9 @@ class P0(Gate):
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[1, 0], [0, 0]])
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["|0><0|"]
+
 
 class P1(Gate):
     r"""Project qubit to one.
@@ -51,7 +55,6 @@ class P1(Gate):
     A non-unitary gate that represents the effect of a measurement. The norm
     of the resultant state is multiplied by the probability of observing 1.
     """
-    text_labels = ["|1><1|"]
 
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
@@ -59,6 +62,9 @@ class P1(Gate):
     @utils.cached_property
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[0, 0], [0, 1]])
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["|1><1|"]
 
 
 # fin

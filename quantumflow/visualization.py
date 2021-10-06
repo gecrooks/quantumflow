@@ -131,7 +131,8 @@ kwarg_to_symbol = {
 class NoWire(IdentityGate):
     """Dummy gate used to draw a gap in a circuit"""
 
-    _diagram_labels = ["  "]
+    def _diagram_labels_(self) -> List[str]:
+        return ["  "]
 
 
 def circuit_to_latex(
@@ -606,27 +607,38 @@ def circuit_to_diagram(
                 }
 
             # Construct text labels
-            name = elem.name
-            if elem._diagram_labels:
-                text_labels = elem._diagram_labels
-                if len(idx) != 1 and len(text_labels) == 1:
-                    text_labels = list(text_labels) * len(idx)
-                text_labels = [t.format(**pretty_params) for t in text_labels]
-            else:
-                if pretty_params:
-                    params_text = ",".join(pretty_params.values())
-                    text_labels = [name + "(%s)" % params_text] * len(idx)
-                else:
-                    text_labels = [name] * len(idx)
-                if len(idx) != 1 and not elem.cv_interchangeable:
-                    # If not interchangeable, we have to label connections
-                    for i in range(elem.qubit_nb):
-                        text_labels[i] = text_labels[i] + "_%s" % i
+            # name = elem.name
+            # if elem._diagram_labels_():
+            #     text_labels = elem._diagram_labels_()
+            #     if len(idx) != 1 and len(text_labels) == 1:
+            #         text_labels = list(text_labels) * len(idx)
+            #     text_labels = [t.format(**pretty_params) for t in text_labels]
+            # else:
+            #     if pretty_params:
+            #         params_text = ",".join(pretty_params.values())
+            #         text_labels = [name + "(%s)" % params_text] * len(idx)
+            #     else:
+            #         text_labels = [name] * len(idx)
+            #     if len(idx) != 1 and not elem.cv_interchangeable:
+            #         # If not interchangeable, we have to label connections
+            #         for i in range(elem.qubit_nb):
+            #             text_labels[i] = text_labels[i] + "_%s" % i
+
+            text_labels = elem._diagram_labels_()
+
+            vertical_lines = len(text_labels) > 1
+
+            if len(text_labels) == 1 and len(idx) > 1:
+                text_labels *= len(idx)
+
+            assert len(text_labels) == len(idx)
+
+            text_labels = [t.format(**pretty_params) for t in text_labels]
 
             if not use_unicode:
                 text_labels = [_unicode_to_ascii(tl) for tl in text_labels]
 
-            if elem.qubit_nb != 1 and not elem._diagram_noline:
+            if vertical_lines:
                 pad = len(re.split(r"[_^(]+", text_labels[0])[0]) // 2
                 draw_line(code, min(idx), max(idx), left_pad=pad)
 

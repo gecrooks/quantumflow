@@ -103,17 +103,17 @@ Reset
 # U1 is now Phase or in circuits 'p' (i.e. PhaseShift gate)
 # CU1 is now CPhase or in circuits 'cp'
 
+from typing import List
 
 import numpy as np
 
 from .. import tensors
 from ..config import CTRL
-from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import Variable
-from .stdgate import StdGate
+from .stdgates import StdCtrlGate, StdGate
 from .stdgates_1q import PhaseShift, Rx, Ry, Rz
 from .stdgates_2q import XX, YY, ZZ, CNot
 from .stdgates_forest import CPhase
@@ -202,7 +202,6 @@ class CU3(StdGate):
     Ref:
         https://github.com/Qiskit/qiskit-terra/blob/master/qiskit/extensions/standard/cu3.py
     """
-    _diagram_labels = [CTRL, "U3({theta}, {phi}, {lam})"]
 
     def __init__(
         self,
@@ -247,31 +246,19 @@ class CU3(StdGate):
         theta, phi, lam = self.params
         return CU3(-theta, -lam, -phi, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [CTRL, "U3({theta}, {phi}, {lam})"]
+
 
 # end class class CU3
 
 
-class CRx(StdGate):
+class CRx(StdCtrlGate):
     r"""A controlled Rx gate."""
-    _diagram_labels = [CTRL, "Rx({theta})"]
+    cv_target = Rx
 
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        (theta,) = self.params
-        q0, q1 = self.qubits
-        return Rx(theta, q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        (theta,) = self.params
-        q0, q1 = self.qubits
-        gate = Rx(theta, q1)
-        from ..modules import ControlGate
-
-        return ControlGate(gate, [q0]).tensor
 
     @property
     def H(self) -> "CRx":
@@ -285,27 +272,12 @@ class CRx(StdGate):
 # end class CRx
 
 
-class CRy(StdGate):
+class CRy(StdCtrlGate):
     r"""A controlled Ry gate."""
-    _diagram_labels = [CTRL, "Ry({theta})"]
+    cv_target = Ry
 
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        (theta,) = self.params
-        q0, q1 = self.qubits
-        return Ry(theta, q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        (theta,) = self.params
-        q0, q1 = self.qubits
-        gate = Ry(theta, q1)
-        from ..modules import ControlGate
-
-        return ControlGate(gate, [q0]).tensor
 
     @property
     def H(self) -> "CRy":
@@ -319,28 +291,13 @@ class CRy(StdGate):
 # end class CRy
 
 
-class CRz(StdGate):
+class CRz(StdCtrlGate):
     r"""A controlled Rz gate."""
+    cv_target = Rz
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL, "Rz({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        (theta,) = self.params
-        q0, q1 = self.qubits
-        return Rz(theta, q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        (theta,) = self.params
-        q0, q1 = self.qubits
-        gate = Rz(theta, q1)
-        from ..modules import ControlGate
-
-        return ControlGate(gate, [q0]).tensor
 
     @property
     def H(self) -> "CRz":

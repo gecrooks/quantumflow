@@ -40,6 +40,7 @@ from typing import (
     Hashable,
     Iterable,
     Iterator,
+    List,
     Sequence,
     Tuple,
     Type,
@@ -145,8 +146,6 @@ class Moment(Sequence, Operation):
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
 
-    _diagram_labels = ["M({cbit})"]
-
     def __init__(self, qubit: Qubit, cbit: Hashable = None) -> None:
         if cbit is None:
             cbit = qubit
@@ -187,6 +186,9 @@ class Measure(Operation):
             rho = rho.store({self.cbit: 1})
         return rho
 
+    def _diagram_labels_(self) -> List[str]:
+        return [f"M({self.cbit})"]
+
 
 # FIXME: Can't have zero qubits
 # Having no qubits specified screws up visualization
@@ -195,9 +197,6 @@ class Reset(Operation):
     r"""An operation that resets qubits to zero irrespective of the
     initial state.
     """
-
-    _diagram_labels = ["┤ ⟨0|"]
-    _diagram_noline = True
 
     def __init__(self, *qubits: Qubit) -> None:
         if not qubits:
@@ -234,6 +233,9 @@ class Reset(Operation):
             return "Reset " + " ".join([str(q) for q in self.qubits])
         return "Reset"
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["┤ ⟨0|"]
+
 
 class Initialize(Operation):
     """An operation that initializes the quantum state"""
@@ -263,8 +265,6 @@ class Barrier(Operation):
     Has no effect on the quantum state."""
 
     interchangable = True
-    _diagram_labels = ["┼"]
-    _diagram_noline = True
 
     def __init__(self, *qubits: Qubit) -> None:
         super().__init__(qubits=qubits)
@@ -281,6 +281,9 @@ class Barrier(Operation):
 
     def __str__(self) -> str:
         return self.name + " " + " ".join(str(q) for q in self.qubits)
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["┼"]
 
 
 # FIXME: Does not work as written?
@@ -312,7 +315,7 @@ class Projection(Operation):
 
 # end class Projection
 
-
+# FIXME: no zero qubit ops?
 class Store(Operation):
     """Store a value in the classical memory of the state."""
 
@@ -430,6 +433,7 @@ class Simulator(Operation):
         SIMULATORS[name] = cls
 
     def __init__(self, circ: Circuit) -> None:
+        super().__init__(qubits=circ.qubits)
         self.circuit = circ
 
     @property

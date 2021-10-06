@@ -7,6 +7,8 @@
 QuantumFlow: Gates peculiar to Rigetti's Forest
 """
 
+from typing import List
+
 import numpy as np
 
 from .. import tensors, var
@@ -16,7 +18,7 @@ from ..qubits import Qubit
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import Variable
-from .stdgate import StdGate
+from .stdgates import StdGate
 
 __all__ = ("CPhase", "CPhase00", "CPhase01", "CPhase10", "PSwap")
 
@@ -29,7 +31,6 @@ class CPhase(StdGate):
     """
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL, "P({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
@@ -59,6 +60,9 @@ class CPhase(StdGate):
         theta = self.param("theta") * t
         return CPhase(theta, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [CTRL, "P({theta})"]
+
 
 # end class CPhase
 
@@ -71,7 +75,6 @@ class CPhase00(StdGate):
     """
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [NCTRL + "({theta})", NCTRL + "({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
@@ -101,6 +104,9 @@ class CPhase00(StdGate):
         theta = self.param("theta")
         return CPhase00(theta * t, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [NCTRL + "({theta})", NCTRL + "({theta})"]
+
 
 # end class CPhase00
 
@@ -112,7 +118,6 @@ class CPhase01(StdGate):
         \text{CPhase01}(\theta) \equiv \text{diag}(1, e^{i \theta}, 1, 1)
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [NCTRL + "({theta})", CTRL + "({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
@@ -140,6 +145,9 @@ class CPhase01(StdGate):
         theta = self.param("theta")
         return CPhase01(theta * t, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [NCTRL + "({theta})", CTRL + "({theta})"]
+
 
 # end class CPhase01
 
@@ -151,7 +159,6 @@ class CPhase10(StdGate):
         \text{CPhase10}(\theta) \equiv \text{diag}(1, 1, e^{i \theta}, 1)
     """
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL + "({theta})", NCTRL + "({theta})"]
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
         super().__init__(params=[theta], qubits=[q0, q1])
@@ -179,6 +186,9 @@ class CPhase10(StdGate):
     def __pow__(self, t: Variable) -> "CPhase10":
         theta = self.param("theta")
         return CPhase10(theta * t, *self.qubits)
+
+    def _diagram_labels_(self) -> List[str]:
+        return [CTRL + "({theta})", NCTRL + "({theta})"]
 
 
 # end class CPhase10

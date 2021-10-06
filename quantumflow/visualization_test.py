@@ -65,7 +65,7 @@ def test_visualize_circuit() -> None:
 
     circ += qf.CNot(1, 2)
     circ += qf.CNot(2, 1)
-    # circ += qf.IDEN(*range(8))
+
     circ += qf.ISwap(4, 2)
     circ += qf.ISwap(6, 5)
     circ += qf.CZ(1, 3)
@@ -106,7 +106,6 @@ def test_visualize_circuit() -> None:
     circ += qf.CH(1, 6)
 
     circ += qf.visualization.NoWire([0, 1, 2])
-    # circ += qf.visualization.NoWire(4, 1, 2)
 
     if os.environ.get("QF_VIZTEST"):
         print()
@@ -122,7 +121,7 @@ def test_visualize_circuit() -> None:
     qf.circuit_to_diagram(circ, use_unicode=False)
 
     latex = qf.circuit_to_latex(circ, package="qcircuit")
-    print(latex)
+
     if os.environ.get("QF_VIZTEST"):
         qf.latex_to_image(latex).show()
 
@@ -134,8 +133,19 @@ def test_visualize_circuit() -> None:
 
 
 def test_circuit_diagram() -> None:
-    circ = qf.Circuit()
-    circ += qf.Givens(pi, 1, 0)  # Not yet supported in latex
+    # Test diagrams creation for a few operations and gates not
+    # necessarily supported in latex
+    circ = qf.Circuit(
+        qf.Givens(pi, 1, 0),
+        qf.IdentityGate([0, 3, 4]),
+        qf.Measure(3, 3),
+        qf.Measure(4),
+        qf.Barrier(0, 2, 3, 4),
+        qf.QFSimulator(qf.Circuit(qf.X(0), qf.X(2))),
+        #  qf.Circuit(qf.X(3), qf.X(4), qf.CNot(3, 4)), FIXME does not work
+        qubits=[0, 1, 2, 3, 4],
+    )
+
     diag = qf.circuit_to_diagram(circ)
     print()
     print(diag)
@@ -143,7 +153,7 @@ def test_circuit_diagram() -> None:
 
 
 @skip_unless_pdflatex
-@pytest.mark.parametrize("gatename", qf.StdGate.cv_stdgates.keys())
+@pytest.mark.parametrize("gatename", qf.STDGATES.keys())
 def test_stdgates_latex_to_image(gatename: str) -> None:
     if gatename not in qf.LATEX_GATESET:
         print("Latex not supported:", gatename)
@@ -157,7 +167,7 @@ def test_stdgates_latex_to_image(gatename: str) -> None:
         img.show()
 
 
-@pytest.mark.parametrize("gatename", qf.StdGate.cv_stdgates.keys())
+@pytest.mark.parametrize("gatename", qf.STDGATES.keys())
 def test_circuit_to_diagram_stdgates(gatename: str) -> None:
     gatet = qf.StdGate.cv_stdgates[gatename]
     gate = _randomize_gate(gatet)

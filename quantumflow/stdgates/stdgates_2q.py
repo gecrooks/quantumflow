@@ -7,10 +7,12 @@
 QuantumFlow: Standard two qubit gates
 """
 
+from typing import List
+
 import numpy as np
 
 from .. import tensors, utils, var
-from ..config import CONJ, CTRL, SQRT, SWAP_TARGET, TARGET
+from ..config import CTRL, SWAP_TARGET, TARGET
 from ..ops import UnitaryGate
 from ..paulialgebra import Pauli, sX, sY, sZ
 from ..qubits import Qubit
@@ -18,8 +20,10 @@ from ..states import State
 from ..tensors import QubitTensor
 from ..utils import cached_property
 from ..var import PI, Variable
-from .stdgate import StdGate
-from .stdgates_1q import V_H, H, I, V, X, Y, Z
+from .stdgates import StdCtrlGate, StdGate
+from .stdgates_1q import V_H, H, I, S, T, V, X, XPow, Y, YPow, Z, ZPow
+
+_H = H
 
 # 2 qubit gates, alphabetic order
 
@@ -134,8 +138,6 @@ class Barenco(StdGate):
         https://arxiv.org/pdf/quant-ph/9505016.pdf
     """
 
-    _diagram_labels = ["───" + CTRL + "───", "Barenco({phi}, {alpha}, {theta})"]
-
     # Note: parameter order as defined by original paper
     def __init__(
         self,
@@ -177,6 +179,9 @@ class Barenco(StdGate):
         alpha = -alpha
         phi = phi + PI
         return Barenco(phi, alpha, theta, *self.qubits)
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["───" + CTRL + "───", "Barenco({phi}, {alpha}, {theta})"]
 
 
 # TODO: Add references and explanation
@@ -252,7 +257,7 @@ class Can(StdGate):
 # end class Can
 
 
-class CH(StdGate):
+class CH(StdCtrlGate):
     r"""A controlled-Hadamard gate
 
     Equivalent to ``controlled_gate(H())`` and locally equivalent to
@@ -267,27 +272,11 @@ class CH(StdGate):
                 0 & 0 & \tfrac{1}{\sqrt{2}} & -\tfrac{1}{\sqrt{2}}
             \end{pmatrix}
     """
-    _diagram_labels = [CTRL, "H"]
+    cv_target = _H
+    cv_hermitian = True
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1 = self.qubits
-        return H(q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = np.asarray(
-            [
-                [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1 / np.sqrt(2), 1 / np.sqrt(2)],
-                [0, 0, 1 / np.sqrt(2), -1 / np.sqrt(2)],
-            ]
-        )
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CH":
@@ -299,7 +288,7 @@ class CH(StdGate):
 # end class CH
 
 
-class CNot(StdGate):
+class CNot(StdCtrlGate):
     r"""A controlled-not gate
 
     Equivalent to ``controlled_gate(X())``, and
@@ -309,21 +298,12 @@ class CNot(StdGate):
         \text{CNot}() \equiv \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                             0&0&0&1 \\ 0&0&1&0 \end{pmatrix}
     """
+    cv_target = X
+    cv_hermitian = True
     cv_tensor_structure = "permutation"
-    _diagram_labels = [CTRL, TARGET]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1 = self.qubits
-        return X(q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CNot":
@@ -341,13 +321,16 @@ class CNot(StdGate):
         tensor[s11] = ket.tensor[s10]
         return State(tensor, ket.qubits, ket.memory)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [CTRL, TARGET]
+
 
 # end class CNot
 
 
 # FIXME: matrix in docs looks wrong?
 # FIXME: docs, controlled_gate
-class CNotPow(StdGate):
+class CNotPow(StdCtrlGate):
     r"""Powers of the CNot gate.
 
     Equivalent to ``controlled_gate(TX(t))``, and locally equivalent to
@@ -369,30 +352,10 @@ class CNotPow(StdGate):
         q0: control qubit
         q1: target qubit
     """
-
-    _diagram_labels = [CTRL, "X^{t}"]
+    cv_target = XPow
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        (t,) = self.params
-        return CNot(*self.qubits).hamiltonian * t
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        ctheta = np.pi * var.asfloat(self.param("t"))
-        phase = np.exp(0.5j * ctheta)
-        cht = np.cos(ctheta / 2)
-        sht = np.sin(ctheta / 2)
-        unitary = [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, phase * cht, phase * -1.0j * sht],
-            [0, 0, phase * -1.0j * sht, phase * cht],
-        ]
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CNotPow":
@@ -420,8 +383,6 @@ class CrossResonance(StdGate):
     # DOCME
     # TESTME
 
-    _diagram_labels = ["CR({s}, {b}, {c})_q0", "CR({s}, {b}, {c})_q1"]
-
     def __init__(self, s: Variable, b: Variable, c: Variable, q0: Qubit, q1: Qubit):
         super().__init__(qubits=(q0, q1), params=[s, b, c])
 
@@ -445,35 +406,26 @@ class CrossResonance(StdGate):
         s, b, c = self.params
         return CrossResonance(t * s, b, c, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["CR({s}, {b}, {c})_0", "CR({s}, {b}, {c})_1"]
+
 
 # end class CrossResonance
 
 
-class CS(StdGate):
+class CS(StdCtrlGate):
     r"""A controlled-S gate
 
     .. math::
         \text{CS}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                     0&0&1&0 \\ 0&0&0&i \end{pmatrix}
     """
+    cv_target = S
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL, "S"]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1 = self.qubits
-        return CZ(q0, q1).hamiltonian / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = np.asarray(
-            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1.0j]]
-        )
-        return tensors.asqutensor(unitary)
 
     def __pow__(self, t: Variable) -> "CZPow":
         return CZPow(t / 2, *self.qubits)
@@ -482,34 +434,19 @@ class CS(StdGate):
 # End class CS
 
 
-class CT(StdGate):
+class CT(StdCtrlGate):
     r"""A controlled-T gate
 
     .. math::
         \text{CT}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                     0&0&1&0 \\ 0&0&0&  \end{pmatrix}
     """
+    cv_target = T
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL, "T"]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1 = self.qubits
-        return CZ(q0, q1).hamiltonian / 4
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, np.exp(1j * np.pi / 4.0)],
-        ]
-        return tensors.asqutensor(unitary)
 
     def __pow__(self, t: Variable) -> "CZPow":
         return CZPow(t / 4, *self.qubits)
@@ -518,7 +455,7 @@ class CT(StdGate):
 # End class CS
 
 
-class CY(StdGate):
+class CY(StdCtrlGate):
     r"""A controlled-Y gate
 
     Equivalent to ``controlled_gate(Y())`` and locally equivalent to
@@ -533,23 +470,12 @@ class CY(StdGate):
                 0 & 0 & i & 0
             \end{pmatrix}
     """
+    cv_target = Y
+    cv_hermitian = True
     cv_tensor_structure = "monomial"
-    _diagram_labels = [CTRL, "Y"]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1 = self.qubits
-        return Y(q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = np.asarray(
-            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]]
-        )
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CY":
@@ -562,33 +488,16 @@ class CY(StdGate):
 # end class CY
 
 
-class CYPow(StdGate):
+class CYPow(StdCtrlGate):
     r"""Powers of the controlled-Y gate
 
     Locally equivalent to ``Can(t/2, 0, 0)``
 
     """
-    _diagram_labels = [CTRL, "Y^{t}"]
+    cv_target = YPow
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        (t,) = self.params
-        return CY(*self.qubits).hamiltonian * t
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        ctheta = np.pi * var.asfloat(self.param("t"))
-        phase = np.exp(0.5j * ctheta)
-        unitary = [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, phase * np.cos(ctheta / 2.0), phase * -np.sin(ctheta / 2.0)],
-            [0, 0, phase * np.sin(ctheta / 2.0), phase * np.cos(ctheta / 2.0)],
-        ]
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CYPow":
@@ -602,24 +511,13 @@ class CYPow(StdGate):
 # End class CYPow
 
 
-class CV(StdGate):
+class CV(StdCtrlGate):
     r"""A controlled V (sqrt of CNOT) gate."""
 
-    _diagram_labels = [CTRL, "V"]
+    cv_target = V
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        return CNot(*self.qubits).hamiltonian / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        q0, q1 = self.qubits
-        from ..modules import ControlGate
-
-        return ControlGate(V(q1), [q0]).tensor
 
     @property
     def H(self) -> "CV_H":
@@ -632,24 +530,13 @@ class CV(StdGate):
 # end class CV
 
 
-class CV_H(StdGate):
+class CV_H(StdCtrlGate):
     r"""A controlled V (sqrt of CNOT) gate."""
 
-    _diagram_labels = [CTRL, "V" + CONJ]
+    cv_target = V_H
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        return -CNot(*self.qubits).hamiltonian / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        q0, q1 = self.qubits
-        from ..modules import ControlGate
-
-        return ControlGate(V_H(q1), [q0]).tensor
 
     @property
     def H(self) -> "CV":
@@ -662,7 +549,7 @@ class CV_H(StdGate):
 # end class CV_H
 
 
-class CZ(StdGate):
+class CZ(StdCtrlGate):
     r"""A controlled-Z gate
 
     Equivalent to ``controlled_gate(Z())`` and locally equivalent to
@@ -672,22 +559,13 @@ class CZ(StdGate):
         \text{CZ}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                     0&0&1&0 \\ 0&0&0&-1 \end{pmatrix}
     """
+    cv_target = Z
+    cv_hermitian = True
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL, CTRL]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        q0, q1 = self.qubits
-        return Z(q1).hamiltonian * (1 - sZ(q0)) / 2
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        unitary = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CZ":
@@ -703,11 +581,14 @@ class CZ(StdGate):
         tensor[s11] *= -1
         return State(tensor, ket.qubits, ket.memory)
 
+    def _diagram_labels_(self) -> List[str]:
+        return [CTRL, CTRL]
+
 
 # End class CZ
 
 
-class CZPow(StdGate):
+class CZPow(StdCtrlGate):
     r"""Powers of the controlled-Z gate
 
     Locally equivalent to ``Can(t/2, 0, 0)``
@@ -720,28 +601,12 @@ class CZPow(StdGate):
                         0 & 0 & 0 & \exp(i \pi t)
                       \end{pmatrix}
     """
+    cv_target = ZPow
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = [CTRL, "Z^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
-
-    @property
-    def hamiltonian(self) -> Pauli:
-        (t,) = self.params
-        return CZ(*self.qubits).hamiltonian * t
-
-    @cached_property
-    def tensor(self) -> QubitTensor:
-        t = var.asfloat(self.param("t"))
-        unitary = [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, np.exp(1j * t * np.pi)],
-        ]
-        return tensors.asqutensor(unitary)
 
     @property
     def H(self) -> "CZPow":
@@ -898,7 +763,6 @@ class ISwap(StdGate):
     """
     cv_interchangeable = True
     cv_tensor_structure = "monomial"
-    _diagram_labels = ["iSwap"]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
@@ -940,7 +804,6 @@ class SqrtISwap(StdGate):
     Equivalent to ``Can(-1/4,-1/4,0)``.
     """
     cv_interchangeable = True
-    _diagram_labels = [SQRT + "iSwap"]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
@@ -971,7 +834,6 @@ class SqrtISwap_H(StdGate):
     Equivalent to ``Can(1/4, 1/4, 0)``.
     """
     cv_interchangeable = True
-    _diagram_labels = [SQRT + "iSwap" + CONJ]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
@@ -1002,7 +864,6 @@ class SqrtSwap(StdGate):
     Equivalent to ``Can(1/4, 1/4, 1/4)``.
     """
     cv_interchangeable = True
-    _diagram_labels = [SQRT + "Swap"]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
@@ -1034,7 +895,6 @@ class SqrtSwap_H(StdGate):
     ``Can(3/4, 1/4, 1/4)``
     """
     cv_interchangeable = True
-    _diagram_labels = [SQRT + "Swap" + CONJ]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
@@ -1071,8 +931,8 @@ class Swap(StdGate):
 
     """
     cv_interchangeable = True
+    cv_hermitian = True
     cv_tensor_structure = "permutation"
-    _diagram_labels = [SWAP_TARGET, SWAP_TARGET]
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
         super().__init__(qubits=[q0, q1])
@@ -1102,6 +962,9 @@ class Swap(StdGate):
         perm[idx1] = idx0
         tensor = np.transpose(ket.tensor, perm)
         return State(tensor, ket.qubits, ket.memory)
+
+    def _diagram_labels_(self) -> List[str]:
+        return [SWAP_TARGET] * 2
 
 
 # end class SWAP
@@ -1171,7 +1034,6 @@ class XX(StdGate):
     """
     # TODO: Is XX(1/2) MS gate, or is it XX(-1/2)???
     cv_interchangeable = True
-    _diagram_labels = ["XX^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
@@ -1209,6 +1071,9 @@ class XX(StdGate):
             return I(qbs[0])
         return self
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["XX^{t}"] * 2
+
 
 class XY(StdGate):
     r"""XY interaction gate.
@@ -1217,7 +1082,6 @@ class XY(StdGate):
     """
     # https://arxiv.org/abs/1912.04424v1
     cv_interchangeable = True
-    _diagram_labels = ["XY^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
@@ -1241,6 +1105,9 @@ class XY(StdGate):
         (t,) = self.params
         return XY(e * t, *self.qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["XY^{t}"] * 2
+
 
 class YY(StdGate):
     r"""A parametric 2-qubit gate generated from a YY interaction.
@@ -1252,7 +1119,6 @@ class YY(StdGate):
         t:
     """
     cv_interchangeable = True
-    _diagram_labels = ["YY^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
@@ -1290,6 +1156,9 @@ class YY(StdGate):
             return I(qbs[0])
         return self
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["YY^{t}"] * 2
+
 
 class ZZ(StdGate):
     r"""A parametric 2-qubit gate generated from a ZZ interaction.
@@ -1302,7 +1171,6 @@ class ZZ(StdGate):
     """
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
-    _diagram_labels = ["ZZ^{t}"]
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
         super().__init__(params=[t], qubits=[q0, q1])
@@ -1346,6 +1214,9 @@ class ZZ(StdGate):
         if np.isclose(t, 0.0) or np.isclose(t, 2.0):
             return I(qbs[0])
         return self
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["ZZ^{t}"] * 2
 
 
 # end class ZZ

@@ -124,7 +124,7 @@ def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
         gatet = translation_source_gate(t)
         gates.add(gatet)  # type: ignore
 
-    missing = set(list(qf.StdGate.cv_stdgates.values())) - gates
+    missing = set(list(qf.STDGATES.values())) - gates
 
     if len(missing) != 0:
         print("Missing gates:", missing)

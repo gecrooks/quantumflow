@@ -117,6 +117,9 @@ class IdentityGate(Gate):
     def H(self) -> "IdentityGate":
         return self
 
+    def _diagram_labels_(self) -> List[str]:
+        return ["I"]
+
 
 # end class IdentityGate
 
@@ -181,7 +184,7 @@ class ControlGate(Gate):
         return ham
 
     # Testme
-    def resolve(self, subs: Mapping[str, float]) -> "Gate":
+    def resolve(self, subs: Mapping[str, float]) -> "ControlGate":
         gate = self.gate.resolve(subs)
         assert isinstance(gate, Gate)
         return type(self)(gate, self.controls, self.axes)
@@ -573,7 +576,7 @@ class MultiplexedGate(Gate):
     # TODO: deke to 2^N control gates
 
     # Testme
-    def resolve(self, subs: Mapping[str, float]) -> "Gate":
+    def resolve(self, subs: Mapping[str, float]) -> "MultiplexedGate":
         gates = cast(Sequence[Gate], [gate.resolve(subs) for gate in self.gates])
         return type(self)(gates, self.controls)
 

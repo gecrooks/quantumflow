@@ -4,15 +4,12 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
-from typing import Type
 
 import numpy as np
-import pytest
 
 import quantumflow as qf
 
 from .config_test import REPS
-from .stdgates.stdgates_test import _randomize_gate
 
 
 def test_bits() -> None:
@@ -100,30 +97,6 @@ def test_qubit_qaoa_circuit() -> None:
     ket = qf.Rx(-2 * 2.74973750579, 1).run(ket)
 
     assert qf.states_close(ket, ket_true)
-
-
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
-def test_gate_run(gatet: Type[qf.StdGate]) -> None:
-    gate0 = _randomize_gate(gatet)
-
-    gate1 = qf.Unitary(gate0.tensor, gate0.qubits)
-    ket = qf.random_state(gate0.qubits)
-
-    ket0 = gate0.run(ket)
-    ket1 = gate1.run(ket)
-    assert qf.states_close(ket0, ket1)
-
-
-@pytest.mark.parametrize("gatet", qf.StdGate.cv_stdgates.values())
-def test_gate_evolve(gatet: Type[qf.StdGate]) -> None:
-    gate0 = _randomize_gate(gatet)
-
-    gate1 = qf.Unitary(gate0.tensor, gate0.qubits)
-    rho = qf.random_density(gate0.qubits)
-
-    rho0 = gate0.evolve(rho)
-    rho1 = gate1.evolve(rho)
-    assert qf.densities_close(rho0, rho1)
 
 
 # Test PROJECTORS....
