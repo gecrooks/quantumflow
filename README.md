@@ -18,7 +18,7 @@ To install the latest stable release:
 $ pip install quantumflow
 ```
 
-In addition, install all of the additional external quantum libraries that QuantumFlow can interact with (such as cirq, qiskit, braket, ect.):
+In addition, install all of the external quantum libraries that QuantumFlow can interact with (such as cirq, qiskit, braket, ect.):
 ```
 $ pip install quantumflow[ext]
 ```
