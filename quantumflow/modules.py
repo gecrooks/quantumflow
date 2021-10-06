@@ -124,11 +124,7 @@ class IdentityGate(Gate):
 # end class IdentityGate
 
 
-# TODO: Redo _diagram_labels
-# TODO: diagrams
 # TODO: Decompose
-# ⊖ ⊕ ⊘ ⊗ ● ○
-# TODO: resolution of variables
 class ControlGate(Gate):
     """A controlled unitary gate. Given C control qubits and a
     gate acting on K qubits, return a controlled gate with C+K qubits.
@@ -151,9 +147,12 @@ class ControlGate(Gate):
     symbols are standard, the rest are adapted from quirk.
     """
 
-    def __init__(self, gate: Gate, controls: Qubits, axes: str = None) -> None:
+    # Note: ControlGate and StdCtrlGate share interface and code.
+    # But unification probably not worth the trouble
+
+    def __init__(self, target: Gate, controls: Qubits, axes: str = None) -> None:
         controls = tuple(controls)
-        qubits = tuple(controls) + tuple(gate.qubits)
+        qubits = tuple(controls) + tuple(target.qubits)
         if len(set(qubits)) != len(qubits):
             raise ValueError("Control and gate qubits overlap")
 
@@ -162,9 +161,17 @@ class ControlGate(Gate):
         assert len(axes) == len(controls)
 
         super().__init__(qubits)
-        self.controls = controls
-        self.gate = gate
+
+        self.target = target
         self.axes = axes
+
+    @property
+    def control_qubits(self) -> Qubits:
+        return self.qubits[: -self.target.qubit_nb]
+
+    @property
+    def target_qubits(self) -> Qubits:
+        return self.target.qubits
 
     @property
     def hamiltonian(self) -> Pauli:
@@ -177,28 +184,41 @@ class ControlGate(Gate):
             "z": (1 + sZ(0)) / 2,
         }
 
-        ham = self.gate.hamiltonian
-        for q, axis in zip(self.controls, self.axes):
+        ham = self.target.hamiltonian
+        for q, axis in zip(self.control_qubits, self.axes):
             ham *= ctrlham[axis].on(q)
 
         return ham
-
-    # Testme
-    def resolve(self, subs: Mapping[str, float]) -> "ControlGate":
-        gate = self.gate.resolve(subs)
-        assert isinstance(gate, Gate)
-        return type(self)(gate, self.controls, self.axes)
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
         # FIXME: This approach generates a tensor with unnecessary numerical noise.
         return UnitaryGate.from_hamiltonian(self.hamiltonian, self.qubits).tensor
 
+    def resolve(self, subs: Mapping[str, float]) -> "ControlGate":
+        target = self.target.resolve(subs)
+        return ControlGate(target, self.control_qubits, self.axes)
+
+    def _diagram_labels_(self) -> List[str]:
+        # TODO: Move to config?
+        ctrl_labels = {
+            "X": "⊖",
+            "x": "⊕",
+            "Y": "⊘",
+            "y": "⊗",
+            "z": "○",
+            "Z": "●",
+        }
+        return [ctrl_labels[a] for a in self.axes] + self.target._diagram_labels_()
+
     def __str__(self) -> str:
-        fqubits = " " + " ".join([str(qubit) for qubit in self.controls])
-        fparams = str(self.gate)
-        # FIXME: Axes
-        return f"{self.name}({fparams}){fqubits}"
+        fqubits = " " + " ".join([str(qubit) for qubit in self.control_qubits])
+        fparams = str(self.target)
+
+        if self.axes == "Z" * len(self.control_qubits):
+            return f"{self.name}({fparams}){fqubits}"
+        else:
+            return f"{self.name}({fparams}, '{self.axes}'){fqubits}"
 
 
 # end class ControlGate

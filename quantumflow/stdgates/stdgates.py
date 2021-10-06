@@ -121,8 +121,8 @@ class StdCtrlGate(StdGate):
     Subclasses should set the `cv_target` class variable to the target gate type.
     """
 
-    # nb: CtrlGate and StdCtrlGate share some code.
-    # Unification probably not worth the trouble
+    # nb: ControlGate and StdCtrlGate share interface and code.
+    # But unification probably not worth the trouble
 
     cv_target: ClassVar[Type[StdGate]] = None
     """StdGate type that is the target of this controlled gate.

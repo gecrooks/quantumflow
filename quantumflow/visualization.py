@@ -380,10 +380,11 @@ def circuit_to_latex(
                 code[idx[0]] = r"\gate{" + text_labels[0] + "}"
 
             # DOCME TESTME
-            # Currently only implemented for multi-controlled X gates
+            # TODO: Currently only implemented for multi-controlled X gates
+            # TODO: axes
             elif isinstance(gate, ControlGate):
-                assert isinstance(gate.gate, X)
-                for i in range(len(gate.controls)):
+                assert isinstance(gate.target, X)
+                for i in range(len(gate.control_qubits)):
                     code[idx[i]] = r"\ctrl{" + str(idx[i + 1] - idx[i]) + "}"
                 code[idx[i + 1]] = r"\targ{}"
 
@@ -606,24 +607,6 @@ def circuit_to_diagram(
                     for key, value in zip(elem.cv_args, params)
                 }
 
-            # Construct text labels
-            # name = elem.name
-            # if elem._diagram_labels_():
-            #     text_labels = elem._diagram_labels_()
-            #     if len(idx) != 1 and len(text_labels) == 1:
-            #         text_labels = list(text_labels) * len(idx)
-            #     text_labels = [t.format(**pretty_params) for t in text_labels]
-            # else:
-            #     if pretty_params:
-            #         params_text = ",".join(pretty_params.values())
-            #         text_labels = [name + "(%s)" % params_text] * len(idx)
-            #     else:
-            #         text_labels = [name] * len(idx)
-            #     if len(idx) != 1 and not elem.cv_interchangeable:
-            #         # If not interchangeable, we have to label connections
-            #         for i in range(elem.qubit_nb):
-            #             text_labels[i] = text_labels[i] + "_%s" % i
-
             text_labels = elem._diagram_labels_()
 
             vertical_lines = len(text_labels) > 1
@@ -767,6 +750,7 @@ def _box_char_transpose(chars: str) -> str:
     )
 
 
+# TODO: extra control character
 # FIXME: pi, alpha, ect...
 unicode_ascii = {
     "●": "@",

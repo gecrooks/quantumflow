@@ -46,7 +46,7 @@ class P0(Gate):
         return tensors.asqutensor([[1, 0], [0, 0]])
 
     def _diagram_labels_(self) -> List[str]:
-        return ["|0><0|"]
+        return ["|0⟩⟨0|"]
 
 
 class P1(Gate):
@@ -64,7 +64,7 @@ class P1(Gate):
         return tensors.asqutensor([[0, 0], [0, 1]])
 
     def _diagram_labels_(self) -> List[str]:
-        return ["|1><1|"]
+        return ["|1⟩⟨1|"]
 
 
 # fin
