@@ -31,15 +31,9 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         python -m pip install .[dev]  # install package + test dependencies   
-        sudo apt-get install texlive texlive-latex-extra latexmk poppler-utils
-        mkdir -p ~/texmf/tex/latex
-        wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex -P ~/texmf/tex/latex
     - name: About
       run: |
         python -m $(python -Wi setup.py --name).about
-        echo
-        pdflatex --version
-        pdftocairo -v
     - name: Test with pytest
       run: |
         python -m pytest --cov --cov-fail-under 100
@@ -56,15 +50,3 @@ jobs:
     - name: Build documentation with sphinx
       run: |
         sphinx-build -M html docs docs/_build
-    - name: Test notebooks (against master)
-      run: |
-        pytest --nbmake tutorial
-    - name: Test with all supported minor versions of cirq
-      run: |
-        python -m pip install cirq~=0.8.0
-        python -m pytest quantumflow/xcirq_test.py    
-        python -m pip install cirq~=0.9.0
-        python -m pytest quantumflow/xcirq_test.py
-        python -m pip install cirq~=0.10.0
-        python -m pytest quantumflow/xcirq_test.py
-
