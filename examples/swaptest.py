@@ -24,7 +24,7 @@ def swap_test(ket, q0: qf.Qubit, q1: qf.Qubit, q2: qf.Qubit) -> qf.QubitTensor:
     circ += qf.H(q0)
     circ += qf.CSwap(q0, q1, q2)
     circ += qf.H(q0)
-    circ += qf.P0(q0)  # Measure
+    circ += qf.Project0(q0)  # Measure
     ket = circ.run(ket)
 
     fid = 2 * ket.norm() - 1.0  # return fidelity

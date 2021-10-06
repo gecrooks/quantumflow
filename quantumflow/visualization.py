@@ -22,12 +22,11 @@ from sympy import Symbol
 from . import utils, var
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
-from .gates import P0, P1
 from .modules import ControlGate, IdentityGate
 from .ops import Gate, Operation
 from .qubits import Qubits
 from .stdgates import CZ, CSwap, Swap, X
-from .stdops import Reset
+from .stdops import Project0, Project1, Reset
 
 __all__ = (
     "LATEX_GATESET",
@@ -83,8 +82,8 @@ LATEX_GATESET = frozenset(
         "YY",
         "ZZ",
         "Can",
-        "P0",
-        "P1",
+        "Project0",
+        "Project1",
         "Reset",
         "NoWire",
         "Measure",
@@ -149,9 +148,6 @@ def circuit_to_latex(
     """
     Create an image of a quantum circuit in LaTeX.
 
-    Can currently draw X, Y, Z, H, T, S, T_H, S_H, Rx, Ry, Rz, XPow, YPow, ZPow,
-    HPow, CNot, CZ, Swap, ISwap, CCNot, CSwap, XX, YY, ZZ, Can, P0 and P1 gates,
-    and the Reset operation.
 
     Args:
         circ:       A quantum Circuit
@@ -292,9 +288,9 @@ def circuit_to_latex(
                 else:  # quantikz
                     for i in idx:
                         code[i] = r""
-            elif isinstance(gate, P0):
+            elif isinstance(gate, Project0):
                 code[idx[0]] = r"\push{\ket{0}\!\!\bra{0}} \qw"
-            elif isinstance(gate, P1):
+            elif isinstance(gate, Project1):
                 code[idx[0]] = r"\push{\ket{1}\!\!\bra{1}} \qw"
             # elif isinstance(gate, Measure):
             #     code[idx[0]] = r"\meter{}"  # TODO: Add cbit label        # FIXME

@@ -76,8 +76,8 @@ def test_visualize_circuit() -> None:
     circ += qf.CCNot(1, 2, 3)
     circ += qf.CSwap(4, 5, 6)
 
-    circ += qf.P0(0)
-    circ += qf.P1(1)
+    circ += qf.Project0(0)
+    circ += qf.Project1(1)
 
     circ += qf.Reset(2)
     circ += qf.Reset(4, 5, 6)

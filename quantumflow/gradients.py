@@ -28,7 +28,7 @@ from numpy import pi
 
 from . import tensors
 from .circuits import Circuit
-from .gates import join_gates
+from .deprecated import join_gates
 from .info import state_fidelity
 from .ops import Gate, Operation
 from .states import State

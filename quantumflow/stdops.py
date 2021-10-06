@@ -52,7 +52,6 @@ import numpy as np
 from . import tensors, utils
 from .circuits import Circuit
 from .config import CIRCUIT_INDENT
-from .gates import P0, P1
 from .ops import _EXCLUDED_OPERATIONS, Channel, Gate, Operation, Unitary
 from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State
@@ -74,6 +73,8 @@ __all__ = [
     "Projection",
     "Simulator",
     "QFSimulator",
+    "Project0",
+    "Project1",
 ]
 
 
@@ -160,20 +161,20 @@ class Measure(Operation):
         return f"{self.name} {self.qubit}"
 
     def run(self, ket: State) -> State:
-        prob_zero = P0(self.qubit).run(ket).norm()
+        prob_zero = Project0(self.qubit).run(ket).norm()
 
         # generate random number to 'roll' for measurement
         if np.random.random() < prob_zero:
-            ket = P0(self.qubit).run(ket).normalize()
+            ket = Project0(self.qubit).run(ket).normalize()
             ket = ket.store({self.cbit: 0})
         else:  # measure one
-            ket = P1(self.qubit).run(ket).normalize()
+            ket = Project1(self.qubit).run(ket).normalize()
             ket = ket.store({self.cbit: 1})
         return ket
 
     def evolve(self, rho: Density) -> Density:
-        p0 = P0(self.qubit).aschannel()
-        p1 = P1(self.qubit).aschannel()
+        p0 = Project0(self.qubit).aschannel()
+        p1 = Project1(self.qubit).aschannel()
 
         prob_zero = p0.evolve(rho).norm()
 
@@ -463,5 +464,42 @@ class QFSimulator(Simulator):
 
 
 # end class QFSimulator
+
+
+class Project0(Gate):
+    r"""Project a qubit to zero.
+
+    A non-unitary operation that represents the effect of a measurement. The norm
+    of the resultant state is multiplied by the probability of observing 0.
+    """
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        return tensors.asqutensor([[1, 0], [0, 0]])
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["|0⟩⟨0|"]
+
+
+class Project1(Gate):
+    r"""Project a qubit to one.
+
+    A non-unitary operation that represents the effect of a measurement. The norm
+    of the resultant state is multiplied by the probability of observing 1.
+    """
+
+    def __init__(self, q0: Qubit = 0) -> None:
+        super().__init__(qubits=[q0])
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        return tensors.asqutensor([[0, 0], [0, 1]])
+
+    def _diagram_labels_(self) -> List[str]:
+        return ["|1⟩⟨1|"]
+
 
 # fin

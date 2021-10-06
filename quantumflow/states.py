@@ -161,13 +161,13 @@ class QuantumState(ABC):
         tensor = tensors.permute(self.tensor, self.qubit_indices(qubits))
         return self.replace(tensor=tensor, qubits=qubits)
 
-    def qubit_indices(self, qubits: Qubits) -> List[int]:
+    def qubit_indices(self, qubits: Qubits) -> Tuple[int, ...]:
         """Convert qubits to index positions.
 
         Raises:
             ValueError: If argument qubits are not found in state qubits
         """
-        return [self.qubits.index(q) for q in qubits]
+        return tuple(self.qubits.index(q) for q in qubits)
 
     def norm(self) -> QubitTensor:
         """Return the state vector norm"""

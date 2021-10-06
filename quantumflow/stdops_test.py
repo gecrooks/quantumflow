@@ -4,6 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
+import numpy as np
 import pytest
 
 import quantumflow as qf
@@ -195,6 +196,22 @@ def test_simulator() -> None:
     rho1 = circ.evolve(rho0)
     rho2 = qf.QFSimulator(circ).evolve(rho0)
     assert qf.densities_close(rho1, rho2)
+
+
+def test_projectors() -> None:
+    ket = qf.zero_state(1)
+    assert qf.Project0(0).run(ket).norm() == 1.0
+
+    ket = qf.H(0).run(ket)
+
+    measure0 = qf.Project0(0).run(ket)
+    assert np.isclose(measure0.norm(), 0.5)
+
+    measure1 = qf.Project1(0).run(ket)
+    assert np.isclose(measure1.norm(), 0.5)
+
+    assert not qf.almost_unitary(qf.Project0())
+    assert not qf.almost_unitary(qf.Project1())
 
 
 # fin

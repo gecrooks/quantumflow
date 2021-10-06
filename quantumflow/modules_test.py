@@ -12,8 +12,10 @@ from sympy import Symbol
 
 import quantumflow as qf
 
+from .config_test import REPS
 
-def test_identitygate() -> None:
+
+def test_IdentityGate() -> None:
     qubits = [3, 4, 5, 6, 7, 8]
     gate = qf.IdentityGate(qubits)
     ket0 = qf.random_state(qubits)
@@ -570,6 +572,16 @@ def test_ControlGate_diagram() -> None:
 
     diag = qf.circuit_to_diagram(qf.Circuit(gate0, qubits=[0, 1, 2, 3, 4, 5, 6, 7]))
     print(diag)
+
+
+def test_RandomGate_inverse() -> None:
+    K = 4
+    for _ in range(REPS):
+        gate = qf.RandomGate(range(K))
+        inv = gate.H
+        gate1 = inv @ gate
+        # TODO: almost_identity
+        assert qf.gates_close(qf.IdentityGate([0, 1, 2, 3]), gate1)
 
 
 # fin

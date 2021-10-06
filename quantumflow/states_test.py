@@ -271,7 +271,7 @@ def test_normalize() -> None:
     ket = qf.random_state(2)
     assert np.isclose(ket.norm(), 1.0)
 
-    ket = qf.P0(0).run(ket)
+    ket = qf.Project0(0).run(ket)
     assert ket.norm() < 1.0
     ket = ket.normalize()
     assert np.isclose(ket.norm(), 1.0)
