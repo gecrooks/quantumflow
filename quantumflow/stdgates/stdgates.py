@@ -79,15 +79,11 @@ class StdGate(Gate):
         label = label.replace("ISwap", "iSwap")
         label = label.replace("Phased", "Ph")
 
-        # TODO: Move to an override
-        # label = label.replace("CrossResonance", "CR")
-        label = label.replace("FSwap", "xᶠ")
+        if label.startswith("Sqrt"):
+            label = SQRT + label[4:]
 
         if label.endswith("_H"):
             label = label[:-2] + CONJ
-
-        if label.startswith("Sqrt"):
-            label = SQRT + label[4:]
 
         args = ""
         if self.cv_args:
@@ -112,7 +108,7 @@ class StdGate(Gate):
 
 
 StdCtrlGateType = TypeVar("StdCtrlGateType", bound="StdCtrlGate")
-"""Generic type annotations for subtypes of Operation"""
+"""Generic type annotations for subtypes of StdCtrlGate"""
 
 
 class StdCtrlGate(StdGate):
@@ -128,27 +124,30 @@ class StdCtrlGate(StdGate):
     """StdGate type that is the target of this controlled gate.
     Should be set by subclasses"""
 
-    cv_control_nb: ClassVar[int] = None
-    """Number of qubit controls"""
-
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
 
-        assert cls.cv_target is not None  # FIXME
-        assert cls.cv_target.cv_args == cls.cv_args  # FIXME
-
-        cls.cv_control_nb = cls.cv_qubit_nb - cls.cv_target.cv_qubit_nb
+        assert cls.cv_target is not None
+        assert cls.cv_target.cv_args == cls.cv_args
 
         if cls.__name__ not in _EXCLUDED_OPERATIONS:
             STDCTRLGATES[cls.__name__] = cls
 
     @property
     def control_qubits(self) -> Qubits:
-        return self.qubits[: self.cv_control_nb]
+        return self.qubits[: self.control_qubit_nb]
 
     @property
     def target_qubits(self) -> Qubits:
-        return self.qubits[self.cv_control_nb :]
+        return self.qubits[self.control_qubit_nb :]
+
+    @property
+    def control_qubit_nb(self) -> int:
+        return self.qubit_nb - self.cv_target.cv_qubit_nb
+
+    @property
+    def target_qubit_nb(self) -> int:
+        return self.cv_target.cv_qubit_nb
 
     @property
     def target(self) -> StdGate:
@@ -176,7 +175,7 @@ class StdCtrlGate(StdGate):
         return type(self)(*target.params, *self.qubits)  # type: ignore
 
     def _diagram_labels_(self) -> List[str]:
-        return ([CTRL] * self.cv_control_nb) + self.target._diagram_labels_()
+        return ([CTRL] * self.control_qubit_nb) + self.target._diagram_labels_()
 
 
 # end StdCtrlGate
