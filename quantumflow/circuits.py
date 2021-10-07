@@ -165,7 +165,9 @@ class Circuit(Sequence, Operation):
         return self.rewire(labels)
 
     def rewire(self, labels: Dict[Qubit, Qubit]) -> "Circuit":
-        return Circuit([elem.rewire(labels) for elem in self])
+        return Circuit(
+            [elem.rewire(labels) for elem in self], qubits=list(labels.values())
+        )
 
     def run(self, ket: State = None) -> State:
         """
@@ -211,7 +213,7 @@ class Circuit(Sequence, Operation):
         """Returns the Hermitian conjugate of this circuit.
         If all the subsidiary gates are unitary, returns the circuit inverse.
         """
-        return Circuit([elem.H for elem in reversed(self)])
+        return Circuit([elem.H for elem in reversed(self)], qubits=self.qubits)
 
     def __str__(self) -> str:
         circ_str = "\n".join([str(elem) for elem in self])
@@ -221,7 +223,7 @@ class Circuit(Sequence, Operation):
     # TESTME
     def resolve(self, subs: Mapping[str, float]) -> "Circuit":
         """Resolve the parameters of all of the elements of this circuit"""
-        return Circuit(op.resolve(subs) for op in self)
+        return Circuit(*[op.resolve(subs) for op in self], qubits=self.qubits)
 
     @property
     def params(self) -> Tuple[Variable, ...]:
@@ -233,7 +235,7 @@ class Circuit(Sequence, Operation):
     # TESTME
     def specialize(self) -> "Circuit":
         """Specialize all of the elements of this circuit"""
-        return Circuit([elem.specialize() for elem in self])
+        return Circuit([elem.specialize() for elem in self], qubits=self.qubits)
 
     # TESTME
     def decompose(self) -> Iterator["Operation"]:

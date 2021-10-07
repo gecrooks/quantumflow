@@ -390,3 +390,11 @@ def test_circuit_flat_lists() -> None:
     flat = qf.Circuit(circ.flat())
     assert len(flat) == 6
     assert flat[2].name == "Y"
+
+
+def test_circuit_order() -> None:
+    circ0 = qf.Circuit([qf.X(0), qf.X(1)], qubits=[1, 0])
+    assert circ0.qubits == (1, 0)
+    assert circ0.H.qubits == (1, 0)
+    assert circ0.on("b", "a").qubits == ("b", "a")
+    assert circ0.rewire({0: "b", 1: "a"}).qubits == ("b", "a")
