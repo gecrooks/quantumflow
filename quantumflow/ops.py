@@ -31,7 +31,7 @@ DAGCircuit, and Pauli.
 """
 
 import inspect
-from abc import ABC
+from abc import ABC, abstractmethod
 from copy import copy
 from functools import total_ordering
 from typing import (
@@ -440,6 +440,11 @@ class Gate(Operation):
     def asoperator(self) -> QubitTensor:
         """Return tensor with with qubit indices flattened"""
         return tensors.flatten(self.tensor, rank=2)
+
+    @property
+    @abstractmethod
+    def tensor(self) -> QubitTensor:
+        ...
 
     @utils.cached_property
     def tensor_diagonal(self) -> QubitTensor:
