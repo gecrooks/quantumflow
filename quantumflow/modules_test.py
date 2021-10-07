@@ -485,8 +485,11 @@ def test_ConditionalGate() -> None:
 def test_ControlGate() -> None:
     gate0 = qf.ControlGate(qf.X(1), [0])
     gate1 = qf.CNot(0, 1)
+
     assert qf.gates_close(gate0, gate1)
     assert gate0.target_qubits == (1,)
+    assert gate0.control_qubit_nb == 1
+    assert gate0.target_qubit_nb == 1
 
     gateb = qf.ControlGate(qf.X(0), [1])
     gate2 = qf.CNot(1, 0)
@@ -582,6 +585,50 @@ def test_RandomGate_inverse() -> None:
         gate1 = inv @ gate
         # TODO: almost_identity
         assert qf.gates_close(qf.IdentityGate([0, 1, 2, 3]), gate1)
+
+
+def test_CompositeGate() -> None:
+    circ0 = qf.Circuit(qf.H(0), qf.CNot(0, 1), qf.CNot(1, 2))
+    gate0 = qf.CompositeGate(*circ0)
+
+    assert qf.gates_close(circ0.asgate(), gate0.asgate())
+    assert qf.gates_close(circ0.aschannel(), gate0.aschannel())
+    assert qf.states_close(circ0.run(), gate0.run())
+    assert qf.densities_close(circ0.evolve(), gate0.evolve())
+
+    gate1 = qf.CompositeGate(*circ0, qubits=[2, 3, 5, 4, 0, 1])
+    assert gate1.qubits == (2, 3, 5, 4, 0, 1)
+    assert gate1.H.qubits == (2, 3, 5, 4, 0, 1)
+
+    assert qf.almost_identity(gate1 @ gate1.H)
+
+    with pytest.raises(ValueError):
+        qf.CompositeGate(qf.Measure(0))
+
+    diag = qf.circuit_to_diagram(qf.Circuit(gate0))
+    print(diag)
+
+    gate2 = qf.ControlGate(gate0, [4, 5, 6])
+    diag = qf.circuit_to_diagram(qf.Circuit(gate2))
+    print(diag)
+
+    print()
+    s = str(gate0)
+    assert len(s.split("\n")) == len(gate0.circuit) + 1
+    print(s)
+
+    gate3 = gate0.on(4, 3, 2)
+    assert gate3.qubits == (4, 3, 2)
+
+    gate4 = gate0.rewire({0: 3, 1: 5, 2: 4})
+    assert gate4.qubits == (3, 5, 4)
+
+    circ5 = qf.Circuit(qf.Rx(0.1, 0), qf.Ry(0.2, 0), qf.Rz(0.2, 2))
+    gate5 = qf.CompositeGate(*circ5)
+    print(gate5.params)
+
+    with pytest.raises(ValueError):
+        gate0.param("theta")
 
 
 # fin
