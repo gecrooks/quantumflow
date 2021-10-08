@@ -16,8 +16,9 @@ from .. import utils
 from ..config import CONJ, CTRL, SQRT
 from ..ops import _EXCLUDED_OPERATIONS, Gate
 from ..paulialgebra import Pauli, sZ
-from ..qubits import Qubits
+from ..qubits import Qubit, Qubits
 from ..tensors import QubitTensor, asqutensor
+from ..var import Variable
 
 __all__ = (
     "StdGate",
@@ -53,15 +54,15 @@ class StdGate(Gate):
             STDGATES[cls.__name__] = cls  # Subclass registration
 
         # Parse the Gate arguments and number of qubits from the arguments to __init__
-        # Convention is that qubit names start with "q", but arguments do not.
-        names = getattr(cls, "__init__").__annotations__.keys()
-        args = tuple(s for s in names if s[0] != "q" and s != "return")
-        qubit_nb = len(names) - len(args)
-        if "return" in names:
-            # For unclear reasons, "return" is often (but not always?) in names.
-            qubit_nb -= 1
+        args = []
+        qubit_nb = 0
+        for name, namet in cls.__init__.__annotations__.items():
+            if namet == Variable:
+                args.append(name)
+            elif namet == Qubit:
+                qubit_nb += 1
 
-        cls.cv_args = args
+        cls.cv_args = tuple(args)
         cls.cv_qubit_nb = qubit_nb
 
     def __repr__(self) -> str:
