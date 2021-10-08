@@ -19,9 +19,7 @@ so don't mix different incomparable data types.
 
 """
 
-from typing import Any, Sequence
-
-from typing_extensions import Protocol  # py 3.7 compatibility.
+from typing import Any, Sequence, Protocol
 
 __all__ = ("Qubit", "Qubits", "sorted_qubits")
 
