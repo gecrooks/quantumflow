@@ -56,10 +56,10 @@ from .config import *  # noqa: F401, F403
 from .dagcircuit import *  # noqa: F401, F403
 from .decompositions import *  # noqa: F401, F403
 from .deprecated import *  # noqa: F401, F403
+from .gates import *  # noqa: F401, F403
 from .gatesets import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403
-from .gates import *  # noqa: F401, F403
 from .ops import *  # noqa: F401, F403
 from .paulialgebra import *  # noqa: F401, F403
 from .qubits import *  # noqa: F401, F403
