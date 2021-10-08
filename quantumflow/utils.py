@@ -32,6 +32,7 @@ __all__ = (
     # Future
     "importlib_metadata",
     "cached_property",
+    "Protocol",
     "deprecated",
     # Collections
     "multi_slice",
@@ -83,6 +84,14 @@ except ImportError:  # pragma: no cover
             return result
 
         return property(wrapper)
+
+
+try:
+    # python >= 3.8
+    from typing import Protocol  # type: ignore
+except ImportError:  # pragma: no cover
+    # python == 3.7
+    from typing_extensions import Protocol  # type: ignore  # noqa: F401
 
 
 def deprecated(func: Callable) -> Callable:

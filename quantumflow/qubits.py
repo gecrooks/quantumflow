@@ -12,16 +12,15 @@ Qubits
 ======
 
 States, gates, and various other methods accept a list of qubits labels upon
-which the given State or Gate acts. A Qubit label can be any hashable python
-object, but typically an integer or string. e.g. `[0, 1, 2]`, or
-`['a', 'b', 'c']`. Note that some operations expect the qubits to be sortable,
-so don't mix different incomparable data types.
+which the given State or Gate acts. A Qubit label can be any hashable and
+sortable python object (most immutable types), but typically an integer or string.
+e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`.
 
 """
 
 from typing import Any, Sequence
 
-from typing_extensions import Protocol  # py 3.7 compatibility.
+from .utils import Protocol
 
 __all__ = ("Qubit", "Qubits", "sorted_qubits")
 
