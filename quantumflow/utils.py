@@ -85,6 +85,7 @@ except ImportError:  # pragma: no cover
 
         return property(wrapper)
 
+
 try:
     # python >= 3.8
     from typing import Protocol  # type: ignore
