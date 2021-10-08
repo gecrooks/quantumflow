@@ -63,9 +63,6 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 """
 
-# TODO: Move all to gate module?
-
-import textwrap
 from typing import (
     Dict,
     Iterable,
@@ -84,7 +81,6 @@ import scipy
 
 from . import tensors, utils, var
 from .circuits import Circuit
-from .config import CIRCUIT_INDENT
 from .ops import Channel, Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, sX, sY, sZ
 from .qubits import Qubit, Qubits

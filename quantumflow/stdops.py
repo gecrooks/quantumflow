@@ -37,7 +37,6 @@ from typing import (
     Callable,
     Dict,
     Hashable,
-    Iterable,
     Iterator,
     List,
     Sequence,
