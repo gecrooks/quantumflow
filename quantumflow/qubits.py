@@ -18,7 +18,8 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`.
 
 """
 
-from typing import Any, Sequence, Protocol
+from typing import Any, Sequence
+from .utils import Protocol
 
 __all__ = ("Qubit", "Qubits", "sorted_qubits")
 
