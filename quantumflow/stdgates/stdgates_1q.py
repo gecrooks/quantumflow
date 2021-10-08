@@ -136,7 +136,7 @@ class Ph(StdGate):
 
     cv_tensor_structure = "diagonal"
 
-    def __init__(self, phi: float, q0: Qubit) -> None:
+    def __init__(self, phi: Variable, q0: Qubit) -> None:
         super().__init__(params=[phi], qubits=[q0])
 
     @property
