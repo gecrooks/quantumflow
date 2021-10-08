@@ -13,13 +13,13 @@
 #
 # We don't include `.utils` since those are internal utility routines.
 #
-# Subgates for interfacing with external resources (e.g. .xcirq, .xforest, etc.)
+# Submodules for interfacing with external resources (e.g. .xcirq, .xforest, etc.)
 # are not imported at top level, since they have external dependencies that
 # often break, and need not be installed by default.
 #
 # We use a star import here (which necessitates suppressing lint messages)
-# so that the public API can be specified in the individual subgates.
-# Each of these subgates should define __all__.
+# so that the public API can be specified in the individual submodules.
+# Each of these submodules should define __all__.
 #
 #
 # Import hierarchy:
@@ -72,7 +72,7 @@ from .translate import *  # noqa: F401, F403
 from .transpile import *  # noqa: F401, F403
 from .var import *  # noqa: F401, F403
 from .visualization import *  # noqa: F401, F403
-from .xbraket import *  # noqa: F401, F403  *  # noqa: F401, F403
+from .xbraket import *  # noqa: F401, F403
 from .xcirq import *  # noqa: F401, F403
 from .xforest import *  # noqa: F401, F403
 from .xqiskit import *  # noqa: F401, F403

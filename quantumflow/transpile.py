@@ -5,8 +5,8 @@
 
 # Implementation Note:
 #
-# We defer import of gates that access eXternal dependences.
-# The subgates are responsible for raising an exception with an informative
+# We defer import of modules that access eXternal dependences.
+# The submodules are responsible for raising an exception with an informative
 # error message if the required dependency isn't installed.
 
 
