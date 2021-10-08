@@ -222,6 +222,8 @@ def test_diagram_labels() -> None:
 def test_StdCtrlGate_tensor_structure(gatetype: Type[qf.StdCtrlGate]) -> None:
     struct = gatetype.cv_target.cv_tensor_structure
 
+    # TODO: make this automatic, rather than testing?
+
     if struct == "swap":
         assert gatetype.cv_tensor_structure == "permutation"
     else:

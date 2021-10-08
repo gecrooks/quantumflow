@@ -444,7 +444,7 @@ class Gate(Operation):
     @property
     @abstractmethod
     def tensor(self) -> QubitTensor:
-        ...
+        pass
 
     @utils.cached_property
     def tensor_diagonal(self) -> QubitTensor:

@@ -163,19 +163,16 @@ class CompositeGate(Gate):
     def evolve(self, rho: Density = None) -> Density:
         return self.circuit.evolve(rho)
 
-    def asgate(self) -> "Gate":
-        return self.circuit.asgate()
-
     def aschannel(self) -> "Channel":
         return self.circuit.aschannel()
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
-        return self.asgate().tensor
+        return self.circuit.asgate().tensor
 
     @property
     def H(self) -> "CompositeGate":
-        return CompositeGate(self.circuit.H, qubits=self.qubits)
+        return CompositeGate(*self.circuit.H, qubits=self.qubits)
 
     def __str__(self) -> str:
         lines = str(self.circuit).split("\n")
@@ -183,11 +180,11 @@ class CompositeGate(Gate):
         return "\n".join(lines)
 
     def on(self, *qubits: Qubit) -> "CompositeGate":
-        return CompositeGate(self.circuit.on(*qubits), qubits=qubits)
+        return CompositeGate(*self.circuit.on(*qubits), qubits=qubits)
 
     def rewire(self, labels: Dict[Qubit, Qubit]) -> "CompositeGate":
         circ = self.circuit.rewire(labels)
-        return CompositeGate(circ, qubits=circ.qubits)
+        return CompositeGate(*circ, qubits=circ.qubits)
 
     @property
     def params(self) -> Tuple[Variable, ...]:

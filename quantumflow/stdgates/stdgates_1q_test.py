@@ -123,7 +123,7 @@ def test_specialize_1q() -> None:
 
     for gatetype in special1p1q:
         for value in special_values:
-            gate0 = gatetype(value, "q0")
+            gate0 = gatetype(value, "q0")  # type: ignore
             gate1 = gate0.specialize()
             assert gate0.qubits == gate1.qubits
             assert qf.gates_close(gate0, gate1)

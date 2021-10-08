@@ -591,8 +591,8 @@ def test_CompositeGate() -> None:
     circ0 = qf.Circuit(qf.H(0), qf.CNot(0, 1), qf.CNot(1, 2))
     gate0 = qf.CompositeGate(*circ0)
 
-    assert qf.gates_close(circ0.asgate(), gate0.asgate())
-    assert qf.gates_close(circ0.aschannel(), gate0.aschannel())
+    assert qf.gates_close(circ0.asgate(), gate0)
+    assert qf.channels_close(circ0.aschannel(), gate0.aschannel())
     assert qf.states_close(circ0.run(), gate0.run())
     assert qf.densities_close(circ0.evolve(), gate0.evolve())
 
@@ -603,7 +603,7 @@ def test_CompositeGate() -> None:
     assert qf.almost_identity(gate1 @ gate1.H)
 
     with pytest.raises(ValueError):
-        qf.CompositeGate(qf.Measure(0))
+        qf.CompositeGate(qf.Measure(0))  # type: ignore
 
     diag = qf.circuit_to_diagram(qf.Circuit(gate0))
     print(diag)
