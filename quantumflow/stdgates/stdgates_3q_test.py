@@ -22,6 +22,8 @@ def test_ccnot() -> None:
     ket = qf.CCNot(0, 1, 2).run(ket)
     assert ket.tensor[1, 1, 1] == 1.0
 
+    assert qf.CCNot(0, 1, 2).target_qubit_nb == 1
+
 
 def test_cswap() -> None:
     ket = qf.zero_state(3)
@@ -32,6 +34,8 @@ def test_cswap() -> None:
     ket = qf.X(0).run(ket)
     ket = qf.CSwap(0, 1, 2).run(ket)
     assert ket.tensor[1, 0, 1] == 1.0
+
+    assert qf.CSwap(0, 1, 2).target_qubit_nb == 2
 
 
 def test_ccz() -> None:

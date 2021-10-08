@@ -32,7 +32,7 @@
 #   states
 #   paulialgebra
 #   ops
-#   modules
+#   gates
 #   stdgates
 #   channels
 #   stdops
@@ -56,10 +56,10 @@ from .config import *  # noqa: F401, F403
 from .dagcircuit import *  # noqa: F401, F403
 from .decompositions import *  # noqa: F401, F403
 from .deprecated import *  # noqa: F401, F403
+from .gates import *  # noqa: F401, F403
 from .gatesets import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403
-from .modules import *  # noqa: F401, F403
 from .ops import *  # noqa: F401, F403
 from .paulialgebra import *  # noqa: F401, F403
 from .qubits import *  # noqa: F401, F403
@@ -72,7 +72,7 @@ from .translate import *  # noqa: F401, F403
 from .transpile import *  # noqa: F401, F403
 from .var import *  # noqa: F401, F403
 from .visualization import *  # noqa: F401, F403
-from .xbraket import *  # noqa: F401, F403  *  # noqa: F401, F403
+from .xbraket import *  # noqa: F401, F403
 from .xcirq import *  # noqa: F401, F403
 from .xforest import *  # noqa: F401, F403
 from .xqiskit import *  # noqa: F401, F403

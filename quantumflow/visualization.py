@@ -22,7 +22,7 @@ from sympy import Symbol
 from . import utils, var
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
-from .modules import ControlGate, IdentityGate
+from .gates import ControlGate, IdentityGate
 from .ops import Gate, Operation
 from .qubits import Qubits
 from .stdgates import CZ, CSwap, Swap, X

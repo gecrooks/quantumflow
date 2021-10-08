@@ -15,7 +15,6 @@ Various standard operations on quantum states, which aren't gates,
 channels, circuits, or DAGCircuit's.
 
 .. autoclass :: Moment
-
 .. autoclass :: Measure
 .. autoclass :: Reset
 .. autoclass :: Initialize
@@ -38,7 +37,6 @@ from typing import (
     Callable,
     Dict,
     Hashable,
-    Iterable,
     Iterator,
     List,
     Sequence,
@@ -84,17 +82,14 @@ class Moment(Sequence, Operation):
     so that they may be applied at the same moment of time.
     """
 
-    def __init__(self, *elements: Union[Iterable[Operation], Operation]) -> None:
-        # Legacy interface (TODO: Raise warning)
-        if len(elements) == 1 and isinstance(elements[0], Iterable):
-            elements = elements[0]  # type: ignore
+    def __init__(self, *elements: Operation, qubits: Qubits = None) -> None:
+        circ = Circuit(Circuit(elements).flat(), qubits=qubits)  # type: ignore
 
-        circ = Circuit(Circuit(elements).flat())  # type: ignore
         qbs = list(q for elem in circ for q in elem.qubits)
         if len(qbs) != len(set(qbs)):
-            raise ValueError("Qubits of operations within Moments " "must be disjoint.")
+            raise ValueError("Qubits of operations within Moments must be disjoint.")
 
-        super().__init__(qubits=qbs)
+        super().__init__(qubits=circ.qubits)
         self._circ = circ
 
     def __getitem__(self, key: Union[int, slice]) -> Any:

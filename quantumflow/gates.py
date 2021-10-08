@@ -5,12 +5,12 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: modules
+.. currentmodule:: gates
 
 Multi-qubit gates
 #################
 
-Larger unitary computational modules that can be broken up into standard gates.
+Larger unitary computational gates that can be broken up into standard gates.
 
 Danger: These multi-qubit gates have a variable, and possible large, number of qubits.
 Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
@@ -56,11 +56,24 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 .. autoclass:: RandomGate
     :members:
+
+
+.. autoclass:: CompositeGate
+    :members:
+
 """
 
-# TODO: Move all to gate module?
-
-from typing import Iterable, Iterator, List, Mapping, Sequence, Union, cast
+from typing import (
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+)
 
 import networkx as nx
 import numpy as np
@@ -68,7 +81,7 @@ import scipy
 
 from . import tensors, utils, var
 from .circuits import Circuit
-from .ops import Gate, Operation, UnitaryGate
+from .ops import Channel, Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, sX, sY, sZ
 from .qubits import Qubit, Qubits
 from .states import Density, State
@@ -91,6 +104,7 @@ __all__ = (
     "MultiplexedRzGate",
     "MultiplexedRyGate",
     "RandomGate",
+    "CompositeGate",
 )
 
 
@@ -122,6 +136,61 @@ class IdentityGate(Gate):
 
 
 # end class IdentityGate
+
+
+class CompositeGate(Gate):
+    """
+    A quantum gate represented by a sequence of quantum gates.
+    """
+
+    def __init__(self, *elements: Gate, qubits: Qubits = None) -> None:
+        circ = Circuit(Circuit(elements).flat(), qubits=qubits)
+
+        for elem in circ:
+            if not isinstance(elem, Gate):
+                raise ValueError("A CompositeGate must be composed of Gates")
+
+        super().__init__(qubits=circ.qubits)
+        self.circuit = circ
+
+    def run(self, ket: State = None) -> State:
+        return self.circuit.run(ket)
+
+    def evolve(self, rho: Density = None) -> Density:
+        return self.circuit.evolve(rho)
+
+    def aschannel(self) -> "Channel":
+        return self.circuit.aschannel()
+
+    @utils.cached_property
+    def tensor(self) -> QubitTensor:
+        return self.circuit.asgate().tensor
+
+    @property
+    def H(self) -> "CompositeGate":
+        return CompositeGate(*self.circuit.H, qubits=self.qubits)
+
+    def __str__(self) -> str:
+        lines = str(self.circuit).split("\n")
+        lines[0] = super().__str__()
+        return "\n".join(lines)
+
+    def on(self, *qubits: Qubit) -> "CompositeGate":
+        return CompositeGate(*self.circuit.on(*qubits), qubits=qubits)
+
+    def rewire(self, labels: Dict[Qubit, Qubit]) -> "CompositeGate":
+        circ = self.circuit.rewire(labels)
+        return CompositeGate(*circ, qubits=circ.qubits)
+
+    @property
+    def params(self) -> Tuple[Variable, ...]:
+        return tuple(item for elem in self.circuit for item in elem.params)
+
+    def param(self, name: str) -> Variable:
+        raise ValueError("Cannot lookup parameters by name for composite operations")
+
+
+# end class CompositeGate
 
 
 # TODO: Decompose
@@ -172,6 +241,14 @@ class ControlGate(Gate):
     @property
     def target_qubits(self) -> Qubits:
         return self.target.qubits
+
+    @property
+    def control_qubit_nb(self) -> int:
+        return self.qubit_nb - self.target.qubit_nb
+
+    @property
+    def target_qubit_nb(self) -> int:
+        return self.target.qubit_nb
 
     @property
     def hamiltonian(self) -> Pauli:

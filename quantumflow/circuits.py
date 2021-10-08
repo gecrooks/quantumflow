@@ -165,7 +165,9 @@ class Circuit(Sequence, Operation):
         return self.rewire(labels)
 
     def rewire(self, labels: Dict[Qubit, Qubit]) -> "Circuit":
-        return Circuit([elem.rewire(labels) for elem in self])
+        return Circuit(
+            [elem.rewire(labels) for elem in self], qubits=list(labels.values())
+        )
 
     def run(self, ket: State = None) -> State:
         """
@@ -191,7 +193,7 @@ class Circuit(Sequence, Operation):
         return rho
 
     def asgate(self) -> Gate:
-        from .modules import IdentityGate
+        from .gates import IdentityGate
 
         gate: Gate = IdentityGate(self.qubits)
         for elem in self:
@@ -199,7 +201,7 @@ class Circuit(Sequence, Operation):
         return gate
 
     def aschannel(self) -> Channel:
-        from .modules import IdentityGate
+        from .gates import IdentityGate
 
         chan = IdentityGate(self.qubits).aschannel()
         for elem in self:
@@ -211,7 +213,7 @@ class Circuit(Sequence, Operation):
         """Returns the Hermitian conjugate of this circuit.
         If all the subsidiary gates are unitary, returns the circuit inverse.
         """
-        return Circuit([elem.H for elem in reversed(self)])
+        return Circuit([elem.H for elem in reversed(self)], qubits=self.qubits)
 
     def __str__(self) -> str:
         circ_str = "\n".join([str(elem) for elem in self])
@@ -221,7 +223,7 @@ class Circuit(Sequence, Operation):
     # TESTME
     def resolve(self, subs: Mapping[str, float]) -> "Circuit":
         """Resolve the parameters of all of the elements of this circuit"""
-        return Circuit(op.resolve(subs) for op in self)
+        return Circuit(*[op.resolve(subs) for op in self], qubits=self.qubits)
 
     @property
     def params(self) -> Tuple[Variable, ...]:
@@ -233,7 +235,7 @@ class Circuit(Sequence, Operation):
     # TESTME
     def specialize(self) -> "Circuit":
         """Specialize all of the elements of this circuit"""
-        return Circuit([elem.specialize() for elem in self])
+        return Circuit([elem.specialize() for elem in self], qubits=self.qubits)
 
     # TESTME
     def decompose(self) -> Iterator["Operation"]:
@@ -305,7 +307,7 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
     # Kudos: Adapted from Rigetti Grove's utility_programs.py
     # grove/utils/utility_programs.py::ControlledProgramBuilder
 
-    from .modules import ControlGate
+    from .gates import ControlGate
 
     circ = Circuit()
     if len(controls) == 1:
@@ -383,7 +385,7 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
     0.25 0.25
 
     """
-    from .modules import ControlGate
+    from .gates import ControlGate
 
     circ = Circuit()
     circ += map_gate(H(0), list(zip(outputs)))  # Hadamard on all output qubits
@@ -393,7 +395,7 @@ def phase_estimation_circuit(gate: Gate, outputs: Qubits) -> Circuit:
         circ += cgate
         gate = gate @ gate
 
-    from .modules import InvQFTGate
+    from .gates import InvQFTGate
 
     circ += InvQFTGate(outputs).decompose()
 
