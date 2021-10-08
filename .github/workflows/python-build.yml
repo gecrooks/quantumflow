@@ -26,7 +26,16 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install base
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .
+        python -m pip install pytest
+    - name: Test with pytest (Tests should pass without extra dependancies installed)
+      run: |
+        python -m $(python -Wi setup.py --name).about
+        python -m pytest
+    - name: Install extra dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -40,7 +49,7 @@ jobs:
         echo
         pdflatex --version
         pdftocairo -v
-    - name: Test with pytest
+    - name: Test coverage with pytest
       run: |
         python -m pytest --cov --cov-fail-under 100
     - name: Lint with black and isort (run `make delint` to fix issues)
