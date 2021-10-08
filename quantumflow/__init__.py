@@ -13,13 +13,13 @@
 #
 # We don't include `.utils` since those are internal utility routines.
 #
-# Submodules for interfacing with external resources (e.g. .xcirq, .xforest, etc.)
+# Subgates for interfacing with external resources (e.g. .xcirq, .xforest, etc.)
 # are not imported at top level, since they have external dependencies that
 # often break, and need not be installed by default.
 #
 # We use a star import here (which necessitates suppressing lint messages)
-# so that the public API can be specified in the individual submodules.
-# Each of these submodules should define __all__.
+# so that the public API can be specified in the individual subgates.
+# Each of these subgates should define __all__.
 #
 #
 # Import hierarchy:
@@ -32,7 +32,7 @@
 #   states
 #   paulialgebra
 #   ops
-#   modules
+#   gates
 #   stdgates
 #   channels
 #   stdops
@@ -59,7 +59,7 @@ from .deprecated import *  # noqa: F401, F403
 from .gatesets import *  # noqa: F401, F403
 from .gradients import *  # noqa: F401, F403
 from .info import *  # noqa: F401, F403
-from .modules import *  # noqa: F401, F403
+from .gates import *  # noqa: F401, F403
 from .ops import *  # noqa: F401, F403
 from .paulialgebra import *  # noqa: F401, F403
 from .qubits import *  # noqa: F401, F403

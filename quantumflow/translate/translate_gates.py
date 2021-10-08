@@ -12,7 +12,7 @@ from networkx.algorithms.approximation.steinertree import steiner_tree
 from sympy.combinatorics import Permutation
 
 from ..circuits import Circuit
-from ..modules import (
+from ..gates import (
     DiagonalGate,
     IdentityGate,
     InvQFTGate,

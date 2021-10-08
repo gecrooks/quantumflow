@@ -38,7 +38,7 @@ import scipy
 from .circuits import Circuit, euler_circuit
 from .config import ATOL
 from .info import almost_unitary, gates_close
-from .modules import MultiplexedRyGate, MultiplexedRzGate
+from .gates import MultiplexedRyGate, MultiplexedRzGate
 from .ops import Gate, Unitary
 from .stdgates import S_H, B, Can, I, Rn, S, V, X, Y, YPow, Z, ZPow
 from .translate import translate_can_to_cnot

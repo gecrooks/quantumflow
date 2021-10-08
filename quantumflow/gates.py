@@ -5,12 +5,12 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: modules
+.. currentmodule:: gates
 
 Multi-qubit gates
 #################
 
-Larger unitary computational modules that can be broken up into standard gates.
+Larger unitary computational gates that can be broken up into standard gates.
 
 Danger: These multi-qubit gates have a variable, and possible large, number of qubits.
 Explicitly creating the gate tensor may consume huge amounts of memory. Beware.

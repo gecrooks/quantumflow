@@ -304,7 +304,7 @@ class Pauli(Operation):
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
-        from .modules import IdentityGate
+        from .gates import IdentityGate
         from .stdgates import STDGATES as NAMED_GATES
 
         qubits = self.qubits if qubits is None else qubits

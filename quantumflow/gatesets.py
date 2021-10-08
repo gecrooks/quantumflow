@@ -20,7 +20,7 @@ Collections of gates and operations
 
 from typing import Set, Type
 
-from .modules import ControlGate
+from .gates import ControlGate
 from .ops import Gate, Operation
 from .stdgates import (
     CCZ,
