@@ -17,7 +17,7 @@ from .future import importlib_metadata
 __all__ = ["__version__", "about"]
 
 
-__version__ = importlib_metadata.version(__package__)
+__version__ = importlib_metadata.version(__package__)  # type: ignore
 
 
 def about(file: typing.TextIO = None) -> None:
@@ -28,7 +28,7 @@ def about(file: typing.TextIO = None) -> None:
     Args:
         file: Output stream (Defaults to stdout)
     """
-    metadata = importlib_metadata.metadata(__package__)
+    metadata = importlib_metadata.metadata(__package__)  # type: ignore
     print(f"# {metadata['Name']}", file=file)
     print(f"{metadata['Summary']}", file=file)
     print(f"{metadata['Home-page']}", file=file)
@@ -39,10 +39,10 @@ def about(file: typing.TextIO = None) -> None:
     versions[__package__] = __version__
     versions["python"] = sys.version[0:5]
 
-    for req in importlib_metadata.requires(__package__):
+    for req in importlib_metadata.requires(__package__):  # type: ignore
         name = re.split("[; =><]", req)[0]
         try:
-            versions[name] = importlib_metadata.version(name)
+            versions[name] = importlib_metadata.version(name)  # type: ignore
         except Exception:  # pragma: no cover
             pass
 
