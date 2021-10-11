@@ -3,7 +3,22 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+import pytest
+
 import quantumflow as qf
+
+
+def test_asqutensor() -> None:
+
+    arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+    vec1 = qf.asqutensor(arr)
+    vec2 = qf.asqutensor(arr, rank=1)
+    op = qf.asqutensor(arr, rank=2)
+    sop = qf.asqutensor(arr, rank=4)
+
+    with pytest.raises(ValueError):
+        qf.asqutensor([0, 1, 2, 3, 4])
 
 
 def test_sorted_bits() -> None:

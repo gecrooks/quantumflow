@@ -26,7 +26,7 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`. Similarly labels for classical bit label
 
 """
 
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 
@@ -35,6 +35,7 @@ from .future import Protocol
 __all__ = (
     "qubit_dtype",
     "QubitTensor",
+    "asqutensor",
     "Qubit",
     "Qubits",
     "sorted_qubits",
@@ -43,12 +44,35 @@ __all__ = (
     "sorted_cbits",
 )
 
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike  # pragma: no cover
+
 
 qubit_dtype = np.complex128
-"""The complex data type used by the backend"""
+"""The complex data type used for quantum data"""
 
 QubitTensor = np.ndarray
 """Type hint for numpy arrays representing quantum data."""
+
+
+def asqutensor(array: "ArrayLike", rank: int = None) -> QubitTensor:
+    """Converts a tensor like object to a numpy array object with complex data type.
+
+    If rank is given (vectors rank 1, operators rank 2, super-operators rank 4)
+    we reshape the array to have than number of axes.
+    """
+    tensor = np.asarray(array, dtype=qubit_dtype)
+
+    N = np.size(tensor)
+    K = int(np.log2(N))
+    if 2 ** K != N:
+        raise ValueError("Wrong number of elements. Must be 2**N where N is an integer")
+
+    if rank is not None:
+        shape = (2 ** (K // rank),) * rank
+        tensor = tensor.reshape(shape)
+
+    return tensor
 
 
 class Qubit(Protocol):
