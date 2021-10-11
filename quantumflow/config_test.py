@@ -34,5 +34,5 @@ def test_copyright() -> None:
             for line in f.readlines():
                 if not line.strip():
                     continue
-                assert line.startswith("# Copyright")
+                assert line.startswith("# Copyright 2019-, Gavin E. Crooks")
                 break
