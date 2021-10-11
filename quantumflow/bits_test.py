@@ -29,10 +29,10 @@ def test_asqutensor() -> None:
 
 def test_sorted_bits() -> None:
 
-    bits: qf.Qubits = ["z", "a", 3, 4, 5, (4, 2), (2, 3)]
-    s = qf.sorted_qubits(bits)
-    assert s == (3, 4, 5, "a", "z", (2, 3), (4, 2))
+    qubits: qf.Qubits = ["z", "a", 3, 4, 5, (4, 2), (2, 3)]
+    qbs = qf.sorted_bits(qubits)
+    assert qbs == (3, 4, 5, "a", "z", (2, 3), (4, 2))
 
-    bits = ["z", "a", 3, 4, 5, (4, 2), (2, 3)]
-    s = qf.sorted_cbits(bits)
-    assert s == (3, 4, 5, "a", "z", (2, 3), (4, 2))
+    cbits: qf.Cbits = ["z", "a", 3, 4, 5, (4, 2), (2, 3)]
+    bs = qf.sorted_bits(cbits)
+    assert bs == (3, 4, 5, "a", "z", (2, 3), (4, 2))

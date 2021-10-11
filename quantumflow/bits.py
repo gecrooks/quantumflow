@@ -6,8 +6,6 @@
 """
 .. module:: quantumflow
 .. contents:: :local:
-.. currentmodule:: quantumflow
-
 
 States, gates, and various other methods accept a list of qubits labels upon
 which the given State or Gate acts. A Qubit label can be any hashable and
@@ -17,16 +15,15 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`. Similarly labels for classical bit label
 
 .. autoclass:: Qubit
 
-.. autofunction:: sorted_qubits
-
 .. autoclass:: Cbit
 
-.. autofunction:: sorted_cbits
+.. autofunction:: sorted_bits
 
 
 """
+# TODO: Add docs for other members
 
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 import numpy as np
 
@@ -36,12 +33,12 @@ __all__ = (
     "qubit_dtype",
     "QubitTensor",
     "asqutensor",
+    "Address",
     "Qubit",
     "Qubits",
-    "sorted_qubits",
     "Cbit",
     "Cbits",
-    "sorted_cbits",
+    "sorted_bits",
 )
 
 if TYPE_CHECKING:
@@ -75,54 +72,48 @@ def asqutensor(array: "ArrayLike", ndim: int = None) -> QubitTensor:
     return tensor
 
 
-class Qubit(Protocol):
-    """Type for qubit labels. Any sortable and hashable python object.
-    e.g. strings, integers, tuples of strings and integers, etc.
-    """
+class Address(Protocol):
+    """A label for a piece of data. This Protocol specifies any sortable and hashable
+    python object (i.e. most immutable types).
+    Examples include strings, integers, tuples of strings and integers, etc."""
 
     def __lt__(self, other: Any) -> bool:
         pass
 
     def __hash__(self) -> int:
         pass
+
+
+AddressType = TypeVar("AddressType", bound=Address)
+
+
+class Qubit(Address, Protocol):
+    """Type for qubit labels. Any any sortable and hashable python object."""
+
+
+class Cbit(Address, Protocol):
+    """Type for labels of classical bits. Any sortable and hashable python object."""
+
+
+Addresses = Sequence[Address]
+"""Type for sequence of addresses"""
 
 
 Qubits = Sequence[Qubit]
 """Type for sequence of qubits"""
 
 
-def sorted_qubits(qbs: Qubits) -> Qubits:
-    """Return a sorted list of unique qubits in canonical order.
-
-    Qubits can be of different types, so we sort first by type (as a string),
-    then within types.
-    """
-    return tuple(sorted(list(set(qbs)), key=lambda x: (str(type(x)), x)))
-
-
-class Cbit(Protocol):
-    """Type for labels of classical bits. Any sortable and hashable python object.
-    e.g. strings, integers, tuples of strings and integers, etc.
-    """
-
-    def __lt__(self, other: Any) -> bool:
-        pass
-
-    def __hash__(self) -> int:
-        pass
-
-
 Cbits = Sequence[Cbit]
-"""Type for sequence of cbits"""
+"""Type for sequence of classical bits"""
 
 
-def sorted_cbits(qbs: Qubits) -> Qubits:
-    """Return a sorted list of unique cbits in canonical order.
+def sorted_bits(bits: Sequence[AddressType]) -> Sequence[AddressType]:
+    """Return a sorted list of unique bit labels in canonical order.
 
-    Cbit labels can be of different types, so we sort first by type (as a string),
-    then within types.
+    Data labels (Qubit and Cbit types) can be of different types, so we sort first by
+    type (as a string), then within types.
     """
-    return tuple(sorted(list(set(qbs)), key=lambda x: (str(type(x)), x)))
+    return tuple(sorted(set(bits), key=lambda x: (str(type(x)), x)))
 
 
 # fin
