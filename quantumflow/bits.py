@@ -55,10 +55,10 @@ QubitTensor = np.ndarray
 """Type hint for numpy arrays representing quantum data."""
 
 
-def asqutensor(array: "ArrayLike", rank: int = None) -> QubitTensor:
+def asqutensor(array: "ArrayLike", ndim: int = None) -> QubitTensor:
     """Converts a tensor like object to a numpy array object with complex data type.
 
-    If rank is given (vectors rank 1, operators rank 2, super-operators rank 4)
+    If rank is given (vectors ndim=1, operators ndim=2, super-operators ndim=4)
     we reshape the array to have than number of axes.
     """
     tensor = np.asarray(array, dtype=qubit_dtype)
@@ -68,8 +68,8 @@ def asqutensor(array: "ArrayLike", rank: int = None) -> QubitTensor:
     if 2 ** K != N:
         raise ValueError("Wrong number of elements. Must be 2**N where N is an integer")
 
-    if rank is not None:
-        shape = (2 ** (K // rank),) * rank
+    if ndim is not None:
+        shape = (2 ** (K // ndim),) * ndim
         tensor = tensor.reshape(shape)
 
     return tensor
