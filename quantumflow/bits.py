@@ -28,9 +28,27 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`. Similarly labels for classical bit label
 
 from typing import Any, Sequence
 
+import numpy as np
+
 from .future import Protocol
 
-__all__ = ("Qubit", "Qubits", "sorted_qubits", "Cbit", "Cbits", "sorted_cbits")
+__all__ = (
+    "qubit_dtype",
+    "QubitTensor",
+    "Qubit",
+    "Qubits",
+    "sorted_qubits",
+    "Cbit",
+    "Cbits",
+    "sorted_cbits",
+)
+
+
+qubit_dtype = np.complex128
+"""The complex data type used by the backend"""
+
+QubitTensor = np.ndarray
+"""Type hint for numpy arrays representing quantum data."""
 
 
 class Qubit(Protocol):
