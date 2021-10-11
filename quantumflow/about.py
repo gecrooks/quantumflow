@@ -10,7 +10,7 @@
 # (else we will get multiple import warnings)
 # Implementation is located in about_.py
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import quantumflow
 
     quantumflow.about()

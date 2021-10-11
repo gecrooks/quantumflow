@@ -9,10 +9,17 @@ Future perfect.
 Conditional imports for backward compatibility.
 """
 
-__all__ = ["importlib_metadata"]
+__all__ = ["importlib_metadata", "Protocol"]
 
 try:
     from importlib import metadata as importlib_metadata  # type: ignore
 except ImportError:  # pragma: no cover
-    # python <= 3.8
+    # python < 3.8
     import importlib_metadata  # type: ignore  # noqa: F401
+
+
+try:
+    from typing import Protocol  # type: ignore
+except ImportError:  # pragma: no cover
+    # python < 3.8
+    from typing_extensions import Protocol  # type: ignore  # noqa: F401

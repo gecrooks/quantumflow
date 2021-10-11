@@ -1,11 +1,13 @@
 
 
-Welcome to the documentation!
-=============================
+QuantumFlow
+===========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
+
+   bits
 
 
 
