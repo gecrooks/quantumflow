@@ -12,12 +12,18 @@ import re
 import sys
 import typing
 
+import numpy as np
+
 from .future import importlib_metadata
 
 __all__ = ["__version__", "about"]
 
 
 __version__ = importlib_metadata.version(__package__)  # type: ignore
+
+
+quantum_dtype = np.complex128
+"""The complex data type used for quantum data"""
 
 
 def about(file: typing.TextIO = None) -> None:
