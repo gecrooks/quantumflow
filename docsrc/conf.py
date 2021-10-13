@@ -17,8 +17,8 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "gecrooks-python-template"
-copyright = "2019-, Gavin E. Crooks"
+project = "QuantumFlow"
+copyright = "2021-, Gavin E. Crooks"
 author = "Gavin E. Crooks"
 
 

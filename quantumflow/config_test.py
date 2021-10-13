@@ -1,4 +1,4 @@
-# Copyright 2019-, Gavin E. Crooks
+# Copyright 2021-, Gavin E. Crooks
 #
 # This source code is licensed under the Apache-2.0 License
 # found in the LICENSE file in the root directory of this source tree.
@@ -7,16 +7,16 @@ import glob
 import io
 import subprocess
 
-import quantumflow
+import quantumflow as qf
 
 
 def test_version() -> None:
-    assert quantumflow.__version__
+    assert qf.__version__
 
 
 def test_about() -> None:
     out = io.StringIO()
-    quantumflow.about(out)
+    qf.about(out)
     print(out)
 
 
@@ -34,5 +34,5 @@ def test_copyright() -> None:
             for line in f.readlines():
                 if not line.strip():
                     continue
-                assert line.startswith("# Copyright 2019-, Gavin E. Crooks")
+                assert line.startswith("# " + qf.__copyright__)
                 break

@@ -15,7 +15,7 @@ install:  ## Install package ready for development
 	if [ -f requirements.txt ]; then pip install -r requirements.txt; fi         
 	python -m pip install -e .[dev]
 
-all: about coverage lint typecheck docs build   ## Run all tests
+all: delint about coverage lint typecheck docs-clean docs build   ## Run all tests
 
 test:  ## Run unittests
 	pytest --disable-pytest-warnings
