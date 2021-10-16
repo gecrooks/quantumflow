@@ -9,6 +9,9 @@ import subprocess
 
 import quantumflow as qf
 
+# DOCME
+REPS = 16
+
 
 def test_version() -> None:
     assert qf.__version__

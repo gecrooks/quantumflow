@@ -5,6 +5,7 @@
 
 import inspect
 
+import numpy as np
 import pytest
 
 import quantumflow as qf
@@ -40,3 +41,25 @@ def test_base_abstract() -> None:
     assert inspect.isabstract(qf.BaseGate)
     assert inspect.isabstract(qf.BaseStdGate)
     assert inspect.isabstract(qf.BaseStdCtrlGate)
+
+
+def test_gate_permute() -> None:
+    gate0 = qf.CNot(0, 1)
+
+    backwards_cnot = np.asarray(
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+        ]
+    )
+
+    gate10 = gate0.permute([1, 0])
+    assert np.allclose(
+        gate10.operator,
+        backwards_cnot,
+    )
+
+
+# fin
