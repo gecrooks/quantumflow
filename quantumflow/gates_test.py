@@ -16,6 +16,9 @@ def test_Identity() -> None:
     assert gate0.H is gate0
     assert gate0 ** 4 is gate0
 
+    arr = np.asarray(gate0.sym_operator).astype(np.complex128)
+    assert np.allclose(gate0.operator, arr)
+
 
 def test_unitary() -> None:
     gate0 = qf.X(0)
@@ -24,6 +27,10 @@ def test_unitary() -> None:
     assert gate0.qubit_nb == gate1.qubit_nb
     assert gate0.qubits == gate1.qubits
     assert np.allclose(gate0.operator, gate1.operator)
+
+    arr = np.asarray(gate1.sym_operator).astype(np.complex128)
+    assert np.allclose(gate1.operator, arr)
+
 
     # FIXME: more tests
     _ = gate1.H

@@ -187,6 +187,12 @@ class BaseGate(BaseOperation):
     """Structural properties of the matrix representation of this gate's operator in the
      in the computational basis"""
 
+    _operator: np.ndarray = None
+    """Instance variable for caching operators."""
+
+    _sym_operator: sym.Matrix = None
+    """Instance variable for symbolic operators."""
+
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
 
@@ -202,6 +208,12 @@ class BaseGate(BaseOperation):
     @abstractmethod
     def operator(self) -> np.ndarray:
         pass
+
+    @property
+    def sym_operator(self) -> sym.Matrix:
+        if self._sym_operator is None:
+            self._sym_operator = sym.Matrix(self.operator)
+        return self._sym_operator
 
     def permute(self, qubits: Qubits) -> "BaseGate":
         """Permute the order of the qubits."""
@@ -266,12 +278,6 @@ class BaseStdGate(BaseGate):
     cv_params: ClassVar[Tuple[str, ...]] = ()
     """The named parameters of this class. Parse by subclass initialization from the
     signature of the __init__ method"""
-
-    _operator: np.ndarray = None
-    """Instance variable for caching operators."""
-
-    _sym_operator: sym.Matrix = None
-    """Instance variable for symbolic operators."""
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()

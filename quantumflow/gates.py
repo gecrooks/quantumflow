@@ -7,6 +7,7 @@
 from typing import TYPE_CHECKING
 
 import numpy as np
+import sympy as sym
 from scipy.linalg import fractional_matrix_power as matpow
 
 from .base import BaseGate, OperatorStructure, Variable, _asarray
@@ -38,9 +39,17 @@ class Identity(BaseGate):
     def H(self) -> "Identity":
         return self  # Hermitian
 
-    @property  # TODO: cached
+    @property
     def operator(self) -> np.ndarray:
-        return np.eye(2 ** self.qubit_nb)
+        if self._operator is None:
+            self._operator = np.eye(2 ** self.qubit_nb)
+        return self._operator
+
+    @property
+    def sym_operator(self) -> sym.Matrix:
+        if self._sym_operator is None:
+            self._sym_operator = sym.eye(2 ** self.qubit_nb)
+        return self._sym_operator
 
     def __pow__(self, t: Variable) -> "Identity":
         return self
