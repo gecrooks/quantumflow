@@ -23,9 +23,10 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`. Similarly labels for classical bit label
 """
 # TODO: Add docs for other members
 
+
 from typing import Any, Sequence, TypeVar
 
-from .future import Protocol
+from .utils.future import Protocol
 
 __all__ = (
     "Address",

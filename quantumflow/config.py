@@ -7,6 +7,7 @@
 Package wide configuration
 """
 
+
 import platform
 import re
 import sys
@@ -14,7 +15,7 @@ import typing
 
 import numpy as np
 
-from .future import importlib_metadata
+from .utils.future import importlib_metadata
 
 __all__ = ["__version__", "__copyright__", "__license__", "about"]
 
@@ -27,6 +28,14 @@ __license__ = (
     "This source code is licensed under the Apache-2.0 License"
     "found in the LICENSE file in the root directory of this source tree."
 )
+
+# See https://numpy.org/doc/stable/reference/generated/numpy.allclose.html
+
+RTOL = 1e-05
+"""Default relative tolerance for numerical comparisons"""
+
+ATOL = 1e-08
+"""Default absolute tolerance for numerical comparisons"""
 
 
 def about(file: typing.TextIO = None) -> None:
