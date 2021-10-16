@@ -11,7 +11,9 @@ Conditional imports for backward compatibility.
 
 __all__ = ["importlib_metadata", "Protocol"]
 
+
 try:
+    # Python >= 3.8
     from importlib import metadata as importlib_metadata  # type: ignore
 except ImportError:  # pragma: no cover
     # python < 3.8
@@ -19,7 +21,10 @@ except ImportError:  # pragma: no cover
 
 
 try:
+    # Python >= 3.8
     from typing import Protocol  # type: ignore
 except ImportError:  # pragma: no cover
-    # python < 3.8
     from typing_extensions import Protocol  # type: ignore  # noqa: F401
+
+
+# fin

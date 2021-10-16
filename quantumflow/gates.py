@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.linalg import fractional_matrix_power as matpow
 
-from .base import BaseGate, Variable, _asarray
+from .base import BaseGate, OperatorStructure, Variable, _asarray
 from .bits import Qubits
 
 # standard workaround to avoid circular imports from type hints
@@ -17,7 +17,36 @@ if TYPE_CHECKING:
     # Numpy typing introduced in v1.20, which may not be installed by default
     from numpy.typing import ArrayLike  # pragma: no cover
 
-__all__ = ("Unitary",)
+__all__ = (
+    "Identity",
+    "Unitary",
+)
+
+
+class Identity(BaseGate):
+    """
+    A multi-qubit identity gate.
+    """
+
+    cv_hermitian = True
+    cv_operator_structure = OperatorStructure.identity
+
+    def __init__(self, qubits: Qubits) -> None:
+        super().__init__(qubits=qubits)
+
+    @property
+    def H(self) -> "Identity":
+        return self  # Hermitian
+
+    @property  # TODO: cached
+    def operator(self) -> np.ndarray:
+        return np.eye(2 ** self.qubit_nb)
+
+    def __pow__(self, t: Variable) -> "Identity":
+        return self
+
+
+# End class Identity
 
 
 class Unitary(BaseGate):

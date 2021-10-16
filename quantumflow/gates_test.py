@@ -9,6 +9,14 @@ import numpy as np
 import quantumflow as qf
 
 
+def test_Identity() -> None:
+    gate0 = qf.Identity([0, 1, 4])
+    assert qf.almost_identity(gate0)
+    assert gate0.cv_operator_structure == qf.OperatorStructure.identity
+    assert gate0.H is gate0
+    assert gate0 ** 4 is gate0
+
+
 def test_unitary() -> None:
     gate0 = qf.X(0)
     gate1 = qf.Unitary.from_gate(gate0)

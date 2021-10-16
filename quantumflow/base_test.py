@@ -62,4 +62,23 @@ def test_gate_permute() -> None:
     )
 
 
+def test_gate_matmul() -> None:
+    gate0 = qf.CNot(0, 1) @ qf.CNot(0, 1)
+    assert qf.almost_identity(gate0)
+
+    gate1 = qf.CNot(0, 1) @ qf.CNot(1, 0) @ qf.CNot(0, 1)
+    # TODO: Check same as swap
+    gate2 = gate1 @ gate1
+    assert qf.almost_identity(gate2)
+
+    theta0 = 0.34
+    theta1 = 0.11
+    gate3 = qf.Rx(theta1, "a") @ qf.Rx(theta0, "a")
+    assert qf.gates_close(gate3, qf.Rx(theta0 + theta1, "a"))
+
+    gate4 = qf.I(0) @ qf.I(1)
+    assert gate4.qubits == (1, 0)
+    assert qf.almost_identity(gate4)
+
+
 # fin

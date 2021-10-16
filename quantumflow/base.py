@@ -223,6 +223,25 @@ class BaseGate(BaseOperation):
 
         return Unitary(tensor, qubits)
 
+    def __matmul__(self, other: "BaseGate") -> "BaseGate":
+        """Apply the action of this gate upon another gate, `self_gate @ other_gate`.
+        Recall that time runs right to left with matrix notation.
+        """
+        from .gates import Identity, Unitary
+        from .utils.math import tensormul
+
+        if not isinstance(other, BaseGate):
+            raise NotImplementedError()
+
+        extra_qubits = tuple(set(self.qubits) - set(other.qubits))
+        if len(extra_qubits) != 0:
+            return self @ (other @ Identity(tuple(other.qubits) + extra_qubits))
+
+        indices = tuple(other.qubits.index(q) for q in self.qubits)
+        tensor = tensormul(self.operator, other.operator, indices)
+
+        return Unitary(tensor, other.qubits)
+
     @abstractmethod
     def __pow__(self, t: Variable) -> "BaseGate":
         """Return this gate raised to the given power."""
@@ -236,10 +255,23 @@ class BaseStdGate(BaseGate):
     _cv_collections = BaseGate._cv_collections + (STDGATES,)
 
     cv_sym_operator: ClassVar[sym.Matrix] = None
+    """A symbolic representation of this gates' operator as a sympy Matrix.
+    Should be set by subclasses. (Subclasses of BaseStdCtrlGate should set
+    cv_target instead.)
+    """
 
     cv_qubit_nb: ClassVar[int] = 0
+    """The number of qubits of this gate. Set by subclass initialization."""
 
     cv_params: ClassVar[Tuple[str, ...]] = ()
+    """The named parameters of this class. Parse by subclass initialization from the
+    signature of the __init__ method"""
+
+    _operator: np.ndarray = None
+    """Instance variable for caching operators."""
+
+    _sym_operator: sym.Matrix = None
+    """Instance variable for symbolic operators."""
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -280,17 +312,21 @@ class BaseStdGate(BaseGate):
 
     @property
     def operator(self) -> np.ndarray:
-        args = (float(sym.N(x)) for x in self._args)
-        M = sym.lambdify(self.cv_params, self.cv_sym_operator)(*args)
-        return _asarray(M, ndim=2)
+        if self._operator is None:
+            args = (float(sym.N(x)) for x in self._args)
+            M = sym.lambdify(self.cv_params, self.cv_sym_operator)(*args)
+            self._operator = _asarray(M, ndim=2)
+        return self._operator
 
     @property
     def sym_operator(self) -> sym.Matrix:
-        M = self.cv_sym_operator
-        tmp = [sym.Symbol(f"_not_a_symbol_{i}") for i in range(len(self.cv_params))]
-        M = M.subs(dict(zip(self.cv_params, tmp)))
-        M = M.subs(dict(zip(tmp, self.args)))
-        return M
+        if self._sym_operator is None:
+            M = self.cv_sym_operator
+            tmp = [sym.Symbol(f"_not_a_symbol_{i}") for i in range(len(self.cv_params))]
+            M = M.subs(dict(zip(self.cv_params, tmp)))
+            M = M.subs(dict(zip(tmp, self.args)))
+            self._sym_operator = M
+        return self._sym_operator
 
 
 # end class BaseStdGate
@@ -299,7 +335,9 @@ class BaseStdGate(BaseGate):
 class BaseStdCtrlGate(BaseStdGate):
     """A standard gate that is a controlled version of another standard gate.
 
-    Subclasses should set the `cv_target` class variable to the target gate type.
+    Subclasses should set the `cv_target` class variable to the target gate type. The
+    class variables ``cv_sym_operator``, ``cv_operator_structure``, and ``cv_hermitian``
+    are all set automatically.
     """
 
     _cv_collections = BaseStdGate._cv_collections + (STDCTRLGATES,)
