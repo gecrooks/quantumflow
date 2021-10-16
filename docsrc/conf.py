@@ -30,7 +30,6 @@ author = "Gavin E. Crooks"
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-
 ]
 
 
