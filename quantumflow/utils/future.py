@@ -9,10 +9,7 @@ Future perfect.
 Conditional imports for backward compatibility.
 """
 
-# python < 3.11
-from __future__ import annotations
-
-__all__ = ["importlib_metadata", "Protocol", "annotations"]
+__all__ = ["importlib_metadata", "Protocol"]
 
 try:
     from importlib import metadata as importlib_metadata  # type: ignore

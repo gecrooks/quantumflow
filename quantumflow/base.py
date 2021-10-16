@@ -348,5 +348,3 @@ class BaseStdCtrlGate(BaseStdGate):
 
 # end BaseStdCtrlGate
 
-
-print(BaseGate.__annotations__)
