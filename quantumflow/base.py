@@ -347,4 +347,3 @@ class BaseStdCtrlGate(BaseStdGate):
 
 
 # end BaseStdCtrlGate
-
