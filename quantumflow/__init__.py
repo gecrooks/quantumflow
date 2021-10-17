@@ -5,6 +5,7 @@
 
 from .base import *  # noqa: F401, F403
 from .bits import *  # noqa: F401, F403
+from .circuits import *  # noqa: F401, F403
 from .config import *  # noqa: F401, F403
 from .gates import *  # noqa: F401, F403
 from .measures import *  # noqa: F401, F403

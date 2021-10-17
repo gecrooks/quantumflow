@@ -10,7 +10,17 @@ TODO
 import enum
 import inspect
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, ClassVar, Sequence, Set, Tuple, Type, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    ClassVar,
+    Iterator,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 import sympy as sym
@@ -170,6 +180,9 @@ class BaseOperation(ABC):
     def qubit_nb(self) -> int:
         """Return the total number of qubits."""
         return len(self.qubits)
+
+    def __iter__(self) -> Iterator["BaseOperation"]:
+        yield self
 
 
 # end class BaseOperation

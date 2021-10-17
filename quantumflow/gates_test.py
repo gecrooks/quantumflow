@@ -31,7 +31,6 @@ def test_unitary() -> None:
     arr = np.asarray(gate1.sym_operator).astype(np.complex128)
     assert np.allclose(gate1.operator, arr)
 
-
     # FIXME: more tests
     _ = gate1.H
     _ = gate1 ** -1
