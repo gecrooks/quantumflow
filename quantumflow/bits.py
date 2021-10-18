@@ -17,31 +17,30 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`. Similarly labels for classical bit label
 
 .. autoclass:: Cbit
 
-.. autofunction:: sorted_bits
 
 
 """
 # TODO: Add docs for other members
 
 
-from typing import Any, Sequence, TypeVar
+from typing import Any, Sequence
 
 from .utils.future import Protocol
 
 __all__ = (
-    "Address",
+    "Addr",
+    "Addrs",
     "Qubit",
     "Qubits",
     "Cbit",
     "Cbits",
-    "sorted_bits",
 )
 
 
-class Address(Protocol):
-    """A label for a piece of data. This Protocol specifies any sortable and hashable
-    python object (i.e. most immutable types).
-    Examples include strings, integers, tuples of strings and integers, etc."""
+class SortableHashable(Protocol):
+    """This Protocol specifies any sortable and hashable python object (i.e. most immutable
+    types). Examples include strings, integers, tuples of strings and integers, etc.
+    """
 
     def __lt__(self, other: Any) -> bool:
         pass
@@ -50,19 +49,17 @@ class Address(Protocol):
         pass
 
 
-AddressType = TypeVar("AddressType", bound=Address)
-
-
-class Qubit(Address, Protocol):
+class Qubit(SortableHashable, Protocol):
     """Type for qubit labels. Any any sortable and hashable python object."""
 
 
-class Cbit(Address, Protocol):
+class Cbit(SortableHashable, Protocol):
     """Type for labels of classical bits. Any sortable and hashable python object."""
 
 
-Addresses = Sequence[Address]
-"""Type for sequence of addresses"""
+class Addr(SortableHashable, Protocol):
+    """An address for a chunk of classical data. Any sortable and hashable python
+    object."""
 
 
 Qubits = Sequence[Qubit]
@@ -72,14 +69,8 @@ Qubits = Sequence[Qubit]
 Cbits = Sequence[Cbit]
 """Type for sequence of classical bits"""
 
-
-def sorted_bits(bits: Sequence[AddressType]) -> Sequence[AddressType]:
-    """Return a sorted list of unique bit labels in canonical order.
-
-    Data labels (Qubit and Cbit types) can be of different types, so we sort first by
-    type (as a string), then within types.
-    """
-    return tuple(sorted(set(bits), key=lambda x: (str(type(x)), x)))
+Addrs = Sequence[Addr]
+"""Type for sequence of addresses"""
 
 
 # fin

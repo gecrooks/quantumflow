@@ -10,21 +10,55 @@ import numpy as np
 import sympy as sym
 from scipy.linalg import fractional_matrix_power as matpow
 
-from .base import BaseGate, OperatorStructure, Variable, _asarray
-from .bits import Qubits
+from .base import OperatorStructure, QuantumComposite, QuantumGate, Variable, _asarray
+from .bits import Cbits, Qubits
 
 # standard workaround to avoid circular imports from type hints
 if TYPE_CHECKING:
     # Numpy typing introduced in v1.20, which may not be installed by default
     from numpy.typing import ArrayLike  # pragma: no cover
 
-__all__ = (
-    "Identity",
-    "Unitary",
-)
+__all__ = ("Identity", "Unitary", "CompositeGate")
 
 
-class Identity(BaseGate):
+from typing import Tuple
+
+
+class CompositeGate(QuantumComposite, QuantumGate):
+
+    _elements: Tuple[QuantumGate, ...]
+
+    def __init__(
+        self,
+        *elements: QuantumGate,
+        qubits: Qubits = None,
+        cbits: Cbits = None,
+    ) -> None:
+        QuantumComposite.__init__(self, *elements, qubits=qubits, cbits=cbits)
+
+        for elem in self:
+            if not isinstance(elem, QuantumGate):
+                raise ValueError("Elements of a composite gate must be gates")
+
+    @property
+    def operator(self) -> np.ndarray:
+        from .circuits import Circuit
+
+        if self._operator is None:
+            self._operator = Circuit(*self, qubits=self.qubits).asgate().operator
+        return self._operator
+
+    def __pow__(self, t: Variable) -> "Unitary":
+        return Unitary.from_gate(self) ** t
+
+    # TODO: Move up to QuantumComposite?
+    @property
+    def H(self) -> "CompositeGate":
+        elements = [elem.H for elem in self._elements[::-1]]
+        return CompositeGate(*elements, qubits=self.qubits, cbits=self.cbits)
+
+
+class Identity(QuantumGate):
     """
     A multi-qubit identity gate.
     """
@@ -58,7 +92,7 @@ class Identity(BaseGate):
 # End class Identity
 
 
-class Unitary(BaseGate):
+class Unitary(QuantumGate):
     """
     A quantum logic gate specified by an explicit unitary operator.
     """
@@ -68,7 +102,7 @@ class Unitary(BaseGate):
         self._operator = _asarray(operator, ndim=2)
 
     @classmethod
-    def from_gate(cls, gate: BaseGate) -> "Unitary":
+    def from_gate(cls, gate: QuantumGate) -> "Unitary":
         """Construct an instance of Unitary from another quantum gate, with the
         same operator and qubits."""
         return cls(gate.operator, gate.qubits)

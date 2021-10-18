@@ -37,10 +37,11 @@ def test_asarray() -> None:
 
 def test_base_abstract() -> None:
     """Make sure base classes are in fact abstract"""
-    assert inspect.isabstract(qf.BaseOperation)
-    assert inspect.isabstract(qf.BaseGate)
-    assert inspect.isabstract(qf.BaseStdGate)
-    assert inspect.isabstract(qf.BaseStdCtrlGate)
+    assert inspect.isabstract(qf.QuantumOperation)
+    assert inspect.isabstract(qf.QuantumGate)
+    assert inspect.isabstract(qf.QuantumStdGate)
+    assert inspect.isabstract(qf.QuantumStdCtrlGate)
+    assert inspect.isabstract(qf.QuantumComposite)
 
 
 def test_gate_permute() -> None:
@@ -79,6 +80,20 @@ def test_gate_matmul() -> None:
     gate4 = qf.I(0) @ qf.I(1)
     assert gate4.qubits == (1, 0)
     assert qf.almost_identity(gate4)
+
+
+def test_gate_relable() -> None:
+    gate0 = qf.Unitary.from_gate(qf.CNot(1, 0))
+    gate1 = gate0.relabel({0: "a", 1: "b"})
+    assert gate1.qubits == ("b", "a")
+    assert qf.gates_close(gate1, qf.Unitary.from_gate(qf.CNot("b", "a")))
+
+
+def test_StdGate_relabel() -> None:
+    gate0 = qf.CNot(1, 0)
+    gate1 = gate0.relabel({0: "a", 1: "b"})
+    assert gate1.qubits == ("b", "a")
+    assert qf.gates_close(gate1, qf.CNot("b", "a"))
 
 
 # fin

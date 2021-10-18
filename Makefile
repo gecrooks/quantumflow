@@ -20,7 +20,7 @@ all: delint about coverage lint typecheck docs-clean docs build   ## Run all tes
 test:  ## Run unittests
 	python -m pytest --disable-pytest-warnings
 
-coverage:  ## Report test coverage
+cov:  ## Report test coverage
 	@echo
 	python -m pytest --disable-pytest-warnings --cov $(NAME)
 	@echo
@@ -37,7 +37,7 @@ delint:  ## Run isort and black to delint project
 	black $(NAME)
 	@echo
 
-typecheck:  ## Static typechecking 
+types:  ## Static typechecking 
 	mypy $(NAME)
 
 docs:  ## Build documentation

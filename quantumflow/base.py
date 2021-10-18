@@ -7,12 +7,16 @@
 TODO
 """
 
+import copy
 import enum
 import inspect
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    Any,
     ClassVar,
+    Collection,
+    Dict,
     Iterator,
     Sequence,
     Set,
@@ -25,17 +29,15 @@ from typing import (
 import numpy as np
 import sympy as sym
 
-from .bits import Cbits, Qubit, Qubits
+from .bits import Cbit, Cbits, Qubit, Qubits
 from .config import quantum_dtype
 
-# from scipy.linalg import fractional_matrix_power as matpow
-
-
 if TYPE_CHECKING:
-    # Numpy typing introduced in v1.20, which may not be installed by default
+    # numpy typing introduced in v1.20, which may not be installed by default
     from numpy.typing import ArrayLike  # pragma: no cover
 
 
+# FIXME not needed
 def _asarray(array: "ArrayLike", ndim: int = None) -> np.ndarray:
     """Converts an array like object to a numpy array with complex data type. We also
     check that the number of elements is a power of 2
@@ -97,28 +99,34 @@ Variables = Sequence[Variable]
 """A sequence of Variables"""
 
 
-OperationType = TypeVar("OperationType", bound="BaseOperation")
-"""Generic type annotations for subtypes of BaseOperation"""
+OperationType = TypeVar("OperationType", bound="QuantumOperation")
+"""Generic type annotations for subtypes of QuantumOperation"""
 
 
-GateType = TypeVar("GateType", bound="BaseGate")
-"""Generic type annotations for subtypes of BaseGate"""
+GateType = TypeVar("GateType", bound="QuantumGate")
+"""Generic type annotations for subtypes of QuantumGate"""
+
+StdGateType = TypeVar("StdGateType", bound="QuantumStdGate")
+"""Generic type annotations for subtypes of QuantumStdGate"""
+
+CompositeType = TypeVar("CompositeType", bound="QuantumComposite")
+"""Generic type annotations for subtypes of QuantumComposite"""
 
 
-OPERATIONS: Set[Type["BaseOperation"]] = set()
-"""All quantum operations (All concrete subclasses of BaseOperation)"""
+OPERATIONS: Set[Type["QuantumOperation"]] = set()
+"""All quantum operations (All concrete subclasses of QuantumOperation)"""
 
-GATES: Set[Type["BaseGate"]] = set()
-"""All gates (All concrete subclasses of BaseGate)"""
+GATES: Set[Type["QuantumGate"]] = set()
+"""All gates (All concrete subclasses of QuantumGate)"""
 
-STDGATES: Set[Type["BaseStdGate"]] = set()
-"""All standard gates (All concrete subclasses of BaseStdGate)"""
+STDGATES: Set[Type["QuantumStdGate"]] = set()
+"""All standard gates (All concrete subclasses of QuantumStdGate)"""
 
-STDCTRLGATES: Set[Type["BaseStdCtrlGate"]] = set()
-"""All standard controlled gates (All concrete subclasses of BaseStdCtrlGate)"""
+STDCTRLGATES: Set[Type["QuantumStdCtrlGate"]] = set()
+"""All standard controlled gates (All concrete subclasses of QuantumStdCtrlGate)"""
 
 
-class BaseOperation(ABC):
+class QuantumOperation(ABC):
     _cv_collections: ClassVar[Tuple[Set, ...]] = (OPERATIONS,)
     """List of collections to add subclasses to."""
 
@@ -140,7 +148,7 @@ class BaseOperation(ABC):
         self._cbits = tuple(cbits)
 
     @abstractmethod
-    def asgate(self) -> "BaseGate":
+    def asgate(self) -> "QuantumGate":
         """
         Convert this quantum operation into a gate (if possible).
 
@@ -161,7 +169,7 @@ class BaseOperation(ABC):
 
     @property
     @abstractmethod
-    def H(self) -> "BaseOperation":
+    def H(self) -> "QuantumOperation":
         """Return the Hermitian conjugate of this quantum operation. For unitary Gates
         (and Circuits composed of the same) the Hermitian conjugate returns the inverse
         Gate (or Circuit).
@@ -169,6 +177,24 @@ class BaseOperation(ABC):
         Raises:
             ValueError: If this operation does not support Hermitian conjugation.
         """
+        pass
+
+    def on(self: OperationType, qubits: Qubits) -> "OperationType":
+        # DOCME
+        qubits = tuple(qubits)
+        if len(qubits) != self.qubit_nb:
+            raise ValueError("Wrong number of qubits")
+        qubit_map = dict(zip(self.qubits, qubits))
+        return self.relabel(qubit_map, cbit_map=None)
+
+    # DOCME
+    @abstractmethod
+    def relabel(
+        self: OperationType,
+        qubit_map: Dict[Qubit, Qubit],
+        cbit_map: Dict[Qubit, Qubit],
+    ) -> "OperationType":
+        # DOCME
         pass
 
     @property
@@ -181,15 +207,15 @@ class BaseOperation(ABC):
         """Return the total number of qubits."""
         return len(self.qubits)
 
-    def __iter__(self) -> Iterator["BaseOperation"]:
+    def __iter__(self) -> Iterator["QuantumOperation"]:
         yield self
 
 
-# end class BaseOperation
+# end class QuantumOperation
 
 
-class BaseGate(BaseOperation):
-    _cv_collections = BaseOperation._cv_collections + (GATES,)
+class QuantumGate(QuantumOperation):
+    _cv_collections = QuantumOperation._cv_collections + (GATES,)
 
     cv_interchangable: ClassVar[bool] = False
 
@@ -214,7 +240,7 @@ class BaseGate(BaseOperation):
 
     @property
     @abstractmethod
-    def H(self) -> "BaseGate":
+    def H(self) -> "QuantumGate":
         pass
 
     @property
@@ -228,7 +254,7 @@ class BaseGate(BaseOperation):
             self._sym_operator = sym.Matrix(self.operator)
         return self._sym_operator
 
-    def permute(self, qubits: Qubits) -> "BaseGate":
+    def permute(self, qubits: Qubits) -> "QuantumGate":
         """Permute the order of the qubits."""
         from .gates import Unitary
 
@@ -248,14 +274,25 @@ class BaseGate(BaseOperation):
 
         return Unitary(tensor, qubits)
 
-    def __matmul__(self, other: "BaseGate") -> "BaseGate":
+    def relabel(
+        self: OperationType,
+        qubit_map: Dict[Qubit, Qubit],
+        cbit_map: Dict[Qubit, Qubit] = None,
+    ) -> "OperationType":
+        qubits = tuple(qubit_map[q] for q in self.qubits)
+
+        op = copy.copy(self)
+        op._qubits = qubits
+        return op
+
+    def __matmul__(self, other: "QuantumGate") -> "QuantumGate":
         """Apply the action of this gate upon another gate, `self_gate @ other_gate`.
         Recall that time runs right to left with matrix notation.
         """
         from .gates import Identity, Unitary
         from .utils.math import tensormul
 
-        if not isinstance(other, BaseGate):
+        if not isinstance(other, QuantumGate):
             raise NotImplementedError()
 
         extra_qubits = tuple(set(self.qubits) - set(other.qubits))
@@ -268,20 +305,20 @@ class BaseGate(BaseOperation):
         return Unitary(tensor, other.qubits)
 
     @abstractmethod
-    def __pow__(self, t: Variable) -> "BaseGate":
+    def __pow__(self, t: Variable) -> "QuantumGate":
         """Return this gate raised to the given power."""
         pass
 
 
-# end class BaseGate
+# end class QuantumGate
 
 
-class BaseStdGate(BaseGate):
-    _cv_collections = BaseGate._cv_collections + (STDGATES,)
+class QuantumStdGate(QuantumGate):
+    _cv_collections = QuantumGate._cv_collections + (STDGATES,)
 
     cv_sym_operator: ClassVar[sym.Matrix] = None
     """A symbolic representation of this gates' operator as a sympy Matrix.
-    Should be set by subclasses. (Subclasses of BaseStdCtrlGate should set
+    Should be set by subclasses. (Subclasses of QuantumStdCtrlGate should set
     cv_target instead.)
     """
 
@@ -295,7 +332,7 @@ class BaseStdGate(BaseGate):
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
 
-        if cls.__name__.startswith("Base"):
+        if cls.__name__.startswith("Quantum"):
             return
 
         # Parse the Gate parameters and number of qubits from the arguments to __init__
@@ -310,7 +347,7 @@ class BaseStdGate(BaseGate):
         cls.cv_params = tuple(params)
         cls.cv_qubit_nb = qubit_nb
 
-        if cls.cv_sym_operator:  # Not yet set for subclasses of BaseCtrlGate
+        if cls.cv_sym_operator:  # Not yet set for subclasses of QuantumCtrlGate
             cls._init_docstring()
 
     @classmethod
@@ -347,21 +384,31 @@ class BaseStdGate(BaseGate):
             self._sym_operator = M
         return self._sym_operator
 
+    def relabel(
+        self: StdGateType,
+        qubit_map: Dict[Qubit, Qubit],
+        cbit_map: Dict[Qubit, Qubit] = None,
+    ) -> "StdGateType":
+        qubits = tuple(qubit_map[q] for q in self.qubits)
 
-# end class BaseStdGate
+        return type(self)(*self.args, *qubits)  # type: ignore
 
 
-class BaseStdCtrlGate(BaseStdGate):
+# end class QuantumStdGate
+
+
+class QuantumStdCtrlGate(QuantumStdGate):
     """A standard gate that is a controlled version of another standard gate.
 
-    Subclasses should set the `cv_target` class variable to the target gate type. The
+    Concrete instances can be found in the ``stdgates`` module.
+    Subclasses should set the ``cv_target`` class variable to the target gate type. The
     class variables ``cv_sym_operator``, ``cv_operator_structure``, and ``cv_hermitian``
     are all set automatically.
     """
 
-    _cv_collections = BaseStdGate._cv_collections + (STDCTRLGATES,)
+    _cv_collections = QuantumStdGate._cv_collections + (STDCTRLGATES,)
 
-    cv_target: ClassVar[Type[BaseStdGate]]
+    cv_target: ClassVar[Type[QuantumStdGate]]
     """StdGate type that is the target of this controlled gate.
     Should be set by subclasses."""
 
@@ -398,9 +445,66 @@ class BaseStdCtrlGate(BaseStdGate):
         return self.cv_qubit_nb - self.cv_target.cv_qubit_nb
 
     @property
-    def target(self) -> BaseStdGate:
+    def target(self) -> QuantumStdGate:
         target_qubits = self.qubits[self.control_qubit_nb :]
         return self.cv_target(*self.args, *target_qubits)  # type: ignore
 
 
-# end BaseStdCtrlGate
+# end QuantumStdCtrlGate
+
+
+class QuantumComposite(Collection, QuantumOperation):
+    _elements: Tuple[QuantumOperation, ...] = ()
+
+    def __init__(
+        self,
+        *elements: QuantumOperation,
+        qubits: Qubits = None,
+        cbits: Cbits = None,
+    ):
+
+        elements = tuple(elements)
+        elem_qubits = tuple(sorted(set([q for elem in elements for q in elem.qubits])))
+        elem_cbits = tuple(sorted(set([c for elem in elements for c in elem.cbits])))
+
+        if qubits is None:
+            qubits = elem_qubits
+        else:
+            qubits = tuple(qubits)
+            if not set(elem_qubits).issubset(set(qubits)):
+                raise ValueError("Incommensurate qubits")
+
+        if cbits is None:
+            cbits = elem_cbits
+        else:
+            cbits = tuple(cbits)
+            if not set(elem_cbits).issubset(set(cbits)):
+                raise ValueError(
+                    "Incommensurate cbits"
+                )  # pragma: no cover  # FIXME TESTME
+
+        super().__init__(qubits, cbits)
+        self._elements = tuple(elements)
+
+    def relabel(
+        self: CompositeType,
+        qubit_map: Dict[Qubit, Qubit] = None,
+        cbit_map: Dict[Cbit, Cbit] = None,
+    ) -> "CompositeType":
+        elements = [elem.relabel(qubit_map, cbit_map) for elem in self]
+        qubits = tuple(qubit_map.values()) if qubit_map is not None else self.qubits
+        cbits = tuple(cbit_map.values()) if cbit_map is not None else self.cbits
+
+        return type(self)(*elements, qubits=qubits, cbits=cbits)
+
+    def __contains__(self, key: Any) -> bool:
+        return key in self._elements
+
+    def __iter__(self) -> Iterator[QuantumOperation]:
+        yield from self._elements
+
+    def __len__(self) -> int:
+        return len(self._elements)
+
+
+# end class QuantumComposite

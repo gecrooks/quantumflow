@@ -12,7 +12,7 @@ import quantumflow as qf
 
 
 # FIXME; FAILS IF RANGE MAKE LARGER , e.g. (-10, 10)
-def random_stdgate(gatet: Type[qf.BaseStdGate]) -> qf.BaseStdGate:
+def random_stdgate(gatet: Type[qf.QuantumStdGate]) -> qf.QuantumStdGate:
     """Given a standard gate subclass construct an instance with randomly chosen
     parameters and randomly ordered qubits. Used for testing purposes."""
 
@@ -23,7 +23,7 @@ def random_stdgate(gatet: Type[qf.BaseStdGate]) -> qf.BaseStdGate:
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates(gatet: Type[qf.BaseStdGate]) -> None:
+def test_stdgates(gatet: Type[qf.QuantumStdGate]) -> None:
 
     # Test creation
     gate0 = random_stdgate(gatet)
@@ -45,7 +45,7 @@ def test_stdgates(gatet: Type[qf.BaseStdGate]) -> None:
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_pow(gatet: Type[qf.BaseStdGate]) -> None:
+def test_stdgates_pow(gatet: Type[qf.QuantumStdGate]) -> None:
     gate0 = random_stdgate(gatet)
 
     exponent = random.uniform(-4, 4)
@@ -56,7 +56,7 @@ def test_stdgates_pow(gatet: Type[qf.BaseStdGate]) -> None:
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_structure(gatet: Type[qf.BaseStdGate]) -> None:
+def test_stdgates_structure(gatet: Type[qf.QuantumStdGate]) -> None:
     gate = random_stdgate(gatet)
 
     if gatet.cv_hermitian:

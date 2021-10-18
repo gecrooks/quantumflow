@@ -19,7 +19,7 @@ Common two qubit gates
 """
 
 
-from ..base import BaseStdCtrlGate, Variable
+from ..base import QuantumStdCtrlGate, Variable
 from ..bits import Qubit
 from .common_gates_1q import X, XPow, Y, YPow, Z, ZPow
 
@@ -34,7 +34,7 @@ __all__ = (
 )
 
 
-class CX(BaseStdCtrlGate):
+class CX(QuantumStdCtrlGate):
     r"""A controlled-X gate, also called controlled-not (cnot).
 
     Locally equivalent to ``Can(1/2, 0, 0)``.
@@ -66,7 +66,7 @@ class CX(BaseStdCtrlGate):
 CNot = CX  # Alias
 
 
-class CXPow(BaseStdCtrlGate):
+class CXPow(QuantumStdCtrlGate):
     r"""Powers of the controlled-X (CX, CNOT) gate.
 
     .. math::
@@ -96,7 +96,7 @@ class CXPow(BaseStdCtrlGate):
 # end class CXPow
 
 
-class CY(BaseStdCtrlGate):
+class CY(QuantumStdCtrlGate):
     r"""A controlled-Y gate.
 
     Locally equivalent to ``Can(1/2, 0, 0)``.
@@ -126,7 +126,7 @@ class CY(BaseStdCtrlGate):
 # end class CY
 
 
-class CYPow(BaseStdCtrlGate):
+class CYPow(QuantumStdCtrlGate):
     r"""Powers of the controlled-Y (CY) gate.
 
     .. math::
@@ -156,7 +156,7 @@ class CYPow(BaseStdCtrlGate):
 # end class CYPow
 
 
-class CZ(BaseStdCtrlGate):
+class CZ(QuantumStdCtrlGate):
     r"""A controlled-Z gate.
 
     Locally equivalent to ``Can(1/2, 0, 0)``.
@@ -186,7 +186,7 @@ class CZ(BaseStdCtrlGate):
 # end class CZ
 
 
-class CZPow(BaseStdCtrlGate):
+class CZPow(QuantumStdCtrlGate):
     r"""Powers of the controlled-Y (CZ) gate.
 
     .. math::

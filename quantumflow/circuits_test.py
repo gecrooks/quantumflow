@@ -4,13 +4,12 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-import numpy as np
 import pytest
 
 import quantumflow as qf
 
 
-def test_circuit_init() -> None:
+def test_Circuit_init() -> None:
     circ0 = qf.Circuit(qf.X(0), qf.S(2), qf.T(1))
     assert circ0.qubits == (0, 1, 2)
     assert len(circ0) == 3
@@ -27,7 +26,7 @@ def test_circuit_init() -> None:
         _ = qf.Circuit(qf.X(10), qf.S(2), qf.T(1), qubits=qbs)
 
 
-def test_circuit_add() -> None:
+def test_Circuit_add() -> None:
     circ0 = qf.Circuit(qf.X(0), qf.S(2), qf.T(1))
 
     circ0 += qf.H(3)
@@ -42,9 +41,6 @@ def test_circuit_add() -> None:
     circ2 = qf.Circuit(qf.X(0), qubits=(0, 5))
     circ2 += qf.S(5)
 
-    with pytest.raises(ValueError):
-        circ2 += qf.S(10)
-
     circ7 = circ6[3:6]
     assert isinstance(circ7, qf.Circuit)
     assert len(circ7) == 3
@@ -53,7 +49,29 @@ def test_circuit_add() -> None:
     assert isinstance(op, qf.S)
 
 
-def test_circuit_flat() -> None:
+def test_Circuit_on() -> None:
+    circ0 = qf.Circuit(qf.X(0), qf.Y(2), qf.Z(1))
+    circ1 = circ0.on(["a", "c", "b"])
+    assert circ1.qubits == ("a", "c", "b")
+    assert circ1[1].qubits == ("b",)
+
+    circ0 = qf.Circuit(qf.X(0), qf.Y(2), qf.Z(1), qubits=[0, 2, 1])
+    circ1 = circ0.on(["a", "c", "b"])
+    assert circ1.qubits == ("a", "c", "b")
+    assert circ1[1].qubits == ("c",)
+
+    with pytest.raises(ValueError):
+        _ = circ0.on(["a", "c", "b", "d"])
+
+
+def test_Circuit_relabel() -> None:
+    circ0 = qf.Circuit(qf.X(0), qf.Y(2), qf.Z(1))
+    circ1 = circ0.relabel({0: "a", 1: "b", 2: "c", 3: "d"})
+    assert circ1[1].qubits == ("c",)
+    assert circ1.qubits == ("a", "b", "c", "d")
+
+
+def test_Circuit_flat() -> None:
     circ0 = qf.Circuit(qf.X(0), qf.Y(0), qf.Z(0))
     circ1 = qf.Circuit(qf.H(0), circ0, qf.H(0))
 

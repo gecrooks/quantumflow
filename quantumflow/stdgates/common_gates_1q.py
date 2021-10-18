@@ -37,7 +37,7 @@ from sympy.abc import phi as sym_phi  # Symbolic phi
 from sympy.abc import t as sym_t  # Symbolic t
 from sympy.abc import theta as sym_theta  # Symbolic theta
 
-from ..base import BaseStdGate, OperatorStructure, Variable
+from ..base import OperatorStructure, QuantumStdGate, Variable
 from ..bits import Qubit
 
 __all__ = (
@@ -68,7 +68,7 @@ __all__ = (
 )
 
 
-class H(BaseStdGate):
+class H(QuantumStdGate):
     r"""
     A 1-qubit Hadamard gate.
 
@@ -101,7 +101,7 @@ H_ = H
 # End class H
 
 
-class HPow(BaseStdGate):
+class HPow(QuantumStdGate):
     r"""
     Powers of the 1-qubit Hadamard gate.
 
@@ -146,7 +146,7 @@ class HPow(BaseStdGate):
 # End class HPow
 
 
-class I(BaseStdGate):  # noqa: E742
+class I(QuantumStdGate):  # noqa: E742
     r"""
     A 1-qubit identity gate.
 
@@ -176,7 +176,7 @@ class I(BaseStdGate):  # noqa: E742
 # end class I
 
 
-class P(BaseStdGate):
+class P(QuantumStdGate):
     r"""A 1-qubit parametric phase shift gate.
 
     Equivalent to Rz up to a global phase.
@@ -207,7 +207,7 @@ class P(BaseStdGate):
 PhaseShift = P  # Alias for P
 
 
-class Ph(BaseStdGate):
+class Ph(QuantumStdGate):
     r"""
     Apply a global phase shift of exp(i phi).
 
@@ -254,7 +254,7 @@ sym_ny = sym.Symbol("ny")
 sym_nz = sym.Symbol("nz")
 
 
-class Rn(BaseStdGate):
+class Rn(QuantumStdGate):
     r"""A 1-qubit rotation of angle theta about axis (nx, ny, nz)
 
     .. math::
@@ -304,7 +304,7 @@ class Rn(BaseStdGate):
 # end class RN
 
 
-class Rx(BaseStdGate):
+class Rx(QuantumStdGate):
     r"""A 1-qubit Pauli-X parametric rotation gate.
 
     .. math::
@@ -338,7 +338,7 @@ class Rx(BaseStdGate):
 # end class Rx
 
 
-class Ry(BaseStdGate):
+class Ry(QuantumStdGate):
     r"""A 1-qubit Pauli-Y parametric rotation gate.
 
     .. math::
@@ -372,7 +372,7 @@ class Ry(BaseStdGate):
 # end class Ry
 
 
-class Rz(BaseStdGate):
+class Rz(QuantumStdGate):
     r"""A 1-qubit Pauli-Z parametric rotation gate.
 
     .. math::
@@ -407,7 +407,7 @@ class Rz(BaseStdGate):
 # end class Rx
 
 
-class S(BaseStdGate):
+class S(QuantumStdGate):
     r"""
     A 1-qubit phase S gate, equivalent to ``Z ** (1/2)``. The square root
     of the Z gate. Also sometimes denoted as the P gate.
@@ -442,7 +442,7 @@ class S(BaseStdGate):
 # end class S
 
 
-class S_H(BaseStdGate):
+class S_H(QuantumStdGate):
     r"""
     The inverse of the 1-qubit phase S gate, equivalent to
     ``Z ** -1/2``.
@@ -477,7 +477,7 @@ class S_H(BaseStdGate):
 # end class S_H
 
 
-class SqrtY(BaseStdGate):
+class SqrtY(QuantumStdGate):
     r"""
     Principal square root of the Y gate.
 
@@ -506,7 +506,7 @@ class SqrtY(BaseStdGate):
 # end class SqrtY
 
 
-class SqrtY_H(BaseStdGate):
+class SqrtY_H(QuantumStdGate):
     r"""
     Complex conjugate of the np.sqrtY gate.
 
@@ -534,7 +534,7 @@ class SqrtY_H(BaseStdGate):
 # end class SqrtY_H
 
 
-class T(BaseStdGate):
+class T(QuantumStdGate):
     r"""
     A 1-qubit T (pi/8) gate, equivalent to ``X ** (1/4)``.
 
@@ -571,7 +571,7 @@ class T(BaseStdGate):
 # end class T
 
 
-class T_H(BaseStdGate):
+class T_H(QuantumStdGate):
     r"""
     The inverse (complex conjugate) of the 1-qubit T (pi/8) gate, equivalent
     to ``Z ** -1/4``.
@@ -606,7 +606,7 @@ class T_H(BaseStdGate):
 # end class T_H
 
 
-class V(BaseStdGate):
+class V(QuantumStdGate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
 
@@ -634,7 +634,7 @@ class V(BaseStdGate):
 # end class V
 
 
-class V_H(BaseStdGate):
+class V_H(QuantumStdGate):
     r"""
     Complex conjugate of the V gate, X-MINUS-90 gate.
 
@@ -663,7 +663,7 @@ class V_H(BaseStdGate):
 # end class V_H
 
 
-class X(BaseStdGate):
+class X(QuantumStdGate):
     r"""
     A 1-qubit Pauli-X gate.
 
@@ -693,7 +693,7 @@ class X(BaseStdGate):
 # end class X
 
 
-class XPow(BaseStdGate):
+class XPow(QuantumStdGate):
     r"""Powers of the 1-qubit Pauli-X gate.
 
     .. math::
@@ -730,7 +730,7 @@ class XPow(BaseStdGate):
 # end class XPow
 
 
-class Y(BaseStdGate):
+class Y(QuantumStdGate):
     r"""
     A 1-qubit Pauli-Y gate.
 
@@ -762,7 +762,7 @@ class Y(BaseStdGate):
 # end class Y
 
 
-class YPow(BaseStdGate):
+class YPow(QuantumStdGate):
     r"""Powers of the 1-qubit Pauli-Y gate.
 
     .. math::
@@ -799,7 +799,7 @@ class YPow(BaseStdGate):
 # end class YPow
 
 
-class Z(BaseStdGate):
+class Z(QuantumStdGate):
     r"""
     A 1-qubit Pauli-Z gate.
 
@@ -829,7 +829,7 @@ class Z(BaseStdGate):
 # end class Z
 
 
-class ZPow(BaseStdGate):
+class ZPow(QuantumStdGate):
     r"""Powers of the 1-qubit Pauli-Z gate.
 
     .. math::
