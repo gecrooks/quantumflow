@@ -12,8 +12,8 @@ import quantumflow as qf
 
 
 def test_asarray() -> None:
-    from quantumflow.base import _asarray
     from quantumflow.config import quantum_dtype
+    from quantumflow.operations import _asarray
 
     arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 

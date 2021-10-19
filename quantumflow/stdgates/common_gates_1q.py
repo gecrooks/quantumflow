@@ -37,8 +37,8 @@ from sympy.abc import phi as sym_phi  # Symbolic phi
 from sympy.abc import t as sym_t  # Symbolic t
 from sympy.abc import theta as sym_theta  # Symbolic theta
 
-from ..base import OperatorStructure, QuantumStdGate, Variable
-from ..bits import Qubit
+from ..operations import OperatorStructure, QuantumStdGate, Variable
+from ..states import Qubit
 
 __all__ = (
     "H",

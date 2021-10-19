@@ -5,9 +5,9 @@
 
 import numpy as np
 
-from .base import QuantumGate
 from .config import ATOL
 from .gates import Identity
+from .operations import QuantumGate
 
 
 def fubini_study_fidelity(vector0: np.ndarray, vector1: np.ndarray) -> float:

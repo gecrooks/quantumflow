@@ -7,11 +7,10 @@
 from itertools import chain
 from typing import Iterable, Iterator, Sequence, TypeVar, Union, overload
 
-from .base import QuantumComposite, QuantumGate, QuantumOperation
-from .bits import Cbits, Qubits
-
 # from .config import CIRCUIT_INDENT
 from .gates import Identity
+from .operations import QuantumComposite, QuantumGate, QuantumOperation
+from .states import Cbits, Qubits
 
 CircuitType = TypeVar("CircuitType", bound="Circuit")
 """Generic type annotations for subtypes of Circuit"""

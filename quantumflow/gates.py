@@ -4,14 +4,20 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 import sympy as sym
 from scipy.linalg import fractional_matrix_power as matpow
 
-from .base import OperatorStructure, QuantumComposite, QuantumGate, Variable, _asarray
-from .bits import Cbits, Qubits
+from .operations import (
+    OperatorStructure,
+    QuantumComposite,
+    QuantumGate,
+    Variable,
+    _asarray,
+)
+from .states import Cbits, Qubits
 
 # standard workaround to avoid circular imports from type hints
 if TYPE_CHECKING:
@@ -19,9 +25,6 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike  # pragma: no cover
 
 __all__ = ("Identity", "Unitary", "CompositeGate")
-
-
-from typing import Tuple
 
 
 class CompositeGate(QuantumComposite, QuantumGate):

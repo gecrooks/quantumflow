@@ -19,8 +19,8 @@ Common two qubit gates
 """
 
 
-from ..base import QuantumStdCtrlGate, Variable
-from ..bits import Qubit
+from ..operations import QuantumStdCtrlGate, Variable
+from ..states import Qubit
 from .common_gates_1q import X, XPow, Y, YPow, Z, ZPow
 
 __all__ = (

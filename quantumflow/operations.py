@@ -29,8 +29,8 @@ from typing import (
 import numpy as np
 import sympy as sym
 
-from .bits import Cbit, Cbits, Qubit, Qubits
 from .config import quantum_dtype
+from .states import Cbit, Cbits, Qubit, Qubits
 
 if TYPE_CHECKING:
     # numpy typing introduced in v1.20, which may not be installed by default
