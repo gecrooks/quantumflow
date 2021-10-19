@@ -6,33 +6,8 @@
 import inspect
 
 import numpy as np
-import pytest
 
 import quantumflow as qf
-
-
-def test_asarray() -> None:
-    from quantumflow.config import quantum_dtype
-    from quantumflow.operations import _asarray
-
-    arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-
-    vec = _asarray(arr, ndim=1)
-    assert vec.ndim == 1
-    assert vec.size == 16
-    assert vec.dtype == quantum_dtype
-
-    op = _asarray(arr, ndim=2)
-    assert op.ndim == 2
-
-    superop = _asarray(arr, ndim=4)
-    assert superop.ndim == 4
-
-    tensor = _asarray(arr)
-    assert tensor.ndim == 4
-
-    with pytest.raises(ValueError):
-        _asarray([0, 1, 2, 3, 4])
 
 
 def test_base_abstract() -> None:
@@ -44,7 +19,16 @@ def test_base_abstract() -> None:
     assert inspect.isabstract(qf.QuantumComposite)
 
 
-def test_gate_permute() -> None:
+def test_Gate_run() -> None:
+    ket = qf.zero_state([0, 1, 2])
+    ket = qf.X(1).run(ket)
+    assert ket.tensor[0, 1, 0] == 1
+    ket = qf.CNot(1, 2).run(ket)
+    assert ket.tensor[0, 1, 0] == 0
+    assert ket.tensor[0, 1, 1] == 1
+
+
+def test_Gate_permute() -> None:
     gate0 = qf.CNot(0, 1)
 
     backwards_cnot = np.asarray(
@@ -63,12 +47,13 @@ def test_gate_permute() -> None:
     )
 
 
-def test_gate_matmul() -> None:
+def test_Gate_matmul() -> None:
     gate0 = qf.CNot(0, 1) @ qf.CNot(0, 1)
     assert qf.almost_identity(gate0)
 
     gate1 = qf.CNot(0, 1) @ qf.CNot(1, 0) @ qf.CNot(0, 1)
-    # TODO: Check same as swap
+    assert qf.gates_close(gate1, qf.Swap(0, 1))
+
     gate2 = gate1 @ gate1
     assert qf.almost_identity(gate2)
 
@@ -82,7 +67,7 @@ def test_gate_matmul() -> None:
     assert qf.almost_identity(gate4)
 
 
-def test_gate_relable() -> None:
+def test_Gate_relable() -> None:
     gate0 = qf.Unitary.from_gate(qf.CNot(1, 0))
     gate1 = gate0.relabel({0: "a", 1: "b"})
     assert gate1.qubits == ("b", "a")

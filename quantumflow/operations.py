@@ -12,13 +12,11 @@ import enum
 import inspect
 from abc import ABC, abstractmethod
 from typing import (
-    TYPE_CHECKING,
     Any,
     ClassVar,
     Collection,
     Dict,
     Iterator,
-    Sequence,
     Set,
     Tuple,
     Type,
@@ -30,37 +28,17 @@ import numpy as np
 import sympy as sym
 
 from .config import quantum_dtype
-from .states import Cbit, Cbits, Qubit, Qubits
-
-if TYPE_CHECKING:
-    # numpy typing introduced in v1.20, which may not be installed by default
-    from numpy.typing import ArrayLike  # pragma: no cover
-
-
-# FIXME not needed
-def _asarray(array: "ArrayLike", ndim: int = None) -> np.ndarray:
-    """Converts an array like object to a numpy array with complex data type. We also
-    check that the number of elements is a power of 2
-
-    If rank is given (vectors ndim=1, operators ndim=2, super-operators ndim=4)
-    we reshape the array to have than number of axes. Otherwise we reshape the array
-    so that all axes have length 2.
-    """
-    arr = np.asarray(array, dtype=quantum_dtype)
-
-    N = np.size(arr)
-    K = int(np.log2(N))
-    if 2 ** K != N:
-        raise ValueError("Wrong number of elements. Must be 2**N where N is an integer")
-
-    if ndim is None:
-        shape = (2,) * K
-    else:
-        shape = (2 ** (K // ndim),) * ndim
-
-    arr = arr.reshape(shape)
-
-    return arr
+from .states import (
+    Addr,
+    Addrs,
+    QuantumStateType,
+    Qubit,
+    Qubits,
+    State,
+    Variable,
+    Variables,
+)
+from .utils.math import tensormul
 
 
 class OperatorStructure(enum.Enum):
@@ -90,13 +68,6 @@ class OperatorStructure(enum.Enum):
 
 
 # end class OperatorStructure
-
-
-Variable = Union[float, sym.Expr]
-"""Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
-
-Variables = Sequence[Variable]
-"""A sequence of Variables"""
 
 
 OperationType = TypeVar("OperationType", bound="QuantumOperation")
@@ -131,7 +102,7 @@ class QuantumOperation(ABC):
     """List of collections to add subclasses to."""
 
     _qubits: Qubits = ()
-    _cbits: Cbits = ()
+    _addrs: Addrs = ()
     name: str
 
     def __init_subclass__(cls) -> None:
@@ -143,9 +114,9 @@ class QuantumOperation(ABC):
             for collection in cls._cv_collections:
                 collection.add(cls)
 
-    def __init__(self, qubits: Qubits, cbits: Cbits = ()) -> None:
+    def __init__(self, qubits: Qubits, addrs: Addrs = ()) -> None:
         self._qubits = tuple(qubits)
-        self._cbits = tuple(cbits)
+        self._addrs = tuple(addrs)
 
     @abstractmethod
     def asgate(self) -> "QuantumGate":
@@ -158,14 +129,14 @@ class QuantumOperation(ABC):
         pass
 
     @property
-    def cbits(self) -> Cbits:
-        """Return the classical bits that this operation acts upon."""
-        return self._cbits
+    def addrs(self) -> Addrs:
+        """Return the addresses of classical data that this operation acts upon."""
+        return self._addrs
 
     @property
-    def cbit_nb(self) -> int:
-        """Return the total number of qubits."""
-        return len(self.cbits)
+    def addrs_nb(self) -> int:
+        """Return the total number of addresses."""
+        return len(self.addrs)
 
     @property
     @abstractmethod
@@ -185,17 +156,21 @@ class QuantumOperation(ABC):
         if len(qubits) != self.qubit_nb:
             raise ValueError("Wrong number of qubits")
         qubit_map = dict(zip(self.qubits, qubits))
-        return self.relabel(qubit_map, cbit_map=None)
+        return self.relabel(qubit_map, addr_map=None)
 
     # DOCME
     @abstractmethod
     def relabel(
         self: OperationType,
         qubit_map: Dict[Qubit, Qubit],
-        cbit_map: Dict[Qubit, Qubit],
+        addr_map: Dict[Addr, Addr],
     ) -> "OperationType":
         # DOCME
         pass
+
+    @abstractmethod
+    def run(self, state: QuantumStateType) -> QuantumStateType:
+        raise NotImplementedError
 
     @property
     def qubits(self) -> Qubits:
@@ -248,6 +223,16 @@ class QuantumGate(QuantumOperation):
     def operator(self) -> np.ndarray:
         pass
 
+    def run(self, ket: State) -> State:
+        indices = tuple(ket.qubits.index(q) for q in self.qubits)
+
+        vector = tensormul(
+            self.operator,
+            ket.vector,
+            tuple(indices),
+        )
+        return State(vector.flatten(), ket.qubits, ket.data)
+
     @property
     def sym_operator(self) -> sym.Matrix:
         if self._sym_operator is None:
@@ -271,13 +256,14 @@ class QuantumGate(QuantumOperation):
         for rr in range(0, 2):
             pperm += [rr * N + idx for idx in perm]
         tensor = np.transpose(tensor, pperm)
+        tensor = np.reshape(tensor, (2 ** N, 2 ** N))
 
         return Unitary(tensor, qubits)
 
     def relabel(
         self: OperationType,
         qubit_map: Dict[Qubit, Qubit],
-        cbit_map: Dict[Qubit, Qubit] = None,
+        addr_map: Dict[Addr, Addr] = None,
     ) -> "OperationType":
         qubits = tuple(qubit_map[q] for q in self.qubits)
 
@@ -290,7 +276,6 @@ class QuantumGate(QuantumOperation):
         Recall that time runs right to left with matrix notation.
         """
         from .gates import Identity, Unitary
-        from .utils.math import tensormul
 
         if not isinstance(other, QuantumGate):
             raise NotImplementedError()
@@ -380,7 +365,7 @@ class QuantumStdGate(QuantumGate):
         if self._operator is None:
             args = (float(sym.N(x)) for x in self._args)
             M = sym.lambdify(self.cv_params, self.cv_sym_operator)(*args)
-            self._operator = _asarray(M, ndim=2)
+            self._operator = M.astype(quantum_dtype)
         return self._operator
 
     @property
@@ -396,7 +381,7 @@ class QuantumStdGate(QuantumGate):
     def relabel(
         self: StdGateType,
         qubit_map: Dict[Qubit, Qubit],
-        cbit_map: Dict[Qubit, Qubit] = None,
+        addr_map: Dict[Addr, Addr] = None,
     ) -> "StdGateType":
         qubits = tuple(qubit_map[q] for q in self.qubits)
 
@@ -469,12 +454,12 @@ class QuantumComposite(Collection, QuantumOperation):
         self,
         *elements: QuantumOperation,
         qubits: Qubits = None,
-        cbits: Cbits = None,
+        addrs: Addrs = None,
     ):
 
         elements = tuple(elements)
         elem_qubits = tuple(sorted(set([q for elem in elements for q in elem.qubits])))
-        elem_cbits = tuple(sorted(set([c for elem in elements for c in elem.cbits])))
+        elem_addrs = tuple(sorted(set([c for elem in elements for c in elem.addrs])))
 
         if qubits is None:
             qubits = elem_qubits
@@ -483,28 +468,35 @@ class QuantumComposite(Collection, QuantumOperation):
             if not set(elem_qubits).issubset(set(qubits)):
                 raise ValueError("Incommensurate qubits")
 
-        if cbits is None:
-            cbits = elem_cbits
+        if addrs is None:
+            addrs = elem_addrs
         else:
-            cbits = tuple(cbits)
-            if not set(elem_cbits).issubset(set(cbits)):
+            addrs = tuple(addrs)
+            if not set(elem_addrs).issubset(set(addrs)):
                 raise ValueError(
-                    "Incommensurate cbits"
+                    "Incommensurate addresses"
                 )  # pragma: no cover  # FIXME TESTME
 
-        super().__init__(qubits, cbits)
+        super().__init__(qubits, addrs)
         self._elements = tuple(elements)
 
     def relabel(
         self: CompositeType,
         qubit_map: Dict[Qubit, Qubit] = None,
-        cbit_map: Dict[Cbit, Cbit] = None,
+        addr_map: Dict[Addr, Addr] = None,
     ) -> "CompositeType":
-        elements = [elem.relabel(qubit_map, cbit_map) for elem in self]
+        elements = [elem.relabel(qubit_map, addr_map) for elem in self]
         qubits = tuple(qubit_map.values()) if qubit_map is not None else self.qubits
-        cbits = tuple(cbit_map.values()) if cbit_map is not None else self.cbits
+        addrs = tuple(addr_map.values()) if addr_map is not None else self.addrs
 
-        return type(self)(*elements, qubits=qubits, cbits=cbits)
+        return type(self)(*elements, qubits=qubits, addrs=addrs)
+
+    # DOCME TESTME
+    def run(self, ket: State) -> State:
+        # TODO: Create state if None
+        for elem in self:
+            ket = elem.run(ket)
+        return ket
 
     def __contains__(self, key: Any) -> bool:
         return key in self._elements

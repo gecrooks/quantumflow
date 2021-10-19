@@ -10,14 +10,9 @@ import numpy as np
 import sympy as sym
 from scipy.linalg import fractional_matrix_power as matpow
 
-from .operations import (
-    OperatorStructure,
-    QuantumComposite,
-    QuantumGate,
-    Variable,
-    _asarray,
-)
-from .states import Cbits, Qubits
+from .config import quantum_dtype
+from .operations import OperatorStructure, QuantumComposite, QuantumGate
+from .states import Addrs, Qubits, Variable
 
 # standard workaround to avoid circular imports from type hints
 if TYPE_CHECKING:
@@ -35,9 +30,9 @@ class CompositeGate(QuantumComposite, QuantumGate):
         self,
         *elements: QuantumGate,
         qubits: Qubits = None,
-        cbits: Cbits = None,
+        addrs: Addrs = None,
     ) -> None:
-        QuantumComposite.__init__(self, *elements, qubits=qubits, cbits=cbits)
+        QuantumComposite.__init__(self, *elements, qubits=qubits, addrs=addrs)
 
         for elem in self:
             if not isinstance(elem, QuantumGate):
@@ -58,7 +53,7 @@ class CompositeGate(QuantumComposite, QuantumGate):
     @property
     def H(self) -> "CompositeGate":
         elements = [elem.H for elem in self._elements[::-1]]
-        return CompositeGate(*elements, qubits=self.qubits, cbits=self.cbits)
+        return CompositeGate(*elements, qubits=self.qubits, addrs=self.addrs)
 
 
 class Identity(QuantumGate):
@@ -102,7 +97,7 @@ class Unitary(QuantumGate):
 
     def __init__(self, operator: "ArrayLike", qubits: Qubits) -> None:
         super().__init__(qubits=qubits)
-        self._operator = _asarray(operator, ndim=2)
+        self._operator = np.asanyarray(operator, dtype=quantum_dtype)
 
     @classmethod
     def from_gate(cls, gate: QuantumGate) -> "Unitary":

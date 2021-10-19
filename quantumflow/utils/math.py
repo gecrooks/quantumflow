@@ -20,6 +20,8 @@ def tensormul(
     assert tensor0.ndim == 2
     assert tensor1.ndim == 1 or tensor1.ndim == 2
 
+    D1 = tensor1.ndim
+
     R0 = intlog2(tensor1.size)
     R1 = intlog2(tensor1.size)
     K = len(indices)
@@ -35,6 +37,7 @@ def tensormul(
 
     tensor = np.reshape(tensor, [2] * R1)
     tensor = np.transpose(tensor, inv_perm)
-    tensor = np.reshape(tensor, [2 ** (R0 // 2), 2 ** (R0 // 2)])
+
+    tensor = np.reshape(tensor, [2 ** (R0 // D1)] * D1)
 
     return tensor
