@@ -64,7 +64,7 @@ __all__ = (
     "YPow",
     "Z",
     "ZPow",
-    "PhaseShift",  # Alias for P  # DOXME
+    "PhaseShift",  # Alias for P  # DOCME
 )
 
 
@@ -84,7 +84,7 @@ class H(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1, 1], [1, -1]]) / sym.sqrt(2)
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "H_":  # See NB implementation note below
@@ -132,8 +132,7 @@ class HPow(QuantumStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__(args=[t], qubits=[q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "HPow":
@@ -163,7 +162,7 @@ class I(QuantumStdGate):  # noqa: E742
     cv_sym_operator = sym.Matrix([[1, 0], [0, 1]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__([], [q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "I":
@@ -191,8 +190,7 @@ class P(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1, 0], [0, sym.exp(sym.I * sym_theta)]])
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__(args=[theta], qubits=[q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "P":
@@ -235,8 +233,7 @@ class Ph(QuantumStdGate):
     )
 
     def __init__(self, phi: Variable, q0: Qubit) -> None:
-        super().__init__(args=[phi], qubits=[q0])
-        self.phi = phi
+        super().__init__(phi, q0)
 
     @property
     def H(self) -> "Ph":
@@ -287,11 +284,7 @@ class Rn(QuantumStdGate):
     def __init__(
         self, theta: Variable, nx: Variable, ny: Variable, nz: Variable, q0: Qubit
     ) -> None:
-        super().__init__(args=[theta, nx, ny, nz], qubits=[q0])
-        self.theta = theta
-        self.nx = nx
-        self.ny = ny
-        self.nz = nz
+        super().__init__(theta, nx, ny, nz, q0)
 
     @property
     def H(self) -> "Rn":
@@ -324,8 +317,7 @@ class Rx(QuantumStdGate):
     )
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__([theta], [q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "Rx":
@@ -358,8 +350,7 @@ class Ry(QuantumStdGate):
     )
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__([theta], [q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "Ry":
@@ -393,8 +384,7 @@ class Rz(QuantumStdGate):
     )
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__([theta], [q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "Rz":
@@ -429,7 +419,7 @@ class S(QuantumStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "S_H":
@@ -464,7 +454,7 @@ class S_H(QuantumStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "S":
@@ -493,7 +483,7 @@ class SqrtY(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1, -1], [1, 1]]) * (1 + sym.I) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "SqrtY_H":
@@ -521,7 +511,7 @@ class SqrtY_H(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1, 1], [-1, 1]]) * (1 - sym.I) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "SqrtY":
@@ -558,7 +548,7 @@ class T(QuantumStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "T_H":
@@ -593,7 +583,7 @@ class T_H(QuantumStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "T":
@@ -621,7 +611,7 @@ class V(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1 + sym.I, 1 - sym.I], [1 - sym.I, 1 + sym.I]]) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "V_H":
@@ -650,7 +640,7 @@ class V_H(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1 - sym.I, 1 + sym.I], [1 + sym.I, 1 - sym.I]]) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "V":
@@ -680,7 +670,7 @@ class X(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[0, 1], [1, 0]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__([], [q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "X":
@@ -716,8 +706,7 @@ class XPow(QuantumStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__([t], [q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "XPow":
@@ -749,7 +738,7 @@ class Y(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[0, -sym.I], [sym.I, 0]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__([], [q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "Y":
@@ -785,8 +774,7 @@ class YPow(QuantumStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__([t], [q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "YPow":
@@ -816,7 +804,7 @@ class Z(QuantumStdGate):
     cv_sym_operator = sym.Matrix([[1, 0], [0, -1]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(args=[], qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "Z":
@@ -853,8 +841,7 @@ class ZPow(QuantumStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__([t], [q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "ZPow":

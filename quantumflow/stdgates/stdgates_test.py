@@ -12,14 +12,14 @@ import quantumflow as qf
 
 
 # FIXME; FAILS IF RANGE MAKE LARGER , e.g. (-10, 10)
-def random_stdgate(gatet: Type[qf.QuantumStdGate]) -> qf.QuantumStdGate:
+def random_stdgate(stdgatet: Type[qf.QuantumStdGate]) -> qf.QuantumStdGate:
     """Given a standard gate subclass construct an instance with randomly chosen
     parameters and randomly ordered qubits. Used for testing purposes."""
 
-    args = (random.uniform(-4, 4) for _ in range(0, len(gatet.cv_params)))
-    qbs = list(range(0, gatet.cv_qubit_nb))
+    args = (random.uniform(-4, 4) for _ in range(0, len(stdgatet.cv_params)))
+    qbs = list(range(0, stdgatet.cv_qubit_nb))
     random.shuffle(qbs)
-    return gatet(*args, *qbs)  # type: ignore
+    return stdgatet(*args, *qbs)
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
