@@ -25,6 +25,9 @@ def test_Circuit_init() -> None:
     with pytest.raises(ValueError):
         _ = qf.Circuit(qf.X(10), qf.S(2), qf.T(1), qubits=qbs)
 
+    assert qf.X(0) in circ0
+    assert qf.X(1) not in circ0
+
 
 def test_Circuit_add() -> None:
     circ0 = qf.Circuit(qf.X(0), qf.S(2), qf.T(1))
@@ -90,3 +93,53 @@ def test_Moment() -> None:
 
     with pytest.raises(ValueError):
         _ = qf.Moment(qf.X(0), qf.S(2), qf.T(2))
+
+
+def test_DAGCircuit_depth() -> None:
+    dagc = qf.DAGCircuit(
+        qf.I(0),
+        qf.X(0),
+        qf.Y(0),
+        qf.Z(0),
+        qf.S(1),
+        qf.T(1),
+    )
+
+    assert len(dagc) == 6
+    assert dagc.depth() == 4
+    assert dagc.component_nb() == 2
+
+    comps = dagc.components()
+    assert len(comps) == 2
+    assert len(comps[0]) == 4
+    assert len(comps[1]) == 2
+
+    moments = list(dagc.moments())
+    assert len(moments) == 4
+
+    assert qf.I(0) in dagc
+    assert qf.I(2) not in dagc
+
+    assert dagc.qubits == (0, 1)
+
+
+def test_Circuit_eq() -> None:
+    circ0 = qf.Circuit(qf.X(0), qf.Y(2))
+    assert circ0 == qf.Circuit(qf.X(0), qf.Y(2))
+    assert circ0 == qf.Circuit(qf.X(0), qf.Y(2), qubits=(0, 2))
+    assert circ0 != qf.Circuit(qf.CNot(0, 2))
+    assert circ0 != qf.Circuit(qf.X(0), qf.Y(1))
+    assert circ0 != qf.Circuit(qf.X(0), qf.X(2))
+    assert circ0 != "NOT A CICUIT"
+    assert circ0 != qf.Moment(qf.X(0), qf.Y(2))
+    assert circ0 != qf.Circuit(qf.X(0), qf.Y(2), qubits=(2, 0))
+
+
+def test_Circuit_repr() -> None:
+    circ0 = qf.Circuit(qf.X(0), qf.Y(2), qf.Z(1))
+    circ1 = eval(repr(circ0), qf.__dict__)
+    assert circ0 == circ1
+
+    circ0 = qf.Circuit(qf.X(0), qf.Y(2), qf.Z(1), qubits=(0, 2, 1))
+    circ1 = eval(repr(circ0), qf.__dict__)
+    assert circ0 == circ1

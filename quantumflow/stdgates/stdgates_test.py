@@ -61,3 +61,19 @@ def test_stdgates_structure(gatet: Type[qf.QuantumStdGate]) -> None:
 
     if gatet.cv_hermitian:
         assert gate.H is gate
+
+
+@pytest.mark.parametrize("gatet", qf.STDGATES)
+def test_stdgates_repr(gatet: Type[qf.QuantumStdGate]) -> None:
+    gate0 = random_stdgate(gatet)
+    rep = repr(gate0)
+    gate1 = eval(rep, {gatet.name: gatet for gatet in qf.STDGATES})
+    qf.gates_close(gate0, gate1)
+
+
+def test_stdgates_hash() -> None:
+    gate0 = qf.XPow(0.5, 0)
+    gate1 = qf.XPow(0.5, 0)
+    assert gate0 == gate1
+
+    assert len(set([gate0, gate1])) == 1

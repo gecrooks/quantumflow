@@ -19,13 +19,20 @@ def test_base_abstract() -> None:
     assert inspect.isabstract(qf.QuantumComposite)
 
 
+def test_Gate_diagonal() -> None:
+    assert qf.gates_close(qf.Unitary(np.diag(qf.I(0).diagonal), [0]), qf.I(0))
+
+
 def test_Gate_run() -> None:
-    ket = qf.zero_state([0, 1, 2])
+    ket = qf.zero_ket([0, 1, 2])
     ket = qf.X(1).run(ket)
     assert ket.tensor[0, 1, 0] == 1
     ket = qf.CNot(1, 2).run(ket)
     assert ket.tensor[0, 1, 0] == 0
     assert ket.tensor[0, 1, 1] == 1
+
+    ket = qf.X(1).run()
+    assert ket.qubits == (1,)
 
 
 def test_Gate_permute() -> None:

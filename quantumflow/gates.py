@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Any, Tuple
 
 import numpy as np
 import sympy as sym
@@ -38,6 +38,12 @@ class CompositeGate(QuantumComposite, QuantumGate):
             if not isinstance(elem, QuantumGate):
                 raise ValueError("Elements of a composite gate must be gates")
 
+    # TODO: Move up to QuantumComposite?
+    @property
+    def H(self) -> "CompositeGate":
+        elements = [elem.H for elem in self._elements[::-1]]
+        return CompositeGate(*elements, qubits=self.qubits, addrs=self.addrs)
+
     @property
     def operator(self) -> np.ndarray:
         from .circuits import Circuit
@@ -46,14 +52,11 @@ class CompositeGate(QuantumComposite, QuantumGate):
             self._operator = Circuit(*self, qubits=self.qubits).asgate().operator
         return self._operator
 
+    def __contains__(self, key: Any) -> bool:
+        return key in self._elements
+
     def __pow__(self, t: Variable) -> "Unitary":
         return Unitary.from_gate(self) ** t
-
-    # TODO: Move up to QuantumComposite?
-    @property
-    def H(self) -> "CompositeGate":
-        elements = [elem.H for elem in self._elements[::-1]]
-        return CompositeGate(*elements, qubits=self.qubits, addrs=self.addrs)
 
 
 class Identity(QuantumGate):

@@ -36,15 +36,13 @@ __all__ = (
     "Addrs",
     "Qubit",
     "Qubits",
-    # "Cbit",
-    # "Cbits",
     "Variable",
     "Variables",
     "QuantumState",
     "QuantumStateType",
-    "State",
-    "zero_state",
-    "ghz_state",
+    "Ket",
+    "zero_ket",
+    "ghz_ket",
 )
 
 
@@ -105,21 +103,57 @@ class QuantumState(ABC):
 
     @property
     @abstractmethod
-    def data(self) -> Dict[Addr, Any]:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
     def qubits(self) -> Qubits:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def qubit_nb(self) -> Qubits:
+    def qubit_nb(self) -> int:
         raise NotImplementedError
 
 
-class State(QuantumState):
+class Ket(QuantumState):
+    def __init__(
+        self, vector: np.ndarray, qubits: Qubits, data: Dict[Addr, Any] = None
+    ):
+        qubits = tuple(qubits)
+        arr = np.asanyarray(vector).astype(quantum_dtype).flatten()
+        assert len(arr) == 2 ** len(qubits)  # FIXME
+        self._vector = arr
+        self._qubits = qubits
+        self._data = data if data is not None else {}
+
+    @property
+    def data(self) -> Dict[Addr, Any]:
+        return self._data
+
+    @property
+    def addrs(self) -> Addrs:  # pragma: no cover  # FIXME
+        return tuple(self._data.keys())
+
+    @property
+    def qubits(self) -> Qubits:
+        return self._qubits
+
+    @property
+    def qubit_nb(self) -> int:
+        return len(self.qubits)
+
+    @property
+    def vector(self) -> np.ndarray:
+        return self._vector
+
+    @property
+    def tensor(self) -> np.ndarray:
+        return np.reshape(self._vector, [2] * self.qubit_nb)
+
+
+# end class State
+
+# FIXME
+
+
+class Density(QuantumState):  # pragma: no cover  # FIXME
     def __init__(
         self, vector: np.ndarray, qubits: Qubits, data: Dict[Addr, Any] = None
     ):
@@ -132,18 +166,14 @@ class State(QuantumState):
 
     @property
     def addrs(self) -> Addrs:
-        return tuple(self.data.keys())
-
-    @property
-    def data(self) -> Dict[Addr, Any]:
-        return self._data
+        return tuple(self._data.keys())
 
     @property
     def qubits(self) -> Qubits:
         return self._qubits
 
     @property
-    def qubit_nb(self) -> Qubits:
+    def qubit_nb(self) -> int:
         return len(self.qubits)
 
     @property
@@ -158,23 +188,23 @@ class State(QuantumState):
 # end class State
 
 
-def zero_state(qubits: Qubits) -> State:
+def zero_ket(qubits: Qubits) -> Ket:
     """Return the all-zero state on the given qubits"""
     qubits = tuple(qubits)
     N = len(qubits)
     vec = np.zeros(shape=2 ** N)
     vec[0] = 1
-    return State(vec, qubits)
+    return Ket(vec, qubits)
 
 
-def ghz_state(qubits: Union[int, Qubits]) -> State:
+def ghz_ket(qubits: Qubits) -> Ket:  # pragma: no cover  # FIXME
     """Return a GHZ state on N qubits"""
     qubits = tuple(qubits)
     N = len(qubits)
     vec = np.zeros(shape=[2] * N)
     vec[(0,) * N] = 1 / np.sqrt(2)
     vec[(1,) * N] = 1 / np.sqrt(2)
-    return State(vec.flatten(), qubits)
+    return Ket(vec.flatten(), qubits)
 
 
 # fin

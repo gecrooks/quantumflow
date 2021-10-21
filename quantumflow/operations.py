@@ -10,6 +10,7 @@ TODO
 import copy
 import enum
 import inspect
+import textwrap
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -17,26 +18,30 @@ from typing import (
     Collection,
     Dict,
     Iterator,
+    Optional,
     Set,
     Tuple,
     Type,
     TypeVar,
     Union,
+    overload,
 )
 
 import numpy as np
 import sympy as sym
 
-from .config import quantum_dtype
+from .config import CIRCUIT_INDENT, quantum_dtype
 from .states import (
     Addr,
     Addrs,
-    QuantumStateType,
+    Density,
+    Ket,
+    QuantumState,
     Qubit,
     Qubits,
-    State,
     Variable,
     Variables,
+    zero_ket,
 )
 from .utils.math import tensormul
 
@@ -83,6 +88,8 @@ StdGateType = TypeVar("StdGateType", bound="QuantumStdGate")
 CompositeType = TypeVar("CompositeType", bound="QuantumComposite")
 """Generic type annotations for subtypes of QuantumComposite"""
 
+
+# TODO: Change back to dictionaries
 
 OPERATIONS: Set[Type["QuantumOperation"]] = set()
 """All quantum operations (All concrete subclasses of QuantumOperation)"""
@@ -168,8 +175,31 @@ class QuantumOperation(ABC):
         # DOCME
         pass
 
-    @abstractmethod
-    def run(self, state: QuantumStateType) -> QuantumStateType:
+    @overload  # noqa: F811
+    def run(self, state: Optional[Ket] = None) -> Ket:
+        pass
+
+    @overload  # noqa: F811
+    def run(self, state: Density) -> Density:
+        pass
+
+    def run(self, state: Optional[QuantumState] = None) -> QuantumState:  # noqa: F811
+        if state is None:
+            ket = zero_ket(self.qubits)
+            return self._run_ket(ket)
+        if isinstance(state, Ket):
+            return self._run_ket(state)
+        elif isinstance(state, Density):  # pragma: no cover  # FIXME
+            return self._run_density(state)
+        else:
+            raise NotImplementedError
+
+    # TODO: Make abstract
+    def _run_ket(self, ket: Ket) -> Ket:
+        raise NotImplementedError
+
+    # TODO: Make abstract
+    def _run_density(self, rho: Density) -> Density:
         raise NotImplementedError
 
     @property
@@ -182,8 +212,15 @@ class QuantumOperation(ABC):
         """Return the total number of qubits."""
         return len(self.qubits)
 
+    # FIXME
     def __iter__(self) -> Iterator["QuantumOperation"]:
         yield self
+
+    # TODO
+    # Default not useful, so make abstract so we remember to implement in subclasses
+    # @abstractmethod
+    # def __repr__(self) -> str:
+    #     raise NotImplementedError
 
 
 # end class QuantumOperation
@@ -202,7 +239,7 @@ class QuantumGate(QuantumOperation):
      in the computational basis"""
 
     _operator: np.ndarray = None
-    """Instance variable for caching operators."""
+    """Instance variable for operators."""
 
     _sym_operator: sym.Matrix = None
     """Instance variable for symbolic operators."""
@@ -210,8 +247,45 @@ class QuantumGate(QuantumOperation):
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
 
+    def __matmul__(self, other: "QuantumGate") -> "QuantumGate":
+        """Apply the action of this gate upon another gate, `self_gate @ other_gate`.
+        Recall that time runs right to left with matrix notation.
+        """
+        from .gates import Identity, Unitary
+
+        if not isinstance(other, QuantumGate):
+            raise NotImplementedError()
+
+        extra_qubits = tuple(set(self.qubits) - set(other.qubits))
+        if len(extra_qubits) != 0:
+            return self @ (other @ Identity(tuple(other.qubits) + extra_qubits))
+
+        indices = tuple(other.qubits.index(q) for q in self.qubits)
+        tensor = tensormul(self.operator, other.operator, indices)
+
+        return Unitary(tensor, other.qubits)
+
+    @abstractmethod
+    def __pow__(self, t: Variable) -> "QuantumGate":
+        """Return this gate raised to the given power."""
+        pass
+
+    def _run_ket(self, ket: Ket) -> Ket:
+        indices = tuple(ket.qubits.index(q) for q in self.qubits)
+
+        vec = tensormul(
+            self.operator,
+            ket.vector,
+            tuple(indices),
+        )
+        return Ket(vec.flatten(), ket.qubits, ket.data)
+
     def asgate(self: GateType) -> "GateType":
         return self
+
+    @property
+    def diagonal(self) -> np.ndarray:
+        return np.diag(self.operator)
 
     @property
     @abstractmethod
@@ -222,16 +296,6 @@ class QuantumGate(QuantumOperation):
     @abstractmethod
     def operator(self) -> np.ndarray:
         pass
-
-    def run(self, ket: State) -> State:
-        indices = tuple(ket.qubits.index(q) for q in self.qubits)
-
-        vector = tensormul(
-            self.operator,
-            ket.vector,
-            tuple(indices),
-        )
-        return State(vector.flatten(), ket.qubits, ket.data)
 
     @property
     def sym_operator(self) -> sym.Matrix:
@@ -271,29 +335,6 @@ class QuantumGate(QuantumOperation):
         op._qubits = qubits
         return op
 
-    def __matmul__(self, other: "QuantumGate") -> "QuantumGate":
-        """Apply the action of this gate upon another gate, `self_gate @ other_gate`.
-        Recall that time runs right to left with matrix notation.
-        """
-        from .gates import Identity, Unitary
-
-        if not isinstance(other, QuantumGate):
-            raise NotImplementedError()
-
-        extra_qubits = tuple(set(self.qubits) - set(other.qubits))
-        if len(extra_qubits) != 0:
-            return self @ (other @ Identity(tuple(other.qubits) + extra_qubits))
-
-        indices = tuple(other.qubits.index(q) for q in self.qubits)
-        tensor = tensormul(self.operator, other.operator, indices)
-
-        return Unitary(tensor, other.qubits)
-
-    @abstractmethod
-    def __pow__(self, t: Variable) -> "QuantumGate":
-        """Return this gate raised to the given power."""
-        pass
-
 
 # end class QuantumGate
 
@@ -311,8 +352,8 @@ class QuantumStdGate(QuantumGate):
     """The number of qubits of this gate. Set by subclass initialization."""
 
     cv_params: ClassVar[Tuple[str, ...]] = ()
-    """The named parameters of this class. Parse by subclass initialization from the
-    signature of the __init__ method"""
+    """The named parameters of this class. Set by subclass initialization from the
+    signature of the __init__ method."""
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -350,11 +391,30 @@ class QuantumStdGate(QuantumGate):
         super().__init__(qubits)
         self._args = tuple(args)
 
+    # FIXME MARK ABSTARCT AT BASE?
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, type(self)):
+            return (
+                self.name == other.name
+                and self.qubits == other.qubits
+                and self.args == other.args
+            )
+        return NotImplemented
+
     def __getattr__(self, name: str) -> Variable:
         # DOCME
         if name not in self.cv_params:
             raise AttributeError
         return self.args[self.cv_params.index(name)]
+
+    # FIXME MARK ABSTARCT AT BASE?
+    def __hash__(self) -> int:
+        return hash((self.name,) + tuple(self.args) + tuple(self.qubits))
+
+    # TESTME
+    def __repr__(self) -> str:
+        args = ", ".join(repr(a) for a in (tuple(self.args) + tuple(self.qubits)))
+        return f"{self.name}({args})"
 
     @property
     def args(self) -> Variables:
@@ -363,9 +423,17 @@ class QuantumStdGate(QuantumGate):
     @property
     def operator(self) -> np.ndarray:
         if self._operator is None:
-            args = (float(sym.N(x)) for x in self._args)
+            args = tuple(float(sym.N(x)) for x in self._args)
             M = sym.lambdify(self.cv_params, self.cv_sym_operator)(*args)
-            self._operator = M.astype(quantum_dtype)
+            M = M.astype(quantum_dtype)
+            M.flags.writeable = False  # Prevent accidental mutation
+
+            if args:
+                self._operator = M
+            else:
+                # If no arguments can set operator on a per class basis
+                type(self)._operator = M
+
         return self._operator
 
     @property
@@ -478,7 +546,7 @@ class QuantumComposite(Collection, QuantumOperation):
                 )  # pragma: no cover  # FIXME TESTME
 
         super().__init__(qubits, addrs)
-        self._elements = tuple(elements)
+        self._elements = elements
 
     def relabel(
         self: CompositeType,
@@ -491,21 +559,75 @@ class QuantumComposite(Collection, QuantumOperation):
 
         return type(self)(*elements, qubits=qubits, addrs=addrs)
 
-    # DOCME TESTME
-    def run(self, ket: State) -> State:
-        # TODO: Create state if None
+    def _run_density(self, rho: Density) -> Density:  # pragma: no cover  # FIXME
         for elem in self:
-            ket = elem.run(ket)
+            rho = elem._run_density(rho)
+        return rho
+
+    def _run_ket(self, ket: Ket) -> Ket:  # pragma: no cover  # FIXME
+        for elem in self:
+            ket = elem._run_ket(ket)
         return ket
 
-    def __contains__(self, key: Any) -> bool:
-        return key in self._elements
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+
+        if self.name != other.name:
+            return False
+
+        if len(self) != len(other):
+            return False
+
+        if self.qubits != other.qubits:
+            return False
+
+        if self.addrs != other.addrs:
+            return False  # pragma: no cover  # FIXME
+
+        for elem0, elem1 in zip(self, other):
+            if elem0 != elem1:
+                return False
+
+        return True
 
     def __iter__(self) -> Iterator[QuantumOperation]:
         yield from self._elements
 
     def __len__(self) -> int:
         return len(self._elements)
+
+    @property
+    def H(self: CompositeType) -> "CompositeType":
+        elements = [elem.H for elem in self._elements[::-1]]
+        return type(self)(*elements, qubits=self.qubits, addrs=self.addrs)
+
+    def asgate(self) -> QuantumGate:
+        from .gates import Identity
+
+        gate: QuantumGate = Identity(self.qubits)
+        for elem in self:
+            gate = elem.asgate() @ gate
+        return gate
+
+    def __repr__(self) -> str:
+        header = self.name + "("
+
+        elems = [repr(elem) for elem in self]
+
+        elem_qubits = tuple(sorted(set(list(q for elem in self for q in elem.qubits))))
+        if self.qubits != elem_qubits:
+            elems += ["qubits=(" + ", ".join(repr(q) for q in self.qubits) + ")"]
+
+        elem_addrs = tuple(sorted(set(list(ad for elem in self for ad in elem.addrs))))
+        if self.addrs != elem_addrs:  # pragma: no cover  # FIXME
+            elems += ["addrs=(" + ", ".join(repr(ad) for ad in self.addrs) + ")"]
+
+        elems_str = textwrap.indent(",\n".join(elems), " " * CIRCUIT_INDENT)
+
+        footer = ")"
+
+        return "\n".join([header, elems_str, footer])
 
 
 # end class QuantumComposite
