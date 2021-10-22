@@ -22,8 +22,9 @@ def random_stdgate(stdgatet: Type[qf.QuantumStdGate]) -> qf.QuantumStdGate:
     return stdgatet(*args, *qbs)
 
 
-@pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates(gatet: Type[qf.QuantumStdGate]) -> None:
+@pytest.mark.parametrize("name", qf.STDGATES)
+def test_stdgates(name: str) -> None:
+    gatet = qf.STDGATES[name]
 
     # Test creation
     gate0 = random_stdgate(gatet)
@@ -44,8 +45,9 @@ def test_stdgates(gatet: Type[qf.QuantumStdGate]) -> None:
     # FIXME: more tests
 
 
-@pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_pow(gatet: Type[qf.QuantumStdGate]) -> None:
+@pytest.mark.parametrize("name", qf.STDGATES)
+def test_stdgates_pow(name: str) -> None:
+    gatet = qf.STDGATES[name]
     gate0 = random_stdgate(gatet)
 
     exponent = random.uniform(-4, 4)
@@ -55,19 +57,21 @@ def test_stdgates_pow(gatet: Type[qf.QuantumStdGate]) -> None:
     qf.gates_close(gate1, gate2)
 
 
-@pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_structure(gatet: Type[qf.QuantumStdGate]) -> None:
+@pytest.mark.parametrize("name", qf.STDGATES)
+def test_stdgates_structure(name: str) -> None:
+    gatet = qf.STDGATES[name]
     gate = random_stdgate(gatet)
 
     if gatet.cv_hermitian:
         assert gate.H is gate
 
 
-@pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_repr(gatet: Type[qf.QuantumStdGate]) -> None:
+@pytest.mark.parametrize("name", qf.STDGATES)
+def test_stdgates_repr(name: str) -> None:
+    gatet = qf.STDGATES[name]
     gate0 = random_stdgate(gatet)
     rep = repr(gate0)
-    gate1 = eval(rep, {gatet.name: gatet for gatet in qf.STDGATES})
+    gate1 = eval(rep, qf.STDGATES)
     qf.gates_close(gate0, gate1)
 
 

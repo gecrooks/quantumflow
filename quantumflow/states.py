@@ -29,7 +29,7 @@ import numpy as np
 import sympy as sym
 
 from .config import quantum_dtype
-from .utils.future import Protocol
+from .utils.future import Protocol, TypeAlias
 
 __all__ = (
     "Addr",
@@ -62,29 +62,22 @@ class Qubit(SortableHashable, Protocol):
     """Type for qubit labels. Any any sortable and hashable python object."""
 
 
-# class Cbit(SortableHashable, Protocol):
-#     """Type for labels of classical bits. Any sortable and hashable python object."""
-
-
 class Addr(SortableHashable, Protocol):
     """An address for a chunk of classical data. Any sortable and hashable python
     object."""
 
 
-Qubits = Sequence[Qubit]
+Qubits: TypeAlias = Sequence[Qubit]
 """Type for sequence of qubits"""
 
 
-# Cbits = Sequence[Cbit]
-# """Type for sequence of classical bits"""
-
-Addrs = Sequence[Addr]
+Addrs: TypeAlias = Sequence[Addr]
 """Type for sequence of addresses"""
 
-Variable = Union[float, sym.Expr]
+Variable: TypeAlias = Union[float, sym.Expr]
 """Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
 
-Variables = Sequence[Variable]
+Variables: TypeAlias = Sequence[Variable]
 """A sequence of Variables"""
 
 

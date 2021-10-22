@@ -11,10 +11,10 @@ import quantumflow as qf
 
 
 def test_Rx() -> None:
-    assert qf.Rx in qf.OPERATIONS
-    assert qf.Rx in qf.GATES
-    assert qf.Rx in qf.STDGATES
-    assert qf.Rx not in qf.STDCTRLGATES
+    assert qf.Rx.name in qf.OPERATIONS
+    assert qf.Rx.name in qf.GATES
+    assert qf.Rx.name in qf.STDGATES
+    assert qf.Rx.name not in qf.STDCTRLGATES
 
     gate0 = qf.Rx(0.2, 1)
 

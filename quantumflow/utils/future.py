@@ -27,4 +27,11 @@ except ImportError:  # pragma: no cover
     from typing_extensions import Protocol  # type: ignore  # noqa: F401
 
 
+try:
+    # Python >= 3.10
+    from typing import TypeAlias  # type: ignore
+except ImportError:  # pragma: no cover
+    from typing_extensions import TypeAlias  # type: ignore  # noqa: F401
+
+
 # fin

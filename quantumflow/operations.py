@@ -91,16 +91,16 @@ CompositeType = TypeVar("CompositeType", bound="QuantumComposite")
 
 # TODO: Change back to dictionaries
 
-OPERATIONS: Set[Type["QuantumOperation"]] = set()
+OPERATIONS: Dict[str, Type["QuantumOperation"]] = {}
 """All quantum operations (All concrete subclasses of QuantumOperation)"""
 
-GATES: Set[Type["QuantumGate"]] = set()
+GATES: Dict[str, Type["QuantumGate"]] = {}
 """All gates (All concrete subclasses of QuantumGate)"""
 
-STDGATES: Set[Type["QuantumStdGate"]] = set()
+STDGATES: Dict[str, Type["QuantumStdGate"]] = {}
 """All standard gates (All concrete subclasses of QuantumStdGate)"""
 
-STDCTRLGATES: Set[Type["QuantumStdCtrlGate"]] = set()
+STDCTRLGATES: Dict[str, Type["QuantumStdCtrlGate"]] = {}
 """All standard controlled gates (All concrete subclasses of QuantumStdCtrlGate)"""
 
 
@@ -119,7 +119,7 @@ class QuantumOperation(ABC):
         # Subclass registration
         if not inspect.isabstract(cls):
             for collection in cls._cv_collections:
-                collection.add(cls)
+                collection[cls.name] = cls
 
     def __init__(self, qubits: Qubits, addrs: Addrs = ()) -> None:
         self._qubits = tuple(qubits)
