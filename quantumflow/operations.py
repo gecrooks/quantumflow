@@ -105,7 +105,7 @@ STDCTRLGATES: Dict[str, Type["QuantumStdCtrlGate"]] = {}
 
 
 class QuantumOperation(ABC):
-    _cv_collections: ClassVar[Tuple[Set, ...]] = (OPERATIONS,)
+    _cv_collections: ClassVar[Tuple[Dict, ...]] = (OPERATIONS,)
     """List of collections to add subclasses to."""
 
     _qubits: Qubits = ()
