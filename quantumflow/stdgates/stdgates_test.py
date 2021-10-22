@@ -12,18 +12,18 @@ import quantumflow as qf
 
 
 # FIXME; FAILS IF RANGE MAKE LARGER , e.g. (-10, 10)
-def random_stdgate(gatet: Type[qf.BaseStdGate]) -> qf.BaseStdGate:
+def random_stdgate(stdgatet: Type[qf.QuantumStdGate]) -> qf.QuantumStdGate:
     """Given a standard gate subclass construct an instance with randomly chosen
     parameters and randomly ordered qubits. Used for testing purposes."""
 
-    args = (random.uniform(-4, 4) for _ in range(0, len(gatet.cv_params)))
-    qbs = list(range(0, gatet.cv_qubit_nb))
+    args = (random.uniform(-4, 4) for _ in range(0, len(stdgatet.cv_params)))
+    qbs = list(range(0, stdgatet.cv_qubit_nb))
     random.shuffle(qbs)
-    return gatet(*args, *qbs)  # type: ignore
+    return stdgatet(*args, *qbs)
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates(gatet: Type[qf.BaseStdGate]) -> None:
+def test_stdgates(gatet: Type[qf.QuantumStdGate]) -> None:
 
     # Test creation
     gate0 = random_stdgate(gatet)
@@ -45,7 +45,7 @@ def test_stdgates(gatet: Type[qf.BaseStdGate]) -> None:
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_pow(gatet: Type[qf.BaseStdGate]) -> None:
+def test_stdgates_pow(gatet: Type[qf.QuantumStdGate]) -> None:
     gate0 = random_stdgate(gatet)
 
     exponent = random.uniform(-4, 4)
@@ -56,8 +56,24 @@ def test_stdgates_pow(gatet: Type[qf.BaseStdGate]) -> None:
 
 
 @pytest.mark.parametrize("gatet", qf.STDGATES)
-def test_stdgates_structure(gatet: Type[qf.BaseStdGate]) -> None:
+def test_stdgates_structure(gatet: Type[qf.QuantumStdGate]) -> None:
     gate = random_stdgate(gatet)
 
     if gatet.cv_hermitian:
         assert gate.H is gate
+
+
+@pytest.mark.parametrize("gatet", qf.STDGATES)
+def test_stdgates_repr(gatet: Type[qf.QuantumStdGate]) -> None:
+    gate0 = random_stdgate(gatet)
+    rep = repr(gate0)
+    gate1 = eval(rep, {gatet.name: gatet for gatet in qf.STDGATES})
+    qf.gates_close(gate0, gate1)
+
+
+def test_stdgates_hash() -> None:
+    gate0 = qf.XPow(0.5, 0)
+    gate1 = qf.XPow(0.5, 0)
+    assert gate0 == gate1
+
+    assert len(set([gate0, gate1])) == 1

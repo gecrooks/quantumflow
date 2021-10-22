@@ -5,6 +5,7 @@
 
 
 import numpy as np
+import pytest
 
 import quantumflow as qf
 
@@ -20,8 +21,13 @@ def test_Rx() -> None:
     assert gate0.name == "Rx"
     assert gate0.qubits == (1,)
     assert gate0.qubit_nb == 1
-    assert gate0.cbits == ()
-    assert gate0.cbit_nb == 0
+    assert gate0.addrs == ()
+    assert gate0.addrs_nb == 0
+    assert gate0.theta == 0.2
+
+    with pytest.raises(AttributeError):
+        gate0.t
+
     assert gate0.qubit_nb == gate0.cv_qubit_nb
     assert gate0.args == (0.2,)
     assert gate0.cv_operator_structure == qf.OperatorStructure.unstructured

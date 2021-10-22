@@ -37,8 +37,8 @@ from sympy.abc import phi as sym_phi  # Symbolic phi
 from sympy.abc import t as sym_t  # Symbolic t
 from sympy.abc import theta as sym_theta  # Symbolic theta
 
-from ..base import BaseStdGate, OperatorStructure, Variable
-from ..bits import Qubit
+from ..operations import OperatorStructure, QuantumStdGate, Variable
+from ..states import Qubit
 
 __all__ = (
     "H",
@@ -64,11 +64,11 @@ __all__ = (
     "YPow",
     "Z",
     "ZPow",
-    "PhaseShift",  # Alias for P  # DOXME
+    "PhaseShift",  # Alias for P  # DOCME
 )
 
 
-class H(BaseStdGate):
+class H(QuantumStdGate):
     r"""
     A 1-qubit Hadamard gate.
 
@@ -84,7 +84,7 @@ class H(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1, 1], [1, -1]]) / sym.sqrt(2)
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "H_":  # See NB implementation note below
@@ -101,7 +101,7 @@ H_ = H
 # End class H
 
 
-class HPow(BaseStdGate):
+class HPow(QuantumStdGate):
     r"""
     Powers of the 1-qubit Hadamard gate.
 
@@ -132,8 +132,7 @@ class HPow(BaseStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__(args=[t], qubits=[q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "HPow":
@@ -146,7 +145,7 @@ class HPow(BaseStdGate):
 # End class HPow
 
 
-class I(BaseStdGate):  # noqa: E742
+class I(QuantumStdGate):  # noqa: E742
     r"""
     A 1-qubit identity gate.
 
@@ -163,7 +162,7 @@ class I(BaseStdGate):  # noqa: E742
     cv_sym_operator = sym.Matrix([[1, 0], [0, 1]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__([], [q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "I":
@@ -176,7 +175,7 @@ class I(BaseStdGate):  # noqa: E742
 # end class I
 
 
-class P(BaseStdGate):
+class P(QuantumStdGate):
     r"""A 1-qubit parametric phase shift gate.
 
     Equivalent to Rz up to a global phase.
@@ -191,8 +190,7 @@ class P(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1, 0], [0, sym.exp(sym.I * sym_theta)]])
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__(args=[theta], qubits=[q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "P":
@@ -207,7 +205,7 @@ class P(BaseStdGate):
 PhaseShift = P  # Alias for P
 
 
-class Ph(BaseStdGate):
+class Ph(QuantumStdGate):
     r"""
     Apply a global phase shift of exp(i phi).
 
@@ -235,8 +233,7 @@ class Ph(BaseStdGate):
     )
 
     def __init__(self, phi: Variable, q0: Qubit) -> None:
-        super().__init__(args=[phi], qubits=[q0])
-        self.phi = phi
+        super().__init__(phi, q0)
 
     @property
     def H(self) -> "Ph":
@@ -254,7 +251,7 @@ sym_ny = sym.Symbol("ny")
 sym_nz = sym.Symbol("nz")
 
 
-class Rn(BaseStdGate):
+class Rn(QuantumStdGate):
     r"""A 1-qubit rotation of angle theta about axis (nx, ny, nz)
 
     .. math::
@@ -287,11 +284,7 @@ class Rn(BaseStdGate):
     def __init__(
         self, theta: Variable, nx: Variable, ny: Variable, nz: Variable, q0: Qubit
     ) -> None:
-        super().__init__(args=[theta, nx, ny, nz], qubits=[q0])
-        self.theta = theta
-        self.nx = nx
-        self.ny = ny
-        self.nz = nz
+        super().__init__(theta, nx, ny, nz, q0)
 
     @property
     def H(self) -> "Rn":
@@ -304,7 +297,7 @@ class Rn(BaseStdGate):
 # end class RN
 
 
-class Rx(BaseStdGate):
+class Rx(QuantumStdGate):
     r"""A 1-qubit Pauli-X parametric rotation gate.
 
     .. math::
@@ -324,8 +317,7 @@ class Rx(BaseStdGate):
     )
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__([theta], [q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "Rx":
@@ -338,7 +330,7 @@ class Rx(BaseStdGate):
 # end class Rx
 
 
-class Ry(BaseStdGate):
+class Ry(QuantumStdGate):
     r"""A 1-qubit Pauli-Y parametric rotation gate.
 
     .. math::
@@ -358,8 +350,7 @@ class Ry(BaseStdGate):
     )
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__([theta], [q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "Ry":
@@ -372,7 +363,7 @@ class Ry(BaseStdGate):
 # end class Ry
 
 
-class Rz(BaseStdGate):
+class Rz(QuantumStdGate):
     r"""A 1-qubit Pauli-Z parametric rotation gate.
 
     .. math::
@@ -393,8 +384,7 @@ class Rz(BaseStdGate):
     )
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
-        super().__init__([theta], [q0])
-        self.theta = theta
+        super().__init__(theta, q0)
 
     @property
     def H(self) -> "Rz":
@@ -407,7 +397,7 @@ class Rz(BaseStdGate):
 # end class Rx
 
 
-class S(BaseStdGate):
+class S(QuantumStdGate):
     r"""
     A 1-qubit phase S gate, equivalent to ``Z ** (1/2)``. The square root
     of the Z gate. Also sometimes denoted as the P gate.
@@ -429,7 +419,7 @@ class S(BaseStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "S_H":
@@ -442,7 +432,7 @@ class S(BaseStdGate):
 # end class S
 
 
-class S_H(BaseStdGate):
+class S_H(QuantumStdGate):
     r"""
     The inverse of the 1-qubit phase S gate, equivalent to
     ``Z ** -1/2``.
@@ -464,7 +454,7 @@ class S_H(BaseStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "S":
@@ -477,7 +467,7 @@ class S_H(BaseStdGate):
 # end class S_H
 
 
-class SqrtY(BaseStdGate):
+class SqrtY(QuantumStdGate):
     r"""
     Principal square root of the Y gate.
 
@@ -493,7 +483,7 @@ class SqrtY(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1, -1], [1, 1]]) * (1 + sym.I) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "SqrtY_H":
@@ -506,7 +496,7 @@ class SqrtY(BaseStdGate):
 # end class SqrtY
 
 
-class SqrtY_H(BaseStdGate):
+class SqrtY_H(QuantumStdGate):
     r"""
     Complex conjugate of the np.sqrtY gate.
 
@@ -521,7 +511,7 @@ class SqrtY_H(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1, 1], [-1, 1]]) * (1 - sym.I) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "SqrtY":
@@ -534,7 +524,7 @@ class SqrtY_H(BaseStdGate):
 # end class SqrtY_H
 
 
-class T(BaseStdGate):
+class T(QuantumStdGate):
     r"""
     A 1-qubit T (pi/8) gate, equivalent to ``X ** (1/4)``.
 
@@ -558,7 +548,7 @@ class T(BaseStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "T_H":
@@ -571,7 +561,7 @@ class T(BaseStdGate):
 # end class T
 
 
-class T_H(BaseStdGate):
+class T_H(QuantumStdGate):
     r"""
     The inverse (complex conjugate) of the 1-qubit T (pi/8) gate, equivalent
     to ``Z ** -1/4``.
@@ -593,7 +583,7 @@ class T_H(BaseStdGate):
     )
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "T":
@@ -606,7 +596,7 @@ class T_H(BaseStdGate):
 # end class T_H
 
 
-class V(BaseStdGate):
+class V(QuantumStdGate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
 
@@ -621,7 +611,7 @@ class V(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1 + sym.I, 1 - sym.I], [1 - sym.I, 1 + sym.I]]) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "V_H":
@@ -634,7 +624,7 @@ class V(BaseStdGate):
 # end class V
 
 
-class V_H(BaseStdGate):
+class V_H(QuantumStdGate):
     r"""
     Complex conjugate of the V gate, X-MINUS-90 gate.
 
@@ -650,7 +640,7 @@ class V_H(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1 - sym.I, 1 + sym.I], [1 + sym.I, 1 - sym.I]]) / 2
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "V":
@@ -663,7 +653,7 @@ class V_H(BaseStdGate):
 # end class V_H
 
 
-class X(BaseStdGate):
+class X(QuantumStdGate):
     r"""
     A 1-qubit Pauli-X gate.
 
@@ -680,7 +670,7 @@ class X(BaseStdGate):
     cv_sym_operator = sym.Matrix([[0, 1], [1, 0]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__([], [q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "X":
@@ -693,7 +683,7 @@ class X(BaseStdGate):
 # end class X
 
 
-class XPow(BaseStdGate):
+class XPow(QuantumStdGate):
     r"""Powers of the 1-qubit Pauli-X gate.
 
     .. math::
@@ -716,8 +706,7 @@ class XPow(BaseStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__([t], [q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "XPow":
@@ -730,7 +719,7 @@ class XPow(BaseStdGate):
 # end class XPow
 
 
-class Y(BaseStdGate):
+class Y(QuantumStdGate):
     r"""
     A 1-qubit Pauli-Y gate.
 
@@ -749,7 +738,7 @@ class Y(BaseStdGate):
     cv_sym_operator = sym.Matrix([[0, -sym.I], [sym.I, 0]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__([], [q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "Y":
@@ -762,7 +751,7 @@ class Y(BaseStdGate):
 # end class Y
 
 
-class YPow(BaseStdGate):
+class YPow(QuantumStdGate):
     r"""Powers of the 1-qubit Pauli-Y gate.
 
     .. math::
@@ -785,8 +774,7 @@ class YPow(BaseStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__([t], [q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "YPow":
@@ -799,7 +787,7 @@ class YPow(BaseStdGate):
 # end class YPow
 
 
-class Z(BaseStdGate):
+class Z(QuantumStdGate):
     r"""
     A 1-qubit Pauli-Z gate.
 
@@ -816,7 +804,7 @@ class Z(BaseStdGate):
     cv_sym_operator = sym.Matrix([[1, 0], [0, -1]])
 
     def __init__(self, q0: Qubit) -> None:
-        super().__init__(args=[], qubits=[q0])
+        super().__init__(q0)
 
     @property
     def H(self) -> "Z":
@@ -829,7 +817,7 @@ class Z(BaseStdGate):
 # end class Z
 
 
-class ZPow(BaseStdGate):
+class ZPow(QuantumStdGate):
     r"""Powers of the 1-qubit Pauli-Z gate.
 
     .. math::
@@ -853,8 +841,7 @@ class ZPow(BaseStdGate):
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
-        super().__init__([t], [q0])
-        self.t = t
+        super().__init__(t, q0)
 
     @property
     def H(self) -> "ZPow":

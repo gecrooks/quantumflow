@@ -31,11 +31,14 @@ __license__ = (
 
 # See https://numpy.org/doc/stable/reference/generated/numpy.allclose.html
 
-RTOL = 1e-05
-"""Default relative tolerance for numerical comparisons"""
 
 ATOL = 1e-08
 """Default absolute tolerance for numerical comparisons"""
+
+RTOL = 1e-05
+"""Default relative tolerance for numerical comparisons"""
+
+CIRCUIT_INDENT = 4
 
 
 def about(file: typing.TextIO = None) -> None:

@@ -18,11 +18,11 @@ install:  ## Install package ready for development
 all: delint about coverage lint typecheck docs-clean docs build   ## Run all tests
 
 test:  ## Run unittests
-	pytest --disable-pytest-warnings
+	python -m pytest --disable-pytest-warnings
 
-coverage:  ## Report test coverage
+cov:  ## Report test coverage
 	@echo
-	pytest --disable-pytest-warnings --cov $(NAME)
+	python -m pytest --disable-pytest-warnings --cov $(NAME)
 	@echo
 
 lint:  ## Lint check python source
@@ -37,7 +37,7 @@ delint:  ## Run isort and black to delint project
 	black $(NAME)
 	@echo
 
-typecheck:  ## Static typechecking 
+types:  ## Static typechecking 
 	mypy $(NAME)
 
 docs:  ## Build documentation
