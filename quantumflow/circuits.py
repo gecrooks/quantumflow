@@ -20,21 +20,21 @@ from typing import (
 
 import networkx as nx
 
-from .operations import QuantumComposite, QuantumOperation
+from .operations import CompositeOperation, Operation
 from .states import Addr, Addrs, Qubit, Qubits
 
 CircuitType = TypeVar("CircuitType", bound="Circuit")
 """Generic type annotations for subtypes of Circuit"""
 
 
-class Circuit(Sequence, QuantumComposite):
+class Circuit(Sequence, CompositeOperation):
 
     # DOCME TODO: Adding composite operations is a little weird
-    def add(self: CircuitType, other: Iterable[QuantumOperation]) -> "CircuitType":
+    def add(self: CircuitType, other: Iterable[Operation]) -> "CircuitType":
         """Concatenate operations and return new circuit"""
         return type(self)(*chain(self, other))
 
-    def flat(self) -> Iterable[QuantumOperation]:
+    def flat(self) -> Iterable[Operation]:
         # DOCME
         for elem in self:
             if isinstance(elem, Circuit):
@@ -42,27 +42,27 @@ class Circuit(Sequence, QuantumComposite):
             else:
                 yield from elem
 
-    def __add__(self: CircuitType, other: Iterable[QuantumOperation]) -> "CircuitType":
+    def __add__(self: CircuitType, other: Iterable[Operation]) -> "CircuitType":
         return self.add(other)
 
     def __contains__(self, key: Any) -> bool:
         return key in self._elements
 
-    def __iadd__(self: CircuitType, other: Iterable[QuantumOperation]) -> "CircuitType":
+    def __iadd__(self: CircuitType, other: Iterable[Operation]) -> "CircuitType":
         return self.add(other)
 
-    def __iter__(self) -> Iterator[QuantumOperation]:
+    def __iter__(self) -> Iterator[Operation]:
         yield from self._elements
 
     @overload
-    def __getitem__(self, key: int) -> QuantumOperation:
+    def __getitem__(self, key: int) -> Operation:
         pass
 
     @overload  # noqa: F811
     def __getitem__(self: CircuitType, key: slice) -> "CircuitType":
         pass
 
-    def __getitem__(self, key: Union[int, slice]) -> QuantumOperation:  # noqa: F811
+    def __getitem__(self, key: Union[int, slice]) -> Operation:  # noqa: F811
         if isinstance(key, slice):
             return Circuit(*self._elements[key])
         return self._elements[key]
@@ -75,7 +75,7 @@ class Moment(Circuit):
     """
 
     def __init__(
-        self, *elements: QuantumOperation, qubits: Qubits = None, addrs: Addrs = None
+        self, *elements: Operation, qubits: Qubits = None, addrs: Addrs = None
     ) -> None:
         super().__init__(*elements, qubits=qubits, addrs=addrs)
 
@@ -85,16 +85,16 @@ class Moment(Circuit):
 
 
 class OperationNode:
-    def __init__(self, elem: QuantumOperation) -> None:
+    def __init__(self, elem: Operation) -> None:
         self.elem = elem
 
     def __bool__(self) -> bool:
         return self.elem is not None
 
 
-class DAGCircuit(QuantumComposite):
+class DAGCircuit(CompositeOperation):
     def __init__(
-        self, *elements: QuantumOperation, qubits: Qubits = None, addrs: Addrs = None
+        self, *elements: Operation, qubits: Qubits = None, addrs: Addrs = None
     ) -> None:
         super().__init__(*elements, qubits=qubits, addrs=addrs)
 
@@ -120,7 +120,7 @@ class DAGCircuit(QuantumComposite):
                 return True
         return False
 
-    def __iter__(self) -> Iterator[QuantumOperation]:
+    def __iter__(self) -> Iterator[Operation]:
         for node in filter(None, nx.topological_sort(self._graph)):
             yield node.elem
 
@@ -145,7 +145,7 @@ class DAGCircuit(QuantumComposite):
                 self._addrs_out[addr] = aout
                 self._graph.add_edge(ain, aout, key=addr)
 
-    def append(self, elem: QuantumOperation) -> None:
+    def append(self, elem: Operation) -> None:
         G = self._graph
         node = OperationNode(elem)
         G.add_node(node)
@@ -179,22 +179,22 @@ class DAGCircuit(QuantumComposite):
     def depth(self) -> int:
         return nx.dag_longest_path_length(self._graph) - 1
 
-    def extend(self, elements: Iterable[QuantumOperation]) -> None:
+    def extend(self, elements: Iterable[Operation]) -> None:
         for elem in elements:
             self.append(elem)
 
     def moments(self) -> Iterator[Moment]:
         G = self._graph
 
-        depth: Dict[QuantumOperation, int] = {}
+        depth: Dict[Operation, int] = {}
         for node in filter(None, G):
             depth[node] = max([depth.get(n, -1) + 1 for n in G.predecessors(node)])
 
-        height: Dict[QuantumOperation, int] = {}
+        height: Dict[Operation, int] = {}
         for node in filter(None, reversed(list(G))):
             height[node] = max([height.get(n, -1) + 1 for n in G.successors(node)])
 
-        moments: List[List[QuantumOperation]] = [[] for _ in range(self.depth())]
+        moments: List[List[Operation]] = [[] for _ in range(self.depth())]
 
         for node in filter(None, G):
             if depth[node] < height[node]:

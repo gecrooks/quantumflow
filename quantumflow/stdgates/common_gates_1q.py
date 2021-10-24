@@ -37,7 +37,8 @@ from sympy.abc import phi as sym_phi  # Symbolic phi
 from sympy.abc import t as sym_t  # Symbolic t
 from sympy.abc import theta as sym_theta  # Symbolic theta
 
-from ..operations import OperatorStructure, QuantumStdGate, Variable
+from ..operations import OperatorStructure, StdGate, Variable
+from ..pauli import Pauli, PauliElement
 from ..states import Qubit
 
 __all__ = (
@@ -68,7 +69,7 @@ __all__ = (
 )
 
 
-class H(QuantumStdGate):
+class H(StdGate):
     r"""
     A 1-qubit Hadamard gate.
 
@@ -90,6 +91,11 @@ class H(QuantumStdGate):
     def H(self) -> "H_":  # See NB implementation note below
         return self  # Hermitian
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return (sym.pi / 2) * ((X(q0) + Z(q0)) / sym.sqrt(2) - 1)
+
     def __pow__(self, t: Variable) -> "HPow":
         return HPow(t, *self.qubits)
 
@@ -101,7 +107,7 @@ H_ = H
 # End class H
 
 
-class HPow(QuantumStdGate):
+class HPow(StdGate):
     r"""
     Powers of the 1-qubit Hadamard gate.
 
@@ -114,21 +120,19 @@ class HPow(QuantumStdGate):
 
     [1]: https://threeplusone.com/gates#HPow
     """
-    cv_sym_operator = (
-        sym.exp(sym.I * sym.pi * sym_t / 2)
-        * sym.Matrix(
+    cv_sym_operator = sym.exp(sym.I * sym.pi * sym_t / 2) * sym.Matrix(
+        [
             [
-                [
-                    sym.cos(sym.pi * sym_t / 2) - (sym.I * sym.sin(sym.pi * sym_t / 2)),
-                    -(sym.I * sym.sin(sym.pi * sym_t / 2)),
-                ],
-                [
-                    -sym.I * sym.sin(sym.pi * sym_t / 2),
-                    sym.cos(sym.pi * sym_t / 2) + (sym.I * sym.sin(sym.pi * sym_t / 2)),
-                ],
-            ]
-        )
-        / sym.sqrt(2)
+                sym.cos(sym.pi * sym_t / 2)
+                - (sym.I * sym.sin(sym.pi * sym_t / 2)) / sym.sqrt(2),
+                -(sym.I * sym.sin(sym.pi * sym_t / 2)) / sym.sqrt(2),
+            ],
+            [
+                -sym.I * sym.sin(sym.pi * sym_t / 2) / sym.sqrt(2),
+                sym.cos(sym.pi * sym_t / 2)
+                + (sym.I * sym.sin(sym.pi * sym_t / 2)) / sym.sqrt(2),
+            ],
+        ]
     )
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
@@ -138,6 +142,11 @@ class HPow(QuantumStdGate):
     def H(self) -> "HPow":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.t * H(q0).hamiltonian
+
     def __pow__(self, t: Variable) -> "HPow":
         return HPow(t * self.t, *self.qubits)
 
@@ -145,7 +154,7 @@ class HPow(QuantumStdGate):
 # End class HPow
 
 
-class I(QuantumStdGate):  # noqa: E742
+class I(PauliElement, StdGate):  # noqa: E742
     r"""
     A 1-qubit identity gate.
 
@@ -163,10 +172,16 @@ class I(QuantumStdGate):  # noqa: E742
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(q0)
+        self._terms = (((), "", 1.0),)
 
     @property
     def H(self) -> "I":
         return self  # Hermitian
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return I(q0) * 2 * sym.pi
 
     def __pow__(self, t: Variable) -> "I":
         return self
@@ -175,7 +190,7 @@ class I(QuantumStdGate):  # noqa: E742
 # end class I
 
 
-class P(QuantumStdGate):
+class P(StdGate):
     r"""A 1-qubit parametric phase shift gate.
 
     Equivalent to Rz up to a global phase.
@@ -196,6 +211,11 @@ class P(QuantumStdGate):
     def H(self) -> "P":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.theta * (Z(q0) - 1) / 2
+
     def __pow__(self, t: Variable) -> "P":
         return P(t * self.theta, *self.qubits)
 
@@ -205,7 +225,7 @@ class P(QuantumStdGate):
 PhaseShift = P  # Alias for P
 
 
-class Ph(QuantumStdGate):
+class Ph(StdGate):
     r"""
     Apply a global phase shift of exp(i phi).
 
@@ -239,11 +259,16 @@ class Ph(QuantumStdGate):
     def H(self) -> "Ph":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return -self.phi * I(q0)
+
     def __pow__(self, t: Variable) -> "Ph":
         return Ph(t * self.phi, *self.qubits)
 
 
-# End class Ph
+# end class Ph
 
 
 sym_nx = sym.Symbol("nx")
@@ -251,7 +276,7 @@ sym_ny = sym.Symbol("ny")
 sym_nz = sym.Symbol("nz")
 
 
-class Rn(QuantumStdGate):
+class Rn(StdGate):
     r"""A 1-qubit rotation of angle theta about axis (nx, ny, nz)
 
     .. math::
@@ -284,11 +309,23 @@ class Rn(QuantumStdGate):
     def __init__(
         self, theta: Variable, nx: Variable, ny: Variable, nz: Variable, q0: Qubit
     ) -> None:
+        norm = sym.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+        nx /= norm
+        ny /= norm
+        nz /= norm
+        theta *= norm
+
         super().__init__(theta, nx, ny, nz, q0)
 
     @property
     def H(self) -> "Rn":
         return self ** -1
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        theta, nx, ny, nz = self.args
+        (q0,) = self.qubits
+        return theta * (nx * X(q0) + ny * Y(q0) + nz * Z(q0)) / 2
 
     def __pow__(self, t: Variable) -> "Rn":
         return Rn(t * self.theta, self.nx, self.ny, self.nz, *self.qubits)
@@ -297,7 +334,7 @@ class Rn(QuantumStdGate):
 # end class RN
 
 
-class Rx(QuantumStdGate):
+class Rx(StdGate):
     r"""A 1-qubit Pauli-X parametric rotation gate.
 
     .. math::
@@ -323,6 +360,11 @@ class Rx(QuantumStdGate):
     def H(self) -> "Rx":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.theta * X(q0) / 2
+
     def __pow__(self, t: Variable) -> "Rx":
         return Rx(self.theta * t, *self.qubits)
 
@@ -330,7 +372,7 @@ class Rx(QuantumStdGate):
 # end class Rx
 
 
-class Ry(QuantumStdGate):
+class Ry(StdGate):
     r"""A 1-qubit Pauli-Y parametric rotation gate.
 
     .. math::
@@ -356,6 +398,11 @@ class Ry(QuantumStdGate):
     def H(self) -> "Ry":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.theta * Y(q0) / 2
+
     def __pow__(self, t: Variable) -> "Ry":
         return Ry(self.theta * t, *self.qubits)
 
@@ -363,7 +410,7 @@ class Ry(QuantumStdGate):
 # end class Ry
 
 
-class Rz(QuantumStdGate):
+class Rz(StdGate):
     r"""A 1-qubit Pauli-Z parametric rotation gate.
 
     .. math::
@@ -390,6 +437,11 @@ class Rz(QuantumStdGate):
     def H(self) -> "Rz":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.theta * Z(q0) / 2
+
     def __pow__(self, t: Variable) -> "Rz":
         return Rz(self.theta * t, *self.qubits)
 
@@ -397,7 +449,7 @@ class Rz(QuantumStdGate):
 # end class Rx
 
 
-class S(QuantumStdGate):
+class S(StdGate):
     r"""
     A 1-qubit phase S gate, equivalent to ``Z ** (1/2)``. The square root
     of the Z gate. Also sometimes denoted as the P gate.
@@ -425,6 +477,11 @@ class S(QuantumStdGate):
     def H(self) -> "S_H":
         return S_H(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return Z(q0).hamiltonian / 2
+
     def __pow__(self, t: Variable) -> "ZPow":
         return ZPow(t / 2, *self.qubits)
 
@@ -432,7 +489,7 @@ class S(QuantumStdGate):
 # end class S
 
 
-class S_H(QuantumStdGate):
+class S_H(StdGate):
     r"""
     The inverse of the 1-qubit phase S gate, equivalent to
     ``Z ** -1/2``.
@@ -460,6 +517,11 @@ class S_H(QuantumStdGate):
     def H(self) -> "S":
         return S(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return -Z(q0).hamiltonian / 2
+
     def __pow__(self, t: Variable) -> "ZPow":
         return ZPow(-t / 2, *self.qubits)
 
@@ -467,7 +529,7 @@ class S_H(QuantumStdGate):
 # end class S_H
 
 
-class SqrtY(QuantumStdGate):
+class SqrtY(StdGate):
     r"""
     Principal square root of the Y gate.
 
@@ -489,6 +551,11 @@ class SqrtY(QuantumStdGate):
     def H(self) -> "SqrtY_H":
         return SqrtY_H(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return Y(q0).hamiltonian / 2
+
     def __pow__(self, t: Variable) -> "YPow":
         return YPow(t / 2, *self.qubits)
 
@@ -496,7 +563,7 @@ class SqrtY(QuantumStdGate):
 # end class SqrtY
 
 
-class SqrtY_H(QuantumStdGate):
+class SqrtY_H(StdGate):
     r"""
     Complex conjugate of the np.sqrtY gate.
 
@@ -517,6 +584,11 @@ class SqrtY_H(QuantumStdGate):
     def H(self) -> "SqrtY":
         return SqrtY(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return -Y(q0).hamiltonian / 2
+
     def __pow__(self, t: Variable) -> "YPow":
         return YPow(-t / 2, *self.qubits)
 
@@ -524,7 +596,7 @@ class SqrtY_H(QuantumStdGate):
 # end class SqrtY_H
 
 
-class T(QuantumStdGate):
+class T(StdGate):
     r"""
     A 1-qubit T (pi/8) gate, equivalent to ``X ** (1/4)``.
 
@@ -554,6 +626,11 @@ class T(QuantumStdGate):
     def H(self) -> "T_H":
         return T_H(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return Z(q0).hamiltonian / 4
+
     def __pow__(self, t: Variable) -> "ZPow":
         return ZPow(t / 4, *self.qubits)
 
@@ -561,7 +638,7 @@ class T(QuantumStdGate):
 # end class T
 
 
-class T_H(QuantumStdGate):
+class T_H(StdGate):
     r"""
     The inverse (complex conjugate) of the 1-qubit T (pi/8) gate, equivalent
     to ``Z ** -1/4``.
@@ -589,6 +666,11 @@ class T_H(QuantumStdGate):
     def H(self) -> "T":
         return T(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return -Z(q0).hamiltonian / 4
+
     def __pow__(self, t: Variable) -> "ZPow":
         return ZPow(-t / 4, *self.qubits)
 
@@ -596,7 +678,7 @@ class T_H(QuantumStdGate):
 # end class T_H
 
 
-class V(QuantumStdGate):
+class V(StdGate):
     r"""
     Principal square root of the X gate, X-PLUS-90 gate.
 
@@ -617,6 +699,11 @@ class V(QuantumStdGate):
     def H(self) -> "V_H":
         return V_H(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return X(q0).hamiltonian / 2
+
     def __pow__(self, t: Variable) -> "XPow":
         return XPow(t / 2, *self.qubits)
 
@@ -624,7 +711,7 @@ class V(QuantumStdGate):
 # end class V
 
 
-class V_H(QuantumStdGate):
+class V_H(StdGate):
     r"""
     Complex conjugate of the V gate, X-MINUS-90 gate.
 
@@ -646,6 +733,11 @@ class V_H(QuantumStdGate):
     def H(self) -> "V":
         return V(*self.qubits)
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return -X(q0).hamiltonian / 2
+
     def __pow__(self, t: Variable) -> "XPow":
         return XPow(-t / 2, *self.qubits)
 
@@ -653,7 +745,7 @@ class V_H(QuantumStdGate):
 # end class V_H
 
 
-class X(QuantumStdGate):
+class X(PauliElement, StdGate):
     r"""
     A 1-qubit Pauli-X gate.
 
@@ -671,10 +763,16 @@ class X(QuantumStdGate):
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(q0)
+        self._terms = ((self.qubits, "X", 1.0),)
 
     @property
     def H(self) -> "X":
         return self  # Hermitian
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return (X(q0) - 1) * sym.pi / 2
 
     def __pow__(self, t: Variable) -> "XPow":
         return XPow(t, *self.qubits)
@@ -683,7 +781,7 @@ class X(QuantumStdGate):
 # end class X
 
 
-class XPow(QuantumStdGate):
+class XPow(StdGate):
     r"""Powers of the 1-qubit Pauli-X gate.
 
     .. math::
@@ -712,6 +810,11 @@ class XPow(QuantumStdGate):
     def H(self) -> "XPow":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.t * X(q0).hamiltonian
+
     def __pow__(self, t: Variable) -> "XPow":
         return XPow(t * self.t, *self.qubits)
 
@@ -719,7 +822,7 @@ class XPow(QuantumStdGate):
 # end class XPow
 
 
-class Y(QuantumStdGate):
+class Y(PauliElement, StdGate):
     r"""
     A 1-qubit Pauli-Y gate.
 
@@ -739,10 +842,16 @@ class Y(QuantumStdGate):
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(q0)
+        self._terms = ((self.qubits, "Y", 1.0),)
 
     @property
     def H(self) -> "Y":
         return self  # Hermitian
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return (Y(q0) - 1) * sym.pi / 2
 
     def __pow__(self, t: Variable) -> "YPow":
         return YPow(t, *self.qubits)
@@ -751,7 +860,7 @@ class Y(QuantumStdGate):
 # end class Y
 
 
-class YPow(QuantumStdGate):
+class YPow(StdGate):
     r"""Powers of the 1-qubit Pauli-Y gate.
 
     .. math::
@@ -780,6 +889,11 @@ class YPow(QuantumStdGate):
     def H(self) -> "YPow":
         return self ** -1
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.t * Y(q0).hamiltonian
+
     def __pow__(self, t: Variable) -> "YPow":
         return YPow(t * self.t, *self.qubits)
 
@@ -787,7 +901,7 @@ class YPow(QuantumStdGate):
 # end class YPow
 
 
-class Z(QuantumStdGate):
+class Z(PauliElement, StdGate):
     r"""
     A 1-qubit Pauli-Z gate.
 
@@ -805,10 +919,16 @@ class Z(QuantumStdGate):
 
     def __init__(self, q0: Qubit) -> None:
         super().__init__(q0)
+        self._terms = ((self.qubits, "Z", 1.0),)
 
     @property
     def H(self) -> "Z":
         return self  # Hermitian
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return (Z(q0) - 1) * sym.pi / 2
 
     def __pow__(self, t: Variable) -> "ZPow":
         return ZPow(t, *self.qubits)
@@ -817,7 +937,7 @@ class Z(QuantumStdGate):
 # end class Z
 
 
-class ZPow(QuantumStdGate):
+class ZPow(StdGate):
     r"""Powers of the 1-qubit Pauli-Z gate.
 
     .. math::
@@ -846,6 +966,11 @@ class ZPow(QuantumStdGate):
     @property
     def H(self) -> "ZPow":
         return self ** -1
+
+    @property
+    def hamiltonian(self) -> Pauli:
+        (q0,) = self.qubits
+        return self.t * Z(q0).hamiltonian
 
     def __pow__(self, t: Variable) -> "ZPow":
         return ZPow(t * self.t, *self.qubits)

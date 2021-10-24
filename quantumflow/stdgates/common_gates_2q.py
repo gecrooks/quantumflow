@@ -21,7 +21,8 @@ Common two qubit gates
 import sympy as sym
 
 from ..gates import Unitary
-from ..operations import OperatorStructure, QuantumStdCtrlGate, QuantumStdGate, Variable
+from ..operations import OperatorStructure, StdCtrlGate, StdGate, Variable
+from ..pauli import Pauli
 from ..states import Qubit
 from .common_gates_1q import X, XPow, Y, YPow, Z, ZPow
 
@@ -37,7 +38,7 @@ __all__ = (
 )
 
 
-class CX(QuantumStdCtrlGate):
+class CX(StdCtrlGate):
     r"""A controlled-X gate, also called controlled-not (cnot).
 
     Locally equivalent to ``Can(1/2, 0, 0)``.
@@ -69,7 +70,7 @@ class CX(QuantumStdCtrlGate):
 CNot = CX  # Alias
 
 
-class CXPow(QuantumStdCtrlGate):
+class CXPow(StdCtrlGate):
     r"""Powers of the controlled-X (CX, CNOT) gate.
 
     .. math::
@@ -98,7 +99,7 @@ class CXPow(QuantumStdCtrlGate):
 # end class CXPow
 
 
-class CY(QuantumStdCtrlGate):
+class CY(StdCtrlGate):
     r"""A controlled-Y gate.
 
     Locally equivalent to ``Can(1/2, 0, 0)``.
@@ -128,7 +129,7 @@ class CY(QuantumStdCtrlGate):
 # end class CY
 
 
-class CYPow(QuantumStdCtrlGate):
+class CYPow(StdCtrlGate):
     r"""Powers of the controlled-Y (CY) gate.
 
     .. math::
@@ -157,7 +158,7 @@ class CYPow(QuantumStdCtrlGate):
 # end class CYPow
 
 
-class CZ(QuantumStdCtrlGate):
+class CZ(StdCtrlGate):
     r"""A controlled-Z gate.
 
     Locally equivalent to ``Can(1/2, 0, 0)``.
@@ -187,7 +188,7 @@ class CZ(QuantumStdCtrlGate):
 # end class CZ
 
 
-class CZPow(QuantumStdCtrlGate):
+class CZPow(StdCtrlGate):
     r"""Powers of the controlled-Z (CZ) gate.
 
     .. math::
@@ -216,7 +217,7 @@ class CZPow(QuantumStdCtrlGate):
 # end class CZPow
 
 
-class Swap(QuantumStdGate):
+class Swap(StdGate):
     r"""A 2-qubit swap gate
 
     Equivalent to ``Can(1/2, 1/2, 1/2)``.
@@ -244,10 +245,15 @@ class Swap(QuantumStdGate):
     def H(self) -> "Swap":
         return self  # Hermitian
 
+    @property
+    def hamiltonian(self) -> Pauli:
+        q0, q1 = self.qubits
+        return (X(q0) * X(q1) + Y(q0) * Y(q1) + Z(q0) * Z(q1) - 1) * sym.pi / 4
+
     def __pow__(self, t: Variable) -> "Unitary":
         return Unitary.from_gate(self) ** t  # FIXME
 
-    # TODO: pow, sym, hamiltonian, pauli_hamiltonian, _diagram_labels_
+    # TODO: pow,, _diagram_labels_
 
 
 # end class Swap

@@ -13,13 +13,13 @@ import inspect
 import textwrap
 from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     ClassVar,
     Collection,
     Dict,
     Iterator,
     Optional,
-    Set,
     Tuple,
     Type,
     TypeVar,
@@ -28,6 +28,7 @@ from typing import (
 )
 
 import numpy as np
+import scipy.linalg
 import sympy as sym
 
 from .config import CIRCUIT_INDENT, quantum_dtype
@@ -44,6 +45,9 @@ from .states import (
     zero_ket,
 )
 from .utils.math import tensormul
+
+if TYPE_CHECKING:
+    from .pauli import Pauli
 
 
 class OperatorStructure(enum.Enum):
@@ -75,36 +79,36 @@ class OperatorStructure(enum.Enum):
 # end class OperatorStructure
 
 
-OperationType = TypeVar("OperationType", bound="QuantumOperation")
-"""Generic type annotations for subtypes of QuantumOperation"""
+OperationType = TypeVar("OperationType", bound="Operation")
+"""Generic type annotations for subtypes of Operation"""
 
 
-GateType = TypeVar("GateType", bound="QuantumGate")
-"""Generic type annotations for subtypes of QuantumGate"""
+GateType = TypeVar("GateType", bound="Gate")
+"""Generic type annotations for subtypes of Gate"""
 
-StdGateType = TypeVar("StdGateType", bound="QuantumStdGate")
-"""Generic type annotations for subtypes of QuantumStdGate"""
+StdGateType = TypeVar("StdGateType", bound="StdGate")
+"""Generic type annotations for subtypes of StdGate"""
 
-CompositeType = TypeVar("CompositeType", bound="QuantumComposite")
-"""Generic type annotations for subtypes of QuantumComposite"""
+CompositeType = TypeVar("CompositeType", bound="CompositeOperation")
+"""Generic type annotations for subtypes of CompositeOperation"""
 
 
 # TODO: Change back to dictionaries
 
-OPERATIONS: Dict[str, Type["QuantumOperation"]] = {}
-"""All quantum operations (All concrete subclasses of QuantumOperation)"""
+OPERATIONS: Dict[str, Type["Operation"]] = {}
+"""All quantum operations (All concrete subclasses of Operation)"""
 
-GATES: Dict[str, Type["QuantumGate"]] = {}
-"""All gates (All concrete subclasses of QuantumGate)"""
+GATES: Dict[str, Type["Gate"]] = {}
+"""All gates (All concrete subclasses of Gate)"""
 
-STDGATES: Dict[str, Type["QuantumStdGate"]] = {}
-"""All standard gates (All concrete subclasses of QuantumStdGate)"""
+STDGATES: Dict[str, Type["StdGate"]] = {}
+"""All standard gates (All concrete subclasses of StdGate)"""
 
-STDCTRLGATES: Dict[str, Type["QuantumStdCtrlGate"]] = {}
-"""All standard controlled gates (All concrete subclasses of QuantumStdCtrlGate)"""
+STDCTRLGATES: Dict[str, Type["StdCtrlGate"]] = {}
+"""All standard controlled gates (All concrete subclasses of StdCtrlGate)"""
 
 
-class QuantumOperation(ABC):
+class Operation(ABC):
     _cv_collections: ClassVar[Tuple[Dict, ...]] = (OPERATIONS,)
     """List of collections to add subclasses to."""
 
@@ -125,15 +129,16 @@ class QuantumOperation(ABC):
         self._qubits = tuple(qubits)
         self._addrs = tuple(addrs)
 
-    @abstractmethod
-    def asgate(self) -> "QuantumGate":
+    def asgate(self) -> "Gate":
         """
         Convert this quantum operation into a gate (if possible).
 
         Raises:
             ValueError: If this operation cannot be converted to a Gate.
         """
-        pass
+        raise ValueError(
+            "This operation cannot be converted to a Gate"
+        )  # pragma: no cover
 
     @property
     def addrs(self) -> Addrs:
@@ -147,7 +152,7 @@ class QuantumOperation(ABC):
 
     @property
     @abstractmethod
-    def H(self) -> "QuantumOperation":
+    def H(self) -> "Operation":
         """Return the Hermitian conjugate of this quantum operation. For unitary Gates
         (and Circuits composed of the same) the Hermitian conjugate returns the inverse
         Gate (or Circuit).
@@ -213,15 +218,15 @@ class QuantumOperation(ABC):
         return len(self.qubits)
 
     # FIXME
-    def __iter__(self) -> Iterator["QuantumOperation"]:
+    def __iter__(self) -> Iterator["Operation"]:
         yield self
 
 
-# end class QuantumOperation
+# end class Operation
 
 
-class QuantumGate(QuantumOperation):
-    _cv_collections = QuantumOperation._cv_collections + (GATES,)
+class Gate(Operation):
+    _cv_collections = Operation._cv_collections + (GATES,)
 
     cv_interchangable: ClassVar[bool] = False
 
@@ -241,13 +246,13 @@ class QuantumGate(QuantumOperation):
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
 
-    def __matmul__(self, other: "QuantumGate") -> "QuantumGate":
+    def __matmul__(self, other: "Gate") -> "Gate":
         """Apply the action of this gate upon another gate, `self_gate @ other_gate`.
         Recall that time runs right to left with matrix notation.
         """
         from .gates import Identity, Unitary
 
-        if not isinstance(other, QuantumGate):
+        if not isinstance(other, Gate):
             raise NotImplementedError()
 
         extra_qubits = tuple(set(self.qubits) - set(other.qubits))
@@ -260,7 +265,7 @@ class QuantumGate(QuantumOperation):
         return Unitary(tensor, other.qubits)
 
     @abstractmethod
-    def __pow__(self, t: Variable) -> "QuantumGate":
+    def __pow__(self, t: Variable) -> "Gate":
         """Return this gate raised to the given power."""
         pass
 
@@ -283,7 +288,7 @@ class QuantumGate(QuantumOperation):
 
     @property
     @abstractmethod
-    def H(self) -> "QuantumGate":
+    def H(self) -> "Gate":
         pass
 
     @property
@@ -297,7 +302,13 @@ class QuantumGate(QuantumOperation):
             self._sym_operator = sym.Matrix(self.operator)
         return self._sym_operator
 
-    def permute(self, qubits: Qubits) -> "QuantumGate":
+    @property
+    def hamiltonian(self) -> "Pauli":
+        from .pauli import pauli_decompose
+        M = -scipy.linalg.logm(self.operator) / 1.0j
+        return pauli_decompose(M)
+
+    def permute(self, qubits: Qubits) -> "Gate":
         """Permute the order of the qubits."""
         from .gates import Unitary
 
@@ -330,15 +341,15 @@ class QuantumGate(QuantumOperation):
         return op
 
 
-# end class QuantumGate
+# end class Gate
 
 
-class QuantumStdGate(QuantumGate):
-    _cv_collections = QuantumGate._cv_collections + (STDGATES,)
+class StdGate(Gate):
+    _cv_collections = Gate._cv_collections + (STDGATES,)
 
     cv_sym_operator: ClassVar[sym.Matrix] = None
     """A symbolic representation of this gates' operator as a sympy Matrix.
-    Should be set by subclasses. (Subclasses of QuantumStdCtrlGate should set
+    Should be set by subclasses. (Subclasses of StdCtrlGate should set
     cv_target instead.)
     """
 
@@ -450,10 +461,10 @@ class QuantumStdGate(QuantumGate):
         return type(self)(*self.args, *qubits)
 
 
-# end class QuantumStdGate
+# end class StdGate
 
 
-class QuantumStdCtrlGate(QuantumStdGate):
+class StdCtrlGate(StdGate):
     """A standard gate that is a controlled version of another standard gate.
 
     Concrete instances can be found in the ``stdgates`` module.
@@ -462,9 +473,9 @@ class QuantumStdCtrlGate(QuantumStdGate):
     are all set automatically.
     """
 
-    _cv_collections = QuantumStdGate._cv_collections + (STDCTRLGATES,)
+    _cv_collections = StdGate._cv_collections + (STDCTRLGATES,)
 
-    cv_target: ClassVar[Type[QuantumStdGate]]
+    cv_target: ClassVar[Type[StdGate]]
     """StdGate type that is the target of this controlled gate.
     Should be set by subclasses."""
 
@@ -501,20 +512,29 @@ class QuantumStdCtrlGate(QuantumStdGate):
         return self.cv_qubit_nb - self.cv_target.cv_qubit_nb
 
     @property
-    def target(self) -> QuantumStdGate:
+    def target(self) -> StdGate:
         target_qubits = self.qubits[self.control_qubit_nb :]
         return self.cv_target(*self.args, *target_qubits)
 
+    @property
+    def hamiltonian(self) -> "Pauli":
+        from .stdgates import Z
 
-# end QuantumStdCtrlGate
+        ham = self.target.hamiltonian
+        for q in self.control_qubits:
+            ham *= (1 - Z(q)) / 2
+        return ham
 
 
-class QuantumComposite(Collection, QuantumOperation):
-    _elements: Tuple[QuantumOperation, ...] = ()
+# end StdCtrlGate
+
+
+class CompositeOperation(Collection, Operation):
+    _elements: Tuple[Operation, ...] = ()
 
     def __init__(
         self,
-        *elements: QuantumOperation,
+        *elements: Operation,
         qubits: Qubits = None,
         addrs: Addrs = None,
     ):
@@ -585,7 +605,7 @@ class QuantumComposite(Collection, QuantumOperation):
 
         return True
 
-    def __iter__(self) -> Iterator[QuantumOperation]:
+    def __iter__(self) -> Iterator[Operation]:
         yield from self._elements
 
     def __len__(self) -> int:
@@ -615,13 +635,22 @@ class QuantumComposite(Collection, QuantumOperation):
         elements = [elem.H for elem in self._elements[::-1]]
         return type(self)(*elements, qubits=self.qubits, addrs=self.addrs)
 
-    def asgate(self) -> QuantumGate:
+    def asgate(self) -> Gate:
         from .gates import Identity
 
-        gate: QuantumGate = Identity(self.qubits)
+        gate: Gate = Identity(self.qubits)
         for elem in self:
             gate = elem.asgate() @ gate
         return gate
 
 
-# end class QuantumComposite
+# end class CompositeOperation
+
+
+# FIXME
+# QuantumOperation = Operation
+# QuantumGate = Gate
+# QuantumComposite = CompositeOperation
+# QuantumStdGate = StdGate
+# QuantumStdCtrlGate = StdCtrlGate
+

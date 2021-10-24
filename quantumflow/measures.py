@@ -7,7 +7,7 @@ import numpy as np
 
 from .config import ATOL
 from .gates import Identity
-from .operations import QuantumGate
+from .operations import Gate
 
 
 def fubini_study_fidelity(vector0: np.ndarray, vector1: np.ndarray) -> float:
@@ -25,10 +25,10 @@ def fubini_study_close(
     return 1 - fubini_study_fidelity(vector0, vector1) <= atol
 
 
-def gates_close(gate0: QuantumGate, gate1: QuantumGate, atol: float = ATOL) -> bool:
+def gates_close(gate0: Gate, gate1: Gate, atol: float = ATOL) -> bool:
     gate1 = gate1.permute(gate0.qubits)
     return fubini_study_close(gate0.operator, gate1.operator, atol)
 
 
-def almost_identity(gate: QuantumGate, atol: float = ATOL) -> bool:
+def almost_identity(gate: Gate, atol: float = ATOL) -> bool:
     return gates_close(gate, Identity(gate.qubits), atol)

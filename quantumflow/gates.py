@@ -4,14 +4,17 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING, Any, Tuple, cast
 
 import numpy as np
+import scipy.linalg
 import sympy as sym
 from scipy.linalg import fractional_matrix_power as matpow
+from scipy.stats import unitary_group
 
 from .config import quantum_dtype
-from .operations import OperatorStructure, QuantumComposite, QuantumGate
+from .operations import OperatorStructure, CompositeOperation, Gate
+from .pauli import Pauli
 from .states import Addrs, Qubits, Variable
 
 # standard workaround to avoid circular imports from type hints
@@ -19,26 +22,26 @@ if TYPE_CHECKING:
     # Numpy typing introduced in v1.20, which may not be installed by default
     from numpy.typing import ArrayLike  # pragma: no cover
 
-__all__ = ("Identity", "Unitary", "CompositeGate")
+__all__ = ("Identity", "Unitary", "CompositeGate", "RandomGate")
 
 
-class CompositeGate(QuantumComposite, QuantumGate):
+class CompositeGate(CompositeOperation, Gate):
 
-    _elements: Tuple[QuantumGate, ...]
+    _elements: Tuple[Gate, ...]
 
     def __init__(
         self,
-        *elements: QuantumGate,
+        *elements: Gate,
         qubits: Qubits = None,
         addrs: Addrs = None,
     ) -> None:
-        QuantumComposite.__init__(self, *elements, qubits=qubits, addrs=addrs)
+        CompositeOperation.__init__(self, *elements, qubits=qubits, addrs=addrs)
 
         for elem in self:
-            if not isinstance(elem, QuantumGate):
+            if not isinstance(elem, Gate):
                 raise ValueError("Elements of a composite gate must be gates")
 
-    # TODO: Move up to QuantumComposite?
+    # TODO: Move up to CompositeOperation?
     @property
     def H(self) -> "CompositeGate":
         elements = [elem.H for elem in self._elements[::-1]]
@@ -59,7 +62,7 @@ class CompositeGate(QuantumComposite, QuantumGate):
         return Unitary.from_gate(self) ** t
 
 
-class Identity(QuantumGate):
+class Identity(Gate):
     """
     A multi-qubit identity gate.
     """
@@ -93,7 +96,7 @@ class Identity(QuantumGate):
 # End class Identity
 
 
-class Unitary(QuantumGate):
+class Unitary(Gate):
     """
     A quantum logic gate specified by an explicit unitary operator.
     """
@@ -103,10 +106,16 @@ class Unitary(QuantumGate):
         self._operator = np.asanyarray(operator, dtype=quantum_dtype)
 
     @classmethod
-    def from_gate(cls, gate: QuantumGate) -> "Unitary":
+    def from_gate(cls, gate: Gate) -> "Unitary":
         """Construct an instance of Unitary from another quantum gate, with the
         same operator and qubits."""
         return cls(gate.operator, gate.qubits)
+
+    @classmethod
+    def from_hamiltonian(cls, hamiltonian: Pauli, qubits: Qubits) -> "Unitary":
+        U = scipy.linalg.expm(-1j * hamiltonian.operator)
+        gate = cast(Unitary, Unitary(U, hamiltonian.qubits) @ Identity(qubits))
+        return gate
 
     @property
     def H(self) -> "Unitary":
@@ -122,3 +131,22 @@ class Unitary(QuantumGate):
 
 
 # End class Unitary
+
+
+class RandomGate(Unitary):
+    r"""Returns a random unitary gate acting on the given qubits, drawn
+    from Harr measure.
+
+    Ref:
+        "How to generate random matrices from the classical compact groups",
+        Francesco Mezzadri, Notices Am. Math. Soc. 54, 592 (2007).
+        arXiv:math-ph/0609050
+    """
+
+    def __init__(self, qubits: Qubits) -> None:
+        qubits = tuple(qubits)
+        matrix = unitary_group.rvs(2 ** len(qubits))
+        super().__init__(matrix, qubits)
+
+
+# end class RandomGate

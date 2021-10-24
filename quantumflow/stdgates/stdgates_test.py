@@ -12,7 +12,7 @@ import quantumflow as qf
 
 
 # FIXME; FAILS IF RANGE MAKE LARGER , e.g. (-10, 10)
-def random_stdgate(stdgatet: Type[qf.QuantumStdGate]) -> qf.QuantumStdGate:
+def random_stdgate(stdgatet: Type[qf.StdGate]) -> qf.StdGate:
     """Given a standard gate subclass construct an instance with randomly chosen
     parameters and randomly ordered qubits. Used for testing purposes."""
 
@@ -65,6 +65,8 @@ def test_stdgates_structure(name: str) -> None:
     if gatet.cv_hermitian:
         assert gate.H is gate
 
+    # TODO: More
+
 
 @pytest.mark.parametrize("name", qf.STDGATES)
 def test_stdgates_repr(name: str) -> None:
@@ -81,3 +83,12 @@ def test_stdgates_hash() -> None:
     assert gate0 == gate1
 
     assert len(set([gate0, gate1])) == 1
+
+
+@pytest.mark.parametrize("name", qf.STDGATES)
+def test_stdgates_hamiltonian(name: str) -> None:
+    gate0 = random_stdgate(qf.STDGATES[name])
+    qbs = gate0.qubits
+    ham = gate0.hamiltonian
+    gate1 = qf.Unitary.from_hamiltonian(ham, qbs)
+    assert qf.gates_close(gate0, gate1)

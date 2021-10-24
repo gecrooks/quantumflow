@@ -72,7 +72,7 @@ def test_Identity() -> None:
     assert np.allclose(gate0.operator, arr)
 
 
-def test_unitary() -> None:
+def test_Unitary() -> None:
     gate0 = qf.X(0)
     gate1 = qf.Unitary.from_gate(gate0)
 

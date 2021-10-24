@@ -12,11 +12,11 @@ import quantumflow as qf
 
 def test_base_abstract() -> None:
     """Make sure base classes are in fact abstract"""
-    assert inspect.isabstract(qf.QuantumOperation)
-    assert inspect.isabstract(qf.QuantumGate)
-    assert inspect.isabstract(qf.QuantumStdGate)
-    assert inspect.isabstract(qf.QuantumStdCtrlGate)
-    assert inspect.isabstract(qf.QuantumComposite)
+    assert inspect.isabstract(qf.Operation)
+    assert inspect.isabstract(qf.Gate)
+    assert inspect.isabstract(qf.StdGate)
+    assert inspect.isabstract(qf.StdCtrlGate)
+    assert inspect.isabstract(qf.CompositeOperation)
 
 
 def test_Gate_diagonal() -> None:
