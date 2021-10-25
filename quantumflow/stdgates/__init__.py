@@ -4,5 +4,5 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from .common_gates_1q import *  # noqa: F401, F403
-from .common_gates_2q import *  # noqa: F401, F403
+from .stdgates_1q import *  # noqa: F401, F403
+from .stdgates_2q import *  # noqa: F401, F403

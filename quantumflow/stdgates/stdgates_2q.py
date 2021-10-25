@@ -24,7 +24,7 @@ from ..gates import Unitary
 from ..operations import OperatorStructure, StdCtrlGate, StdGate, Variable
 from ..paulialgebra import Pauli
 from ..states import Qubit
-from .common_gates_1q import X, XPow, Y, YPow, Z, ZPow
+from .stdgates_1q import X, XPow, Y, YPow, Z, ZPow
 
 __all__ = (
     "CX",
