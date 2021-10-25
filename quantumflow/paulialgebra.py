@@ -302,7 +302,7 @@ class Pauli(PauliElement, Operation):
             for q, op in zip(qbs, ops):
                 gate = STDGATES[op](q) @ gate
             res.append(gate.operator * value)
-        return reduce(lambda x, y: x + y, res)
+        return reduce(np.add, res)
 
 
     # TESTME
@@ -316,7 +316,9 @@ class Pauli(PauliElement, Operation):
                 res = NAMED_GATES[op](q).run(res)  # type: ignore
             resultants.append(res.tensor)
 
-        out = State(sum(resultants), ket.qubits)
+
+        vec = reduce(np.add, resultants)
+        out = State(vec, ket.qubits)
         return out
 
     def relabel(
