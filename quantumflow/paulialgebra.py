@@ -304,28 +304,6 @@ class Pauli(PauliElement, Operation):
             res.append(gate.operator * value)
         return reduce(lambda x, y: x + y, res)
 
-    # DEPRECATE
-    def asoperator(self, qubits: Qubits = None) -> np.ndarray:
-        # DOCME: Use of qubits argument here.
-
-        # Late import to prevent circular imports
-        from .gates import Identity as IdentityGate
-        from .operations import STDGATES as NAMED_GATES
-
-        qubits = self.qubits if qubits is None else qubits
-        if self.is_zero():
-            N = len(qubits)
-            return np.zeros(shape=(2 ** N, 2 ** N))
-
-        res = []
-        for qbs, ops, coeff in self._terms:
-            if var.is_symbolic(coeff):
-                coeff = complex(coeff)
-            gate = IdentityGate(qubits)
-            for q, op in zip(qbs, ops):
-                gate = NAMED_GATES[op](q) @ gate  # type: ignore
-            res.append(gate.operator * coeff)
-        return cast(np.ndarray, sum(res))
 
     # TESTME
     def _run_state(self, ket: State) -> State:
