@@ -22,7 +22,7 @@ import sympy as sym
 
 from ..gates import Unitary
 from ..operations import OperatorStructure, StdCtrlGate, StdGate, Variable
-from ..pauli import Pauli
+from ..paulialgebra import Pauli, PauliElement
 from ..states import Qubit
 from .common_gates_1q import X, XPow, Y, YPow, Z, ZPow
 

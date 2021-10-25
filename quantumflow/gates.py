@@ -13,8 +13,8 @@ from scipy.linalg import fractional_matrix_power as matpow
 from scipy.stats import unitary_group
 
 from .config import quantum_dtype
-from .operations import OperatorStructure, CompositeOperation, Gate
-from .pauli import Pauli
+from .operations import CompositeOperation, Gate, OperatorStructure
+from .paulialgebra import Pauli
 from .states import Addrs, Qubits, Variable
 
 # standard workaround to avoid circular imports from type hints

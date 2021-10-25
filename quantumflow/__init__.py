@@ -8,6 +8,6 @@ from .config import *  # noqa: F401, F403
 from .gates import *  # noqa: F401, F403
 from .measures import *  # noqa: F401, F403
 from .operations import *  # noqa: F401, F403
-from .pauli import *  # noqa: F401, F403
+from .paulialgebra import *  # noqa: F401, F403
 from .states import *  # noqa: F401, F403
 from .stdgates import *  # noqa: F401, F403

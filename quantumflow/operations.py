@@ -19,13 +19,13 @@ from typing import (
     Collection,
     Dict,
     Iterator,
+    List,
     Optional,
     Tuple,
     Type,
     TypeVar,
     Union,
     overload,
-    List
 )
 
 import numpy as np
@@ -37,10 +37,10 @@ from .states import (
     Addr,
     Addrs,
     Density,
-    State,
     QuantumState,
     Qubit,
     Qubits,
+    State,
     Variable,
     Variables,
     zero_state,
@@ -48,7 +48,7 @@ from .states import (
 from .utils.math import tensormul
 
 if TYPE_CHECKING:
-    from .pauli import Pauli
+    from .paulialgebra import Pauli
 
 
 class OperatorStructure(enum.Enum):
@@ -108,8 +108,7 @@ STDCTRLGATES: Dict[str, Type["StdCtrlGate"]] = {}
 
 
 class Operation(ABC):
-    """An operation on a quantum state. An element of a quantum circuit.
-    """
+    """An operation on a quantum state. An element of a quantum circuit."""
 
     _cv_collections: ClassVar[Tuple[Dict, ...]] = (OPERATIONS,)
     """List of collections to add subclasses to."""
@@ -322,7 +321,8 @@ class Gate(Operation):
         .. math::
             U = e^{-i H)
         """
-        from .pauli import pauli_decompose
+        from .paulialgebra import pauli_decompose
+
         M = -scipy.linalg.logm(self.operator) / 1.0j
         return pauli_decompose(M)
 
@@ -588,6 +588,7 @@ class StdCtrlGate(StdGate):
     def _diagram_labels_(self) -> List[str]:
         return ([CTRL] * self.control_qubit_nb) + self.target._diagram_labels_()
 
+
 # end StdCtrlGate
 
 
@@ -642,7 +643,7 @@ class CompositeOperation(Collection, Operation):
 
     def _run_state(self, ket: State) -> State:  # pragma: no cover  # FIXME
         for elem in self:
-            ket = elem._run_ket(ket)
+            ket = elem._run_state(ket)
         return ket
 
     def __eq__(self, other: Any) -> bool:

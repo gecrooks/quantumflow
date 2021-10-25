@@ -38,7 +38,7 @@ from sympy.abc import t as sym_t  # Symbolic t
 from sympy.abc import theta as sym_theta  # Symbolic theta
 
 from ..operations import OperatorStructure, StdGate, Variable
-from ..pauli import Pauli, PauliElement
+from ..paulialgebra import Pauli, PauliElement
 from ..states import Qubit
 
 __all__ = (

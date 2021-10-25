@@ -11,7 +11,14 @@ from sympy import Expr
 
 from .future import TypeAlias
 
-__all__ = "Variable", "ComplexVariable", "is_symbolic", "is_complex_variable", "almost_zero_variable"
+__all__ = (
+    "Variable",
+    "ComplexVariable",
+    "is_symbolic",
+    "is_complex_variable",
+    "almost_zero",
+    "almost_zero_variable",
+)
 
 Variable: TypeAlias = Union[float, Expr]
 """Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
@@ -29,9 +36,12 @@ def is_complex_variable(x: Any) -> bool:
     return isinstance(x, Complex) or isinstance(x, Expr)
 
 
-def almost_zero_variable(x: ComplexVariable) -> bool:
+def almost_zero(x: ComplexVariable) -> bool:
     if isinstance(x, Complex) and cmath.isclose(x, 0.0):
         return True
     if is_symbolic(x):
         return x.is_zero
     return False
+
+
+almost_zero_variable = almost_zero  # FIXME
