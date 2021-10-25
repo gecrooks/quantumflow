@@ -25,6 +25,7 @@ from typing import (
     TypeVar,
     Union,
     overload,
+    List
 )
 
 import numpy as np
@@ -36,13 +37,13 @@ from .states import (
     Addr,
     Addrs,
     Density,
-    Ket,
+    State,
     QuantumState,
     Qubit,
     Qubits,
     Variable,
     Variables,
-    zero_ket,
+    zero_state,
 )
 from .utils.math import tensormul
 
@@ -52,7 +53,8 @@ if TYPE_CHECKING:
 
 class OperatorStructure(enum.Enum):
     """
-    An enumeration of possible structures the operator of a gate can take.
+    An enumeration of possible structures the operator of a gate can take
+    in the computational basis.
     """
 
     identity = enum.auto()
@@ -82,7 +84,6 @@ class OperatorStructure(enum.Enum):
 OperationType = TypeVar("OperationType", bound="Operation")
 """Generic type annotations for subtypes of Operation"""
 
-
 GateType = TypeVar("GateType", bound="Gate")
 """Generic type annotations for subtypes of Gate"""
 
@@ -92,8 +93,6 @@ StdGateType = TypeVar("StdGateType", bound="StdGate")
 CompositeType = TypeVar("CompositeType", bound="CompositeOperation")
 """Generic type annotations for subtypes of CompositeOperation"""
 
-
-# TODO: Change back to dictionaries
 
 OPERATIONS: Dict[str, Type["Operation"]] = {}
 """All quantum operations (All concrete subclasses of Operation)"""
@@ -109,8 +108,14 @@ STDCTRLGATES: Dict[str, Type["StdCtrlGate"]] = {}
 
 
 class Operation(ABC):
+    """An operation on a quantum state. An element of a quantum circuit.
+    """
+
     _cv_collections: ClassVar[Tuple[Dict, ...]] = (OPERATIONS,)
     """List of collections to add subclasses to."""
+
+    cv_interchangable: ClassVar[bool] = False
+    """Is this Operation invariant to permutation of qubits?"""
 
     _qubits: Qubits = ()
     _addrs: Addrs = ()
@@ -163,25 +168,24 @@ class Operation(ABC):
         pass
 
     def on(self: OperationType, qubits: Qubits) -> "OperationType":
-        # DOCME
+        """Return a copy of this Operation acting on new qubits"""
         qubits = tuple(qubits)
         if len(qubits) != self.qubit_nb:
             raise ValueError("Wrong number of qubits")
         qubit_map = dict(zip(self.qubits, qubits))
         return self.relabel(qubit_map, addr_map=None)
 
-    # DOCME
     @abstractmethod
     def relabel(
         self: OperationType,
         qubit_map: Dict[Qubit, Qubit],
         addr_map: Dict[Addr, Addr],
     ) -> "OperationType":
-        # DOCME
+        """Relabel qubits and addresses and return a copy of this Operation"""
         pass
 
     @overload  # noqa: F811
-    def run(self, state: Optional[Ket] = None) -> Ket:
+    def run(self, state: Optional[State] = None) -> State:
         pass
 
     @overload  # noqa: F811
@@ -189,22 +193,26 @@ class Operation(ABC):
         pass
 
     def run(self, state: Optional[QuantumState] = None) -> QuantumState:  # noqa: F811
+        """Apply the action of this operation upon a quantum state"""
+        # Subclasses should override _run_state and/or _run_density.
         if state is None:
-            ket = zero_ket(self.qubits)
-            return self._run_ket(ket)
-        if isinstance(state, Ket):
-            return self._run_ket(state)
+            ket = zero_state(self.qubits)
+            return self._run_state(ket)
+        if isinstance(state, State):
+            return self._run_state(state)
         elif isinstance(state, Density):  # pragma: no cover  # FIXME
             return self._run_density(state)
         else:
             raise NotImplementedError
 
     # TODO: Make abstract
-    def _run_ket(self, ket: Ket) -> Ket:
+    def _run_state(self, ket: State) -> State:
+        """Apply the action of this operation upon a pure quantum state."""
         raise NotImplementedError
 
     # TODO: Make abstract
     def _run_density(self, rho: Density) -> Density:
+        """Apply the action of this operation upon a mixed quantum state."""
         raise NotImplementedError
 
     @property
@@ -217,7 +225,7 @@ class Operation(ABC):
         """Return the total number of qubits."""
         return len(self.qubits)
 
-    # FIXME
+    # FIXME Not needed?
     def __iter__(self) -> Iterator["Operation"]:
         yield self
 
@@ -226,9 +234,12 @@ class Operation(ABC):
 
 
 class Gate(Operation):
-    _cv_collections = Operation._cv_collections + (GATES,)
+    """
+    A quantum logic gate. A unitary operator that acts upon a collection
+    of qubits.
+    """
 
-    cv_interchangable: ClassVar[bool] = False
+    _cv_collections = Operation._cv_collections + (GATES,)
 
     cv_hermitian: ClassVar[bool] = False
     """Is this gate's operator known to be always hermitian?"""
@@ -243,12 +254,9 @@ class Gate(Operation):
     _sym_operator: sym.Matrix = None
     """Instance variable for symbolic operators."""
 
-    def __init_subclass__(cls) -> None:
-        super().__init_subclass__()
-
     def __matmul__(self, other: "Gate") -> "Gate":
         """Apply the action of this gate upon another gate, `self_gate @ other_gate`.
-        Recall that time runs right to left with matrix notation.
+        Recall that time runs from right to left with matrix notation.
         """
         from .gates import Identity, Unitary
 
@@ -269,7 +277,7 @@ class Gate(Operation):
         """Return this gate raised to the given power."""
         pass
 
-    def _run_ket(self, ket: Ket) -> Ket:
+    def _run_state(self, ket: State) -> State:
         indices = tuple(ket.qubits.index(q) for q in self.qubits)
 
         vec = tensormul(
@@ -277,13 +285,14 @@ class Gate(Operation):
             ket.vector,
             tuple(indices),
         )
-        return Ket(vec.flatten(), ket.qubits, ket.data)
+        return State(vec.flatten(), ket.qubits, ket.data)
 
     def asgate(self: GateType) -> "GateType":
         return self
 
     @property
     def diagonal(self) -> np.ndarray:
+        """The diagonal of this gate's operator"""
         return np.diag(self.operator)
 
     @property
@@ -294,16 +303,25 @@ class Gate(Operation):
     @property
     @abstractmethod
     def operator(self) -> np.ndarray:
+        """The unitary operator of this gate"""
         pass
 
     @property
     def sym_operator(self) -> sym.Matrix:
+        """This gate's operator as a symbolic sympy matrix"""
         if self._sym_operator is None:
             self._sym_operator = sym.Matrix(self.operator)
         return self._sym_operator
 
     @property
     def hamiltonian(self) -> "Pauli":
+        """
+        Returns the hermitian Hamiltonian of corresponding to this
+        unitary operation, as an element of the Pauli algebra.
+
+        .. math::
+            U = e^{-i H)
+        """
         from .pauli import pauli_decompose
         M = -scipy.linalg.logm(self.operator) / 1.0j
         return pauli_decompose(M)
@@ -345,6 +363,17 @@ class Gate(Operation):
 
 
 class StdGate(Gate):
+    """
+    A standard gate. Standard gates have a name, a fixed number of real
+    parameters, and act upon a fixed number of qubits.
+
+    e.g. Rx(theta, q0), CNot(q0, q1), Can(tx, ty, tz, q0, q1, q2)
+
+    In the argument list, parameters are first, then qubits. Parameters
+    have type Variable (either a concrete floating point number, or a symbolic
+    expression), and qubits have type Qubit (Any hashable python type).
+    """
+
     _cv_collections = Gate._cv_collections + (STDGATES,)
 
     cv_sym_operator: ClassVar[sym.Matrix] = None
@@ -460,6 +489,37 @@ class StdGate(Gate):
 
         return type(self)(*self.args, *qubits)
 
+    def _diagram_labels_(self) -> List[str]:
+
+        label = self.name
+
+        label = label.replace("ISwap", "iSwap")
+        label = label.replace("Phased", "Ph")
+
+        if label.startswith("Sqrt"):
+            label = SQRT + label[4:]
+
+        if label.endswith("_H"):
+            label = label[:-2] + CONJ
+
+        args = ""
+        if self.cv_args:
+            args = ", ".join("{" + arg + "}" for arg in self.cv_args)
+
+        if args:
+            if label.endswith("Pow"):
+                label = label[:-3] + "^" + args
+            else:
+                label = label + "(" + args + ")"
+
+        labels = [label] * self.qubit_nb
+
+        if self.qubit_nb > 1 and not self.cv_interchangeable:
+            for i in range(self.qubit_nb):
+                labels[i] = labels[i] + "_%s" % i
+
+        return labels
+
 
 # end class StdGate
 
@@ -525,6 +585,8 @@ class StdCtrlGate(StdGate):
             ham *= (1 - Z(q)) / 2
         return ham
 
+    def _diagram_labels_(self) -> List[str]:
+        return ([CTRL] * self.control_qubit_nb) + self.target._diagram_labels_()
 
 # end StdCtrlGate
 
@@ -578,7 +640,7 @@ class CompositeOperation(Collection, Operation):
             rho = elem._run_density(rho)
         return rho
 
-    def _run_ket(self, ket: Ket) -> Ket:  # pragma: no cover  # FIXME
+    def _run_state(self, ket: State) -> State:  # pragma: no cover  # FIXME
         for elem in self:
             ket = elem._run_ket(ket)
         return ket
@@ -645,12 +707,3 @@ class CompositeOperation(Collection, Operation):
 
 
 # end class CompositeOperation
-
-
-# FIXME
-# QuantumOperation = Operation
-# QuantumGate = Gate
-# QuantumComposite = CompositeOperation
-# QuantumStdGate = StdGate
-# QuantumStdCtrlGate = StdCtrlGate
-

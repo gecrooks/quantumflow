@@ -24,7 +24,7 @@ def test_Gate_diagonal() -> None:
 
 
 def test_Gate_run() -> None:
-    ket = qf.zero_ket([0, 1, 2])
+    ket = qf.zero_state([0, 1, 2])
     ket = qf.X(1).run(ket)
     assert ket.tensor[0, 1, 0] == 1
     ket = qf.CNot(1, 2).run(ket)

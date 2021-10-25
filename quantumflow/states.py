@@ -40,9 +40,9 @@ __all__ = (
     "Variables",
     "QuantumState",
     "QuantumStateType",
-    "Ket",
-    "zero_ket",
-    "ghz_ket",
+    "State",
+    "zero_state",
+    "ghz_state",
 )
 
 
@@ -105,7 +105,7 @@ class QuantumState(ABC):
         raise NotImplementedError
 
 
-class Ket(QuantumState):
+class State(QuantumState):
     def __init__(
         self, vector: np.ndarray, qubits: Qubits, data: Dict[Addr, Any] = None
     ):
@@ -181,23 +181,23 @@ class Density(QuantumState):  # pragma: no cover  # FIXME
 # end class State
 
 
-def zero_ket(qubits: Qubits) -> Ket:
+def zero_state(qubits: Qubits) -> State:
     """Return the all-zero state on the given qubits"""
     qubits = tuple(qubits)
     N = len(qubits)
     vec = np.zeros(shape=2 ** N)
     vec[0] = 1
-    return Ket(vec, qubits)
+    return State(vec, qubits)
 
 
-def ghz_ket(qubits: Qubits) -> Ket:  # pragma: no cover  # FIXME
+def ghz_state(qubits: Qubits) -> State:  # pragma: no cover  # FIXME
     """Return a GHZ state on N qubits"""
     qubits = tuple(qubits)
     N = len(qubits)
     vec = np.zeros(shape=[2] * N)
     vec[(0,) * N] = 1 / np.sqrt(2)
     vec[(1,) * N] = 1 / np.sqrt(2)
-    return Ket(vec.flatten(), qubits)
+    return State(vec.flatten(), qubits)
 
 
 # fin
