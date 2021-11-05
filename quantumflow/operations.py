@@ -48,6 +48,7 @@ from .states import (
 from .utils.math import tensormul
 
 if TYPE_CHECKING:
+    from .gates import Unitary
     from .paulialgebra import Pauli
 
 
@@ -106,6 +107,8 @@ STDGATES: Dict[str, Type["StdGate"]] = {}
 STDCTRLGATES: Dict[str, Type["StdCtrlGate"]] = {}
 """All standard controlled gates (All concrete subclasses of StdCtrlGate)"""
 
+BASE_OPERATIONS = "Operation", "Gate", "StdGate", "StdCtrlGate", "CompositeGate"
+
 
 class Operation(ABC):
     """An operation on a quantum state. An element of a quantum circuit."""
@@ -125,7 +128,7 @@ class Operation(ABC):
         cls.name = name
 
         # Subclass registration
-        if not inspect.isabstract(cls):
+        if not (inspect.isabstract(cls) or cls.name in BASE_OPERATIONS):
             for collection in cls._cv_collections:
                 collection[cls.name] = cls
 
@@ -271,10 +274,11 @@ class Gate(Operation):
 
         return Unitary(tensor, other.qubits)
 
-    @abstractmethod
     def __pow__(self, t: Variable) -> "Gate":
         """Return this gate raised to the given power."""
-        pass
+        from .gates import Unitary
+
+        return Unitary.from_gate(self) ** t
 
     def _run_state(self, ket: State) -> State:
         indices = tuple(ket.qubits.index(q) for q in self.qubits)
@@ -295,9 +299,8 @@ class Gate(Operation):
         return np.diag(self.operator)
 
     @property
-    @abstractmethod
     def H(self) -> "Gate":
-        pass
+        return self ** -1
 
     @property
     @abstractmethod
@@ -439,7 +442,7 @@ class StdGate(Gate):
     def __getattr__(self, name: str) -> Variable:
         # DOCME
         if name not in self.cv_params:
-            raise AttributeError
+            raise AttributeError(f"'{type(self)}' object has no attribute '{name}'") 
         return self.args[self.cv_params.index(name)]
 
     # FIXME MARK ABSTRACT AT BASE?

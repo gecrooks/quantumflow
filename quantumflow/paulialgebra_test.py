@@ -260,7 +260,6 @@ def test_run() -> None:
     _ = s.run(ket0)
 
 
-
 # Start GEC 2021
 
 

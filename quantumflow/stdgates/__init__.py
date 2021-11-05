@@ -6,3 +6,7 @@
 
 from .stdgates_1q import *  # noqa: F401, F403
 from .stdgates_2q import *  # noqa: F401, F403
+from .stdgates_3q import *  # noqa: F401, F403
+from .stdgates_cirq import *  # noqa: F401, F403
+from .stdgates_forest import *  # noqa: F401, F403
+from .stdgates_qasm import *  # noqa: F401, F403

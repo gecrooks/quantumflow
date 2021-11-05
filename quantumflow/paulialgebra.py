@@ -304,7 +304,6 @@ class Pauli(PauliElement, Operation):
             res.append(gate.operator * value)
         return reduce(np.add, res)
 
-
     # TESTME
     def _run_state(self, ket: State) -> State:
         from .operations import STDGATES as NAMED_GATES
@@ -315,7 +314,6 @@ class Pauli(PauliElement, Operation):
             for q, op in zip(qbs, ops):
                 res = NAMED_GATES[op](q).run(res)  # type: ignore
             resultants.append(res.tensor)
-
 
         vec = reduce(np.add, resultants)
         out = State(vec, ket.qubits)
