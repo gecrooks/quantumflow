@@ -10,7 +10,6 @@ Unit tests for quantumflow examples.
 """
 
 import os
-
 import subprocess
 
 import numpy as np
