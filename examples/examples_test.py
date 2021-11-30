@@ -43,7 +43,9 @@ def test_prepare_w16_main():
 
 
 def test_prepare_cswap_decomposition():
-    rval = subprocess.call([os.path.join("examples", "cswap_decomposition.py")], shell=True)
+    rval = subprocess.call(
+        [os.path.join("examples", "cswap_decomposition.py")], shell=True
+    )
     assert rval == 0
 
 
@@ -69,12 +71,16 @@ def test_swap_test_main():
 
 
 def test_circuit_identities_main():
-    rval = subprocess.call([os.path.join("examples", "circuit_identities.py")], shell=True)
+    rval = subprocess.call(
+        [os.path.join("examples", "circuit_identities.py")], shell=True
+    )
     assert rval == 0
 
 
 def test_gate_translate_identities_main():
-    rval = subprocess.call([os.path.join("examples", "gate_translations.py")], shell=True)
+    rval = subprocess.call(
+        [os.path.join("examples", "gate_translations.py")], shell=True
+    )
     assert rval == 0
 
 
