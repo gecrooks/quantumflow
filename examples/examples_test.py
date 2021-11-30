@@ -24,7 +24,7 @@ def test_prepare_w4():
 
 
 def test_prepare_w4_main():
-    rval = subprocess.call(["state_prep_w4.py"], shell=True, cwd="examples")
+    rval = subprocess.call(["examples/state_prep_w4.py"], shell=True)
     assert rval == 0
 
 
@@ -36,12 +36,12 @@ def test_prepare_w16():
 
 
 def test_prepare_w16_main():
-    rval = subprocess.call(["state_prep_w16.py"], shell=True, cwd="examples")
+    rval = subprocess.call(["examples/state_prep_w16.py"], shell=True)
     assert rval == 0
 
 
 def test_prepare_cswap_decomposition():
-    rval = subprocess.call(["cswap_decomposition.py"], shell=True, cwd="examples")
+    rval = subprocess.call(["examples/cswap_decomposition.py"], shell=True)
     assert rval == 0
 
 
@@ -62,17 +62,17 @@ def test_swap_test():
 
 
 def test_swap_test_main():
-    rval = subprocess.call(["swaptest.py"], shell=True, cwd="examples")
+    rval = subprocess.call(["examples/swaptest.py"], shell=True)
     assert rval == 0
 
 
 def test_circuit_identities_main():
-    rval = subprocess.call(["circuit_identities.py"], shell=True, cwd="examples")
+    rval = subprocess.call(["examples/circuit_identities.py"], shell=True)
     assert rval == 0
 
 
 def test_gate_translate_identities_main():
-    rval = subprocess.call(["gate_translations.py"], shell=True, cwd="examples")
+    rval = subprocess.call(["examples/gate_translations.py"], shell=True)
     assert rval == 0
 
 
