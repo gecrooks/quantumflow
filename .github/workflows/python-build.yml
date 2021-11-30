@@ -13,10 +13,12 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.7', '3.8', '3.9']
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -38,31 +40,40 @@ jobs:
     - name: Install extra dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        python -m pip install .[dev]  # install package + test dependencies   
+        python -m pip install wheel
+        python -m pip install .[dev]  # install package + test dependencies
+    - name: Install extra Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
         sudo apt-get install texlive texlive-latex-extra latexmk poppler-utils
         mkdir -p ~/texmf/tex/latex
         wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex -P ~/texmf/tex/latex
     - name: About
+      if: runner.os == 'Linux'
       run: |
         python -m $(python -Wi setup.py --name).about
         echo
         pdflatex --version
         pdftocairo -v
     - name: Test coverage with pytest
+      if: runner.os == 'Linux'
       run: |
         python -m pytest --cov --cov-fail-under 100
     - name: Lint with black and isort (run `make delint` to fix issues)
+      if: runner.os == 'Linux'
       run: |
         black --check .  
         isort --check -m 3 --tc .
     - name: Lint with flake8
+      if: runner.os == 'Linux'
       run: |
         flake8 .            
     - name: Typecheck with mypy
+      if: runner.os == 'Linux'
       run: |
         mypy
     - name: Build documentation with sphinx
+      if: runner.os == 'Linux'
       run: |
         sphinx-build -M html docs docs/_build
     - name: Test notebooks (against master)
