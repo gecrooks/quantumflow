@@ -35,7 +35,7 @@ def test_copyright() -> None:
             continue
         print("Checking " + fname + " for copyright header...  ", end="")
 
-        with open(fname, encoding='utf-8') as f:
+        with open(fname, encoding="utf-8") as f:
             for line in f.readlines():
                 if not line.strip():
                     continue
