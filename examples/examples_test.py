@@ -12,9 +12,9 @@ Unit tests for quantumflow examples.
 import os
 import subprocess
 
-import numpy as np
+# import numpy as np
 
-import quantumflow as qf
+# import quantumflow as qf
 
 # def test_prepare_w4():
 #     import examples.state_prep_w4 as ex
