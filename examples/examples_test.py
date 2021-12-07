@@ -12,28 +12,10 @@ Unit tests for quantumflow examples.
 import os
 import subprocess
 
-import numpy as np
-
-import quantumflow as qf
-
-
-def test_prepare_w4():
-    import examples.state_prep_w4 as ex
-
-    ket = ex.prepare_w4()
-    assert qf.states_close(ket, qf.w_state(4))
-
 
 def test_prepare_w4_main():
     rval = subprocess.call([os.path.join("examples", "state_prep_w4.py")], shell=True)
     assert rval == 0
-
-
-def test_prepare_w16():
-    import examples.state_prep_w16 as ex
-
-    ket = ex.prepare_w16()
-    assert qf.states_close(ket, qf.w_state(16))
 
 
 def test_prepare_w16_main():
@@ -46,22 +28,6 @@ def test_prepare_cswap_decomposition():
         [os.path.join("examples", "cswap_decomposition.py")], shell=True
     )
     assert rval == 0
-
-
-def test_swap_test():
-    import examples.swaptest as ex
-
-    ket0 = qf.zero_state([0])
-    ket1 = qf.random_state([1])
-    ket2 = qf.random_state([2])
-
-    ket = qf.join_states(ket0, ket1)
-    ket = qf.join_states(ket, ket2)
-
-    fid = qf.state_fidelity(ket1, ket2.on(1))
-    st_fid = ex.swap_test(ket, 0, 1, 2)
-
-    assert np.isclose(fid, st_fid)
 
 
 def test_swap_test_main():
@@ -82,9 +48,5 @@ def test_gate_translate_identities_main():
     )
     assert rval == 0
 
-
-# def test_fit_state():
-#     from examples import fit_state
-#     fit_state.example_fit_state()
 
 # fin
