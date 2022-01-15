@@ -45,6 +45,7 @@ jobs:
     - name: Install extra Linux dependencies
       if: runner.os == 'Linux'
       run: |
+        sudo apt-get update
         sudo apt-get install texlive texlive-latex-extra latexmk poppler-utils
         mkdir -p ~/texmf/tex/latex
         wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex -P ~/texmf/tex/latex
