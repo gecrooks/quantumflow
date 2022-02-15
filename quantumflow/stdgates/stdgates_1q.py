@@ -153,7 +153,7 @@ class Ph(StdGate):
 
     @property
     def H(self) -> "Ph":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Ph":
         return Ph(t * self.param("phi"), *self.qubits)
@@ -443,7 +443,7 @@ class PhaseShift(StdGate):
 
     @property
     def H(self) -> "PhaseShift":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "PhaseShift":
         return PhaseShift(self.param("theta") * t, *self.qubits)
@@ -500,7 +500,7 @@ class Rx(StdGate):
 
     @property
     def H(self) -> "Rx":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Rx":
         return Rx(self.param("theta") * t, *self.qubits)
@@ -550,7 +550,7 @@ class Ry(StdGate):
 
     @property
     def H(self) -> "Ry":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Ry":
         return Ry(self.param("theta") * t, *self.qubits)
@@ -597,7 +597,7 @@ class Rz(StdGate):
 
     @property
     def H(self) -> "Rz":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Rz":
         return Rz(self.param("theta") * t, *self.qubits)
@@ -712,7 +712,7 @@ class Rn(StdGate):
         self, theta: Variable, nx: Variable, ny: Variable, nz: Variable, q0: Qubit
     ) -> None:
 
-        norm = var.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+        norm = var.sqrt(nx**2 + ny**2 + nz**2)
 
         nx /= norm
         ny /= norm
@@ -745,7 +745,7 @@ class Rn(StdGate):
 
     @property
     def H(self) -> "Rn":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Rn":
         theta, nx, ny, nz = self.params
@@ -788,7 +788,7 @@ class XPow(StdGate):
 
     @property
     def H(self) -> "XPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "XPow":
         return XPow(t * self.param("t"), *self.qubits)
@@ -835,7 +835,7 @@ class YPow(StdGate):
 
     @property
     def H(self) -> "YPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "YPow":
         return YPow(t * self.param("t"), *self.qubits)
@@ -942,7 +942,7 @@ class HPow(StdGate):
 
     @property
     def H(self) -> "HPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "HPow":
         return HPow(t * self.param("t"), *self.qubits)

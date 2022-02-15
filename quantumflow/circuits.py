@@ -318,11 +318,11 @@ def control_circuit(controls: Qubits, gate: Gate) -> Circuit:
             cgate = ControlGate(gate, [q0])
             circ += cgate
     else:
-        circ += control_circuit(controls[-1:], gate ** 0.5)
+        circ += control_circuit(controls[-1:], gate**0.5)
         circ += control_circuit(controls[0:-1], X(controls[-1]))
-        circ += control_circuit(controls[-1:], gate ** -0.5)
+        circ += control_circuit(controls[-1:], gate**-0.5)
         circ += control_circuit(controls[0:-1], X(controls[-1]))
-        circ += control_circuit(controls[0:-1], gate ** 0.5)
+        circ += control_circuit(controls[0:-1], gate**0.5)
     return circ
 
 

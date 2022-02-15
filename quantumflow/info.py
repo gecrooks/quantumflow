@@ -199,7 +199,7 @@ def purity(rho: Density) -> float:
     """
     tensor = rho.tensor
     N = rho.qubit_nb
-    matrix = np.reshape(tensor, [2 ** N, 2 ** N])
+    matrix = np.reshape(tensor, [2**N, 2**N])
     return float(np.trace(matrix @ matrix))
 
 
@@ -331,7 +331,7 @@ def gates_phase_close(gate0: Gate, gate1: Gate, atol: float = ATOL) -> bool:
     if not gates_close(gate0, gate1):
         return False
     N = gate0.qubit_nb
-    phase = np.trace((gate1 @ gate0.H).asoperator()) / 2 ** N
+    phase = np.trace((gate1 @ gate0.H).asoperator()) / 2**N
     return bool(np.isclose(phase, 1.0, atol=atol))
 
 
@@ -413,7 +413,7 @@ def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> float:
             raise ValueError("Qubits must be same")  # pragma: no cover  # TESTME
 
     N = kraus.qubit_nb
-    d = 2 ** N
+    d = 2**N
 
     U = target.H.asoperator()
 
@@ -421,14 +421,14 @@ def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> float:
     for w, K in zip(kraus.weights, kraus.operators):
         summand += np.absolute(np.trace(w * U @ K.asoperator())) ** 2
 
-    return (d + summand) / (d + d ** 2)
+    return (d + summand) / (d + d**2)
 
 
 # Author: GEC (2019)
 def almost_unital(chan: Channel) -> bool:
     """Return true if the channel is (almost) unital."""
     # Unital channels leave the identity unchanged.
-    dim = 2 ** chan.qubit_nb
+    dim = 2**chan.qubit_nb
     eye0 = np.eye(dim, dim)
     rho0 = Density(eye0, chan.qubits)
     rho1 = chan.evolve(rho0)
