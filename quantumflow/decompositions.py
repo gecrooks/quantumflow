@@ -75,7 +75,7 @@ def bloch_decomposition(gate: Gate) -> Circuit:
     nx = -U[0, 1].imag
     ny = -U[0, 1].real
     nz = -U[0, 0].imag
-    N = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+    N = np.sqrt(nx**2 + ny**2 + nz**2)
     if N == 0:  # Identity
         nx, ny, nz = 1, 1, 1
     else:
@@ -182,7 +182,7 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
         raise ValueError("Expected 2-qubit gate")
 
     U = gate.asoperator()
-    rank = 2 ** gate.qubit_nb
+    rank = 2**gate.qubit_nb
     U /= np.linalg.det(U) ** (1 / rank)
 
     R = U.reshape(2, 2, 2, 2)
@@ -261,7 +261,7 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     assert almost_unitary(gate)  # Sanity check
     U = gate.asoperator()
 
-    rank = 2 ** gate.qubit_nb
+    rank = 2**gate.qubit_nb
     U /= np.linalg.det(U) ** (1 / rank)  # U is in SU(4) so det U = 1
 
     U_mb = Q_H @ U @ Q  # Transform gate to Magic Basis [1, (eq. 17, 18)]
@@ -736,7 +736,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
         M2 = B1 @ B2.conj().T
         eigvals, V = np.linalg.eig(M2)
-        D = np.diag(eigvals ** 0.5)
+        D = np.diag(eigvals**0.5)
         W = D @ V.conj().T @ B2
         thetas = np.real(np.log(eigvals) * 1j)
 
@@ -748,7 +748,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
         M2 = A1 @ A2.conj().T
         eigvals, V = np.linalg.eig(M2)
-        D = np.diag(eigvals ** 0.5)
+        D = np.diag(eigvals**0.5)
         W = D @ V.conj().T @ A2
         thetas = np.real(np.log(eigvals) * 1j)
 

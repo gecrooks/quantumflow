@@ -327,19 +327,19 @@ def translate_cross_resonance_to_xx(
 
     t7 = (
         var.arccos(
-            ((1 + b ** 2 * var.cos(var.PI * var.sqrt(1 + b ** 2) * s))) / (1 + b ** 2)
+            ((1 + b**2 * var.cos(var.PI * var.sqrt(1 + b**2) * s))) / (1 + b**2)
         )
         / var.PI
     )
     t4 = c * s
     t1 = (
         var.arccos(
-            var.cos(0.5 * var.PI * var.sqrt(1 + b ** 2) * s) / var.cos(t7 * var.PI / 2)
+            var.cos(0.5 * var.PI * var.sqrt(1 + b**2) * s) / var.cos(t7 * var.PI / 2)
         )
         / var.PI
     )
 
-    a = var.sin(var.PI * var.sqrt(1 + b ** 2) * s / 2)
+    a = var.sin(var.PI * var.sqrt(1 + b**2) * s / 2)
     t7 *= var.sign(a) * var.sign(b)
     t1 *= var.sign(a)
 

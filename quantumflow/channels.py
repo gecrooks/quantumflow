@@ -105,7 +105,7 @@ class Kraus(Operation):
         """Returns: Action of Kraus operators as a superoperator Channel"""
         qubits = self.qubits
         N = len(qubits)
-        ident = UnitaryGate(np.eye(2 ** N), qubits).aschannel()
+        ident = UnitaryGate(np.eye(2**N), qubits).aschannel()
 
         tensors = [(op.aschannel() @ ident).tensor for op in self.operators]
         if self.weights is not None:
@@ -258,7 +258,7 @@ def channel_to_kraus(chan: Channel) -> "Kraus":
     ops = []
     for i in range(2 ** (2 * N)):
         if not np.isclose(values[i], 0.0):
-            mat = np.reshape(evecs[i], (2 ** N, 2 ** N)) * values[i]
+            mat = np.reshape(evecs[i], (2**N, 2**N)) * values[i]
             g = UnitaryGate(mat, qubits)
             ops.append(g)
 
@@ -272,7 +272,7 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
     qubits = kraus.qubits
     N = kraus.qubit_nb
 
-    ident = UnitaryGate(np.eye(2 ** N), qubits)
+    ident = UnitaryGate(np.eye(2**N), qubits)
 
     tensors = [(op.H @ op @ ident).asoperator() for op in kraus.operators]
     tensors = [t * w for t, w in zip(tensors, kraus.weights)]
@@ -281,7 +281,7 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
     res = UnitaryGate(tensor, qubits)
 
     N = res.qubit_nb
-    return np.allclose(res.asoperator(), np.eye(2 ** N))
+    return np.allclose(res.asoperator(), np.eye(2**N))
 
 
 # TODO: as class RandomChannel?
@@ -301,8 +301,8 @@ def random_channel(qubits: Qubits, rank: int = None, unital: bool = False) -> Ch
     """
     qubits = tuple(qubits)
     N = len(qubits)
-    dim = 2 ** N  # Hilbert space dimension
-    size = (dim ** 2, dim ** 2) if rank is None else (dim ** 2, rank)
+    dim = 2**N  # Hilbert space dimension
+    size = (dim**2, dim**2) if rank is None else (dim**2, rank)
 
     # arXiv:0804.2361 page 4, steps 1 to 4
     # arXiv:0709.0824 page 6

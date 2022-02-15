@@ -84,7 +84,7 @@ class PhasedXPow(StdGate):
 
     @property
     def H(self) -> "PhasedXPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "PhasedXPow":
         p, s = self.params
@@ -151,7 +151,7 @@ class FSim(StdGate):
 
     @property
     def H(self) -> "FSim":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "FSim":
         theta, phi = self.params
@@ -241,7 +241,7 @@ class FSwapPow(StdGate):
 
     @property
     def H(self) -> "FSwapPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "FSwapPow":
         (t,) = self.params
@@ -286,7 +286,7 @@ class Sycamore(StdGate):
 
     @property
     def H(self) -> "FSim":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "FSim":
         return FSim(t * np.pi / 2, t * np.pi / 6, *self.qubits)
