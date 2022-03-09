@@ -48,7 +48,7 @@ def flatten(tensor: QubitTensor, rank: int) -> np.ndarray:
     """Return tensor with with qubit indices flattened"""
     R = rank
     N = np.ndim(tensor) // R
-    return np.reshape(tensor, [2**N] * R)
+    return np.reshape(tensor, [2 ** N] * R)
 
 
 def transpose(tensor: QubitTensor, perm: Sequence[int] = None) -> QubitTensor:
@@ -102,7 +102,7 @@ def outer(tensor0: QubitTensor, tensor1: QubitTensor, rank: int) -> QubitTensor:
     # R = 1  perm = (0, 1)
     # R = 2  perm = (0, 2, 1, 3)
     # R = 4  perm = (0, 4, 1, 5, 2, 6, 3, 7)
-    tensor = np.reshape(tensor, ([2**N0] * R) + ([2**N1] * R))
+    tensor = np.reshape(tensor, ([2 ** N0] * R) + ([2 ** N1] * R))
     perm = [idx for ij in zip(range(0, R), range(R, 2 * R)) for idx in ij]
     if R != 1:
         tensor = transpose(tensor, perm)
@@ -181,14 +181,14 @@ def tensormul(
     K = np.ndim(tensor0) // 2
     assert K == len(indices)
 
-    gate = np.reshape(tensor0, [2**K, 2**K])
+    gate = np.reshape(tensor0, [2 ** K, 2 ** K])
 
     perm = list(indices) + [n for n in range(N) if n not in indices]
     inv_perm = np.argsort(perm)
 
     tensor = tensor1
     tensor = np.transpose(tensor, perm)
-    tensor = np.reshape(tensor, [2**K, 2 ** (N - K)])
+    tensor = np.reshape(tensor, [2 ** K, 2 ** (N - K)])
 
     tensor = np.matmul(gate, tensor)
 
@@ -213,7 +213,7 @@ def tensormul_diagonal(
 
     tensor = tensor1
     tensor = np.transpose(tensor, perm)
-    tensor = np.reshape(tensor, [2**K, 2 ** (N - K)])
+    tensor = np.reshape(tensor, [2 ** K, 2 ** (N - K)])
 
     tensor = np.transpose(tensor)
     tensor = tensor * tensor0_diagonal.flatten()

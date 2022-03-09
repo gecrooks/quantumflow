@@ -152,7 +152,7 @@ def test_cirq_to_circuit_0_7() -> None:
     assert qf.gates_close(circ.asgate(), qf.Givens(0.5 * pi / 2, 0, 1))
 
     op = cq.PhasedXZGate(
-        x_exponent=0.125, z_exponent=0.25, axis_phase_exponent=0.375
+        x_exponent=0.125, z_exponent=0.25, axis_phase_exponent=0.375  # type: ignore
     ).on(q0)
     circ = cirq_to_circuit(cq.Circuit(op))
     assert len(circ) == 3
@@ -165,7 +165,7 @@ def test_cirq_to_circuit2() -> None:
     q1 = cq.GridQubit(1, 0)
 
     def basic_circuit(meas=False):  # type: ignore
-        sqrt_x = cq.X**0.5
+        sqrt_x = cq.X ** 0.5
         yield cq.X(q0) ** 0.5, sqrt_x(q1)
         yield cq.CZ(q0, q1)
         yield sqrt_x(q0), sqrt_x(q1)

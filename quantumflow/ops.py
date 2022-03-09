@@ -417,7 +417,7 @@ class Gate(Operation):
 
         # TODO: As Kraus?
         tensor = np.outer(self.tensor, self.H.tensor)
-        tensor = np.reshape(tensor, [2**N] * R)
+        tensor = np.reshape(tensor, [2 ** N] * R)
         tensor = np.transpose(tensor, [0, 3, 1, 2])
 
         return Channel(tensor, self.qubits)
@@ -456,7 +456,7 @@ class Gate(Operation):
 
     def su(self) -> "UnitaryGate":
         """Convert gate tensor to the special unitary group."""
-        rank = 2**self.qubit_nb
+        rank = 2 ** self.qubit_nb
         U = self.asoperator()
         U /= np.linalg.det(U) ** (1 / rank)
         return UnitaryGate(U, self.qubits)
@@ -659,7 +659,7 @@ class Channel(Operation):
 
         # TODO: Use tensor_transpose, or remove tensor_transpose
         tensor = self.tensor
-        tensor = np.reshape(tensor, [2**N] * 4)
+        tensor = np.reshape(tensor, [2 ** N] * 4)
         tensor = np.transpose(tensor, (0, 2, 1, 3))
         tensor = np.reshape(tensor, [2] * 4 * N)
         return Channel(tensor, self.qubits)

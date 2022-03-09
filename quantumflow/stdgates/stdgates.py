@@ -164,7 +164,7 @@ class StdCtrlGate(StdGate):
     @utils.cached_property
     def tensor(self) -> QubitTensor:
         ctrl_block = np.identity(
-            2**self.cv_qubit_nb - 2**self.cv_target.cv_qubit_nb
+            2 ** self.cv_qubit_nb - 2 ** self.cv_target.cv_qubit_nb
         )
         target_block = self.target.asoperator()
         unitary = scipy.linalg.block_diag(ctrl_block, target_block)

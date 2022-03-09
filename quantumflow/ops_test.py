@@ -101,7 +101,7 @@ def test_gate_symbolic_params() -> None:
     gate0 = qf.Rz(theta, 1)
     assert str(gate0) == "Rz(θ) 1"
 
-    gate1 = gate0**4
+    gate1 = gate0 ** 4
     assert str(gate1) == "Rz(4*θ) 1"
 
     circ = qf.Circuit([gate0, gate1])

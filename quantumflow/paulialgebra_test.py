@@ -186,16 +186,16 @@ def test_merge_sum() -> None:
 def test_power() -> None:
     p = sX(0) + sY(1) + qf.Pauli.term([2, 3], "XY")
 
-    assert p**0 == qf.Pauli.identity()
-    assert p**1 == p
-    assert p * p == p**2
-    assert p * p * p == p**3
-    assert p * p * p * p * p * p * p * p * p * p == p**10
+    assert p ** 0 == qf.Pauli.identity()
+    assert p ** 1 == p
+    assert p * p == p ** 2
+    assert p * p * p == p ** 3
+    assert p * p * p * p * p * p * p * p * p * p == p ** 10
 
     with pytest.raises(ValueError):
-        p**-1
+        p ** -1
 
-    p**400
+    p ** 400
 
 
 def test_simplify() -> None:

@@ -38,6 +38,7 @@ from operator import itemgetter, mul
 from typing import Any, Dict, Iterator, List, Set, Tuple, cast
 
 import numpy as np
+import sympy
 
 from . import var
 from .config import ATOL
@@ -45,7 +46,7 @@ from .ops import Operation
 from .qubits import Qubit, Qubits
 from .states import State
 from .tensors import QubitTensor
-from .var import Variable
+from .var import ComplexVariable
 
 __all__ = [
     "PauliTerm",
@@ -64,7 +65,7 @@ __all__ = [
 ]
 
 
-PauliTerm = Tuple[Qubits, str, Variable]
+PauliTerm = Tuple[Qubits, str, ComplexVariable]
 
 PAULI_OPS = ["X", "Y", "Z", "I"]
 
@@ -139,7 +140,9 @@ class Pauli(Operation):
 
     # Rename coeff?
     @classmethod
-    def term(cls, qubits: Qubits, ops: str, coefficient: Variable = 1.0) -> "Pauli":
+    def term(
+        cls, qubits: Qubits, ops: str, coefficient: ComplexVariable = 1.0
+    ) -> "Pauli":
         """
         Create an element of the Pauli algebra from a sequence of qubits
         and operators. Qubits must be unique and sortable
@@ -147,7 +150,9 @@ class Pauli(Operation):
         return cls((qubits, ops, coefficient))
 
     @classmethod
-    def sigma(cls, qubit: Qubit, operator: str, coefficient: complex = 1.0) -> "Pauli":
+    def sigma(
+        cls, qubit: Qubit, operator: str, coefficient: ComplexVariable = 1.0
+    ) -> "Pauli":
         """Returns a Pauli operator ('I', 'X', 'Y', or 'Z') acting
         on the given qubit"""
         if operator == "I":
@@ -155,7 +160,7 @@ class Pauli(Operation):
         return cls.term([qubit], operator, coefficient)
 
     @classmethod
-    def scalar(cls, coefficient: complex) -> "Pauli":
+    def scalar(cls, coefficient: ComplexVariable) -> "Pauli":
         """Return a scalar multiple of the Pauli identity element."""
         return cls.term((), "", coefficient)
 
@@ -310,11 +315,11 @@ class Pauli(Operation):
         qubits = self.qubits if qubits is None else qubits
         if self.is_zero():
             N = len(qubits)
-            return np.zeros(shape=(2**N, 2**N))
+            return np.zeros(shape=(2 ** N, 2 ** N))
 
         res = []
         for qbs, ops, coeff in self.terms:
-            if var.is_symbolic(coeff):
+            if isinstance(coeff, sympy.Expr):
                 coeff = complex(coeff)
             gate = IdentityGate(qubits)
             for q, op in zip(qbs, ops):
@@ -355,22 +360,22 @@ class Pauli(Operation):
 # End class Pauli
 
 
-def sX(qubit: Qubit, coefficient: complex = 1) -> Pauli:
+def sX(qubit: Qubit, coefficient: ComplexVariable = 1) -> Pauli:
     """Return the Pauli sigma_X operator acting on the given qubit"""
     return Pauli.sigma(qubit, "X", coefficient)
 
 
-def sY(qubit: Qubit, coefficient: complex = 1) -> Pauli:
+def sY(qubit: Qubit, coefficient: ComplexVariable = 1) -> Pauli:
     """Return the Pauli sigma_Y operator acting on the given qubit"""
     return Pauli.sigma(qubit, "Y", coefficient)
 
 
-def sZ(qubit: Qubit, coefficient: complex = 1) -> Pauli:
+def sZ(qubit: Qubit, coefficient: ComplexVariable = 1) -> Pauli:
     """Return the Pauli sigma_Z operator acting on the given qubit"""
     return Pauli.sigma(qubit, "Z", coefficient)
 
 
-def sI(qubit: Qubit, coefficient: complex = 1) -> Pauli:
+def sI(qubit: Qubit, coefficient: ComplexVariable = 1) -> Pauli:
     """Return the Pauli sigma_I (identity) operator. The qubit is irrelevant,
     but kept as an argument for consistency"""
     return Pauli.sigma(qubit, "I", coefficient)
@@ -549,7 +554,7 @@ def pauli_decompose_hermitian(matrix: np.ndarray, qubits: Qubits = None) -> Paul
     terms = []
     for ops in product("IXYZ", repeat=N):
         P = Pauli.term(qubits, "".join(ops)).asoperator(qubits=qubits)
-        coeff = np.real(np.trace(P @ matrix) / (2**N))
+        coeff = np.real(np.trace(P @ matrix) / (2 ** N))
         term = Pauli.term(qubits, "".join(ops), coeff)
         terms.append(term)
 

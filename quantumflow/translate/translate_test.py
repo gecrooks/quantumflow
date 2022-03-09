@@ -52,7 +52,7 @@ def test_std_gate_translators_symbolic(trans: Callable) -> None:
     gatet = translation_source_gate(trans)
     args = [kwarg_to_symbol[a] for a in gatet.cv_args]
     qbs = range(gatet.cv_qubit_nb)
-    gate = gatet(*chain(args, qbs))
+    gate = gatet(*chain(args, qbs))  # type: ignore
 
     qubits = "abcdefg"[0 : gate.qubit_nb]  # Check that qubits are preserved
     gate = gate.on(*qubits)
@@ -60,8 +60,8 @@ def test_std_gate_translators_symbolic(trans: Callable) -> None:
     circ0 = qf.Circuit([gate])
     circ1 = qf.Circuit(trans(gate))  # type: ignore
 
-    circ0f = circ0.resolve(concrete)
-    circ1f = circ1.resolve(concrete)
+    circ0f = circ0.resolve(concrete)  # type: ignore  # FIXME
+    circ1f = circ1.resolve(concrete)  # type: ignore  # FIXME
     assert qf.gates_close(circ0f.asgate(), circ1f.asgate())
 
 

@@ -431,7 +431,7 @@ class Density(QuantumState):
 def mixed_density(qubits: Union[int, Qubits]) -> Density:
     """Returns the completely mixed density matrix"""
     N, qubits = _qubits_count_tuple(qubits)
-    matrix = np.eye(2**N) / 2**N
+    matrix = np.eye(2 ** N) / 2 ** N
     return Density(matrix, qubits)
 
 
@@ -479,7 +479,7 @@ def random_density_hs(qubits: Union[int, Qubits], rank: int = None) -> Density:
         arXiv:quant-ph/0012101
     """
     N, qubits = _qubits_count_tuple(qubits)
-    size = (2**N, 2**N) if rank is None else (2**N, rank)
+    size = (2 ** N, 2 ** N) if rank is None else (2 ** N, rank)
 
     X = utils.complex_ginibre_ensemble(size)
     matrix = X @ X.conj().T
@@ -503,7 +503,7 @@ def random_density_bures(qubits: Union[int, Qubits], rank: int = None) -> Densit
          055302 (2010). arXiv:0909.5094
     """
     N, qubits = _qubits_count_tuple(qubits)
-    dim = 2**N
+    dim = 2 ** N
     size = (dim, dim) if rank is None else (dim, rank)
     P = np.eye(dim) + utils.unitary_ensemble(dim)
     G = utils.complex_ginibre_ensemble(size=size)

@@ -83,11 +83,11 @@ def test_stdgates(gatet: Type[qf.StdGate]) -> None:
     assert qf.gates_phase_close(qf.IdentityGate(range(gate.qubit_nb)), eye)
 
     # Test pow
-    assert qf.gates_close(gate**-1, inv_gate)
-    assert qf.gates_close((gate**0.5) ** 2, gate)
-    assert qf.gates_close((gate**0.3) @ (gate**0.7), gate)
+    assert qf.gates_close(gate ** -1, inv_gate)
+    assert qf.gates_close((gate ** 0.5) ** 2, gate)
+    assert qf.gates_close((gate ** 0.3) @ (gate ** 0.7), gate)
 
-    hgate = qf.Unitary((gate**0.5).tensor, gate.qubits)
+    hgate = qf.Unitary((gate ** 0.5).tensor, gate.qubits)
     assert qf.gates_close(hgate @ hgate, gate)
 
 
@@ -96,9 +96,9 @@ def _tensor_structure(tensor: qf.QubitTensor) -> "str":
     # TODO: Swap
 
     N = np.ndim(tensor) // 2
-    M = np.reshape(tensor, (2**N, 2**N))
+    M = np.reshape(tensor, (2 ** N, 2 ** N))
 
-    if np.all(M == np.eye(2**N)):
+    if np.all(M == np.eye(2 ** N)):
         return "identity"
 
     if np.all(M == np.diag(np.diagonal(M))):
@@ -166,8 +166,8 @@ def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     qbs = range(gatet.cv_qubit_nb)
 
     # Make gate with symbols
-    gate0 = gatet(*chain(args, qbs))
-    gate1 = gate0.resolve(subs=args)
+    gate0 = gatet(*args.values(), *qbs)  # type: ignore
+    gate1 = gate0.resolve(subs=args)  # type: ignore
     gate2 = gatet(*args.values(), *qbs)  # type: ignore
     assert isinstance(gate1, qf.StdGate)
     assert qf.gates_close(gate1, gate2)

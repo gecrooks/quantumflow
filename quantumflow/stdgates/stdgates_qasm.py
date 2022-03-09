@@ -262,7 +262,7 @@ class CRx(StdCtrlGate):
 
     @property
     def H(self) -> "CRx":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CRx":
         theta = self.param("theta")
@@ -281,7 +281,7 @@ class CRy(StdCtrlGate):
 
     @property
     def H(self) -> "CRy":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CRy":
         theta = self.param("theta")
@@ -301,7 +301,7 @@ class CRz(StdCtrlGate):
 
     @property
     def H(self) -> "CRz":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CRz":
         theta = self.param("theta")
@@ -333,7 +333,7 @@ class Rxx(StdGate):
 
     @property
     def H(self) -> "Rxx":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, e: Variable) -> "Rxx":
         (theta,) = self.params
@@ -361,7 +361,7 @@ class Ryy(StdGate):
 
     @property
     def H(self) -> "Ryy":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, e: Variable) -> "Ryy":
         (theta,) = self.params
@@ -391,7 +391,7 @@ class Rzz(StdGate):
 
     @property
     def H(self) -> "Rzz":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, e: Variable) -> "Rzz":
         (theta,) = self.params

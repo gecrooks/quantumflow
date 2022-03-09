@@ -37,15 +37,15 @@ def test_PhasedX() -> None:
 
         gate0 = qf.PhasedX(p, q0)
         gate1 = qf.PhasedXPow(p, t, q0)
-        assert qf.gates_close(gate0**t, gate1)
-        assert (gate0**t).qubits == (q0,)
+        assert qf.gates_close(gate0 ** t, gate1)
+        assert (gate0 ** t).qubits == (q0,)
 
         gate0.H
         gate1.H
-        gate2 = gate1**t
+        gate2 = gate1 ** t
         p2, t2 = gate2.params
         assert p2 == p
-        assert np.isclose(t2 - t**2, 0.0)
+        assert np.isclose(t2 - t ** 2, 0.0)
 
         assert qf.gates_close(gate0, gate0.specialize())
 

@@ -54,7 +54,7 @@ class CPhase(StdGate):
 
     @property
     def H(self) -> "CPhase":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase":
         theta = self.param("theta") * t
@@ -98,7 +98,7 @@ class CPhase00(StdGate):
 
     @property
     def H(self) -> "CPhase00":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase00":
         theta = self.param("theta")
@@ -139,7 +139,7 @@ class CPhase01(StdGate):
 
     @property
     def H(self) -> "CPhase01":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase01":
         theta = self.param("theta")
@@ -181,7 +181,7 @@ class CPhase10(StdGate):
 
     @property
     def H(self) -> "CPhase10":
-        return self**-1
+        return self ** -1
 
     def __pow__(self, t: Variable) -> "CPhase10":
         theta = self.param("theta")
