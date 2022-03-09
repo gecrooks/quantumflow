@@ -717,7 +717,7 @@ class MultiplexedRzGate(MultiplexedGate):
 
     @cached_property
     def tensor_diagonal(self) -> QubitTensor:
-        diagonal = []
+        diagonal: List[float] = []
         for theta in self.params:
             rz = Rz(theta, 0)
             diagonal.extend(np.diag(rz.tensor))

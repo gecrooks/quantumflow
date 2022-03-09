@@ -300,7 +300,7 @@ def trace_distance(rho0: Density, rho1: Density) -> float:
     """
     op0 = rho0.asoperator()
     op1 = rho1.asoperator()
-    return 0.5 * np.linalg.norm(op0 - op1, 1)
+    return float(0.5 * np.linalg.norm(op0 - op1, 1))
 
 
 # Measures on gates
