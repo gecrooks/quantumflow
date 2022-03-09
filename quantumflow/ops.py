@@ -46,7 +46,6 @@ from typing import (
     Sequence,
     Tuple,
     Type,
-    TypeVar,
 )
 
 import numpy as np
@@ -54,7 +53,8 @@ import scipy
 from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
 
-from . import tensors, utils, var
+from . import tensors, var
+from .future import Self, cached_property
 from .qubits import Qubit, Qubits
 from .states import Density, State
 from .tensors import QubitTensor
@@ -77,13 +77,6 @@ __all__ = [
     "OPERATIONS",
     "GATES",
 ]
-
-
-OperationType = TypeVar("OperationType", bound="Operation")
-"""Generic type annotations for subtypes of Operation"""
-
-GateType = TypeVar("GateType", bound="Gate")
-"""Generic type annotations for subtypes of Gate"""
 
 
 _EXCLUDED_OPERATIONS = set(
@@ -170,7 +163,7 @@ class Operation(ABC):
         """Return the total number of qubits"""
         return len(self.qubits)
 
-    def on(self: OperationType, *qubits: Qubit) -> OperationType:
+    def on(self, *qubits: Qubit) -> Self:
         """Return a copy of this Operation with new qubits"""
         if len(qubits) != self.qubit_nb:
             raise ValueError("Wrong number of qubits")
@@ -178,7 +171,7 @@ class Operation(ABC):
         op._qubits = qubits
         return op
 
-    def rewire(self: OperationType, labels: Dict[Qubit, Qubit]) -> OperationType:
+    def rewire(self, labels: Dict[Qubit, Qubit]) -> Self:
         """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
@@ -225,7 +218,7 @@ class Operation(ABC):
         """
         return var.asfloat(self.param(name), subs)
 
-    def resolve(self: OperationType, subs: Mapping[str, float]) -> OperationType:
+    def resolve(self, subs: Mapping[str, float]) -> Self:
         """Resolve symbolic parameters"""
         # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
@@ -407,7 +400,7 @@ class Gate(Operation):
         pauli = pauli_decompose_hermitian(H, self.qubits)
         return pauli
 
-    def asgate(self: GateType) -> GateType:
+    def asgate(self) -> Self:
         return self
 
     def aschannel(self) -> "Channel":
@@ -446,7 +439,7 @@ class Gate(Operation):
     def tensor(self) -> QubitTensor:
         pass
 
-    @utils.cached_property
+    @cached_property
     def tensor_diagonal(self) -> QubitTensor:
         """
         Returns the diagonal of the tensor representation of this operation
@@ -583,7 +576,7 @@ class UnitaryGate(Gate):
         U = scipy.linalg.expm(-1j * op)
         return cls(U, qubits)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         """Returns the tensor representation of gate operator"""
         return self._tensor
@@ -617,7 +610,7 @@ class Channel(Operation):
         self._tensor = tensor
         self._name = type(self).__name__ if name is None else name
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         """Return the tensor representation of the channel's superoperator"""
         return self._tensor

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, List, Sequence, Tuple
 
 import numpy as np
 
+from .future import TypeAlias
+
 if TYPE_CHECKING:
     from numpy.typing import ArrayLike  # pragma: no cover
 
@@ -17,10 +19,10 @@ if TYPE_CHECKING:
 __all__ = ("QubitTensor", "asqutensor")
 
 
-qubit_dtype = np.complex128
+qubit_dtype: TypeAlias = np.complex128
 """The complex data type used by the backend"""
 
-QubitTensor = np.ndarray
+QubitTensor: TypeAlias = np.ndarray
 """Type hint for numpy arrays representing quantum data.
 QubitTensor arrays have complex data type, and all axes have length 2."""
 

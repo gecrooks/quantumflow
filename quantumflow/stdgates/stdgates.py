@@ -7,13 +7,13 @@
 
 # DO Rename
 
-from typing import ClassVar, Dict, List, Mapping, Type, TypeVar
+from typing import ClassVar, Dict, List, Mapping, Type
 
 import numpy as np
 import scipy
 
-from .. import utils
 from ..config import CONJ, CTRL, SQRT
+from ..future import Self, cached_property
 from ..ops import _EXCLUDED_OPERATIONS, Gate
 from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit, Qubits
@@ -108,10 +108,6 @@ class StdGate(Gate):
 # End class StdGate
 
 
-StdCtrlGateType = TypeVar("StdCtrlGateType", bound="StdCtrlGate")
-"""Generic type annotations for subtypes of StdCtrlGate"""
-
-
 class StdCtrlGate(StdGate):
     """A standard gate that is a controlled version of another standard gate.
 
@@ -161,7 +157,7 @@ class StdCtrlGate(StdGate):
             ham *= (1 - sZ(q)) / 2
         return ham
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         ctrl_block = np.identity(
             2**self.cv_qubit_nb - 2**self.cv_target.cv_qubit_nb
@@ -171,7 +167,7 @@ class StdCtrlGate(StdGate):
 
         return asqutensor(unitary)
 
-    def resolve(self: StdCtrlGateType, subs: Mapping[str, float]) -> StdCtrlGateType:
+    def resolve(self, subs: Mapping[str, float]) -> Self:
         target = self.target.resolve(subs)
         return type(self)(*target.params, *self.qubits)  # type: ignore
 

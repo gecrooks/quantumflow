@@ -13,10 +13,10 @@ import numpy as np
 
 from .. import tensors, var
 from ..config import CTRL, NCTRL
+from ..future import cached_property
 from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit
 from ..tensors import QubitTensor
-from ..utils import cached_property
 from ..var import Variable
 from .stdgates import StdGate
 

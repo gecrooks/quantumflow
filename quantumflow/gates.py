@@ -81,6 +81,7 @@ import scipy
 
 from . import tensors, utils, var
 from .circuits import Circuit
+from .future import cached_property
 from .ops import Channel, Gate, Operation, UnitaryGate
 from .paulialgebra import Pauli, sX, sY, sZ
 from .qubits import Qubit, Qubits
@@ -120,7 +121,7 @@ class IdentityGate(Gate):
     def hamiltonian(self) -> Pauli:
         return Pauli.zero()
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor(np.eye(2**self.qubit_nb))
 
@@ -162,7 +163,7 @@ class CompositeGate(Gate):
     def aschannel(self) -> "Channel":
         return self.circuit.aschannel()
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return self.circuit.asgate().tensor
 
@@ -267,7 +268,7 @@ class ControlGate(Gate):
 
         return ham
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         # FIXME: This approach generates a tensor with unnecessary numerical noise.
         return UnitaryGate.from_hamiltonian(self.hamiltonian, self.qubits).tensor
@@ -371,7 +372,7 @@ class MultiSwapGate(Gate):
 
         return Density(tensor, qubits, rho.memory)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         N = self.qubit_nb
         qubits = self.qubits
@@ -432,7 +433,7 @@ class QFTGate(Gate):
     def H(self) -> "InvQFTGate":
         return InvQFTGate(self.qubits)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return Circuit(self.decompose()).asgate().on(*self.qubits).tensor
 
@@ -450,7 +451,7 @@ class InvQFTGate(Gate):
     def H(self) -> "QFTGate":
         return QFTGate(self.qubits)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return Circuit(self.decompose()).asgate().on(*self.qubits).tensor
 
@@ -506,7 +507,7 @@ class PauliGate(Gate):
 
         yield from translate_PauliGate(self, topology)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return Circuit(self.decompose()).asgate().on(*self.qubits).tensor
 
@@ -608,11 +609,11 @@ class DiagonalGate(Gate):
         params = tensors.permute(params, self.qubit_indices(qubits))
         return DiagonalGate(tuple(params.flatten()), qubits)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return asqutensor(np.diag(self.tensor_diagonal.flatten()))
 
-    @utils.cached_property
+    @cached_property
     def tensor_diagonal(self) -> QubitTensor:
         return asqutensor(np.exp(-1.0j * np.asarray(self.params)))
 
@@ -657,7 +658,7 @@ class MultiplexedGate(Gate):
         self.targets = targets
         self.gates = gates
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         blocks = [gate.asoperator() for gate in self.gates]
         return asqutensor(scipy.linalg.block_diag(*blocks))
@@ -710,13 +711,13 @@ class MultiplexedRzGate(MultiplexedGate):
         super().__init__(gates=gates, controls=controls)
         self._params = thetas  # FIXME: This seems broken?
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return asqutensor(np.diag(self.tensor_diagonal.flatten()))
 
-    @utils.cached_property
+    @cached_property
     def tensor_diagonal(self) -> QubitTensor:
-        diagonal = []
+        diagonal: List[float] = []
         for theta in self.params:
             rz = Rz(theta, 0)
             diagonal.extend(np.diag(rz.tensor))

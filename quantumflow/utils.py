@@ -29,10 +29,6 @@ import networkx as nx
 import numpy as np
 
 __all__ = (
-    # Future
-    "importlib_metadata",
-    "cached_property",
-    "Protocol",
     "deprecated",
     # Collections
     "multi_slice",
@@ -52,46 +48,6 @@ __all__ = (
     "octagonal_tiling_graph",
     "truncated_grid_2d_graph",
 )
-
-
-# -- Future present --
-
-try:
-    # python >= 3.8
-    from importlib import metadata as importlib_metadata  # type: ignore
-except ImportError:  # pragma: no cover
-    # python == 3.7
-    import importlib_metadata  # type: ignore  # noqa: F401
-
-
-try:  # pragma: no cover
-    # Python >= 3.8
-    from functools import cached_property  # type: ignore
-except ImportError:  # pragma: no cover
-    # python == 3.7
-    def cached_property(func):  # type: ignore
-        """
-        Method decorator for immutable properties.
-        The result is cached on the first call.
-        """
-
-        def wrapper(instance):  # type: ignore
-            attr = "_cached_property_" + func.__name__
-            if hasattr(instance, attr):
-                return getattr(instance, attr)
-            result = func(instance)
-            setattr(instance, attr, result)
-            return result
-
-        return property(wrapper)
-
-
-try:
-    # python >= 3.8
-    from typing import Protocol  # type: ignore
-except ImportError:  # pragma: no cover
-    # python == 3.7
-    from typing_extensions import Protocol  # type: ignore  # noqa: F401
 
 
 def deprecated(func: Callable) -> Callable:

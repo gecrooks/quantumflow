@@ -224,7 +224,7 @@ def test_phase_estimation_circuit_1() -> None:
     phase = 1 / 4
     gate = qf.Rz(-4 * np.pi * phase, N)
     circ = qf.phase_estimation_circuit(gate, range(N))
-    res = circ.run().measure()[0:N]
+    res = list(circ.run().measure()[0:N])
     est_phase = bitlist_to_int(res) / 2**N
     assert np.isclose(phase, est_phase)
 
@@ -234,7 +234,7 @@ def test_phase_estimation_circuit_2() -> None:
     phase = 12 / 256
     gate = qf.Rz(-4 * np.pi * phase, N)
     circ = qf.phase_estimation_circuit(gate, range(N))
-    res = circ.run().measure()[0:N]
+    res = list(circ.run().measure()[0:N])
     est_phase = bitlist_to_int(res) / 2**N
     assert np.isclose(phase, est_phase)
 
@@ -244,7 +244,7 @@ def test_phase_estimation_circuit_3() -> None:
     phase = 12 / 256
     gate = qf.ZZ(-4 * phase, N, N + 1)
     circ = qf.phase_estimation_circuit(gate, range(N))
-    res = circ.run().measure()[0:N]
+    res = list(circ.run().measure()[0:N])
     est_phase = bitlist_to_int(res) / 2**N
     assert np.isclose(phase, est_phase)
 

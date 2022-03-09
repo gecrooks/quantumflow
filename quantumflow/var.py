@@ -12,6 +12,7 @@ import sympy
 
 from . import utils
 from .config import ATOL, RTOL
+from .future import TypeAlias
 
 __all__ = ("Variable", "ComplexVariable", "PI")
 
@@ -20,10 +21,10 @@ Symbol = sympy.Symbol
 """Class for symbols in symbolic expressions"""
 
 
-Variable = Union[float, sympy.Expr]
+Variable: TypeAlias = Union[float, sympy.Expr]
 """Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
 
-ComplexVariable = Union[float, complex, sympy.Expr]
+ComplexVariable: TypeAlias = Union[float, complex, sympy.Expr]
 """Type for complex parameters. Either a float, complex, sympy.Symbol or sympy.Expr"""
 
 
