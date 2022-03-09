@@ -13,7 +13,7 @@ import sympy
 from . import utils
 from .config import ATOL, RTOL
 
-__all__ = ("Variable", "PI")
+__all__ = ("Variable", "ComplexVariable", "PI")
 
 
 Symbol = sympy.Symbol
@@ -23,31 +23,37 @@ Symbol = sympy.Symbol
 Variable = Union[float, sympy.Expr]
 """Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
 
+ComplexVariable = Union[float, complex, sympy.Expr]
+"""Type for complex parameters. Either a float, complex, sympy.Symbol or sympy.Expr"""
+
 
 PI = sympy.pi
 """Symbolic constant pi"""
 
 
+# If confuses mypy, inline `isinstance(x, sympy.Expr)` directly.
 def is_symbolic(x: Variable) -> bool:
     """Returns true if a symbolic expression"""
     return isinstance(x, sympy.Expr)
 
 
-def isclose(x: Variable, y: Variable, atol: float = ATOL, rtol: float = RTOL) -> bool:
+def isclose(
+    x: ComplexVariable, y: ComplexVariable, atol: float = ATOL, rtol: float = RTOL
+) -> bool:
     """Compares two variables.
 
     Returns: True if variables are almost identical concrete numbers,
         of if they are the same symbolic expression, else False.
     """
-    if not is_symbolic(x) and not is_symbolic(y):
+    if not isinstance(x, sympy.Expr) and not isinstance(y, sympy.Expr):
         return bool(np.isclose(x, y, atol=atol, rtol=rtol))
-    if is_symbolic(x) and is_symbolic(y):
+    if isinstance(x, sympy.Expr) and isinstance(y, sympy.Expr):
         return x == y
     return False
 
 
 # DOCME # Testme
-def almost_zero(x: Variable, atol: float = ATOL) -> bool:
+def almost_zero(x: ComplexVariable, atol: float = ATOL) -> bool:
     """Is the variable symbolically zero, or numerically almost zero."""
     if x == sympy.S.Zero:
         return True
@@ -89,61 +95,61 @@ def asexpression(flt: float) -> sympy.Expr:
 
 
 def arccos(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.acos(x)
     return np.arccos(x)
 
 
 def arcsin(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.asin(x)
     return np.arcsin(x)
 
 
 def arctan(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.atan(x)
     return np.arctan(x)
 
 
 def arctan2(x1: Variable, x2: Variable) -> Variable:
-    if is_symbolic(x1) or is_symbolic(x2):
+    if isinstance(x1, sympy.Expr) or isinstance(x2, sympy.Expr):
         return sympy.atan2(x1, x2)
     return np.arctan2(x1, x2)
 
 
 def cos(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.cos(x)
     return np.cos(x)
 
 
 def exp(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.exp(x)
     return np.exp(x)
 
 
 def sign(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.sign(x)
     return np.sign(x)
 
 
 def sin(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.sin(x)
     return np.sin(x)
 
 
 def sqrt(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.sqrt(x)
     return np.sqrt(x)
 
 
 def tan(x: Variable) -> Variable:
-    if is_symbolic(x):
+    if isinstance(x, sympy.Expr):
         return sympy.tan(x)
     return np.tan(x)
 

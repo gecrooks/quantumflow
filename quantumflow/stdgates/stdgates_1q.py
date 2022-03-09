@@ -59,15 +59,8 @@ def _specialize_gate(
         opts:       A map from particular gate parameters to a special case
                     of the original gate type
     """
-    # params = list(gate.params)
 
-    params = list(gate.params)
-
-    # for p in params:
-    #     if variable_is_symbolic(p):
-    #         return gate
-
-    params = [var.asfloat(p) % pd for p, pd in zip(params, periods)]
+    params = [var.asfloat(p) % pd for p, pd in zip(gate.params, periods)]
 
     for values, gatetype in opts.items():
         if np.isclose(params, values):

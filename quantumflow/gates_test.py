@@ -527,7 +527,7 @@ def test_ControlGate() -> None:
 def test_ControlGate_resolve() -> None:
     theta = Symbol("theta")
     gate0 = qf.ControlGate(qf.Rx(theta, 1), [0])
-    gate1 = gate0.resolve({theta: 2.3})
+    gate1 = gate0.resolve({theta: 2.3})  # type: ignore  # FIXME
     gate2 = qf.ControlGate(qf.Rx(2.3, 1), [0])
     assert qf.gates_close(gate1, gate2)
 

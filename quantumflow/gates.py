@@ -466,7 +466,7 @@ class PauliGate(Gate):
 
     # Kudos: GEC (2019).
 
-    def __init__(self, element: Pauli, alpha: float) -> None:
+    def __init__(self, element: Pauli, alpha: Variable) -> None:
 
         super().__init__(qubits=element.qubits)
         self.element = element

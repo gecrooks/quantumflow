@@ -166,8 +166,8 @@ def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     qbs = range(gatet.cv_qubit_nb)
 
     # Make gate with symbols
-    gate0 = gatet(*chain(args, qbs))
-    gate1 = gate0.resolve(subs=args)
+    gate0 = gatet(*args.values(), *qbs)  # type: ignore
+    gate1 = gate0.resolve(subs=args)  # type: ignore
     gate2 = gatet(*args.values(), *qbs)  # type: ignore
     assert isinstance(gate1, qf.StdGate)
     assert qf.gates_close(gate1, gate2)
