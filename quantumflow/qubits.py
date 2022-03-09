@@ -20,7 +20,7 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`.
 
 from typing import Any, Sequence
 
-from .utils import Protocol
+from .future import Protocol, TypeAlias
 
 __all__ = ("Qubit", "Qubits", "sorted_qubits")
 
@@ -37,7 +37,7 @@ class Qubit(Protocol):
         pass
 
 
-Qubits = Sequence[Qubit]
+Qubits: TypeAlias = Sequence[Qubit]
 """Type for sequence of qubits"""
 
 

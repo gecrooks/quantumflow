@@ -47,9 +47,10 @@ from typing import (
 
 import numpy as np
 
-from . import tensors, utils
+from . import tensors
 from .circuits import Circuit
 from .config import CIRCUIT_INDENT
+from .future import cached_property
 from .ops import _EXCLUDED_OPERATIONS, Channel, Gate, Operation, Unitary
 from .qubits import Qubit, Qubits, sorted_qubits
 from .states import Density, State
@@ -241,7 +242,7 @@ class Initialize(Operation):
         self._qubits = ket.qubits  # FIXME
         super().__init__(ket.qubits)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return self._ket.tensor
 
@@ -471,7 +472,7 @@ class Project0(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[1, 0], [0, 0]])
 
@@ -489,7 +490,7 @@ class Project1(Gate):
     def __init__(self, q0: Qubit = 0) -> None:
         super().__init__(qubits=[q0])
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[0, 0], [0, 1]])
 

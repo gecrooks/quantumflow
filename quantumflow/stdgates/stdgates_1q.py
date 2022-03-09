@@ -12,6 +12,7 @@ from typing import Dict, List, Type
 import numpy as np
 
 from .. import tensors, utils, var
+from ..future import cached_property
 from ..paulialgebra import Pauli, sI, sX, sY, sZ
 from ..qubits import Qubit
 from ..states import Density, State
@@ -89,7 +90,7 @@ class I(StdGate):  # noqa: E742
     def hamiltonian(self) -> Pauli:
         return Pauli.zero()
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor(np.eye(2))
 
@@ -138,7 +139,7 @@ class Ph(StdGate):
         (phi,) = self.params
         return -phi * sI(q0)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         phi = var.asfloat(self.param("phi"))
         unitary = [[np.exp(1j * phi), 0.0], [0.0, np.exp(1j * phi)]]
@@ -183,7 +184,7 @@ class X(StdGate):
         (q0,) = self.qubits
         return -(PI / 2) * (1 - sX(q0))
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = [[0, 1], [1, 0]]
         return tensors.asqutensor(unitary)
@@ -225,7 +226,7 @@ class Y(StdGate):
         (q0,) = self.qubits
         return -(PI / 2) * (1 - sY(q0))
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray([[0, -1.0j], [1.0j, 0]])
         return tensors.asqutensor(unitary)
@@ -265,7 +266,7 @@ class Z(StdGate):
         (q0,) = self.qubits
         return -(PI / 2) * (1 - sZ(q0))
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray([[1, 0], [0, -1.0]])
         return tensors.asqutensor(unitary)
@@ -302,7 +303,7 @@ class H(StdGate):
         (q0,) = self.qubits
         return (PI / 2) * ((sX(q0) + sZ(q0)) / np.sqrt(2) - 1)
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray([[1, 1], [1, -1]]) / np.sqrt(2)
         return tensors.asqutensor(unitary)
@@ -352,7 +353,7 @@ class S(StdGate):
         (q0,) = self.qubits
         return (PI / 2) * (sZ(q0) - 1) / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, 1.0j]])
         return tensors.asqutensor(unitary)
@@ -389,7 +390,7 @@ class T(StdGate):
         (q0,) = self.qubits
         return (PI / 2) * (sZ(q0) - 1) / 4
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = [[1.0, 0.0], [0.0, np.exp(1j * np.pi / 4.0)]]
         return tensors.asqutensor(unitary)
@@ -428,7 +429,7 @@ class PhaseShift(StdGate):
         (q0,) = self.qubits
         return theta * (sZ(q0) - 1) / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = var.asfloat(self.param("theta"))
         unitary = [[1.0, 0.0], [0.0, np.exp(1j * theta)]]
@@ -482,7 +483,7 @@ class Rx(StdGate):
         (q0,) = self.qubits
         return theta * sX(q0) / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = var.asfloat(self.param("theta"))
         unitary = [
@@ -532,7 +533,7 @@ class Ry(StdGate):
         (q0,) = self.qubits
         return theta * sY(q0) / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = var.asfloat(self.param("theta"))
         unitary = [
@@ -582,7 +583,7 @@ class Rz(StdGate):
         (q0,) = self.qubits
         return self.param("theta") * sZ(q0) / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = var.asfloat(self.param("theta"))
         unitary = [[np.exp(-theta * 0.5j), 0], [0, np.exp(theta * 0.5j)]]
@@ -633,7 +634,7 @@ class S_H(StdGate):
         (q0,) = self.qubits
         return -PI * (sZ(q0) - 1) / 4
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray([[1.0, 0.0], [0.0, -1.0j]])
         return tensors.asqutensor(unitary)
@@ -670,7 +671,7 @@ class T_H(StdGate):
         (q0,) = self.qubits
         return -PI * (sZ(q0) - 1) / 8
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = [[1.0, 0.0], [0.0, np.exp(-1j * np.pi / 4.0)]]
         return tensors.asqutensor(unitary)
@@ -720,7 +721,7 @@ class Rn(StdGate):
         (q0,) = self.qubits
         return theta * (nx * sX(q0) + ny * sY(q0) + nz * sZ(q0)) / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = var.asfloat(self.param("theta"))
         nx = var.asfloat(self.param("nx"))
@@ -769,7 +770,7 @@ class XPow(StdGate):
         (q0,) = self.qubits
         return t * (sX(q0) - 1) * PI / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = np.pi * var.asfloat(self.param("t"))
         phase = np.exp(0.5j * theta)
@@ -816,7 +817,7 @@ class YPow(StdGate):
         (q0,) = self.qubits
         return t * (sY(q0) - 1) * PI / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = np.pi * var.asfloat(self.param("t"))
         phase = np.exp(0.5j * theta)
@@ -861,7 +862,7 @@ class ZPow(StdGate):
         (q0,) = self.qubits
         return t * (sZ(q0) - 1) * PI / 2
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = np.pi * var.asfloat(self.param("t"))
         phase = np.exp(0.5j * theta)
@@ -915,7 +916,7 @@ class HPow(StdGate):
     def hamiltonian(self) -> Pauli:
         return H(*self.qubits).hamiltonian * self.param("t")
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = np.pi * var.asfloat(self.param("t"))
         phase = np.exp(0.5j * theta)
@@ -961,7 +962,7 @@ class V(StdGate):
         (q0,) = self.qubits
         return (sX(q0) - 1) * PI / 4
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return XPow(0.5, *self.qubits).tensor
 
@@ -989,7 +990,7 @@ class V_H(StdGate):
         (q0,) = self.qubits
         return -(sX(q0) - 1) * PI / 4
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return XPow(-0.5, *self.qubits).tensor
 
@@ -1017,7 +1018,7 @@ class SqrtY(StdGate):
         (q0,) = self.qubits
         return (sY(q0) - 1) * PI / 4
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return YPow(0.5, *self.qubits).tensor
 
@@ -1045,7 +1046,7 @@ class SqrtY_H(StdGate):
         (q0,) = self.qubits
         return -(sY(q0) - 1) * PI / 4
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         return YPow(-0.5, *self.qubits).tensor
 

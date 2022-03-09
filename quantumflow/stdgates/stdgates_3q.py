@@ -12,6 +12,7 @@ import numpy as np
 
 from .. import tensors, utils, var
 from ..config import CTRL
+from ..future import cached_property
 from ..paulialgebra import Pauli, sX, sZ
 from ..qubits import Qubit
 from ..states import State
@@ -61,7 +62,7 @@ class CCiX(StdGate):
         q0, q1, q2 = self.qubits
         return -sX(q2) * (1 - sZ(q1)) * (1 - sZ(q0)) * PI / 8
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray(
             [
@@ -305,7 +306,7 @@ class Deutsch(StdGate):
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
         super().__init__(params=[theta], qubits=[q0, q1, q2])
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         theta = var.asfloat(self.param("theta"))
 
@@ -369,7 +370,7 @@ class Margolus(StdGate):
             / 8
         )
 
-    @utils.cached_property
+    @cached_property
     def tensor(self) -> QubitTensor:
         unitary = np.asarray(
             [

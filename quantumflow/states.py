@@ -41,7 +41,6 @@ from typing import (
     Mapping,
     TextIO,
     Tuple,
-    TypeVar,
     Union,
 )
 
@@ -49,6 +48,7 @@ import numpy as np
 import opt_einsum
 
 from . import tensors, utils
+from .future import Self
 from .qubits import Qubit, Qubits, sorted_qubits
 from .tensors import QubitTensor
 
@@ -70,10 +70,6 @@ __all__ = [
     "random_density",
     "join_densities",
 ]
-
-
-QuantumStateType = TypeVar("QuantumStateType", bound="QuantumState")
-"""TypeVar for quantum states"""
 
 
 class QuantumState(ABC):
@@ -120,12 +116,12 @@ class QuantumState(ABC):
         return len(self._qubits)
 
     def replace(
-        self: QuantumStateType,
+        self,
         *,
         tensor: "ArrayLike" = None,
         qubits: Qubits = None,
         memory: Mapping = None,
-    ) -> QuantumStateType:
+    ) -> Self:
         """
         Creates a copy of this state, replacing the fields specified.
         """
@@ -135,23 +131,23 @@ class QuantumState(ABC):
         memory = self.memory if memory is None else memory
         return type(self)(tensor, qubits, memory)
 
-    def store(self: QuantumStateType, *args: Any, **kwargs: Any) -> QuantumStateType:
+    def store(self, *args: Any, **kwargs: Any) -> Self:
         """Update information in classical memory and return a new State."""
         mem = self.memory.update(*args, **kwargs)
         return self.replace(memory=mem)
 
     # TESTME
-    def on(self: QuantumStateType, *qubits: Qubit) -> QuantumStateType:
+    def on(self, *qubits: Qubit) -> Self:
         """Return a copy of this State with new qubits"""
         return self.replace(qubits=qubits)
 
     # TESTME
-    def rewire(self: QuantumStateType, labels: Dict[Qubit, Qubit]) -> QuantumStateType:
+    def rewire(self, labels: Dict[Qubit, Qubit]) -> Self:
         """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
 
-    def permute(self: QuantumStateType, qubits: Qubits = None) -> QuantumStateType:
+    def permute(self, qubits: Qubits = None) -> Self:
         """Return a copy of this state with state tensor transposed to
         put qubits in the given order. If an explicit qubit
         ordering isn't supplied, we put qubits in sorted order.

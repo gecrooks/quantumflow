@@ -109,9 +109,9 @@ import numpy as np
 
 from .. import tensors
 from ..config import CTRL
+from ..future import cached_property
 from ..qubits import Qubit
 from ..tensors import QubitTensor
-from ..utils import cached_property
 from ..var import Variable
 from .stdgates import StdCtrlGate, StdGate
 from .stdgates_1q import PhaseShift, Rx, Ry, Rz

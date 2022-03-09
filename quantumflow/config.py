@@ -12,7 +12,7 @@ import re
 import sys
 import typing
 
-from .utils import importlib_metadata
+from .future import importlib_metadata
 
 __all__ = ["__version__", "about"]
 
