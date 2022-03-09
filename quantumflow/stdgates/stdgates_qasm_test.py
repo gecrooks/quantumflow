@@ -67,7 +67,7 @@ def test_CRZ() -> None:
     assert np.isclose(coords[1], 0.0)
     assert np.isclose(coords[2], 0.0)
 
-    coords = qf.canonical_coords(gate0 ** 3.3)
+    coords = qf.canonical_coords(gate0**3.3)
     assert np.isclose(coords[0], 3.3 * 0.5 * theta / np.pi)
 
     gate1 = qf.Circuit([qf.CRZ(theta, 0, 1), qf.CRZ(theta, 0, 1).H]).asgate()
@@ -80,7 +80,7 @@ def test_RZZ() -> None:
     gate1 = qf.ZZ(theta / np.pi, 0, 1)
     assert qf.gates_close(gate0, gate1)
     assert qf.gates_close(gate0.H, gate1.H)
-    assert qf.gates_close(gate0 ** 0.12, gate1 ** 0.12)
+    assert qf.gates_close(gate0**0.12, gate1**0.12)
 
 
 # fin

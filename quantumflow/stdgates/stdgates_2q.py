@@ -124,7 +124,7 @@ class B(StdGate):
 
     @property
     def H(self) -> "Can":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Can":
         return Can(-t / 2, -t / 4, 0, *self.qubits)
@@ -228,7 +228,7 @@ class Can(StdGate):
 
     @property
     def H(self) -> "Can":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Can":
         tx, ty, tz = self.params
@@ -359,7 +359,7 @@ class CNotPow(StdCtrlGate):
 
     @property
     def H(self) -> "CNotPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "CNotPow":
         (t,) = self.params
@@ -399,7 +399,7 @@ class CrossResonance(StdGate):
 
     @property
     def H(self) -> "CrossResonance":
-        return self ** -1
+        return self**-1
 
     # TESTME
     def __pow__(self, t: Variable) -> "CrossResonance":
@@ -501,7 +501,7 @@ class CYPow(StdCtrlGate):
 
     @property
     def H(self) -> "CYPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "CYPow":
         (t,) = self.params
@@ -610,7 +610,7 @@ class CZPow(StdCtrlGate):
 
     @property
     def H(self) -> "CZPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "CZPow":
         (t,) = self.params
@@ -644,7 +644,7 @@ class ECP(StdGate):
 
     @property
     def H(self) -> "Can":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Can":
         return Can(t / 2, t / 4, t / 4, *self.qubits)
@@ -676,7 +676,7 @@ class Exch(StdGate):
 
     @property
     def H(self) -> "Exch":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "Exch":
         (t,) = self.params
@@ -741,7 +741,7 @@ class Givens(StdGate):
 
     @property
     def H(self) -> "Givens":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "Givens":
         (theta,) = self.params
@@ -788,7 +788,7 @@ class ISwap(StdGate):
 
     @property
     def H(self) -> "XY":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "XY":
         return XY(-t / 2, *self.qubits)
@@ -1057,7 +1057,7 @@ class XX(StdGate):
 
     @property
     def H(self) -> "XX":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "XX":
         (t,) = self.params
@@ -1099,7 +1099,7 @@ class XY(StdGate):
 
     @property
     def H(self) -> "XY":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "XY":
         (t,) = self.params
@@ -1142,7 +1142,7 @@ class YY(StdGate):
 
     @property
     def H(self) -> "YY":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "YY":
         (t,) = self.params
@@ -1199,7 +1199,7 @@ class ZZ(StdGate):
 
     @property
     def H(self) -> "ZZ":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "ZZ":
         (t,) = self.params

@@ -122,7 +122,7 @@ class IdentityGate(Gate):
 
     @utils.cached_property
     def tensor(self) -> QubitTensor:
-        return tensors.asqutensor(np.eye(2 ** self.qubit_nb))
+        return tensors.asqutensor(np.eye(2**self.qubit_nb))
 
     def __pow__(self, t: Variable) -> "IdentityGate":
         return self
@@ -380,7 +380,7 @@ class MultiSwapGate(Gate):
         for q0, q1 in zip(qubits, self.qubits_out):
             perm[qubits.index(q0)] = qubits.index(q1)
 
-        U = np.eye(2 ** N)
+        U = np.eye(2**N)
         U = np.reshape(U, [2] * 2 * N)
         U = np.transpose(U, perm)
         return tensors.asqutensor(U)
@@ -477,7 +477,7 @@ class PauliGate(Gate):
 
     @property
     def H(self) -> "PauliGate":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, t: Variable) -> "PauliGate":
         return PauliGate(self.element, self.alpha * t)
@@ -574,7 +574,7 @@ class DiagonalGate(Gate):
     ) -> None:
         super().__init__(qubits=qubits, params=tuple(diag_hamiltonian))
 
-        assert len(self.params) == 2 ** self.qubit_nb  # FIXME
+        assert len(self.params) == 2**self.qubit_nb  # FIXME
 
     # DOCME TESTME
     @classmethod
@@ -618,7 +618,7 @@ class DiagonalGate(Gate):
 
     @property
     def H(self) -> "DiagonalGate":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "DiagonalGate":
         params = [p * e for p in self.params]
@@ -664,10 +664,10 @@ class MultiplexedGate(Gate):
 
     @property
     def H(self) -> "MultiplexedGate":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "MultiplexedGate":
-        gates = [gate ** e for gate in self.gates]
+        gates = [gate**e for gate in self.gates]
         return MultiplexedGate(gates, self.controls)
 
     # TODO: deke to 2^N control gates
@@ -725,7 +725,7 @@ class MultiplexedRzGate(MultiplexedGate):
 
     @property
     def H(self) -> "MultiplexedRzGate":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "MultiplexedRzGate":
         thetas = [e * p for p in self.params]
@@ -749,7 +749,7 @@ class MultiplexedRyGate(MultiplexedGate):
 
     @property
     def H(self) -> "MultiplexedRyGate":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "MultiplexedRyGate":
         thetas = [e * p for p in self.params]

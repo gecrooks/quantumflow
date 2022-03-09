@@ -315,7 +315,7 @@ class Pauli(Operation):
         qubits = self.qubits if qubits is None else qubits
         if self.is_zero():
             N = len(qubits)
-            return np.zeros(shape=(2 ** N, 2 ** N))
+            return np.zeros(shape=(2**N, 2**N))
 
         res = []
         for qbs, ops, coeff in self.terms:
@@ -554,7 +554,7 @@ def pauli_decompose_hermitian(matrix: np.ndarray, qubits: Qubits = None) -> Paul
     terms = []
     for ops in product("IXYZ", repeat=N):
         P = Pauli.term(qubits, "".join(ops)).asoperator(qubits=qubits)
-        coeff = np.real(np.trace(P @ matrix) / (2 ** N))
+        coeff = np.real(np.trace(P @ matrix) / (2**N))
         term = Pauli.term(qubits, "".join(ops), coeff)
         terms.append(term)
 

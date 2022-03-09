@@ -147,7 +147,7 @@ class CCXPow(StdCtrlGate):
 
     @property
     def H(self) -> "CCXPow":
-        return self ** -1
+        return self**-1
 
     def __pow__(self, e: Variable) -> "CCXPow":
         (t,) = self.params
