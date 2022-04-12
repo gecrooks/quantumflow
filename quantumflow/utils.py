@@ -24,6 +24,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from .future import importlib_metadata  # noqa: F401  # Backwards compatibility
 
 import networkx as nx
 import numpy as np
@@ -50,6 +51,7 @@ __all__ = (
 )
 
 
+# TODO: Replace with deprecated package?
 def deprecated(func: Callable) -> Callable:
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
