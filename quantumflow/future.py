@@ -38,17 +38,13 @@ except ImportError:  # pragma: no cover
         return property(wrapper)
 
 
-# python < 3.8
-from typing_extensions import Protocol  # noqa: F401
-
-# https://www.python.org/dev/peps/pep-0613/
-# python < 3.10
-from typing_extensions import TypeAlias  # noqa: F401
-
-
 # https://www.python.org/dev/peps/pep-0673/
 # python < 3.11
+# https://www.python.org/dev/peps/pep-0613/
+# python < 3.10
+# python < 3.8
+from typing_extensions import Protocol  # noqa: F401
 from typing_extensions import Self  # noqa: F401
-
+from typing_extensions import TypeAlias  # noqa: F401
 
 # fin

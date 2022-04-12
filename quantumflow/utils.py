@@ -24,10 +24,11 @@ from typing import (
     TypeVar,
     Union,
 )
-from .future import importlib_metadata  # noqa: F401  # Backwards compatibility
 
 import networkx as nx
 import numpy as np
+
+from .future import importlib_metadata  # noqa: F401  # Backwards compatibility
 
 __all__ = (
     "deprecated",
