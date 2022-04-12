@@ -35,7 +35,7 @@ class QSimSimulator(Simulator):
         https://github.com/quantumlib/qsim
     """
 
-    def __init__(self, circ: Circuit) -> None:
+    def __init__(self, circ: Circuit, translate: bool = True) -> None:
 
         try:
             import qsimcirq
