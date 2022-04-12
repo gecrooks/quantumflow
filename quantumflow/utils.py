@@ -28,6 +28,8 @@ from typing import (
 import networkx as nx
 import numpy as np
 
+from .future import importlib_metadata  # noqa: F401  # Backwards compatibility
+
 __all__ = (
     "deprecated",
     # Collections
@@ -50,6 +52,7 @@ __all__ = (
 )
 
 
+# TODO: Replace with deprecated package?
 def deprecated(func: Callable) -> Callable:
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
