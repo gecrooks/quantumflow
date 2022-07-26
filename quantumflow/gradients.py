@@ -129,7 +129,7 @@ def expectation_gradients(
         if dfunc is not None:
             g = g * dfunc(float(expectation))
 
-        grads.append(g)
+        grads.append(float(g))
 
     return grads
 

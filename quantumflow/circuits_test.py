@@ -272,8 +272,8 @@ def test_addition_circuit() -> None:
 
                 ket = circ.run(ket)
                 bits2 = ket.measure()
-                res = bits2[[5, 2, 3]]  # type: ignore
-                res = bitlist_to_int(res)
+                res0 = list(bits2[[5, 2, 3]])
+                res = bitlist_to_int(res0)
 
                 assert res == expected
 
@@ -295,7 +295,7 @@ def test_addition_circuit() -> None:
                 ket = circ.run(ket)
                 bits2 = ket.measure()
                 res = bits2[[7, 3, 4, 5]]  # type: ignore
-                res = bitlist_to_int(res)
+                res = bitlist_to_int(res)  # type: ignore
 
                 # print(c0, a0, a1, expected, res)
                 assert res == expected
