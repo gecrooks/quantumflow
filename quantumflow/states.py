@@ -250,8 +250,7 @@ class State(QuantumState):
         probs = np.real(self.probabilities())
         indices = np.asarray(list(np.ndindex(*[2] * self.qubit_nb)))
         res = np.random.choice(probs.size, p=probs.ravel())
-        res = indices[res]
-        return res
+        return indices[res]
 
     def asdensity(self, qubits: Qubits = None) -> "Density":
         """Convert a pure state to a density matrix.
