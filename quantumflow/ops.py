@@ -117,8 +117,8 @@ class Operation(ABC):
     """The number of qubits, for operations with a fixed number of qubits"""
 
     cv_args: ClassVar[Optional[Tuple[str, ...]]] = None
-    """The names of the parameters for this operation (For operations with a fixed number
-    of float parameters)"""
+    """The names of the parameters for this operation (For operations with a fixed
+    number of float parameters)"""
 
     def __init_subclass__(cls) -> None:
         # Note: The __init_subclass__ initializes all subclasses of a given class.
