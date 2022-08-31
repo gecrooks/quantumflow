@@ -464,8 +464,9 @@ def pauli_pow(pauli: Pauli, exponent: int) -> Pauli:
 
 def paulis_close(pauli0: Pauli, pauli1: Pauli, atol: float = ATOL) -> bool:
     """Returns: True if Pauli elements are almost identical."""
-    pauli = pauli0 - pauli1
-    d = sum(abs(coeff) ** 2 for _, _, coeff in pauli.terms)
+    pauli: Pauli = pauli0 - pauli1
+
+    d = sum(abs(cast(Complex, coeff)) ** 2 for _, _, coeff in pauli.terms)
     return d <= atol
 
 
