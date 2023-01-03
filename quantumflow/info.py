@@ -161,7 +161,7 @@ def state_fidelity(ket0: State, ket1: State) -> float:
     """Return the quantum fidelity between pure states."""
     ket1 = ket1.permute(ket0.qubits)
     tensor = np.absolute(tensors.inner(ket0.tensor, ket1.tensor)) ** 2
-    return float(tensor)
+    return float(np.real(tensor.real))
 
 
 def state_angle(ket0: State, ket1: State) -> float:
@@ -200,7 +200,7 @@ def purity(rho: Density) -> float:
     tensor = rho.tensor
     N = rho.qubit_nb
     matrix = np.reshape(tensor, [2**N, 2**N])
-    return float(np.trace(matrix @ matrix))
+    return float(np.real(np.trace(matrix @ matrix)))
 
 
 def fidelity(rho0: Density, rho1: Density) -> float:
@@ -222,12 +222,12 @@ def bures_distance(rho0: Density, rho1: Density) -> float:
     tr0 = np.trace(rho0.asoperator())
     tr1 = np.trace(rho1.asoperator())
 
-    return np.sqrt(tr0 + tr1 - 2.0 * np.sqrt(fid))
+    return np.real(np.sqrt(tr0 + tr1 - 2.0 * np.sqrt(fid)))
 
 
 def bures_angle(rho0: Density, rho1: Density) -> float:
     """Return the Bures angle between mixed quantum states"""
-    return np.arccos(np.sqrt(fidelity(rho0, rho1)))
+    return np.real(np.arccos(np.sqrt(fidelity(rho0, rho1))))
 
 
 def density_angle(rho0: Density, rho1: Density) -> float:
