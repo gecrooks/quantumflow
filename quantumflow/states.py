@@ -41,6 +41,7 @@ from typing import (
     Mapping,
     TextIO,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -70,6 +71,8 @@ __all__ = [
     "random_density",
     "join_densities",
 ]
+
+QuantumStateTV = TypeVar("QuantumStateTV", bound="QuantumState")
 
 
 class QuantumState(ABC):
@@ -116,12 +119,12 @@ class QuantumState(ABC):
         return len(self._qubits)
 
     def replace(
-        self,
+        self: QuantumStateTV,
         *,
         tensor: "ArrayLike" = None,
         qubits: Qubits = None,
         memory: Mapping = None,
-    ) -> Self:
+    ) -> QuantumStateTV:
         """
         Creates a copy of this state, replacing the fields specified.
         """
@@ -131,23 +134,23 @@ class QuantumState(ABC):
         memory = self.memory if memory is None else memory
         return type(self)(tensor, qubits, memory)
 
-    def store(self, *args: Any, **kwargs: Any) -> Self:
+    def store(self: QuantumStateTV, *args: Any, **kwargs: Any) -> QuantumStateTV:
         """Update information in classical memory and return a new State."""
         mem = self.memory.update(*args, **kwargs)
         return self.replace(memory=mem)
 
     # TESTME
-    def on(self, *qubits: Qubit) -> Self:
+    def on(self: QuantumStateTV, *qubits: Qubit) -> QuantumStateTV:
         """Return a copy of this State with new qubits"""
         return self.replace(qubits=qubits)
 
     # TESTME
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> Self:
+    def rewire(self: QuantumStateTV, labels: Dict[Qubit, Qubit]) -> QuantumStateTV:
         """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
 
-    def permute(self, qubits: Qubits = None) -> Self:
+    def permute(self: QuantumStateTV, qubits: Qubits = None) -> QuantumStateTV:
         """Return a copy of this state with state tensor transposed to
         put qubits in the given order. If an explicit qubit
         ordering isn't supplied, we put qubits in sorted order.
