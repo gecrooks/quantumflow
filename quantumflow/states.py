@@ -50,7 +50,6 @@ import numpy as np
 import opt_einsum
 
 from . import tensors, utils
-from .future import Self
 from .qubits import Qubit, Qubits, sorted_qubits
 from .tensors import QubitTensor
 

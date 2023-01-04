@@ -13,7 +13,7 @@ import numpy as np
 import scipy
 
 from ..config import CONJ, CTRL, SQRT
-from ..future import Self, cached_property
+from ..future import cached_property
 from ..ops import _EXCLUDED_OPERATIONS, Gate
 from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit, Qubits
