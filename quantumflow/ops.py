@@ -134,7 +134,7 @@ class Operation(ABC):
     def __init__(
         self,
         qubits: Qubits,
-        params: Sequence[Variable] = None,
+        params: Optional[Sequence[Variable]] = None,
     ) -> None:
         self._qubits: Qubits = tuple(qubits)
         self._params: Tuple[Variable, ...] = ()
@@ -209,7 +209,9 @@ class Operation(ABC):
         return self._params[idx]
 
     # rename? param_asfloat? Then use where needed.
-    def float_param(self, name: str, subs: Mapping[str, float] = None) -> float:
+    def float_param(
+        self, name: str, subs: Optional[Mapping[str, float]] = None
+    ) -> float:
         """Return a a named parameters of this Operation as a float.
 
         Args:
@@ -599,8 +601,8 @@ class Channel(Operation):
         self,
         tensor: "ArrayLike",
         qubits: Qubits,
-        params: Sequence[var.Variable] = None,
-        name: str = None,  # FIXME
+        params: Optional[Sequence[var.Variable]] = None,
+        name: Optional[str] = None,  # FIXME
     ) -> None:
 
         tensor = tensors.asqutensor(tensor)

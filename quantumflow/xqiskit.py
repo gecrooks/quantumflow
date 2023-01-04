@@ -22,7 +22,7 @@ Interface between IBM's Qiskit and QuantumFlow
 # qiskit
 
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .circuits import Circuit
 from .gatesets import QISKIT_GATES
@@ -95,7 +95,7 @@ QASM_TO_QF = {
 
 
 class QiskitSimulator(Simulator):
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         try:
             import qiskit
         except ModuleNotFoundError as err:  # pragma: no cover

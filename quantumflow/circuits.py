@@ -88,7 +88,9 @@ class Circuit(Sequence, Operation):
     """
 
     def __init__(
-        self, *elements: Union[Iterable[Operation], Operation], qubits: Qubits = None
+        self,
+        *elements: Union[Iterable[Operation], Operation],
+        qubits: Optional[Qubits] = None,
     ) -> None:
 
         elements = tuple(elements)
@@ -169,7 +171,7 @@ class Circuit(Sequence, Operation):
             [elem.rewire(labels) for elem in self], qubits=list(labels.values())
         )
 
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         """
         Apply the action of this circuit upon a state.
 
@@ -183,7 +185,7 @@ class Circuit(Sequence, Operation):
             ket = elem.run(ket)
         return ket
 
-    def evolve(self, rho: Density = None) -> Density:
+    def evolve(self, rho: Optional[Density] = None) -> Density:
         if rho is None:
             qubits = self.qubits
             rho = zero_state(qubits=qubits).asdensity()

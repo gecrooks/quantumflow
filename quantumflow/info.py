@@ -65,6 +65,8 @@ Channel Measures
 .. autofunction:: almost_unital
 """
 
+from typing import Optional
+
 import numpy as np
 import scipy.stats
 from scipy.linalg import sqrtm  # matrix square root
@@ -245,7 +247,7 @@ def densities_close(rho0: Density, rho1: Density, atol: float = ATOL) -> bool:
     return fubini_study_close(rho0.tensor, rho1.tensor, atol)
 
 
-def entropy(rho: Density, base: float = None) -> float:
+def entropy(rho: Density, base: Optional[float] = None) -> float:
     """
     Returns the von-Neumann entropy of a mixed quantum state.
 
@@ -265,7 +267,10 @@ def entropy(rho: Density, base: float = None) -> float:
 
 # TESTME
 def mutual_info(
-    rho: Density, qubits0: Qubits, qubits1: Qubits = None, base: float = None
+    rho: Density,
+    qubits0: Qubits,
+    qubits1: Optional[Qubits] = None,
+    base: Optional[float] = None,
 ) -> float:
     """Compute the bipartite von-Neumann mutual information of a mixed
     quantum state.
@@ -399,7 +404,7 @@ def channels_close(chan0: Channel, chan1: Channel, atol: float = ATOL) -> bool:
 
 
 # TESTME  multiqubits
-def average_gate_fidelity(kraus: Kraus, target: Gate = None) -> float:
+def average_gate_fidelity(kraus: Kraus, target: Optional[Gate] = None) -> float:
     """Return the average gate fidelity between a noisy gate (specified by a
     Kraus representation of a superoperator), and a purely unitary target gate.
 

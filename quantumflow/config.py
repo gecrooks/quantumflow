@@ -6,11 +6,11 @@
 """
 Package wide configuration
 """
-
 import platform
 import re
 import sys
 import typing
+from typing import Optional
 
 from .future import importlib_metadata
 
@@ -56,7 +56,7 @@ CONJ = "⁺"  # Unicode "superscript plus sign"
 SQRT = "√"
 
 
-def about(file: typing.TextIO = None) -> None:
+def about(file: Optional[typing.TextIO] = None) -> None:
     """Print information about the configuration
 
      ``> python -m quantumflow.about``

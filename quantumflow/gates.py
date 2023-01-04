@@ -69,6 +69,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    Optional,
     Sequence,
     Tuple,
     Union,
@@ -144,7 +145,7 @@ class CompositeGate(Gate):
     A quantum gate represented by a sequence of quantum gates.
     """
 
-    def __init__(self, *elements: Gate, qubits: Qubits = None) -> None:
+    def __init__(self, *elements: Gate, qubits: Optional[Qubits] = None) -> None:
         circ = Circuit(Circuit(elements).flat(), qubits=qubits)
 
         for elem in circ:
@@ -154,10 +155,10 @@ class CompositeGate(Gate):
         super().__init__(qubits=circ.qubits)
         self.circuit = circ
 
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         return self.circuit.run(ket)
 
-    def evolve(self, rho: Density = None) -> Density:
+    def evolve(self, rho: Optional[Density] = None) -> Density:
         return self.circuit.evolve(rho)
 
     def aschannel(self) -> "Channel":
@@ -220,7 +221,9 @@ class ControlGate(Gate):
     # Note: ControlGate and StdCtrlGate share interface and code.
     # But unification probably not worth the trouble
 
-    def __init__(self, target: Gate, controls: Qubits, axes: str = None) -> None:
+    def __init__(
+        self, target: Gate, controls: Qubits, axes: Optional[str] = None
+    ) -> None:
         controls = tuple(controls)
         qubits = tuple(controls) + tuple(target.qubits)
         if len(set(qubits)) != len(qubits):
@@ -494,7 +497,7 @@ class PauliGate(Gate):
         return self
 
     def decompose(
-        self, topology: nx.Graph = None
+        self, topology: Optional[nx.Graph] = None
     ) -> Iterator[Union[CNot, XPow, YPow, ZPow]]:
         """
         Returns a Circuit corresponding to the exponential of

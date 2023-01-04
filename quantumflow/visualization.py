@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Any, Dict, List, Sequence, TextIO
+from typing import Any, Dict, List, Optional, Sequence, TextIO
 
 import numpy as np
 import sympy
@@ -136,14 +136,14 @@ class NoWire(IdentityGate):
 
 def circuit_to_latex(
     circ: Circuit,
-    qubits: Qubits = None,
+    qubits: Optional[Qubits] = None,
     document: bool = True,
     package: str = "quantikz",
-    options: str = None,
+    options: Optional[str] = None,
     scale: float = 0.75,
     qubit_labels: bool = True,
-    left_labels: Sequence[str] = None,  # DOCME TESTME
-    right_labels: Sequence[str] = None,  # DOCME TESTME
+    left_labels: Optional[Sequence[str]] = None,  # DOCME TESTME
+    right_labels: Optional[Sequence[str]] = None,  # DOCME TESTME
 ) -> str:
     """
     Create an image of a quantum circuit in LaTeX.
@@ -507,7 +507,7 @@ def latex_to_image(latex: str) -> Image:
     return img
 
 
-def circuit_to_image(circ: Circuit, qubits: Qubits = None) -> Image:
+def circuit_to_image(circ: Circuit, qubits: Optional[Qubits] = None) -> Image:
     """Create an image of a quantum circuit.
 
     A convenience function that calls circuit_to_latex() and latex_to_image().
@@ -530,7 +530,7 @@ def circuit_to_image(circ: Circuit, qubits: Qubits = None) -> Image:
 
 def circuit_to_diagram(
     circ: Circuit,
-    qubits: Qubits = None,
+    qubits: Optional[Qubits] = None,
     use_unicode: bool = True,
     transpose: bool = False,
     qubit_labels: bool = True,
@@ -763,7 +763,7 @@ def _unicode_to_ascii(text: str) -> str:
     return "".join(unicode_ascii.get(c, c) for c in text)
 
 
-def print_gate(gate: Gate, ndigits: int = 2, file: TextIO = None) -> None:
+def print_gate(gate: Gate, ndigits: int = 2, file: Optional[TextIO] = None) -> None:
     """Pretty print a gate tensor
 
     Args:

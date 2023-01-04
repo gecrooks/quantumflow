@@ -13,6 +13,8 @@ https://github.com/quantumlib/qsim
 
 """
 
+from typing import Optional
+
 from .circuits import Circuit
 from .gatesets import QSIM_GATES
 from .states import State
@@ -47,7 +49,7 @@ class QSimSimulator(Simulator):
         self._cirq = circuit_to_cirq(self.circuit)
         self._qsim_circuit = qsimcirq.QSimCircuit(self._cirq)
 
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
 
         try:
             import qsimcirq

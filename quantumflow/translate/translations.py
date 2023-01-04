@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import Callable, Iterable, List, Sequence, Tuple, Type
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Type
 
 from ..circuits import Circuit
 from ..ops import Gate
@@ -54,7 +54,8 @@ def translation_target_gates(trans: Callable) -> Tuple[Type[Gate]]:
 
 
 def select_translations(
-    target_gates: Iterable[Type[Gate]], translations: Iterable[Callable] = None
+    target_gates: Iterable[Type[Gate]],
+    translations: Optional[Iterable[Callable]] = None,
 ) -> List[Callable]:
     """Return a list of translations that will translate source gates to target
     gates.
@@ -115,8 +116,8 @@ select_translators = select_translations
 
 def circuit_translate(
     circ: Circuit,
-    translators: Sequence = None,
-    targets: Iterable[Type[Gate]] = None,
+    translators: Optional[Sequence] = None,
+    targets: Optional[Iterable[Type[Gate]]] = None,
     recurse: bool = True,
 ) -> Circuit:
     """Apply a collection of translations to each gate in a circuit.

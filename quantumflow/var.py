@@ -5,7 +5,7 @@
 
 # DOCME
 
-from typing import Mapping, Union
+from typing import Mapping, Optional, Union
 
 import numpy as np
 import sympy
@@ -61,7 +61,7 @@ def almost_zero(x: ComplexVariable, atol: float = ATOL) -> bool:
     return isclose(x, 0.0, atol=atol)
 
 
-def asfloat(x: Variable, subs: Mapping[str, float] = None) -> float:
+def asfloat(x: Variable, subs: Optional[Mapping[str, float]] = None) -> float:
     """Convert a variable to a float"""
     if is_symbolic(x) and subs:
         x = x.evalf(subs=subs)  # type: ignore

@@ -35,7 +35,7 @@ from functools import reduce
 from itertools import groupby, product
 from numbers import Complex
 from operator import itemgetter, mul
-from typing import Any, Dict, Iterator, List, Set, Tuple, cast
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, cast
 
 import numpy as np
 import sympy
@@ -305,7 +305,7 @@ class Pauli(Operation):
     def __hash__(self) -> int:
         return hash(self.terms)
 
-    def asoperator(self, qubits: Qubits = None) -> QubitTensor:
+    def asoperator(self, qubits: Optional[Qubits] = None) -> QubitTensor:
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
@@ -526,7 +526,9 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     return tuple(groups)
 
 
-def pauli_decompose_hermitian(matrix: np.ndarray, qubits: Qubits = None) -> Pauli:
+def pauli_decompose_hermitian(
+    matrix: np.ndarray, qubits: Optional[Qubits] = None
+) -> Pauli:
     """Decompose a Hermitian matrix into an element of the Pauli algebra.
 
     This works because tensor products of Pauli matrices form an orthonormal
