@@ -5,7 +5,7 @@
 
 import random
 from itertools import chain
-from typing import Type
+from typing import Optional, Type
 
 import numpy as np
 import pytest
@@ -91,7 +91,7 @@ def test_stdgates(gatet: Type[qf.StdGate]) -> None:
     assert qf.gates_close(hgate @ hgate, gate)
 
 
-def _tensor_structure(tensor: qf.QubitTensor) -> "str":
+def _tensor_structure(tensor: qf.QubitTensor) -> Optional["str"]:
     # "identity", "diagonal", "permutation", "monomial"
     # TODO: Swap
 

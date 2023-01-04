@@ -7,7 +7,7 @@
 
 # DO Rename
 
-from typing import ClassVar, Dict, List, Mapping, Type, TypeVar
+from typing import ClassVar, Dict, List, Mapping, Optional, Type, TypeVar
 
 import numpy as np
 import scipy
@@ -119,7 +119,7 @@ class StdCtrlGate(StdGate):
     # nb: ControlGate and StdCtrlGate share interface and code.
     # But unification probably not worth the trouble
 
-    cv_target: ClassVar[Type[StdGate]] = None
+    cv_target: ClassVar[Type[StdGate]]
     """StdGate type that is the target of this controlled gate.
     Should be set by subclasses"""
 
@@ -142,10 +142,12 @@ class StdCtrlGate(StdGate):
 
     @property
     def control_qubit_nb(self) -> int:
+        assert self.cv_target is not None
         return self.qubit_nb - self.cv_target.cv_qubit_nb
 
     @property
     def target_qubit_nb(self) -> int:
+        assert self.cv_target is not None
         return self.cv_target.cv_qubit_nb
 
     @property
@@ -161,6 +163,7 @@ class StdCtrlGate(StdGate):
 
     @cached_property
     def tensor(self) -> QubitTensor:
+        assert self.cv_target is not None
         ctrl_block = np.identity(
             2**self.cv_qubit_nb - 2**self.cv_target.cv_qubit_nb
         )

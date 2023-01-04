@@ -115,7 +115,7 @@ with 'pip install qutip'"""
 
 
 _QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
-    I: None,
+    I: "",
     Ph: "GLOBALPHASE",
     Rx: "RX",
     Ry: "RY",

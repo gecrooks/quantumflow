@@ -116,10 +116,10 @@ class Operation(ABC):
     """Is this a multi-qubit operation that is known to be invariant under
     permutations of qubits?"""
 
-    cv_qubit_nb: ClassVar[int] = None
+    cv_qubit_nb: ClassVar[int] = 0
     """The number of qubits, for operations with a fixed number of qubits"""
 
-    cv_args: ClassVar[Optional[Tuple[str, ...]]] = None
+    cv_args: ClassVar[Tuple[str, ...]] = ()
     """The names of the parameters for this operation (For operations with a fixed
     number of float parameters)"""
 
@@ -140,7 +140,7 @@ class Operation(ABC):
         self._params: Tuple[Variable, ...] = ()
         if params is not None:
             self._params = tuple(params)
-        self._tensor: QubitTensor = None
+        self._tensor: Optional[QubitTensor] = None
 
         if self.cv_qubit_nb is not None:
             if self.cv_qubit_nb != len(self._qubits):
@@ -584,6 +584,7 @@ class UnitaryGate(Gate):
     @cached_property
     def tensor(self) -> QubitTensor:
         """Returns the tensor representation of gate operator"""
+        assert self._tensor is not None
         return self._tensor
 
 
@@ -612,8 +613,8 @@ class Channel(Operation):
             raise ValueError("Wrong number of qubits for tensor")
 
         super().__init__(qubits=qubits, params=params)
-        self._tensor = tensor
-        self._name = type(self).__name__ if name is None else name
+        self._tensor: QubitTensor = tensor
+        self._name: str = type(self).__name__ if name is None else name
 
     @cached_property
     def tensor(self) -> QubitTensor:
