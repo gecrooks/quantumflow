@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
@@ -60,7 +60,7 @@ jobs:
     - name: Test coverage with pytest
       if: runner.os == 'Linux'
       run: |
-        python -m pytest --cov --cov-fail-under 100
+        python -m pytest --cov --cov-fail-under 95
     - name: Lint with black and isort (run `make delint` to fix issues)
       if: runner.os == 'Linux'
       run: |

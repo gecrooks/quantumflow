@@ -46,6 +46,7 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    TypeVar,
 )
 
 import numpy as np
@@ -54,7 +55,7 @@ from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
 
 from . import tensors, var
-from .future import Self, cached_property
+from .future import cached_property
 from .qubits import Qubit, Qubits
 from .states import Density, State
 from .tensors import QubitTensor
@@ -66,7 +67,6 @@ if TYPE_CHECKING:
 
     from .paulialgebra import Pauli  # pragma: no cover
     from .stdgates import StdGate  # noqa:F401  # pragma: no cover
-
 
 __all__ = [
     "Operation",
@@ -91,6 +91,9 @@ OPERATIONS: Dict[str, Type["Operation"]] = {}
 
 GATES: Dict[str, Type["Gate"]] = {}
 """All gates (All non-abstract subclasses of Gate)"""
+
+
+OperationTV = TypeVar("OperationTV", bound="Operation")
 
 
 @total_ordering
@@ -163,7 +166,7 @@ class Operation(ABC):
         """Return the total number of qubits"""
         return len(self.qubits)
 
-    def on(self, *qubits: Qubit) -> Self:
+    def on(self: OperationTV, *qubits: Qubit) -> OperationTV:
         """Return a copy of this Operation with new qubits"""
         if len(qubits) != self.qubit_nb:
             raise ValueError("Wrong number of qubits")
@@ -171,7 +174,7 @@ class Operation(ABC):
         op._qubits = qubits
         return op
 
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> Self:
+    def rewire(self: OperationTV, labels: Dict[Qubit, Qubit]) -> OperationTV:
         """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
@@ -218,7 +221,7 @@ class Operation(ABC):
         """
         return var.asfloat(self.param(name), subs)
 
-    def resolve(self, subs: Mapping[str, float]) -> Self:
+    def resolve(self: OperationTV, subs: Mapping[str, float]) -> OperationTV:
         """Resolve symbolic parameters"""
         # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
@@ -337,6 +340,9 @@ class Operation(ABC):
 # End class Operation
 
 
+GateTV = TypeVar("GateTV", bound="Gate")
+
+
 class Gate(Operation):
     """
     A quantum logic gate. A unitary operator that acts upon a collection
@@ -400,7 +406,7 @@ class Gate(Operation):
         pauli = pauli_decompose_hermitian(H, self.qubits)
         return pauli
 
-    def asgate(self) -> Self:
+    def asgate(self: GateTV) -> GateTV:
         return self
 
     def aschannel(self) -> "Channel":

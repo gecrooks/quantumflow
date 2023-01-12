@@ -7,13 +7,13 @@
 
 # DO Rename
 
-from typing import ClassVar, Dict, List, Mapping, Type
+from typing import ClassVar, Dict, List, Mapping, Type, TypeVar
 
 import numpy as np
 import scipy
 
 from ..config import CONJ, CTRL, SQRT
-from ..future import Self, cached_property
+from ..future import cached_property
 from ..ops import _EXCLUDED_OPERATIONS, Gate
 from ..paulialgebra import Pauli, sZ
 from ..qubits import Qubit, Qubits
@@ -107,6 +107,8 @@ class StdGate(Gate):
 
 # End class StdGate
 
+StdCtrlGateTV = TypeVar("StdCtrlGateTV", bound="StdCtrlGate")
+
 
 class StdCtrlGate(StdGate):
     """A standard gate that is a controlled version of another standard gate.
@@ -167,7 +169,7 @@ class StdCtrlGate(StdGate):
 
         return asqutensor(unitary)
 
-    def resolve(self, subs: Mapping[str, float]) -> Self:
+    def resolve(self: StdCtrlGateTV, subs: Mapping[str, float]) -> StdCtrlGateTV:
         target = self.target.resolve(subs)
         return type(self)(*target.params, *self.qubits)  # type: ignore
 
