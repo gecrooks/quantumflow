@@ -48,7 +48,6 @@ def _check_circuit_translations():
 def _print_circuit_identity(
     name, circ0, circ1, min_col_width=0, col_sep=5, left_margin=8
 ):
-
     print()
     print("", name)
     print()

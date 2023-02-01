@@ -164,7 +164,6 @@ def test_PauliIdentity() -> None:
 
 
 def test_PauliGate_more() -> None:
-
     alphas = [0.1, 2.0, -3.14, -0.4]
     paulis = [
         qf.sZ(0) + 1,
@@ -215,7 +214,6 @@ def test_PauliGate_pow() -> None:
 
 
 def test_DiagonalGate() -> None:
-
     gate0 = qf.DiagonalGate([0.1, -0.1], qubits=[1])
     gate1 = qf.Rz(0.2, 1)
     assert qf.gates_close(gate0, gate0)
@@ -320,7 +318,6 @@ def test_merge_diagonal_gates_symbolic() -> None:
 
 
 def test_DiagonalGate_decomposition_count() -> None:
-
     for N in range(1, 9):
         qbs = list(range(0, N))
         params = np.random.rand(2**N)
@@ -533,7 +530,6 @@ def test_ControlGate_resolve() -> None:
 
 
 def test_ControlGate_axes() -> None:
-
     gate0 = qf.ControlGate(qf.Z(1), [0], axes="z")
     gate1 = qf.Circuit([qf.X(0), qf.CZ(0, 1), qf.X(0)]).asgate()
     assert qf.gates_close(gate0, gate1)

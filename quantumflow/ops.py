@@ -605,7 +605,6 @@ class Channel(Operation):
         params: Sequence[var.Variable] = None,
         name: str = None,  # FIXME
     ) -> None:
-
         tensor = tensors.asqutensor(tensor)
 
         N = np.ndim(tensor) // 4

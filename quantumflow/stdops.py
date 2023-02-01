@@ -312,6 +312,7 @@ class Projection(Operation):
 
 # end class Projection
 
+
 # FIXME: no zero qubit ops?
 class Store(Operation):
     """Store a value in the classical memory of the state."""

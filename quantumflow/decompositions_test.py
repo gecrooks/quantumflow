@@ -225,7 +225,6 @@ def test_decomp_sqrtswap_sandwich() -> None:
 def test_orthogonal_diagonalization() -> None:
     samples = 100
     for _ in range(samples):
-
         # Build a random symmetric complex matrix
         orthoganal = scipy.stats.special_ortho_group.rvs(4)
         eigvals = (

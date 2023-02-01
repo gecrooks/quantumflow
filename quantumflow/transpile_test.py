@@ -17,7 +17,6 @@ pytest.importorskip("qiskit")  # noqa: 402
 
 
 def test_guess_format() -> None:
-
     circ = qf.Circuit(qf.X(0), qf.Z(1))
 
     c0 = xcirq.circuit_to_cirq(circ)
@@ -59,7 +58,6 @@ circuit_formats = [
 
 @pytest.mark.parametrize("circuit_format", circuit_formats)
 def test_transpile(circuit_format: str) -> None:
-
     circ0 = qf.Circuit(qf.X(0), qf.Z(1))
 
     circ1 = transpile(circ0, output_format=circuit_format)
@@ -69,7 +67,6 @@ def test_transpile(circuit_format: str) -> None:
 
 @pytest.mark.parametrize("circuit_format", circuit_formats)
 def test_transpile_translate(circuit_format: str) -> None:
-
     circ0 = qf.Circuit(
         qf.X(0), qf.Z(1), qf.Margolus(0, 1, 2), qf.Can(0.1, 0.2, 0.3, 2, 3)
     )
@@ -99,7 +96,6 @@ def test_transpile_accross() -> None:
 
 
 def test_transpile_errors() -> None:
-
     with pytest.raises(ValueError):
         _ = transpile(19939848)
 

@@ -253,6 +253,7 @@ class FSwapPow(StdGate):
 
 # End class FSwapPow
 
+
 # FIXME: Syc
 class Sycamore(StdGate):
     r"""The Sycamore gate is a two-qubit gate equivalent to

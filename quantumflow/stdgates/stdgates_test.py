@@ -55,7 +55,6 @@ def test_repr() -> None:
 
 @pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_stdgates_repr(gatet: Type[qf.StdGate]) -> None:
-
     gate0 = _randomize_gate(gatet)
     rep = repr(gate0)
     gate1 = eval(rep, dict(qf.STDGATES))
@@ -65,7 +64,6 @@ def test_stdgates_repr(gatet: Type[qf.StdGate]) -> None:
 
 @pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_stdgates(gatet: Type[qf.StdGate]) -> None:
-
     # Test creation
     gate = _randomize_gate(gatet)
 
@@ -122,7 +120,6 @@ def _tensor_structure(tensor: qf.QubitTensor) -> "str":
 
 @pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_tensor_properties(gatet: Type[qf.StdGate]) -> None:
-
     gate = _randomize_gate(gatet)
 
     assert qf.almost_unitary(gate)
@@ -146,7 +143,6 @@ def test_tensor_properties(gatet: Type[qf.StdGate]) -> None:
 
 @pytest.mark.parametrize("gatet", qf.STDGATES.values())
 def test_hamiltonians(gatet: Type[qf.StdGate]) -> None:
-
     gate0 = _randomize_gate(gatet)
 
     qbs = gate0.qubits

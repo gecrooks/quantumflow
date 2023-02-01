@@ -36,7 +36,6 @@ def test_braket_to_circuit() -> None:
 
 
 def test_circuit_to_qiskit() -> None:
-
     circ = qf.Circuit([qf.CNot(0, 1), qf.Rz(0.2, 1)])
     bkcirc = circuit_to_braket(circ)
     print(bkcirc)

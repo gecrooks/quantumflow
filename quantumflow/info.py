@@ -360,6 +360,7 @@ def almost_hermitian(gate: Gate) -> bool:
 
 # Measures on circuits
 
+
 # DOCME
 def circuits_close(
     circ0: Circuit, circ1: Circuit, atol: float = ATOL, reps: int = 16

@@ -101,7 +101,6 @@ html_static_path = ["_static"]
 
 
 def do_edits():
-
     pats = [
         # Hacks to shorten type descriptors
         (r"quantumflow\.qubits", r"qf"),

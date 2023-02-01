@@ -415,7 +415,6 @@ def _lambdas_to_coords(lambdas: np.ndarray) -> np.ndarray:
 def _constrain_to_weyl(
     lambdas: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-
     for permutation in itertools.permutations(range(4)):
         for signs in ([1, 1, 1, 1], [1, 1, -1, -1], [-1, 1, -1, 1], [1, -1, -1, 1]):
             signed_lambdas = lambdas * np.asarray(signs)

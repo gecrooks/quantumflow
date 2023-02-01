@@ -705,7 +705,6 @@ class Rn(StdGate):
     def __init__(
         self, theta: Variable, nx: Variable, ny: Variable, nz: Variable, q0: Qubit
     ) -> None:
-
         norm = var.sqrt(nx**2 + ny**2 + nz**2)
 
         nx /= norm
