@@ -183,7 +183,6 @@ def display_weyl(decomps):
 
 # ---------- Command Line Interface ----------
 def _cli():
-
     parser = argparse.ArgumentParser(
         description=__description__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

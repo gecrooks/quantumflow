@@ -486,7 +486,6 @@ def paulis_commute(element0: Pauli, element1: Pauli) -> bool:
         op0 = zip(term0[0], term0[1])
         op1 = zip(term1[0], term1[1])
         for _, qops in groupby(heapq.merge(op0, op1, key=key), key=key):
-
             listqops = list(qops)
             if len(listqops) == 2 and listqops[0][1] != listqops[1][1]:
                 non_similar += 1

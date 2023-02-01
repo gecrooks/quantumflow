@@ -27,7 +27,6 @@ def benchmark_circuit(N, gate_nb, gate):
 
 
 def _cli():
-
     gates = [
         qf.I(0),
         qf.X(0),

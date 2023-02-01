@@ -468,7 +468,6 @@ class PauliGate(Gate):
     # Kudos: GEC (2019).
 
     def __init__(self, element: Pauli, alpha: Variable) -> None:
-
         super().__init__(qubits=element.qubits)
         self.element = element
         self.alpha = alpha
@@ -513,6 +512,7 @@ class PauliGate(Gate):
 
 
 # end class PauliGate
+
 
 # TODO: Move
 def merge_diagonal_gates(
@@ -705,7 +705,6 @@ class MultiplexedRzGate(MultiplexedGate):
     def __init__(
         self, thetas: Sequence[Variable], controls: Qubits, target: Qubit
     ) -> None:
-
         thetas = tuple(thetas)
         gates = [Rz(theta, target) for theta in thetas]
         super().__init__(gates=gates, controls=controls)
@@ -742,7 +741,6 @@ class MultiplexedRyGate(MultiplexedGate):
     def __init__(
         self, thetas: Sequence[Variable], controls: Qubits, target: Qubit
     ) -> None:
-
         thetas = tuple(thetas)
         gates = [Ry(theta, target) for theta in thetas]
         super().__init__(gates=gates, controls=controls)

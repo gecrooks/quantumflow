@@ -90,7 +90,6 @@ class Circuit(Sequence, Operation):
     def __init__(
         self, *elements: Union[Iterable[Operation], Operation], qubits: Qubits = None
     ) -> None:
-
         elements = tuple(elements)
 
         if len(elements) == 1 and isinstance(elements[0], Iterable):

@@ -39,7 +39,6 @@ def translation_source_gate(trans: Callable) -> Type[Gate]:
 
 
 def translation_target_gates(trans: Callable) -> Tuple[Type[Gate]]:
-
     try:
         ret = trans.__annotations__["return"].__args__[0]
     except KeyError:  # pragma: no cover   # FIXME

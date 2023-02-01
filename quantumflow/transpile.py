@@ -79,7 +79,6 @@ def transpile(circuit: Any, output_format: str = "quantumflow") -> Any:
 
 
 def _transpile_from(circuit: Any) -> Circuit:
-
     input_format = _guess_format(circuit)
 
     if input_format == "braket":
@@ -146,7 +145,6 @@ def _guess_format(circuit: Any) -> str:
 
 
 def _transpile_to(circuit: Circuit, output_format: str) -> Any:
-
     if output_format == "braket":
         from . import xbraket
 

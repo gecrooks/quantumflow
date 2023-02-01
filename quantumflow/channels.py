@@ -166,7 +166,6 @@ class UnitaryMixture(Kraus):
     def __init__(
         self, operators: Sequence[Gate], weights: Sequence[float] = None
     ) -> None:
-
         from .info import almost_unitary
 
         for op in operators:

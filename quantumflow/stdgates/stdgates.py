@@ -74,7 +74,6 @@ class StdGate(Gate):
         return f"{self.name}({fargs})"
 
     def _diagram_labels_(self) -> List[str]:
-
         label = self.name
 
         label = label.replace("ISwap", "iSwap")

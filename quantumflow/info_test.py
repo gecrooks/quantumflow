@@ -17,7 +17,6 @@ from .config_test import REPS
 
 
 def test_fubini_study_angle() -> None:
-
     for _ in range(REPS):
         theta = random.uniform(-np.pi, +np.pi)
 

@@ -80,7 +80,6 @@ class DAGCircuit(Operation):
     """
 
     def __init__(self, elements: Iterable[Operation]) -> None:
-
         self.graph = nx.MultiDiGraph()
         self._qubits_in: Dict[Qubit, In] = {}
         self._qubits_out: Dict[Qubit, Out] = {}

@@ -11,7 +11,6 @@ import quantumflow as qf
 
 
 def test_operation_incommensurate_qubits() -> None:
-
     gate1 = qf.CCNot("a", "c", "b")
     indices = gate1.qubit_indices(["a", "b", "c"])
     assert indices == (0, 2, 1)

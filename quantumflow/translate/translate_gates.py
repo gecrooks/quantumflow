@@ -90,7 +90,6 @@ def translate_QFTGate(gate: QFTGate) -> Iterator[Union[H, CZPow, Swap]]:
 
 @register_translation
 def translate_InvQFTGate(gate: InvQFTGate) -> Iterator[Union[H, CZPow, Swap]]:
-
     gates = list(translate_QFTGate(QFTGate(gate.qubits)))
     yield from (gate.H for gate in gates[::-1])
 

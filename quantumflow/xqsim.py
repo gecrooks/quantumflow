@@ -36,7 +36,6 @@ class QSimSimulator(Simulator):
     """
 
     def __init__(self, circ: Circuit, translate: bool = True) -> None:
-
         try:
             import qsimcirq
         except ModuleNotFoundError as err:  # pragma: no cover
@@ -48,7 +47,6 @@ class QSimSimulator(Simulator):
         self._qsim_circuit = qsimcirq.QSimCircuit(self._cirq)
 
     def run(self, ket: State = None) -> State:
-
         try:
             import qsimcirq
         except ModuleNotFoundError as err:  # pragma: no cover

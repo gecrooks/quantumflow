@@ -26,7 +26,6 @@ from quantumflow.xqiskit import (
 
 
 def test_qiskit_to_circuit() -> None:
-
     q = QuantumRegister(5)
     c = ClassicalRegister(5)
     qc = QuantumCircuit(q, c)
