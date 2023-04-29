@@ -211,7 +211,7 @@ def translate_cnot_to_cz(gate: CNot) -> Iterator[Union[H, CZ]]:
 
 @register_translation
 def translate_cnot_to_sqrtiswap(gate: CNot) -> Iterator[Union[SqrtISwap_H, X, S_H, H]]:
-    """Translate an ECP gate to a square-root-iswap sandwich"""
+    """Translate a CNOT gate to a square-root-iswap sandwich"""
     q0, q1 = gate.qubits
 
     # TODO: simplify 1-qubit gates
