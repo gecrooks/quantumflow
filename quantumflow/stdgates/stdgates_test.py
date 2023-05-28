@@ -18,7 +18,6 @@ from quantumflow.visualization import kwarg_to_symbol
 def _randomize_gate(gatet: Type[qf.StdGate]) -> qf.StdGate:
     """Given a StdGate subclass, return an instance with randomly initialized
     parameters and qubits"""
-    assert gatet.cv_args is not None
     args = {arg: random.uniform(-4, 4) for arg in gatet.cv_args}
 
     qubits = list(range(gatet.cv_qubit_nb))
@@ -159,9 +158,8 @@ def test_hamiltonians(gatet: Type[qf.StdGate]) -> None:
 def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     if len(gatet.cv_args) == 0:
         return
-    assert gatet.cv_args is not None
+
     args = {kwarg_to_symbol[arg]: random.uniform(-4, 4) for arg in gatet.cv_args}
-    assert gatet.cv_qubit_nb is not None
     qbs = range(gatet.cv_qubit_nb)
 
     # Make gate with symbols
