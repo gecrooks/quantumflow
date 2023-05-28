@@ -118,7 +118,9 @@ class StdCtrlGate(StdGate):
     # nb: ControlGate and StdCtrlGate share interface and code.
     # But unification probably not worth the trouble
 
-    cv_target: ClassVar[Type[StdGate]] = None
+    from .stdgates_1q import I
+
+    cv_target: ClassVar[Type[StdGate]] = I  # null gate
     """StdGate type that is the target of this controlled gate.
     Should be set by subclasses"""
 

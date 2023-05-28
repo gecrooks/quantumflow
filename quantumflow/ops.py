@@ -47,6 +47,7 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+    Union,
 )
 
 import numpy as np
@@ -116,10 +117,10 @@ class Operation(ABC):
     """Is this a multi-qubit operation that is known to be invariant under
     permutations of qubits?"""
 
-    cv_qubit_nb: ClassVar[int] = None
+    cv_qubit_nb: ClassVar[int] = 0
     """The number of qubits, for operations with a fixed number of qubits"""
 
-    cv_args: ClassVar[Optional[Tuple[str, ...]]] = None
+    cv_args: ClassVar[Union[Tuple[str, ...], Tuple]] = ()
     """The names of the parameters for this operation (For operations with a fixed
     number of float parameters)"""
 
@@ -134,15 +135,15 @@ class Operation(ABC):
     def __init__(
         self,
         qubits: Qubits,
-        params: Sequence[Variable] = None,
+        params: Optional[Sequence[Variable]] = None,
     ) -> None:
         self._qubits: Qubits = tuple(qubits)
         self._params: Tuple[Variable, ...] = ()
         if params is not None:
             self._params = tuple(params)
-        self._tensor: QubitTensor = None
+        self._tensor: Optional[QubitTensor] = None
 
-        if self.cv_qubit_nb is not None:
+        if self.cv_qubit_nb != 0:
             if self.cv_qubit_nb != len(self._qubits):
                 raise ValueError(
                     "Wrong number of qubits for Operation"
@@ -201,6 +202,8 @@ class Operation(ABC):
         Raise:
             KeyError: If unrecognized parameter name
         """
+        if self.cv_args is None:
+            raise KeyError("No parameters")
         try:
             idx = self.cv_args.index(name)
         except ValueError:
@@ -209,7 +212,9 @@ class Operation(ABC):
         return self._params[idx]
 
     # rename? param_asfloat? Then use where needed.
-    def float_param(self, name: str, subs: Mapping[str, float] = None) -> float:
+    def float_param(
+        self, name: str, subs: Optional[Mapping[str, float]] = None
+    ) -> float:
         """Return a a named parameters of this Operation as a float.
 
         Args:
@@ -585,6 +590,8 @@ class UnitaryGate(Gate):
     @cached_property
     def tensor(self) -> QubitTensor:
         """Returns the tensor representation of gate operator"""
+        if self._tensor is None:
+            raise ValueError("No tensor representation")
         return self._tensor
 
 
@@ -602,8 +609,8 @@ class Channel(Operation):
         self,
         tensor: "ArrayLike",
         qubits: Qubits,
-        params: Sequence[var.Variable] = None,
-        name: str = None,  # FIXME
+        params: Optional[Sequence[var.Variable]] = None,
+        name: Optional[str] = None,  # FIXME
     ) -> None:
         tensor = tensors.asqutensor(tensor)
 
@@ -618,6 +625,8 @@ class Channel(Operation):
     @cached_property
     def tensor(self) -> QubitTensor:
         """Return the tensor representation of the channel's superoperator"""
+        if self._tensor is None:
+            raise ValueError("No tensor representation")
         return self._tensor
 
     @property

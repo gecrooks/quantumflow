@@ -15,7 +15,7 @@ Interface between IBM's Qiskit and QuantumFlow
 .. autofunction:: circuit_to_qiskit
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
@@ -168,7 +168,7 @@ def translate_to_braket(circ: Circuit) -> Circuit:
 
 
 class BraketSimulator(Simulator):
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         try:
             from braket.devices import LocalSimulator
         except ModuleNotFoundError as err:  # pragma: no cover

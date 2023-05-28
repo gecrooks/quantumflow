@@ -627,7 +627,7 @@ def translate_iswap_to_sqrtiswap(gate: ISwap) -> Iterator[SqrtISwap]:
 
 
 @register_translation
-def translate_iswap_to_xy(gate: ISwap) -> Iterator[Union[XY]]:
+def translate_iswap_to_xy(gate: ISwap) -> Iterator[XY]:
     """Convert ISwap gate to a XY gate."""
     q0, q1 = gate.qubits
     yield XY(-0.5, q0, q1)
@@ -646,7 +646,7 @@ def translate_pswap_to_canonical(gate: PSwap) -> Iterator[Union[Can, Y]]:
 
 
 @register_translation
-def translate_rxx_to_xx(gate: Rxx) -> Iterator[Union[XX]]:
+def translate_rxx_to_xx(gate: Rxx) -> Iterator[XX]:
     """Translate QASM's RXX gate to standard gates"""
     q0, q1 = gate.qubits
     (theta,) = gate.params
@@ -654,7 +654,7 @@ def translate_rxx_to_xx(gate: Rxx) -> Iterator[Union[XX]]:
 
 
 @register_translation
-def translate_ryy_to_yy(gate: Ryy) -> Iterator[Union[YY]]:
+def translate_ryy_to_yy(gate: Ryy) -> Iterator[YY]:
     """Translate QASM's RYY gate to standard gates"""
     q0, q1 = gate.qubits
     (theta,) = gate.params
@@ -662,7 +662,7 @@ def translate_ryy_to_yy(gate: Ryy) -> Iterator[Union[YY]]:
 
 
 @register_translation
-def translate_rzz_to_zz(gate: Rzz) -> Iterator[Union[ZZ]]:
+def translate_rzz_to_zz(gate: Rzz) -> Iterator[ZZ]:
     """Translate QASM's RZZ gate to standard gates"""
     q0, q1 = gate.qubits
     (theta,) = gate.params
@@ -838,7 +838,7 @@ def translate_w_to_ch_cnot(gate: W) -> Iterator[Union[CNot, CH]]:
 
 
 @register_translation
-def translate_xx_to_can(gate: XX) -> Iterator[Union[Can]]:
+def translate_xx_to_can(gate: XX) -> Iterator[Can]:
     """Convert an XX gate to a canonical circuit."""
     q0, q1 = gate.qubits
     t = gate.param("t")
@@ -886,7 +886,7 @@ def translate_xy_to_sqrtiswap(
 
 
 @register_translation
-def translate_yy_to_can(gate: YY) -> Iterator[Union[Can]]:
+def translate_yy_to_can(gate: YY) -> Iterator[Can]:
     """Convert an YY gate to a canonical circuit."""
     q0, q1 = gate.qubits
     t = gate.param("t")
@@ -906,7 +906,7 @@ def translate_yy_to_zz(gate: YY) -> Iterator[Union[XPow, ZZ]]:
 
 
 @register_translation
-def translate_zz_to_can(gate: ZZ) -> Iterator[Union[Can]]:
+def translate_zz_to_can(gate: ZZ) -> Iterator[Can]:
     """Convert an ZZ gate to a canonical circuit."""
     q0, q1 = gate.qubits
     t = gate.param("t")

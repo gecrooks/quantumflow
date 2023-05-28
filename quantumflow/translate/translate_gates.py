@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import Iterator, Union
+from typing import Iterator, Optional, Union
 
 import networkx as nx
 import numpy as np
@@ -96,7 +96,7 @@ def translate_InvQFTGate(gate: InvQFTGate) -> Iterator[Union[H, CZPow, Swap]]:
 
 @register_translation
 def translate_PauliGate(
-    gate: PauliGate, topology: nx.Graph = None
+    gate: PauliGate, topology: Optional[nx.Graph] = None
 ) -> Iterator[Union[CNot, XPow, YPow, ZPow]]:
     """
     Yields a circuit corresponding to the exponential of

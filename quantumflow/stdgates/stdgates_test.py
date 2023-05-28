@@ -5,7 +5,7 @@
 
 import random
 from itertools import chain
-from typing import Type
+from typing import Optional, Type
 
 import numpy as np
 import pytest
@@ -89,7 +89,7 @@ def test_stdgates(gatet: Type[qf.StdGate]) -> None:
     assert qf.gates_close(hgate @ hgate, gate)
 
 
-def _tensor_structure(tensor: qf.QubitTensor) -> "str":
+def _tensor_structure(tensor: qf.QubitTensor) -> Optional["str"]:
     # "identity", "diagonal", "permutation", "monomial"
     # TODO: Swap
 
@@ -158,6 +158,7 @@ def test_hamiltonians(gatet: Type[qf.StdGate]) -> None:
 def test_symbolic(gatet: Type[qf.StdGate]) -> None:
     if len(gatet.cv_args) == 0:
         return
+
     args = {kwarg_to_symbol[arg]: random.uniform(-4, 4) for arg in gatet.cv_args}
     qbs = range(gatet.cv_qubit_nb)
 

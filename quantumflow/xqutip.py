@@ -68,7 +68,7 @@ Fredkin                     CSwap       FREDKIN
 # qrot
 # QASMU
 
-from typing import TYPE_CHECKING, Dict, Type, cast
+from typing import TYPE_CHECKING, Dict, Optional, Type, cast
 
 from . import var
 from .circuits import Circuit
@@ -114,7 +114,7 @@ _IMPORT_ERROR_MSG = """External dependency 'qutip' not installed. Install
 with 'pip install qutip'"""
 
 
-_QUTIP_GATE_NAMES: Dict[Type[Gate], str] = {
+_QUTIP_GATE_NAMES: Dict[Type[Gate], Optional[str]] = {
     I: None,
     Ph: "GLOBALPHASE",
     Rx: "RX",

@@ -54,7 +54,7 @@ Standard channels
 
 from functools import reduce
 from operator import add
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 from scipy import linalg
@@ -85,7 +85,7 @@ class Kraus(Operation):
     # FIXME: Shouldn't take Gate, since may not be Unitary operators
 
     def __init__(
-        self, operators: Sequence[Gate], weights: Sequence[float] = None
+        self, operators: Sequence[Gate], weights: Optional[Sequence[float]] = None
     ) -> None:
         self.operators = operators
 
@@ -164,7 +164,7 @@ class UnitaryMixture(Kraus):
     """
 
     def __init__(
-        self, operators: Sequence[Gate], weights: Sequence[float] = None
+        self, operators: Sequence[Gate], weights: Optional[Sequence[float]] = None
     ) -> None:
         from .info import almost_unitary
 
@@ -285,7 +285,9 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
 
 # TODO: as class RandomChannel?
 # Author: GEC (2019)
-def random_channel(qubits: Qubits, rank: int = None, unital: bool = False) -> Channel:
+def random_channel(
+    qubits: Qubits, rank: Optional[int] = None, unital: bool = False
+) -> Channel:
     """
     Returns: A randomly sampled Channel drawn from the BCSZ ensemble with
     the specified Kraus rank.

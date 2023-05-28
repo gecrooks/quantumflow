@@ -21,7 +21,7 @@ QuantumFlow: Gradients of parameterized gates, and gradient descent optimizers
 
 """
 
-from typing import Callable, Sequence, Tuple
+from typing import Callable, Optional, Sequence, Tuple
 
 import numpy as np
 from numpy import pi
@@ -85,7 +85,7 @@ def expectation_gradients(
     ket0: State,
     circ: Circuit,
     hermitian: Operation,
-    dfunc: Callable[[float], float] = None,
+    dfunc: Optional[Callable[[float], float]] = None,
 ) -> Sequence[float]:
     """
     Calculate the gradients of a function of expectation for a

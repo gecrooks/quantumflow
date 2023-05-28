@@ -6,7 +6,7 @@
 # DOCME
 
 import string
-from typing import TYPE_CHECKING, List, Sequence, Tuple
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -53,7 +53,7 @@ def flatten(tensor: QubitTensor, rank: int) -> np.ndarray:
     return np.reshape(tensor, [2**N] * R)
 
 
-def transpose(tensor: QubitTensor, perm: Sequence[int] = None) -> QubitTensor:
+def transpose(tensor: QubitTensor, perm: Optional[Sequence[int]] = None) -> QubitTensor:
     """(Super)-operator transpose. Permutes the meta-indices.
     Default is to invert the meta-index order.
     """
