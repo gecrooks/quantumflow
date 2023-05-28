@@ -7,7 +7,7 @@
 
 # DO Rename
 
-from typing import ClassVar, Dict, List, Mapping, Optional, Type, TypeVar
+from typing import ClassVar, Dict, List, Mapping, Type, TypeVar
 
 import numpy as np
 import scipy
