@@ -25,6 +25,7 @@ STD_TRANSLATIONS = [
 def test_stdgate_translators(trans: Callable) -> None:
     gatet = translation_source_gate(trans)
 
+    assert gatet.cv_args is not None
     args = [np.random.uniform(-4, 4) for _ in gatet.cv_args]
     qbs = range(10, 10 + gatet.cv_qubit_nb)  # Check that qubits are preserved
     gate = gatet(*chain(args, qbs))  # type: ignore
@@ -50,6 +51,7 @@ concrete = {n: np.random.uniform(-4, 4) for n in kwarg_to_symbol.values()}
 def test_std_gate_translators_symbolic(trans: Callable) -> None:
     """Check that translations can handle symbolic arguments"""
     gatet = translation_source_gate(trans)
+    assert gatet.cv_args is not None
     args = [kwarg_to_symbol[a] for a in gatet.cv_args]
     qbs = range(gatet.cv_qubit_nb)
     gate = gatet(*chain(args, qbs))  # type: ignore

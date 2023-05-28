@@ -9,7 +9,16 @@ QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 
 import itertools
 import textwrap
-from typing import Any, Dict, Generator, Iterable, Iterator, List, Tuple
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+)
 
 import networkx as nx
 import numpy as np
@@ -245,14 +254,14 @@ class DAGCircuit(Operation):
                 yield elem
 
     # DOCME TESTME
-    def next_element(self, elem: Operation, qubit: Qubit = None) -> Operation:
+    def next_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
         for _, node, key in self.graph.edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
         assert False  # Insanity check  # FIXME, raise exception
 
     # DOCME TESTME
-    def prev_element(self, elem: Operation, qubit: Qubit = None) -> Operation:
+    def prev_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
         for node, _, key in self.graph.in_edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node

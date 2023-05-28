@@ -39,6 +39,7 @@ from typing import (
     Hashable,
     Iterator,
     List,
+    Optional,
     Sequence,
     Tuple,
     Type,
@@ -83,7 +84,7 @@ class Moment(Sequence, Operation):
     so that they may be applied at the same moment of time.
     """
 
-    def __init__(self, *elements: Operation, qubits: Qubits = None) -> None:
+    def __init__(self, *elements: Operation, qubits: Optional[Qubits] = None) -> None:
         circ = Circuit(Circuit(elements).flat(), qubits=qubits)  # type: ignore
 
         qbs = list(q for elem in circ for q in elem.qubits)
@@ -102,10 +103,10 @@ class Moment(Sequence, Operation):
     def __iter__(self) -> Iterator[Operation]:
         yield from self._circ
 
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         return self._circ.run(ket)
 
-    def evolve(self, rho: Density = None) -> Density:
+    def evolve(self, rho: Optional[Density] = None) -> Density:
         return self._circ.evolve(rho)
 
     def asgate(self) -> "Gate":
@@ -143,7 +144,7 @@ class Moment(Sequence, Operation):
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
 
-    def __init__(self, qubit: Qubit, cbit: Hashable = None) -> None:
+    def __init__(self, qubit: Qubit, cbit: Optional[Hashable] = None) -> None:
         if cbit is None:
             cbit = qubit
 
@@ -443,7 +444,7 @@ class Simulator(Operation):
         raise NotImplementedError()
 
     @abstractmethod
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         raise NotImplementedError()
 
 
@@ -453,10 +454,10 @@ class Simulator(Operation):
 class QFSimulator(Simulator):
     """Our standard QuantumnFlow quantum circuit simulator as a Simulator subclass."""
 
-    def run(self, ket: State = None) -> State:
+    def run(self, ket: Optional[State] = None) -> State:
         return self.circuit.run(ket)
 
-    def evolve(self, rho: Density = None) -> Density:
+    def evolve(self, rho: Optional[Density] = None) -> Density:
         return self.circuit.evolve(rho)
 
 

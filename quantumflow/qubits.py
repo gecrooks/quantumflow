@@ -30,7 +30,7 @@ class Qubit(Protocol):
     e.g. strings, integers, tuples of strings and integers, etc.
     """
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: Any, /) -> bool:
         pass
 
     def __hash__(self) -> int:

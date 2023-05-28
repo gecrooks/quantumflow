@@ -75,7 +75,9 @@ def deprecated(func: Callable) -> Callable:
 # -- Collections --
 
 
-def multi_slice(axes: Sequence, items: Sequence, axes_nb: int = None) -> Tuple:
+def multi_slice(
+    axes: Sequence, items: Sequence, axes_nb: Optional[int] = None
+) -> Tuple:
     """Construct a multidimensional slice to access array data.
     e.g. mydata[multi_slice([3,5], [1,2]))] is equivalent to
     mydata[:,:,:,1,:,2,...]
@@ -180,7 +182,7 @@ def bitlist_to_int(bitlist: Sequence[int]) -> int:
     return out
 
 
-def int_to_bitlist(x: int, pad: int = None) -> List[int]:
+def int_to_bitlist(x: int, pad: Optional[int] = None) -> List[int]:
     """Converts an integer to a binary sequence of bits.
 
     Pad prepends with sufficient zeros to ensures that the returned list
@@ -228,7 +230,7 @@ _DENOMINATORS = set(
 )
 
 
-def rationalize(flt: float, denominators: Set[int] = None) -> Fraction:
+def rationalize(flt: float, denominators: Optional[Set[int]] = None) -> Fraction:
     """Convert a floating point number to a Fraction with a small
     denominator.
 
@@ -336,7 +338,7 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
     return grp
 
 
-def truncated_grid_2d_graph(m: int, n: int, t: int = None) -> nx.Graph:
+def truncated_grid_2d_graph(m: int, n: int, t: Optional[int] = None) -> nx.Graph:
     """Generate a rectangular grid graph (of width `m` and height `n`),
     with corners removed. It the truncation `t` is not given, then it
     is set to half the shortest side (rounded down)
