@@ -58,7 +58,7 @@ def test_stdgates_repr(gatet: Type[qf.StdGate]) -> None:
     gate0 = _randomize_gate(gatet)
     rep = repr(gate0)
     gate1 = eval(rep, dict(qf.STDGATES))
-    assert type(gate0) == type(gate1)
+    assert type(gate0) is type(gate1)
     assert qf.gates_close(gate0, gate1)
 
 
