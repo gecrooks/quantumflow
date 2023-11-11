@@ -139,15 +139,16 @@ def to_cirq_qubit(qubit: Qubit) -> "cirq.Qid":
     except ModuleNotFoundError as err:  # pragma: no cover
         raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
+
     if isinstance(qubit, int):
         return cirq.LineQubit(qubit)
     elif (
         isinstance(qubit, tuple)
-        and len(qubit) == 2
-        and isinstance(qubit[0], int)
-        and isinstance(qubit[1], int)
+        and len(qubit) == 2  # type: ignore
+        and isinstance(qubit[0], int) # type: ignore
+        and isinstance(qubit[1], int) # type: ignore
     ):
-        return cirq.GridQubit(row=qubit[0], col=qubit[1])
+        return cirq.GridQubit(row=qubit[0], col=qubit[1]) # type: ignore
     return cirq.NamedQubit(str(qubit))
 
 
