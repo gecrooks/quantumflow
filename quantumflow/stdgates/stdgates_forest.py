@@ -29,6 +29,7 @@ class CPhase(StdGate):
     .. math::
         \text{CPhase}(\theta) \equiv \text{diag}(1, 1, 1, e^{i \theta})
     """
+
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
 
@@ -73,6 +74,7 @@ class CPhase00(StdGate):
     .. math::
         \text{CPhase00}(\theta) \equiv \text{diag}(e^{i \theta}, 1, 1, 1)
     """
+
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
 
@@ -117,6 +119,7 @@ class CPhase01(StdGate):
     .. math::
         \text{CPhase01}(\theta) \equiv \text{diag}(1, e^{i \theta}, 1, 1)
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -158,6 +161,7 @@ class CPhase10(StdGate):
     .. math::
         \text{CPhase10}(\theta) \equiv \text{diag}(1, 1, e^{i \theta}, 1)
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, theta: Variable, q0: Qubit = 0, q1: Qubit = 1) -> None:
@@ -204,6 +208,7 @@ class PSwap(StdGate):
         \text{PSwap}(\theta) \equiv \begin{pmatrix} 1&0&0&0 \\
         0&0&e^{i\theta}&0 \\ 0&e^{i\theta}&0&0 \\ 0&0&0&1 \end{pmatrix}
     """
+
     cv_interchangeable = True
     cv_tensor_structure = "monomial"
 

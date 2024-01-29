@@ -114,6 +114,7 @@ class IdentityGate(Gate):
     r"""
     The multi-qubit identity gate.
     """
+
     cv_interchangeable = True
     cv_hermitian = True
     cv_tensor_structure = "identity"
@@ -571,6 +572,7 @@ class DiagonalGate(Gate):
     `arXiv:0406176 <https://arxiv.org/pdf/quant-ph/0406176.pdf>`_
 
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(
