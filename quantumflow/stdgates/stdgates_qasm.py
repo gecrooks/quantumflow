@@ -255,6 +255,7 @@ class CU3(StdGate):
 
 class CRx(StdCtrlGate):
     r"""A controlled Rx gate."""
+
     cv_target = Rx
 
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -274,6 +275,7 @@ class CRx(StdCtrlGate):
 
 class CRy(StdCtrlGate):
     r"""A controlled Ry gate."""
+
     cv_target = Ry
 
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -293,6 +295,7 @@ class CRy(StdCtrlGate):
 
 class CRz(StdCtrlGate):
     r"""A controlled Rz gate."""
+
     cv_target = Rz
     cv_tensor_structure = "diagonal"
 

@@ -49,6 +49,7 @@ class CCiX(StdGate):
     Refs:
           http://arxiv.org/abs/1210.0974
     """
+
     # Kudos: Adapted from 1210.0974, via Quipper
     # See also https://arxiv.org/pdf/1508.03273.pdf, fig 3
 
@@ -104,6 +105,7 @@ class CCNot(StdCtrlGate):
             \end{pmatrix}
 
     """
+
     cv_target = X
     cv_hermitian = True
     cv_tensor_structure = "permutation"
@@ -141,6 +143,7 @@ class CCXPow(StdCtrlGate):
         q1: control qubit
         q2: target qubits
     """
+
     cv_target = XPow
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit, q2: Qubit) -> None:
@@ -176,6 +179,7 @@ class CCZ(StdCtrlGate):
                 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1
             \end{pmatrix}
     """
+
     cv_target = Z
     cv_hermitian = True
     cv_interchangeable = True
@@ -224,6 +228,7 @@ class CISwap(StdCtrlGate):
     Refs:
           https://arxiv.org/abs/2002.11728
     """
+
     cv_target = ISwap
     cv_tensor_structure = "monomial"
 
@@ -252,6 +257,7 @@ class CSwap(StdCtrlGate):
                 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1
             \end{pmatrix}
     """
+
     cv_target = Swap
     cv_hermitian = True
     cv_tensor_structure = "permutation"

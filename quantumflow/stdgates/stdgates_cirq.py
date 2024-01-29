@@ -32,6 +32,7 @@ class PhasedX(StdGate):
     r"""A phased X gate, equivalent to the circuit
     ───Z^-p───X───Z^p───
     """
+
     # Kudos: Adapted from Cirq
 
     cv_tensor_structure = "monomial"
@@ -124,6 +125,7 @@ class FSim(StdGate):
                 0 & 0 & 0 & e^{-i\phi)}
             \end{pmatrix}
     """
+
     # Kudos: Adapted from Cirq
 
     cv_interchangeable = True
@@ -273,6 +275,7 @@ class Sycamore(StdGate):
     Ref:
          https://www.nature.com/articles/s41586-019-1666-5
     """
+
     # Kudos: Adapted from Cirq
 
     cv_interchangeable = True

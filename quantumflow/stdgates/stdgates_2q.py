@@ -198,6 +198,7 @@ class Can(StdGate):
             + t_y Y\otimes Y + t_z Z\otimes Z)\Big\}
 
     """
+
     cv_interchangeable = True
 
     def __init__(
@@ -272,6 +273,7 @@ class CH(StdCtrlGate):
                 0 & 0 & \tfrac{1}{\sqrt{2}} & -\tfrac{1}{\sqrt{2}}
             \end{pmatrix}
     """
+
     cv_target = _H
     cv_hermitian = True
 
@@ -298,6 +300,7 @@ class CNot(StdCtrlGate):
         \text{CNot}() \equiv \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                             0&0&0&1 \\ 0&0&1&0 \end{pmatrix}
     """
+
     cv_target = X
     cv_hermitian = True
     cv_tensor_structure = "permutation"
@@ -352,6 +355,7 @@ class CNotPow(StdCtrlGate):
         q0: control qubit
         q1: target qubit
     """
+
     cv_target = XPow
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -420,6 +424,7 @@ class CS(StdCtrlGate):
         \text{CS}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                     0&0&1&0 \\ 0&0&0&i \end{pmatrix}
     """
+
     cv_target = S
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
@@ -441,6 +446,7 @@ class CT(StdCtrlGate):
         \text{CT}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                     0&0&1&0 \\ 0&0&0&  \end{pmatrix}
     """
+
     cv_target = T
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
@@ -470,6 +476,7 @@ class CY(StdCtrlGate):
                 0 & 0 & i & 0
             \end{pmatrix}
     """
+
     cv_target = Y
     cv_hermitian = True
     cv_tensor_structure = "monomial"
@@ -494,6 +501,7 @@ class CYPow(StdCtrlGate):
     Locally equivalent to ``Can(t/2, 0, 0)``
 
     """
+
     cv_target = YPow
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -559,6 +567,7 @@ class CZ(StdCtrlGate):
         \text{CZ}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
                                     0&0&1&0 \\ 0&0&0&-1 \end{pmatrix}
     """
+
     cv_target = Z
     cv_hermitian = True
     cv_interchangeable = True
@@ -601,6 +610,7 @@ class CZPow(StdCtrlGate):
                         0 & 0 & 0 & \exp(i \pi t)
                       \end{pmatrix}
     """
+
     cv_target = ZPow
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
@@ -629,6 +639,7 @@ class ECP(StdGate):
 
     Equivalent to ``Can(1/2, 1/4, 1/4)``.
     """
+
     cv_interchangeable = True
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
@@ -659,6 +670,7 @@ class Exch(StdGate):
     Equivalent to Can(t,t,t)
 
     """
+
     cv_interchangeable = True
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -717,6 +729,7 @@ class Givens(StdGate):
             \end{pmatrix}
 
     """
+
     # Kudos: Adapted from cirq
 
     def __init__(self, theta: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -761,6 +774,7 @@ class ISwap(StdGate):
         \begin{pmatrix} 1&0&0&0 \\ 0&0&i&0 \\ 0&i&0&0 \\ 0&0&0&1 \end{pmatrix}
 
     """
+
     cv_interchangeable = True
     cv_tensor_structure = "monomial"
 
@@ -803,6 +817,7 @@ class SqrtISwap(StdGate):
 
     Equivalent to ``Can(-1/4,-1/4,0)``.
     """
+
     cv_interchangeable = True
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
@@ -833,6 +848,7 @@ class SqrtISwap_H(StdGate):
 
     Equivalent to ``Can(1/4, 1/4, 0)``.
     """
+
     cv_interchangeable = True
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
@@ -863,6 +879,7 @@ class SqrtSwap(StdGate):
 
     Equivalent to ``Can(1/4, 1/4, 1/4)``.
     """
+
     cv_interchangeable = True
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
@@ -894,6 +911,7 @@ class SqrtSwap_H(StdGate):
     Equivalent to ``Can(-1/4, -1/4, -1/4)``, and locally equivalent to
     ``Can(3/4, 1/4, 1/4)``
     """
+
     cv_interchangeable = True
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
@@ -930,6 +948,7 @@ class Swap(StdGate):
             \end{pmatrix}
 
     """
+
     cv_interchangeable = True
     cv_hermitian = True
     cv_tensor_structure = "permutation"
@@ -999,6 +1018,7 @@ class W(StdGate):
         https://arxiv.org/pdf/1505.06552.pdf
 
     """
+
     # Kudos: Adapted from Quipper
 
     def __init__(self, q0: Qubit, q1: Qubit) -> None:
@@ -1032,6 +1052,7 @@ class XX(StdGate):
     Args:
         t:
     """
+
     # TODO: Is XX(1/2) MS gate, or is it XX(-1/2)???
     cv_interchangeable = True
 
@@ -1080,6 +1101,7 @@ class XY(StdGate):
 
     Powers of the iSWAP gate. Equivalent to ``Can(t, t, 0)``.
     """
+
     # https://arxiv.org/abs/1912.04424v1
     cv_interchangeable = True
 
@@ -1118,6 +1140,7 @@ class YY(StdGate):
     Args:
         t:
     """
+
     cv_interchangeable = True
 
     def __init__(self, t: Variable, q0: Qubit, q1: Qubit) -> None:
@@ -1169,6 +1192,7 @@ class ZZ(StdGate):
     Args:
         t:
     """
+
     cv_interchangeable = True
     cv_tensor_structure = "diagonal"
 

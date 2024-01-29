@@ -80,6 +80,7 @@ class I(StdGate):  # noqa: E742
     .. math::
         I() \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
     """
+
     cv_hermitian = True
     cv_tensor_structure = "identity"
 
@@ -124,6 +125,7 @@ class Ph(StdGate):
         \operatorname{Ph}(\phi) \equiv \begin{pmatrix} e^{i \phi}& 0 \\
                               0 & e^{i \phi} \end{pmatrix}
     """
+
     # TODO
     # Ref: Explorations in Quantum Computing, Williams, p77
     # Ref: Barenco
@@ -173,6 +175,7 @@ class X(StdGate):
     .. math::
         X() &\equiv \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}
     """
+
     cv_hermitian = True
     cv_tensor_structure = "permutation"
 
@@ -215,6 +218,7 @@ class Y(StdGate):
 
     mnemonic: "Minus eye high".
     """
+
     cv_hermitian = True
     cv_tensor_structure = "monomial"
 
@@ -255,6 +259,7 @@ class Z(StdGate):
     .. math::
         Z() &\equiv \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}
     """
+
     cv_hermitian = True
     cv_tensor_structure = "diagonal"
 
@@ -293,6 +298,7 @@ class H(StdGate):
         H() \equiv \frac{1}{\sqrt{2}}
         \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}
     """
+
     cv_hermitian = True
 
     def __init__(self, q0: Qubit) -> None:
@@ -343,6 +349,7 @@ class S(StdGate):
         S() \equiv \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}
 
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, q0: Qubit) -> None:
@@ -380,6 +387,7 @@ class T(StdGate):
     .. math::
         \begin{pmatrix} 1 & 0 \\ 0 & e^{i \pi / 4} \end{pmatrix}
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, q0: Qubit) -> None:
@@ -418,6 +426,7 @@ class PhaseShift(StdGate):
         \text{PhaseShift}(\theta) \equiv \begin{pmatrix}
          1 & 0 \\ 0 & e^{i \theta} \end{pmatrix}
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
@@ -573,6 +582,7 @@ class Rz(StdGate):
     Args:
         theta: Angle of rotation in Bloch sphere
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, theta: Variable, q0: Qubit) -> None:
@@ -624,6 +634,7 @@ class S_H(StdGate):
         \begin{pmatrix} 1 & 0 \\ 0 & -i \end{pmatrix}
 
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, q0: Qubit) -> None:
@@ -661,6 +672,7 @@ class T_H(StdGate):
     .. math::
         \begin{pmatrix} 1 & 0 \\ 0 & e^{-i \pi / 4} \end{pmatrix}
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, q0: Qubit) -> None:
@@ -850,6 +862,7 @@ class ZPow(StdGate):
     Args:
         t: Number of half turns (quarter cycles) on Block sphere
     """
+
     cv_tensor_structure = "diagonal"
 
     def __init__(self, t: Variable, q0: Qubit) -> None:
