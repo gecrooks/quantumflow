@@ -60,7 +60,6 @@ jobs:
     - name: Test coverage with pytest
       if: runner.os == 'Linux'
       run: |
-        pip install pytest-cov
         python -m pytest --cov --cov-fail-under 95
     - name: Lint with ruff
       if: runner.os == 'Linux'
