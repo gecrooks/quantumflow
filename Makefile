@@ -11,7 +11,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 init:  ## Install and initlize package ready for development
-	pip install -e .[dev]
+	pip install -e '.[dev]'
 
 about:	## Report versions of dependent packages
 	@python -m $(PROJECT).about
@@ -29,23 +29,10 @@ coverage:	## Report test coverage using current backend
 	@echo
 
 lint:		## Lint check python source
-	@echo
-	@echo "isort"
-	@isort --check -m 3 --tc $(FILES)  || echo "FAILED isort!"
-	@echo
-	@echo "black"
-	@black --diff --color $(FILES)  || echo "FAILED black"
-	@echo
-	@echo "flake8"
-	@flake8 $(FILES)  || echo "FAILED flake8"
-	@echo
+	ruff check
 
 delint:   ## Run isort and black to delint project
-	@echo	
-	isort -m 3 --tc $(FILES)
-	@echo
-	black $(FILES)
-	@echo
+	ruff format
 
 typecheck:	## Static typechecking 
 	mypy $(PROJECT)

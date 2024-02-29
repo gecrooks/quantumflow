@@ -326,7 +326,7 @@ def translate_cross_resonance_to_xx(
     q0, q1 = gate.qubits
 
     t7 = (
-        var.arccos(((1 + b**2 * var.cos(var.PI * var.sqrt(1 + b**2) * s))) / (1 + b**2))
+        var.arccos((1 + b**2 * var.cos(var.PI * var.sqrt(1 + b**2) * s)) / (1 + b**2))
         / var.PI
     )
     t4 = c * s

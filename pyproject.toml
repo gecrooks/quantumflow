@@ -1,9 +1,179 @@
-# pyproject.toml
+
+
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#writing-pyproject-toml
+
+
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=67.0", "setuptools_scm[toml]>=7.1"]
 
 
-# pyproject.toml
+
+[project]
+name = "quantumflow"
+dynamic = ["version"]
+requires-python =">=3.9"
+
+authors = [
+  {name = "Gavin E. Crooks", email = "gavincrooks@gmail.com"},
+]
+
+description = "Cross compiler for gate based models of quantum computing"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = []
+classifiers = [ 
+  # Full List: https://pypi.org/classifiers/
+ 
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: Python",
+    "Natural Language :: English",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",     
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+
+dependencies = [
+    "typing_extensions       >= 4.1.1",
+    "numpy",                   
+    "scipy                   < 1.10.0",    # v1.10 breaks tests
+    "sympy                   >= 1.6",
+    "networkx",
+    "decorator               < 5.0.0",     # 5.0 breaks networkx dependancy 
+    "opt_einsum",
+    "pillow                  != 9.1.0",    # 9.1.0 has problems on some versions of MacOS
+                                        # https://github.com/python-pillow/Pillow/issues/6179
+    "matplotlib",
+  ]
+
+
+[project.urls]
+Homepage = "https://github.com/gecrooks/quantumflow/"
+# Documentation = "https://readthedocs.org"
+Repository = "https://github.com/gecrooks/quantumflow.git"
+Issues = "https://github.com/gecrooks/quantumflow/issues"
+# Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+
+
+[project.optional-dependencies]
+
+ext = [
+    "cirq                    >= 0.8.0",
+    "qiskit                  >= 0.24.0",
+    "qiskit-aer",
+    "ruamel.yaml",                         # Additional requirement for pyquil
+    "pyquil                  >= 2.28.0",
+    "qsimcirq                >= 0.10.2",
+    "qutip",
+    "amazon-braket-sdk",    
+]
+docs = [
+    "sphinx",
+    "sphinxcontrib-bibtex",
+    "guzzle-sphinx-theme",
+    "setuptools_scm",
+]
+dev = [
+    "cirq                    >= 0.8.0",
+    "qiskit                  >= 0.24.0",
+    "qiskit-aer",
+    "ruamel.yaml",                         # Additional requirement for pyquil
+    "pyquil                  >= 2.28.0",
+    "qsimcirq                >= 0.10.2   ; python_version < '3.11'",   # PEP508 environment marker
+    "qutip",
+    "amazon-braket-sdk",  
+
+    "sphinx",
+    "sphinxcontrib-bibtex",
+    "guzzle-sphinx-theme",
+    "setuptools_scm",
+    "twine",
+
+    "setupext-janitor",
+
+    "numpy                   >= 1.20",     # Needed for numpy.typehints
+    "pytest >= 4.6",
+    "pytest-cov",
+    "ruff",
+    "mypy                    >= 0.931",
+    "nbmake",                              # for testing notebooks
+    "pre-commit",
+]
+
+
+
+[tool.setuptools]
+packages = ["quantumflow"]
+
+
 [tool.setuptools_scm]
+fallback_version = "0.0.0-dev"
+# write_to = "example_python_project/_version.py"
+
+
+[tools.ruff]
+# https://docs.astral.sh/ruff/configuration/
+
+
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+
+
+# pytest configuration
+# https://docs.pytest.org/en/7.2.x/reference/customize.html
+
+[tool.pytest.ini_options]
+testpaths = ["quantumflow", "examples"]
+
+
+
+
+[tool.coverage.run]
+branch = true
+source = ["quantumflow"]
+parallel = true
+
+[tool.coverage.report]
+omit = ['*_test.py']
+exclude_lines = [
+  '\#\s*pragma: no cover',
+  '^\s*raise AssertionError\b',
+  '^\s*raise NotImplementedError\b',
+  '^\s*return NotImplemented\b',
+  '^\s*raise$',
+  '^assert False\b',
+  '''^if __name__ == ['"]__main__['"]:$''',
+]
+
+
+
+
+# mypy typecheck configuration
+# https://mypy.readthedocs.io/en/stable/config_file.html
+
+[tool.mypy]
+
+
+# Suppresses error about unresolved imports (i.e. from numpy)
+ignore_missing_imports = true
+
+# Disallows functions without type annotations
+# disallow_untyped_defs = true
+
+
 
