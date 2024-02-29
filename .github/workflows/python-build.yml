@@ -35,7 +35,7 @@ jobs:
         python -m pip install pytest
     - name: Test with pytest (Tests should pass without extra dependancies installed)
       run: |
-        python -m $(python -Wi setup.py --name).about
+        python -m quantumflow.about
         python -m pytest
     - name: Install extra dependencies
       if: runner.os == 'Linux'
@@ -61,16 +61,10 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         python -m pytest --cov --cov-fail-under 95
-    - name: Lint with black and isort (run `make delint` to fix issues)
+    - name: Lint with ruff
       if: runner.os == 'Linux'
       run: |
-        python -m pip install black --upgrade  # Weirdly one of the optimal dependencies downgrades black 
-        black --check .  
-        isort --check -m 3 --tc .
-    - name: Lint with flake8
-      if: runner.os == 'Linux'
-      run: |
-        flake8 .            
+        python -m ruff check     
     - name: Typecheck with mypy
       if: runner.os == 'Linux'
       run: |
