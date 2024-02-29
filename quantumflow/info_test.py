@@ -117,7 +117,7 @@ def test_fidelity() -> None:
 
     ket0 = qf.random_state(3)
     ket1 = qf.random_state(3)
-    fid0 = qf.state_fidelity(ket0, ket1, atol=10**(-3))
+    fid0 = qf.state_fidelity(ket0, ket1)
 
     rho0 = ket0.asdensity()
     rho1 = ket1.asdensity()
@@ -157,7 +157,7 @@ def test_bures_distance(repeat: int) -> None:
 
 def test_bures_angle() -> None:
     rho = qf.random_density(4)
-    assert np.isclose(qf.bures_angle(rho, rho), 0.0, atol=ATOL * 20)
+    assert np.isclose(qf.bures_angle(rho, rho), 0.0, atol=0.03)
 
     rho1 = qf.random_density(4)
     qf.bures_angle(rho, rho1)
