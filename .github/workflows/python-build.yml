@@ -42,7 +42,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install wheel
-        python -m pip install .[dev]  # install package + test dependencies
+        python -m pip install '.[dev]'  # install package + test dependencies
     - name: Install extra Linux dependencies
       if: runner.os == 'Linux'
       run: |
@@ -60,6 +60,7 @@ jobs:
     - name: Test coverage with pytest
       if: runner.os == 'Linux'
       run: |
+        pip install pytest-cov
         python -m pytest --cov --cov-fail-under 95
     - name: Lint with ruff
       if: runner.os == 'Linux'
