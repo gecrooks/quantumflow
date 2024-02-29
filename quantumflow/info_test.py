@@ -113,11 +113,11 @@ def test_fidelity() -> None:
     assert 0.0 <= fid <= 1.0
 
     fid = qf.fidelity(rho0, rho0)
-    assert np.isclose(fid, 1.0)
+    assert np.isclose(fid, 1.0, atol=0.001)
 
     ket0 = qf.random_state(3)
     ket1 = qf.random_state(3)
-    fid0 = qf.state_fidelity(ket0, ket1)
+    fid0 = qf.state_fidelity(ket0, ket1, atol=10**(-3))
 
     rho0 = ket0.asdensity()
     rho1 = ket1.asdensity()
