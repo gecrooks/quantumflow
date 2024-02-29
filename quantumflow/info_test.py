@@ -147,7 +147,7 @@ def test_purity() -> None:
 def test_bures_distance(repeat: int) -> None:
     rho = qf.random_density(4)
     # Note ATOL. Sometimes does not give accurate answer
-    assert np.isclose(qf.bures_distance(rho, rho), 0.0, atol=ATOL * 1000)
+    assert np.isclose(qf.bures_distance(rho, rho), 0.0,  atol=10**(-4))
 
     rho1 = qf.random_density(4)
     qf.bures_distance(rho, rho1)
@@ -170,7 +170,7 @@ def test_bures_angle() -> None:
     ang0 = qf.fubini_study_angle(ket0.tensor, ket1.tensor)
     ang1 = qf.bures_angle(rho0, rho1)
 
-    assert np.isclose(ang0, ang1, atol=ATOL*1000)
+    assert np.isclose(ang0, ang1,  atol=10**(-4))
 
 
 def test_entropy() -> None:
