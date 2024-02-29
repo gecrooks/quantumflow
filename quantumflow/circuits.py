@@ -114,10 +114,12 @@ class Circuit(Sequence, Operation):
 
     # Methods for Sequence
     @overload
-    def __getitem__(self, key: int) -> Operation: ...  # pragma: no cover
+    def __getitem__(self, key: int) -> Operation:
+        ...  # pragma: no cover
 
     @overload  # noqa: F811
-    def __getitem__(self, key: slice) -> "Circuit": ...  # pragma: no cover
+    def __getitem__(self, key: slice) -> "Circuit":
+        ...  # pragma: no cover
 
     def __getitem__(self, key: Union[int, slice]) -> Operation:  # noqa: F811s
         if isinstance(key, slice):

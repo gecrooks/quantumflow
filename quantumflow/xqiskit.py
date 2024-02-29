@@ -96,7 +96,6 @@ QASM_TO_QF = {
 
 class QiskitSimulator(Simulator):
     def run(self, ket: Optional[State] = None) -> State:
-
         circ = self.circuit
         if ket is not None:
             circ = Circuit(Initialize(ket)) + circ
