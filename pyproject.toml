@@ -161,14 +161,19 @@ exclude_lines = [
 ]
 
 
+
+
 # mypy typecheck configuration
 # https://mypy.readthedocs.io/en/stable/config_file.html
 
-# [tools.mypy]
-files = ["quantumflow", "examples"]
+[tool.mypy]
+
 
 # Suppresses error about unresolved imports (i.e. from numpy)
 ignore_missing_imports = true
 
-# Disallows functions without type annotations#
-disallow_untyped_defs = true
+# Disallows functions without type annotations
+# disallow_untyped_defs = true
+
+
+

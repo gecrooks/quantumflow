@@ -68,7 +68,7 @@ jobs:
     - name: Typecheck with mypy
       if: runner.os == 'Linux'
       run: |
-        mypy
+        mypy quantumflow
     - name: Build documentation with sphinx
       if: runner.os == 'Linux'
       run: |
