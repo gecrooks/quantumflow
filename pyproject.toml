@@ -45,7 +45,7 @@ classifiers = [
 dependencies = [
     "typing_extensions       >= 4.1.1",
     "numpy",                   
-    "scipy                   < 1.10.0",    # v1.10 breaks tests
+    "scipy                  ",    # v1.10 breaks tests
     "sympy                   >= 1.6",
     "networkx",
     "decorator               < 5.0.0",     # 5.0 breaks networkx dependancy 
