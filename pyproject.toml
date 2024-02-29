@@ -103,10 +103,8 @@ dev = [
     "numpy                   >= 1.20",     # Needed for numpy.typehints
     "pytest >= 4.6",
     "pytest-cov",
-    "flake8",
+    "ruff",
     "mypy                    >= 0.931",
-    "black",                   
-    "isort",
     "nbmake",                              # for testing notebooks
     "pre-commit",
 ]
