@@ -53,7 +53,7 @@ jobs:
     - name: About
       if: runner.os == 'Linux'
       run: |
-        python -m $(python -Wi setup.py --name).about
+        python -m quantumflow.about
         echo
         pdflatex --version
         pdftocairo -v
