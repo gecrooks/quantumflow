@@ -125,7 +125,7 @@ def trace(tensor: QubitTensor, rank: int) -> float:
 
     tensor = np.reshape(tensor, [2 ** (N * R // 2)] * 2)
     trace = np.trace(tensor)
-    return float(trace)
+    return np.real(trace)
 
 
 def norm(tensor: QubitTensor) -> QubitTensor:
