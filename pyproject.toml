@@ -12,7 +12,7 @@ requires = ["setuptools>=67.0", "setuptools_scm[toml]>=7.1"]
 [project]
 name = "quantumflow"
 dynamic = ["version"]
-requires-python =">=3.9"
+requires-python =">=3.10"
 
 authors = [
   {name = "Gavin E. Crooks", email = "gavincrooks@gmail.com"},
@@ -34,9 +34,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",     
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",     
     "Operating System :: OS Independent",
     "License :: OSI Approved :: Apache Software License",
 ]
@@ -45,7 +45,7 @@ classifiers = [
 dependencies = [
     "typing_extensions       >= 4.1.1",
     "numpy",                   
-    "scipy                   < 1.10.0",    # v1.10 breaks tests
+    "scipy                  ",    # v1.10 breaks tests
     "sympy                   >= 1.6",
     "networkx",
     "decorator               < 5.0.0",     # 5.0 breaks networkx dependancy 
