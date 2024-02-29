@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 
 import quantumflow as qf
-from quantumflow.config import ATOL
 
 from .config_test import REPS
 
