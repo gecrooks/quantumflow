@@ -7,15 +7,20 @@
 Unit tests for quantumflow.xqiskit
 """
 
-# fmt: off
-import pytest; pytest.importorskip("qiskit")  # noqa: E702
-# fmt: on
+
+import pytest
+
+pytest.importorskip("qiskit")
 
 
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+from qiskit.circuit import (  # noqa: E402
+    ClassicalRegister,
+    QuantumCircuit,
+    QuantumRegister,
+)
 
-import quantumflow as qf
-from quantumflow.xqiskit import (
+import quantumflow as qf  # noqa: E402
+from quantumflow.xqiskit import (  # noqa: E402
     QiskitSimulator,
     circuit_to_qasm,
     circuit_to_qiskit,
@@ -64,8 +69,8 @@ def test_qiskit_to_circuit() -> None:
     qc.cy(q[0], q[1])
     qc.cz(q[0], q[1])
     qc.h(q[0])
-    qc.i(q[1])
-    qc.i(q[2])
+    qc.id(q[1])
+    qc.id(q[2])
     qc.rx(0.0, q[0])
     qc.ry(0.1, q[1])
     qc.rz(0.2, q[2])

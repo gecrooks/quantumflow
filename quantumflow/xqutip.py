@@ -201,7 +201,7 @@ def circuit_to_qutip(circ: Circuit, translate: bool = False) -> "QubitCircuit":
     qbc = QubitCircuit(N + 1)
 
     for op in circ:
-        if not type(op) in _QUTIP_GATE_NAMES:
+        if type(op) not in _QUTIP_GATE_NAMES:
             raise ValueError(f"Cannot convert operation to qutip: {op}")
 
         gate_name = _QUTIP_GATE_NAMES[cast(Type[Gate], type(op))]

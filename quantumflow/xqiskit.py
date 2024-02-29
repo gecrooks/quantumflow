@@ -96,10 +96,6 @@ QASM_TO_QF = {
 
 class QiskitSimulator(Simulator):
     def run(self, ket: Optional[State] = None) -> State:
-        try:
-            import qiskit
-        except ModuleNotFoundError as err:  # pragma: no cover
-            raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
 
         circ = self.circuit
         if ket is not None:
@@ -109,7 +105,11 @@ class QiskitSimulator(Simulator):
 
         # The call to get_backend() automagically adds the save_statevector() method to
         # QuantumCircuit. WTF. Mutating classes!? This is a terrible design.
-        simulator = qiskit.Aer.get_backend("aer_simulator")
+
+        from qiskit_aer import Aer
+
+        simulator = Aer.get_backend("aer_simulator")
+
         qkcircuit.save_statevector()
         result = simulator.run(qkcircuit).result()
         tensor = result.get_statevector()
@@ -207,7 +207,10 @@ translate_gates_to_qiskit = translate_to_qiskit
 
 def circuit_to_qasm(circ: Circuit, translate: bool = False) -> str:
     """Convert a QF circuit to a QASM formatted string"""
-    return circuit_to_qiskit(circ, translate).qasm()
+    circ = circuit_to_qiskit(circ, translate)
+    from qiskit import qasm2
+
+    return qasm2.dumps(circ)
 
 
 def qasm_to_circuit(qasm_str: str) -> Circuit:
