@@ -15,7 +15,7 @@ dynamic = ["version"]
 requires-python =">=3.9"
 
 authors = [
-  {name = "Gavin E. Crooks", email = "sgavincrooks@gmail.com"},
+  {name = "Gavin E. Crooks", email = "gavincrooks@gmail.com"},
 ]
 
 description = "Cross compiler for gate based models of quantum computing"
@@ -59,8 +59,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/gecrooks/quantumflow/"
 # Documentation = "https://readthedocs.org"
-# Repository = "https://github.com/me/spam.git"
-# Issues = "https://github.com/me/spam/issues"
+Repository = "https://github.com/gecrooks/quantumflow.git"
+Issues = "https://github.com/gecrooks/quantumflow/issues"
 # Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 
