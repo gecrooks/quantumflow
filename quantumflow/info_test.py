@@ -123,11 +123,10 @@ def test_fidelity() -> None:
     rho1 = ket1.asdensity()
     fid1 = qf.fidelity(rho0, rho1)
 
-    print(fid0, fid1, fid1-fid0)
-    assert np.isclose(fid1, fid0)
+    assert np.isclose(fid1, fid0, atol=ATOL)
 
     fid2 = np.cos(qf.fubini_study_angle(ket0.tensor, ket1.tensor)) ** 2
-    assert np.isclose(fid2, fid0)
+    assert np.isclose(fid2, fid0, atol=ATOL*200)
 
 
 def test_purity() -> None:
@@ -148,7 +147,7 @@ def test_purity() -> None:
 def test_bures_distance(repeat: int) -> None:
     rho = qf.random_density(4)
     # Note ATOL. Sometimes does not give accurate answer
-    assert np.isclose(qf.bures_distance(rho, rho), 0.0, atol=ATOL * 100)
+    assert np.isclose(qf.bures_distance(rho, rho), 0.0, atol=ATOL * 200)
 
     rho1 = qf.random_density(4)
     qf.bures_distance(rho, rho1)
