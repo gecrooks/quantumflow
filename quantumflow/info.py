@@ -224,7 +224,7 @@ def bures_distance(rho0: Density, rho1: Density) -> float:
     tr0 = np.real(np.trace(rho0.asoperator()))
     tr1 = np.real(np.trace(rho1.asoperator()))
     bures_squared = tr0 + tr1 - 2.0 * np.sqrt(fid)
-    bures_squared = max(bures_squared, 0.0) 
+    bures_squared = max(bures_squared, 0.0)
     return np.sqrt(bures_squared)
 
 

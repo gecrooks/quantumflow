@@ -123,10 +123,10 @@ def test_fidelity() -> None:
     rho1 = ket1.asdensity()
     fid1 = qf.fidelity(rho0, rho1)
 
-    assert np.isclose(fid1, fid0, atol=10**(-3))
+    assert np.isclose(fid1, fid0, atol=10 ** (-3))
 
     fid2 = np.cos(qf.fubini_study_angle(ket0.tensor, ket1.tensor)) ** 2
-    assert np.isclose(fid2, fid0,  atol=10**(-3))
+    assert np.isclose(fid2, fid0, atol=10 ** (-3))
 
 
 def test_purity() -> None:
@@ -170,7 +170,7 @@ def test_bures_angle() -> None:
     ang0 = qf.fubini_study_angle(ket0.tensor, ket1.tensor)
     ang1 = qf.bures_angle(rho0, rho1)
 
-    assert np.isclose(ang0, ang1,  atol=10**(-3))
+    assert np.isclose(ang0, ang1, atol=10 ** (-3))
 
 
 def test_entropy() -> None:
