@@ -202,7 +202,7 @@ def purity(rho: Density) -> float:
     tensor = rho.tensor
     N = rho.qubit_nb
     matrix = np.reshape(tensor, [2**N, 2**N])
-    return float(np.trace(matrix @ matrix))
+    return np.real(np.trace(matrix @ matrix))
 
 
 def fidelity(rho0: Density, rho1: Density) -> float:

@@ -123,6 +123,7 @@ def test_fidelity() -> None:
     rho1 = ket1.asdensity()
     fid1 = qf.fidelity(rho0, rho1)
 
+    print(fid0, fid1, fid1-fid0)
     assert np.isclose(fid1, fid0)
 
     fid2 = np.cos(qf.fubini_study_angle(ket0.tensor, ket1.tensor)) ** 2
