@@ -127,7 +127,7 @@ def expectation_gradients(
         g = -2 * r * np.imag(tensors.inner(f0.tensor, back.tensor))
 
         if dfunc is not None:
-            g = g * dfunc(np.real(expectation))
+            g = g * dfunc(float(np.real(expectation)))
 
         grads.append(float(g))
 
