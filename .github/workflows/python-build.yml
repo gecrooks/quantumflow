@@ -49,7 +49,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install texlive texlive-latex-extra latexmk poppler-utils
         mkdir -p ~/texmf/tex/latex
-        wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex -P ~/texmf/tex/latex
+        wget http://mirrors.ctan.org/graphics/pgf/contrib/quantikz/tikzlibraryquantikz.code.tex --no-check-certificate -P ~/texmf/tex/latex
     - name: About
       if: runner.os == 'Linux'
       run: |
