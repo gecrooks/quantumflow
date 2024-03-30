@@ -74,6 +74,7 @@ ext = [
     "pyquil                  >= 2.28.0",
     "qsimcirq                >= 0.10.2",
     "qutip",
+    "qutip-qip",
     "amazon-braket-sdk",    
 ]
 docs = [
@@ -90,6 +91,7 @@ dev = [
     "pyquil                  >= 2.28.0",
     "qsimcirq                >= 0.10.2   ; python_version < '3.11'",   # PEP508 environment marker
     "qutip",
+    "qutip-qip",
     "amazon-braket-sdk",  
 
     "sphinx",
