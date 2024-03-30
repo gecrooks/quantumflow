@@ -186,9 +186,35 @@ def qutip_to_circuit(qubitcircuit: "QubitCircuit") -> Circuit:
 def circuit_to_qutip(circ: Circuit, translate: bool = False) -> "QubitCircuit":
     """Convert a QuantumFlow circuit to a QuTiP circuit."""
     try:
-        from qutip.qip.circuit import QubitCircuit, _ctrl_gates, _para_gates
+        from qutip.qip.circuit import QubitCircuit
     except ModuleNotFoundError as err:  # pragma: no cover
         raise ModuleNotFoundError(_IMPORT_ERROR_MSG) from err
+
+    _ctrl_gates = [
+        "CNOT",
+        "CSIGN",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CY",
+        "CZ",
+        "CS",
+        "CT",
+        "CPHASE",
+    ]
+    _para_gates = [
+        "RX",
+        "RY",
+        "RZ",
+        "CPHASE",
+        "SWAPalpha",
+        "PHASEGATE",
+        "GLOBALPHASE",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "QASMU",
+    ]
 
     if translate:
         circ = translate_to_qutip(circ)
