@@ -15,6 +15,7 @@ https://algassert.com/quirk
 .. autofunction:: quirk_url
 .. autofunction:: open_quirk_webserver
 """
+
 import json
 import urllib
 import webbrowser

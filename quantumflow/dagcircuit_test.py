@@ -7,7 +7,6 @@
 Unit tests for quantumflow.dagcircuit
 """
 
-
 import numpy as np
 import pytest
 

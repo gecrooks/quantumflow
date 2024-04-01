@@ -5,7 +5,6 @@
 
 """Tests for quantumflow.xforest"""
 
-
 import numpy as np
 import pytest
 

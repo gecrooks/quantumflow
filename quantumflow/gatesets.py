@@ -17,7 +17,6 @@ Collections of gates and operations
 
 """
 
-
 from typing import Set, Type
 
 from .gates import ControlGate

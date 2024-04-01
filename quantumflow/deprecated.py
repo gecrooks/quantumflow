@@ -5,7 +5,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-""" Quantumflow Deprecated
+"""Quantumflow Deprecated
 
 A module for obsolete functions and classes, where they can live out
 their pitiful existence of quite desperation.
