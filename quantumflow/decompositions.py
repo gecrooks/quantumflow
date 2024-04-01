@@ -28,7 +28,6 @@ Two-qubit gate decompositions
 .. autofunction:: b_decomposition
 """
 
-
 import itertools
 from typing import Iterator, List, Sequence, Tuple, cast
 

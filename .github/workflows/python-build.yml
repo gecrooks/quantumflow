@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: "0 13 * * *"  # Every day at 1pm UTC (6am PST)
+    - cron: "0 0 * * 0"  # Every Sunday
 
 jobs:
   build:

@@ -7,7 +7,6 @@
 Unit tests for quantumflow.xqiskit
 """
 
-
 import pytest
 
 pytest.importorskip("qiskit")

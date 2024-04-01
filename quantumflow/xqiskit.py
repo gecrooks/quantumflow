@@ -21,7 +21,6 @@ Interface between IBM's Qiskit and QuantumFlow
 # since you might want to use those gates in QuantumFlow without loading
 # qiskit
 
-
 from typing import TYPE_CHECKING, Optional
 
 from .circuits import Circuit

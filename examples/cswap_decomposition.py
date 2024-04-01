@@ -10,6 +10,7 @@
 QuantumFlow Examples:
     Demonstration of decomposing a CSwap into CZ and 1-qubit gates
 """
+
 import quantumflow as qf
 
 circ0 = qf.Circuit([qf.CSwap(0, 1, 2)])

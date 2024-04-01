@@ -216,7 +216,6 @@ products of single qubit gates.
 """  # noqa: E501
 # Note: see comments in gates_qasm.py to understand the QASM gate mappings.
 
-
 from .stdgates import *  # noqa: F401, F403
 from .stdgates_1q import *  # noqa: F401, F403
 from .stdgates_2q import *  # noqa: F401, F403

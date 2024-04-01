@@ -7,7 +7,6 @@
 Unit tests for quantumflow States
 """
 
-
 import io
 
 import numpy as np

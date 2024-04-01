@@ -6,6 +6,7 @@
 """
 QuantumFlow: Standard three qubit gates
 """
+
 from typing import List
 
 import numpy as np

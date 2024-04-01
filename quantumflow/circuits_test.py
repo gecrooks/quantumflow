@@ -6,7 +6,6 @@
 
 """Unit tests for quantumflow.circuits"""
 
-
 import networkx as nx
 import numpy as np
 import pytest
