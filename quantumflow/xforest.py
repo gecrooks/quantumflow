@@ -16,16 +16,19 @@ Interface to pyQuil and the Rigetti Forest.
 
 """
 
+import numpy as np
+
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from . import utils
+from . import utils, var
 from .circuits import Circuit
 from .gatesets import QUIL_GATES
 from .ops import Gate
 from .stdgates import STDGATES
 from .stdops import Measure
 from .translate import circuit_translate
+
 
 if TYPE_CHECKING:
     from pyquil.quil import Program as pqProgram  # pragma: no cover
@@ -84,7 +87,7 @@ def circuit_to_pyquil(circ: Circuit, translate: bool = False) -> "pqProgram":
     QF_TO_QUIL = utils.invert_map(QUIL_TO_QF)
     for elem in circ:
         if isinstance(elem, Gate) and elem.name in QF_TO_QUIL:
-            params = list(elem.params)
+            params = list(var.asfloat(p) for p in elem.params)
             name = QF_TO_QUIL[elem.name]
             prog.gate(name, params, elem.qubits)  # type: ignore
         else:
@@ -119,7 +122,7 @@ def pyquil_to_circuit(program: "pqProgram") -> Circuit:
             name = QUIL_TO_QF[inst.name]
             defgate = STDGATES[name]
             qubits = [q.index for q in inst.qubits]
-            gate = defgate(*chain(inst.params, qubits))  # type: ignore
+            gate = defgate(*chain((np.real(p) for p in inst.params), qubits))  # type: ignore
             circ += gate
         else:
             raise ValueError("PyQuil program is not protoquil")  # pragma: no cover
