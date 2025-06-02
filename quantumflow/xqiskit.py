@@ -27,7 +27,7 @@ from .circuits import Circuit
 from .gatesets import QISKIT_GATES
 from .states import State
 from .stdgates import STDGATES
-from .stdops import If, Initialize, Simulator
+from .stdops import Initialize, Simulator
 from .translate import circuit_translate
 from .utils import invert_map
 
