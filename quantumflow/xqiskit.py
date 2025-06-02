@@ -27,7 +27,7 @@ from .circuits import Circuit
 from .gatesets import QISKIT_GATES
 from .states import State
 from .stdgates import STDGATES
-from .stdops import If, Initialize, Simulator
+from .stdops import Initialize, Simulator
 from .translate import circuit_translate
 from .utils import invert_map
 
@@ -127,6 +127,10 @@ def qiskit_to_circuit(qkcircuit: "qiskit.QuantumCircuit") -> Circuit:
 
     qkqbs = qkcircuit.qregs[0][:]
 
+    # DeprecationWarning: Treating CircuitInstruction as an iterable is deprecated legacy 
+    # behavior since Qiskit 1.2, and will be removed in Qiskit 3.0. 
+    # Instead, use the `operation`, `qubits` and `clbits` named attributes.
+    
     for instruction, qargs, cargs in qkcircuit:
         name = instruction.name
         if name not in QASM_TO_QF:
@@ -138,11 +142,15 @@ def qiskit_to_circuit(qkcircuit: "qiskit.QuantumCircuit") -> Circuit:
         args = [float(param) for param in instruction.params] + qubits
         gate = STDGATES[qf_name](*args)  # type: ignore
 
-        if instruction.condition is None:
-            circ += gate
-        else:
-            classical, value = instruction.condition
-            circ += If(gate, classical, value)
+
+        
+        # FIXME
+        # if instruction.condition is None:
+        #     
+        # else:
+        #     classical, value = instruction.condition
+        #     circ += If(gate, classical, value)
+        circ += gate
 
     return circ
 

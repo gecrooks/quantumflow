@@ -548,7 +548,7 @@ def merge_diagonal_gates(
         gate1 = DiagonalGate(params.flatten(), extra_qubits1 + tuple(gate1.qubits))
     gate1 = gate1.permute(qubits)
 
-    params = (a + b for a, b in zip(gate0.params, gate1.params))
+    params = list(a + b for a, b in zip(gate0.params, gate1.params))
     return DiagonalGate(params, qubits)
 
 
