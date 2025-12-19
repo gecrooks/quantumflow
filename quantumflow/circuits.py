@@ -105,8 +105,8 @@ class Circuit(Sequence, Operation):
         else:
             if not set(qbs).issubset(qubits):
                 raise ValueError(
-                    f"Incommensurate qubits: Expected {list(qubits)}"
-                    "but received {list(qbs)}"
+                    f"Incommensurate qubits: Expected {list(qubits)} "
+                    f"but received {list(qbs)}"
                 )
 
         super().__init__(qubits=qubits)
