@@ -253,19 +253,41 @@ class DAGCircuit(Operation):
             if not isinstance(elem, In) and not isinstance(elem, Out):
                 yield elem
 
-    # DOCME TESTME
     def next_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
+        """Return the next element in the DAG following the given element.
+
+        Args:
+            elem: The operation to find the successor of.
+            qubit: If specified, follow only the edge for this qubit.
+
+        Returns:
+            The next operation in the DAG.
+
+        Raises:
+            KeyError: If no next element is found.
+        """
         for _, node, key in self.graph.edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False  # Insanity check  # FIXME, raise exception
+        raise KeyError(f"No next element found for {elem!r} on qubit {qubit}")
 
-    # DOCME TESTME
     def prev_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
+        """Return the previous element in the DAG before the given element.
+
+        Args:
+            elem: The operation to find the predecessor of.
+            qubit: If specified, follow only the edge for this qubit.
+
+        Returns:
+            The previous operation in the DAG.
+
+        Raises:
+            KeyError: If no previous element is found.
+        """
         for node, _, key in self.graph.in_edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False  # Insanity check  # FIXME, raise exception
+        raise KeyError(f"No previous element found for {elem!r} on qubit {qubit}")
 
     def next_edges(self, elem: Operation) -> List[Tuple[Any, Any, Qubit]]:
         qubits = elem.qubits
