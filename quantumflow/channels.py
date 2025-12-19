@@ -238,10 +238,20 @@ def join_channels(chan0: Channel, chan1: Channel) -> Channel:
     return Channel(tensor, tuple(chan0.qubits) + tuple(chan1.qubits))
 
 
-# TESTME
 def channel_to_kraus(chan: Channel) -> "Kraus":
     """Convert a channel superoperator into a Kraus operator representation
-    of the same channel."""
+    of the same channel.
+
+    Args:
+        chan: A quantum channel represented as a superoperator.
+
+    Returns:
+        A Kraus representation of the same channel.
+
+    Raises:
+        ValueError: If the Choi matrix has non-real or negative eigenvalues,
+            indicating an invalid quantum channel.
+    """
     qubits = chan.qubits
     N = chan.qubit_nb
 
@@ -249,10 +259,23 @@ def channel_to_kraus(chan: Channel) -> "Kraus":
     evals, evecs = np.linalg.eig(choi)
     evecs = np.transpose(evecs)
 
-    assert np.allclose(evals.imag, 0.0)  # FIXME exception
-    assert np.all(evals.real >= 0.0)  # FIXME exception
+    if not np.allclose(evals.imag, 0.0):
+        max_imag = np.max(np.abs(evals.imag))
+        raise ValueError(
+            f"Choi matrix has non-real eigenvalues (max imaginary: {max_imag:.2e}). "
+            "Channel may not be Hermitian-preserving."
+        )
 
-    values = np.sqrt(evals.real)
+    # Use small tolerance for numerical noise
+    if np.any(evals.real < -1e-9):
+        min_eval = np.min(evals.real)
+        raise ValueError(
+            f"Choi matrix has negative eigenvalues (min: {min_eval:.2e}). "
+            "Channel may not be completely positive."
+        )
+
+    # Clamp small negative values from numerical noise to zero
+    values = np.sqrt(np.maximum(evals.real, 0.0))
 
     ops = []
     for i in range(2 ** (2 * N)):
