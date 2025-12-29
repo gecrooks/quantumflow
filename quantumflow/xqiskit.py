@@ -127,29 +127,20 @@ def qiskit_to_circuit(qkcircuit: "qiskit.QuantumCircuit") -> Circuit:
 
     qkqbs = qkcircuit.qregs[0][:]
 
-    # DeprecationWarning: Treating CircuitInstruction as an iterable is deprecated legacy 
-    # behavior since Qiskit 1.2, and will be removed in Qiskit 3.0. 
-    # Instead, use the `operation`, `qubits` and `clbits` named attributes.
-    
-    for instruction, qargs, cargs in qkcircuit:
-        name = instruction.name
+    for instruction in qkcircuit:
+        op = instruction.operation
+        qargs = instruction.qubits
+        # cargs = instruction.clbits  # Available if needed for classical bits
+
+        name = op.name
         if name not in QASM_TO_QF:
             raise NotImplementedError("Unknown qiskit operation")
 
         qf_name = QASM_TO_QF[name]
         qubits = [qkqbs.index(q) for q in qargs]
 
-        args = [float(param) for param in instruction.params] + qubits
+        args = [float(param) for param in op.params] + qubits
         gate = STDGATES[qf_name](*args)  # type: ignore
-
-
-        
-        # FIXME
-        # if instruction.condition is None:
-        #     
-        # else:
-        #     classical, value = instruction.condition
-        #     circ += If(gate, classical, value)
         circ += gate
 
     return circ
