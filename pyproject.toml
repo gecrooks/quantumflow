@@ -44,15 +44,15 @@ classifiers = [
 
 dependencies = [
     "typing_extensions       >= 4.1.1",
-    "numpy                   <2.0",                   
-    "scipy                  ",    # v1.10 breaks tests
+    "numpy                   >= 1.21, < 2.0",   # 1.21 needed for numpy.typing
+    "scipy                   >= 1.9, < 2.0",    # v1.10 breaks tests, 1.9 for compatibility
     "sympy                   >= 1.6",
-    "networkx",
-    "decorator               < 5.0.0",     # 5.0 breaks networkx dependancy 
+    "networkx                >= 2.6, < 4.0",
+    "decorator               < 5.0.0",     # 5.0 breaks networkx dependency
     "opt_einsum",
-    "pillow                  != 9.1.0",    # 9.1.0 has problems on some versions of MacOS
-                                        # https://github.com/python-pillow/Pillow/issues/6179
-    "matplotlib",
+    "pillow                  >= 9.0, != 9.1.0",  # 9.1.0 has problems on some versions of MacOS
+                                                 # https://github.com/python-pillow/Pillow/issues/6179
+    "matplotlib              >= 3.5",
   ]
 
 
