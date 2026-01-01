@@ -121,7 +121,7 @@ def pyquil_to_circuit(program: "pqProgram") -> Circuit:
         elif isinstance(inst, pqGate):
             name = QUIL_TO_QF[inst.name]
             defgate = STDGATES[name]
-            qubits = [q.index for q in inst.qubits] # type: ignore
+            qubits = inst.get_qubit_indices()
             gate = defgate(*chain((np.real(p) for p in inst.params), qubits))  # type: ignore
             circ += gate
         else:
