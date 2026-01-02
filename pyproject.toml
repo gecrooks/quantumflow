@@ -141,6 +141,11 @@ ignore = []
 
 [tool.pytest.ini_options]
 testpaths = ["quantumflow", "examples"]
+filterwarnings = [
+    # pyquil's .qubits property internally calls deprecated get_qubits()
+    # This is a bug in pyquil, not our code. See: https://github.com/rigetti/pyquil/issues/1720
+    "ignore:Call to deprecated method get_qubits:DeprecationWarning",
+]
 
 
 
