@@ -100,8 +100,7 @@ class CirqSimulator(Simulator):
             qubits = self.qubits
             ket = zero_state(qubits=qubits)
 
-        tensor = ket.tensor.flatten()
-        tensor = np.asarray(tensor, dtype=np.complex64)
+        tensor = np.asarray(ket.tensor.flatten(), dtype=np.complex64) 
         sim = cirq.Simulator()
         res = sim.simulate(self._cqc, initial_state=tensor)
         tensor = res.state_vector()  # type:ignore  # Needed for cirq <0.10.0

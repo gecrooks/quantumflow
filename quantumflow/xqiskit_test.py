@@ -155,6 +155,7 @@ def test_circuit_to_qiskit() -> None:
 
 
 def test_qiskitsimulator() -> None:
+    pytest.importorskip("qiskit-aer")
     circ = qf.Circuit()
     circ += qf.H(1)
     circ += qf.X(0)

@@ -186,9 +186,9 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
 
     R = U.reshape(2, 2, 2, 2)
     R = R.transpose(0, 2, 1, 3)
-    R = R.reshape(4, 4)
+    R44 = R.reshape(4, 4)
 
-    u, s, vh = np.linalg.svd(R)
+    u, s, vh = np.linalg.svd(R44)
     A = np.sqrt(s[0]) * u[:, 0].reshape(2, 2)
     B = np.sqrt(s[0]) * vh[0, :].reshape(2, 2)
 
