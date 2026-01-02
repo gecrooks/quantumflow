@@ -173,13 +173,6 @@ exclude_lines = [
 # Suppresses error about unresolved imports (i.e. from numpy)
 ignore_missing_imports = true
 
-[tool.uv.workspace]
-members = [
-    ".",
-]
-
-[tool.uv.sources]
-quantumflow = { workspace = true }
 
 # Disallows functions without type annotations
 # disallow_untyped_defs = true
