@@ -91,7 +91,7 @@ dev = [
     "qsimcirq                >= 0.10.2",
     "qutip",
     "qutip-qip",
-    "amazon-braket-sdk",  
+    "amazon-braket-sdk",  ; python_version < '3.14'", # 2026-01-01 braket tests failing on python 3.14
 
     "sphinx",
     "sphinxcontrib-bibtex",
