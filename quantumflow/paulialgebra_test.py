@@ -343,6 +343,11 @@ def test_pauli_decompose_hermitian() -> None:
     with pytest.raises(ValueError):
         qf.pauli_decompose_hermitian(op)
 
+    # Test qubit count mismatch
+    op = np.ones(shape=[4, 4])
+    with pytest.raises(ValueError, match="Number of qubits"):
+        qf.pauli_decompose_hermitian(op, qubits=[0, 1, 2])  # 3 qubits for 2-qubit matrix
+
 
 def test_pauli_rewire() -> None:
     term = sZ(0) * sX(1)

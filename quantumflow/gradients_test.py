@@ -83,6 +83,16 @@ def test_gradient_errors() -> None:
         qf.expectation_gradients(ket0, circ, qf.IdentityGate([0, 1]))
 
 
+def test_gradient_non_gate_error() -> None:
+    """Test that parameter_shift_circuits raises TypeError for non-Gate operations."""
+    # Note: state_fidelity_gradients and expectation_gradients call circ.H first,
+    # which fails earlier with ValueError for non-Gate ops. Only parameter_shift_circuits
+    # can actually reach our TypeError check.
+    circ = qf.Circuit([qf.Measure(0)])
+    with pytest.raises(TypeError, match="requires Gate operations"):
+        qf.parameter_shift_circuits(circ, 0)
+
+
 def test_parameter_shift_circuits() -> None:
     """Checks that gradients calculated with middle out algorithm
     match gradients calculated from parameter shift rule.

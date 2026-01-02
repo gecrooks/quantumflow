@@ -110,7 +110,7 @@ def expectation_gradients(
     expectation = tensors.inner(forward.tensor, back.tensor)
 
     for elem in circ:
-        assert isinstance(elem, Gate)
+        assert isinstance(elem, Gate)  # Checked by circ.H above
         back = elem.run(back)
         forward = elem.run(forward)
 
@@ -157,7 +157,7 @@ def state_fidelity_gradients(
     ol = tensors.inner(forward.tensor, back.tensor)
 
     for elem in circ:
-        assert isinstance(elem, Gate)
+        assert isinstance(elem, Gate)  # Checked by circ.H above
         back = elem.run(back)
         forward = elem.run(forward)
 
@@ -229,7 +229,8 @@ def parameter_shift_circuits(
     """
 
     elem = circ[index]
-    assert isinstance(elem, Gate)
+    if not isinstance(elem, Gate):
+        raise TypeError(f"Gradient computation requires Gate operations, got {type(elem).__name__}")
     gate_type = type(elem)
     if gate_type not in shift_constant:
         raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
