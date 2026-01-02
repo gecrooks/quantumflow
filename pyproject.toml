@@ -87,8 +87,8 @@ dev = [
     "cirq                    >= 0.8.0",
     "qiskit                  >= 0.24.0 ; python_version < '3.14'",
     "qiskit-aer ; python_version < '3.14'", # 2026-01-01 qiskit-aer won't install on python 3.14
-    "pyquil                  ; python_version < '3.13'", # 2026-01-01 Pyquil won't install on python 3.13 or 3.14
-    "qsimcirq                >= 0.10.2   ; python_version < '3.11'",   # PEP508 environment marker
+    "pyquil     ; python_version < '3.13'", # 2026-01-01 Pyquil won't install on python 3.13 or 3.14
+    "qsimcirq                >= 0.10.2",
     "qutip",
     "qutip-qip",
     "amazon-braket-sdk",  
