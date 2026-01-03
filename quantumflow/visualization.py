@@ -170,7 +170,8 @@ def circuit_to_latex(
             (https://arxiv.org/abs/1809.03842).
     """
 
-    assert package in ["qcircuit", "quantikz"]  # FIXME. Throw Exception
+    if package not in ["qcircuit", "quantikz"]:
+        raise ValueError(f"Unknown LaTeX package: {package}. Must be 'qcircuit' or 'quantikz'.")
 
     # TODO: I would be good to move much of the gate dependent details
     # into the gate classes, as has been done for circuit_to_diagram.

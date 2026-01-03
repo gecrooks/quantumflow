@@ -35,6 +35,12 @@ def test_circuit_to_latex_error() -> None:
         qf.circuit_to_latex(circ)
 
 
+def test_circuit_to_latex_invalid_package() -> None:
+    circ = qf.Circuit([qf.H(0)])
+    with pytest.raises(ValueError, match="Unknown LaTeX package"):
+        qf.circuit_to_latex(circ, package="invalid_package")
+
+
 def test_visualize_circuit() -> None:
     circ = qf.Circuit()
 
