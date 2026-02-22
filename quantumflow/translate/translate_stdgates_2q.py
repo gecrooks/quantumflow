@@ -698,7 +698,7 @@ def translate_sqrtiswap_h_to_can(gate: SqrtISwap_H) -> Iterator[Can]:
 def translate_sqrtiswap_h_to_sqrtiswap(
     gate: SqrtISwap_H,
 ) -> Iterator[Union[SqrtISwap, Z]]:
-    """Translate square-root-iswap to it's inverse."""
+    """Translate square-root-iswap to its inverse."""
     q0, q1 = gate.qubits
     yield Z(q0)
     yield SqrtISwap(q0, q1)

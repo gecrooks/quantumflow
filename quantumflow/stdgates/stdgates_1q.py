@@ -571,7 +571,7 @@ class Ry(StdGate):
 
 
 class Rz(StdGate):
-    r"""A 1-qubit Pauli-X parametric rotation gate
+    r"""A 1-qubit Pauli-Z parametric rotation gate
 
     .. math::
         R_z(\theta) =   \begin{bmatrix*}
@@ -710,7 +710,7 @@ class Rn(StdGate):
             (n_x X+ n_y Y + n_z Z)
 
     Args:
-        theta: Angle of rotation on Block sphere
+        theta: Angle of rotation on Bloch sphere
         (nx, ny, nz): A three-dimensional real unit vector
     """
 

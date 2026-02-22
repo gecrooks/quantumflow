@@ -135,7 +135,7 @@ class FrozenDict(Mapping[KeyType, ValueType]):
         return self.update()
 
     def update(self, *args: Any, **kwargs: Any) -> "FrozenDict":
-        """Update mappings, and return a new FrizenDict"""
+        """Update mappings, and return a new FrozenDict"""
         d = self._dict.copy()
         d.update(*args, **kwargs)
         return type(self)(d)
@@ -264,7 +264,7 @@ def complex_ginibre_ensemble(size: Tuple[int, ...]) -> np.ndarray:
 
 
 def unitary_ensemble(dim: int) -> np.ndarray:
-    """Return a random unitary of size (dim, dim) drawn from Harr measure
+    """Return a random unitary of size (dim, dim) drawn from Haar measure
 
     Ref:
        "How to generate random matrices from the classical compact groups",

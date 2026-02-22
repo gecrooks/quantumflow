@@ -169,7 +169,7 @@ class CCZ(StdCtrlGate):
     Equivalent to ``controlled_gate(CZ())``
 
     .. math::
-        \text{CSWAP}() \equiv \begin{pmatrix}
+        \text{CCZ}() \equiv \begin{pmatrix}
                 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
                 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\

@@ -444,7 +444,7 @@ class CT(StdCtrlGate):
 
     .. math::
         \text{CT}() = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
-                                    0&0&1&0 \\ 0&0&0&  \end{pmatrix}
+                                    0&0&1&0 \\ 0&0&0&e^{i\pi/4}  \end{pmatrix}
     """
 
     cv_target = T
@@ -458,7 +458,7 @@ class CT(StdCtrlGate):
         return CZPow(t / 4, *self.qubits)
 
 
-# End class CS
+# End class CT
 
 
 class CY(StdCtrlGate):

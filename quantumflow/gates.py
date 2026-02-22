@@ -12,7 +12,7 @@ Multi-qubit gates
 
 Larger unitary computational gates that can be broken up into standard gates.
 
-Danger: These multi-qubit gates have a variable, and possible large, number of qubits.
+Danger: These multi-qubit gates have a variable, and possibly large, number of qubits.
 Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 .. autoclass:: UnitaryGate
@@ -201,7 +201,7 @@ class ControlGate(Gate):
     """A controlled unitary gate. Given C control qubits and a
     gate acting on K qubits, return a controlled gate with C+K qubits.
     The optional axes argument specifies the basis of the control
-    qubits. The length of the sting should be the same as the number of control
+    qubits. The length of the string should be the same as the number of control
     qubits. The default axis 'Z' is standard control in the standard 'z'
     (computational) basis. Anti-control, where the gate is activated with the zero
     state, is specified by 'z'

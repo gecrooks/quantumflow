@@ -5,7 +5,7 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: quantumflow.xquirk
+.. currentmodule:: quantumflow.xqsim
 
 Interface to qsim
 

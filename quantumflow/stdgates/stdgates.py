@@ -3,9 +3,6 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
-# CHECME copywrite
-
-# DO Rename
 
 from typing import ClassVar, Dict, List, Mapping, Type, TypeVar
 
@@ -32,7 +29,7 @@ STDGATES: Dict[str, "Type[StdGate]"] = {}
 """All standard gates (All non-abstract subclasses of StdGate)"""
 
 STDCTRLGATES: Dict[str, "Type[StdCtrlGate]"] = {}
-"""All standard control gates (All non-abstract subclasses of StdCtlGate)"""
+"""All standard control gates (All non-abstract subclasses of StdCtrlGate)"""
 
 
 class StdGate(Gate):

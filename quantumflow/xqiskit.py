@@ -120,7 +120,7 @@ class QiskitSimulator(Simulator):
 
 
 def qiskit_to_circuit(qkcircuit: "qiskit.QuantumCircuit") -> Circuit:
-    """Convert a qsikit QuantumCircuit to QuantumFlow's Circuit"""
+    """Convert a qiskit QuantumCircuit to QuantumFlow's Circuit"""
     # We assume that there is only one quantum register of qubits.
 
     circ = Circuit()
@@ -158,7 +158,7 @@ def qiskit_to_circuit(qkcircuit: "qiskit.QuantumCircuit") -> Circuit:
 def circuit_to_qiskit(
     circ: Circuit, translate: bool = False
 ) -> "qiskit.QuantumCircuit":
-    """Convert a QuantumFlow's Circuit to a qsikit QuantumCircuit."""
+    """Convert a QuantumFlow's Circuit to a qiskit QuantumCircuit."""
 
     # In qiskit each gate is defined as a class, and then a method is
     # monkey patched onto QuantumCircuit which will create that gate and

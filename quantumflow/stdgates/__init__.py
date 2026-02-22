@@ -110,12 +110,12 @@ QASM gates
 
 Mapping between APIs
 ####################
-Each of the main quantum computing python APIs (QuantumFlow, Cirq, qsikit
+Each of the main quantum computing python APIs (QuantumFlow, Cirq, qiskit
 (QASM), and pyQuil) have different gates available and different naming
 conventions. The following table maps gate names between these APIs.
 
 ==========================  =========== =============== =========== =========== ===========
-Description                 QF          Cirq            QASM/qsikit PyQuil      Pennylane
+Description                 QF          Cirq            QASM/qiskit PyQuil      Pennylane
 ==========================  =========== =============== =========== =========== ===========
 
 * One qubit gates
