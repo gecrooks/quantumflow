@@ -10,8 +10,8 @@ pytest.importorskip("cirq")
 pytest.importorskip("qsimcirq")
 
 
-import quantumflow as qf  # noqa: E402
-from quantumflow.xqsim import QSimSimulator  # noqa: E402
+import quantumflow as qf
+from quantumflow.xqsim import QSimSimulator
 
 
 def test_qsim_simulator() -> None:

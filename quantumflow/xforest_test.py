@@ -8,10 +8,10 @@
 import numpy as np
 import pytest
 
-import quantumflow as qf  # noqa: 402
-from quantumflow import xforest  # noqa: 402
+import quantumflow as qf
+from quantumflow import xforest
 
-pytest.importorskip("pyquil")  # noqa: 402
+pytest.importorskip("pyquil")
 
 
 def test_circuit_to_pyquil() -> None:

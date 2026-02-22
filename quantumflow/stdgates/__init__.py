@@ -213,13 +213,13 @@ products of single qubit gates.
 (e.g. XX(t,0,1) is the same as X(0) X(1) when t=1)
 
 
-"""  # noqa: E501
+"""
 # Note: see comments in gates_qasm.py to understand the QASM gate mappings.
 
-from .stdgates import *  # noqa: F401, F403
-from .stdgates_1q import *  # noqa: F401, F403
-from .stdgates_2q import *  # noqa: F401, F403
-from .stdgates_3q import *  # noqa: F401, F403
-from .stdgates_cirq import *  # noqa: F401, F403
-from .stdgates_forest import *  # noqa: F401, F403
-from .stdgates_qasm import *  # noqa: F401, F403
+from .stdgates import *
+from .stdgates_1q import *
+from .stdgates_2q import *
+from .stdgates_3q import *
+from .stdgates_cirq import *
+from .stdgates_forest import *
+from .stdgates_qasm import *

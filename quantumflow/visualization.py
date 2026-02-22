@@ -732,10 +732,10 @@ def _pretty(obj: Any, format: str = "text") -> str:
 #                  r 0000111100001111
 #                  b 0011001100110011
 #                  l 0101010101010101
-STD_BOX_CHARS = " ╴╷┐╶─┌┬╵┘│┤└┴├┼"  # noqa: E221
-BOLD_BOX_CHARS = " ╸╻┓╺━┏┳╹┛┃┫┗┻┣╋"  # noqa: E221
-DOUBLE_BOX_CHARS = " ═║╗══╔╦║╝║╣╚╩╠╬"  # noqa: E221  # No half widths
-ASCII_BOX_CHARS = r"   \ -/+ /|+\+++"  # noqa: E221
+STD_BOX_CHARS = " ╴╷┐╶─┌┬╵┘│┤└┴├┼"
+BOLD_BOX_CHARS = " ╸╻┓╺━┏┳╹┛┃┫┗┻┣╋"
+DOUBLE_BOX_CHARS = " ═║╗══╔╦║╝║╣╚╩╠╬"  # No half widths
+ASCII_BOX_CHARS = r"   \ -/+ /|+\+++"
 
 TOP, RIGHT, BOT, LEFT = 8, 4, 2, 1
 CROSS = TOP + RIGHT + BOT + LEFT

@@ -67,7 +67,7 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike  # pragma: no cover
 
     from .paulialgebra import Pauli  # pragma: no cover
-    from .stdgates import StdGate  # noqa:F401  # pragma: no cover
+    from .stdgates import StdGate  # pragma: no cover
 
 __all__ = [
     "Operation",
@@ -683,14 +683,6 @@ class Channel(Operation):
     def from_choi(cls, tensor: "ArrayLike", qubits: Qubits) -> "Channel":
         """Return a Channel from a Choi matrix"""
         return cls(tensor, qubits).sharp
-
-    # TESTME
-    # FIXME: Can't be right, same as choi?
-    def chi(self) -> QubitTensor:
-        """Return the chi (or process) matrix representation of this
-        superoperator"""
-        N = self.qubit_nb
-        return np.reshape(self.sharp.tensor, [2 ** (N * 2)] * 2)
 
     def run(self, ket: State) -> "State":
         raise TypeError()  # Not possible in general

@@ -284,7 +284,6 @@ class Barrier(Operation):
         return ["┼"]
 
 
-# FIXME: Does not work as written?
 class Projection(Operation):
     """A projection operator, represented as a sequence of state vectors"""
 

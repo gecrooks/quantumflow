@@ -129,7 +129,7 @@ def translate_can_to_cnot(
         Phys. Rev. A, 69:032315, 2004. quant-ph/0308006 :cite:`Vatan2004a` Fig. 6
 
         B. Kraus and J. I. Cirac, Phys. Rev. A 63, 062309 (2001).
-    """  # noqa: W291, E501
+    """
     # TODO: Other special cases
 
     # Note: sign flip on central ZPow, YPow, YPow because of differing sign

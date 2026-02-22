@@ -81,7 +81,7 @@ Measure
 Reset
 
 
-"""  # noqa: E501
+"""
 # Is QASM's U1 gate a PhaseShift gate or an RZ gate?
 # This is very confusing. In the QASM paper U1(lam) is defined as both
 # PhaseShift(lam) (Eq. 3) and as U3(0,0, lam), which is RZ(lam) (Bottom of

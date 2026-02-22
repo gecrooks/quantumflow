@@ -108,11 +108,6 @@ def test_identity() -> None:
     assert chan.name == "Channel"
 
 
-def test_channel_chi() -> None:
-    chan = qf.IdentityGate([0, 1, 2]).aschannel()
-    chi = chan.chi()
-    assert chi.shape == (64, 64)
-
 
 def test_channle_choi() -> None:
     chan0 = qf.Damping(0.1, 0).aschannel()

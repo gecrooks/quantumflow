@@ -18,7 +18,7 @@ if sys_pf == "darwin":
 
     matplotlib.use("TkAgg")
 
-import quantumflow as qf  # noqa: E402
+import quantumflow as qf
 
 __version__ = qf.__version__
 __description__ = """Canonical decompositions of pairs of 2-qubit gates.

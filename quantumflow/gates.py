@@ -709,7 +709,6 @@ class ConditionalGate(MultiplexedGate):
 # end class ConditionalGate
 
 
-# FIXME: resolve won't work
 class MultiplexedRzGate(MultiplexedGate):
     """Uniformly controlled (multiplexed) Rz gate"""
 
@@ -721,7 +720,7 @@ class MultiplexedRzGate(MultiplexedGate):
         thetas = tuple(thetas)
         gates = [Rz(theta, target) for theta in thetas]
         super().__init__(gates=gates, controls=controls)
-        self._params = thetas  # FIXME: This seems broken?
+        self._params = thetas
 
     @cached_property
     def tensor(self) -> QubitTensor:
@@ -744,6 +743,10 @@ class MultiplexedRzGate(MultiplexedGate):
         thetas = [e * p for p in self.params]
         return MultiplexedRzGate(thetas, self.controls, self.targets[0])
 
+    def resolve(self, subs: Mapping[str, float]) -> "MultiplexedRzGate":
+        thetas = [var.asfloat(t, subs) for t in self.params]
+        return MultiplexedRzGate(thetas, self.controls, self.targets[0])
+
 
 # end class MultiplexedRzGate
 
@@ -757,7 +760,7 @@ class MultiplexedRyGate(MultiplexedGate):
         thetas = tuple(thetas)
         gates = [Ry(theta, target) for theta in thetas]
         super().__init__(gates=gates, controls=controls)
-        self._params = thetas  # FIXME: This seems broken?
+        self._params = thetas
 
     @property
     def H(self) -> "MultiplexedRyGate":
@@ -765,6 +768,10 @@ class MultiplexedRyGate(MultiplexedGate):
 
     def __pow__(self, e: Variable) -> "MultiplexedRyGate":
         thetas = [e * p for p in self.params]
+        return MultiplexedRyGate(thetas, self.controls, self.targets[0])
+
+    def resolve(self, subs: Mapping[str, float]) -> "MultiplexedRyGate":
+        thetas = [var.asfloat(t, subs) for t in self.params]
         return MultiplexedRyGate(thetas, self.controls, self.targets[0])
 
 
