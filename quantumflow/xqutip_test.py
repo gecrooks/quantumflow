@@ -8,10 +8,10 @@ import pytest
 
 pytest.importorskip("qutip")
 
-from qutip.qip.operations import gate_sequence_product  # noqa: E402
+from qutip.qip.operations import gate_sequence_product
 
-import quantumflow as qf  # noqa: E402
-from quantumflow import xqutip  # noqa: E402
+import quantumflow as qf
+from quantumflow import xqutip
 
 # from qutip.qip.circuit import QubitCircuit
 

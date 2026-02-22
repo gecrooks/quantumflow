@@ -12,14 +12,14 @@ import pytest
 pytest.importorskip("qiskit")
 
 
-from qiskit.circuit import (  # noqa: E402
+from qiskit.circuit import (
     ClassicalRegister,
     QuantumCircuit,
     QuantumRegister,
 )
 
-import quantumflow as qf  # noqa: E402
-from quantumflow.xqiskit import (  # noqa: E402
+import quantumflow as qf
+from quantumflow.xqiskit import (
     QiskitSimulator,
     circuit_to_qasm,
     circuit_to_qiskit,

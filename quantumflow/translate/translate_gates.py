@@ -45,7 +45,7 @@ from .translations import register_translation
 
 
 @register_translation
-def translate_IdentityGate_to_I(gate: IdentityGate) -> Iterator[I]:  # noqa: E741
+def translate_IdentityGate_to_I(gate: IdentityGate) -> Iterator[I]:
     """Translate a multi-qubit identity to a sequence of single qubit identity gates"""
     for q in gate.qubits:
         yield I(q)

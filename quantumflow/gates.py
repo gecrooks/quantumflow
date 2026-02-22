@@ -12,7 +12,7 @@ Multi-qubit gates
 
 Larger unitary computational gates that can be broken up into standard gates.
 
-Danger: These multi-qubit gates have a variable, and possible large, number of qubits.
+Danger: These multi-qubit gates have a variable, and possibly large, number of qubits.
 Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 .. autoclass:: UnitaryGate
@@ -201,7 +201,7 @@ class ControlGate(Gate):
     """A controlled unitary gate. Given C control qubits and a
     gate acting on K qubits, return a controlled gate with C+K qubits.
     The optional axes argument specifies the basis of the control
-    qubits. The length of the sting should be the same as the number of control
+    qubits. The length of the string should be the same as the number of control
     qubits. The default axis 'Z' is standard control in the standard 'z'
     (computational) basis. Anti-control, where the gate is activated with the zero
     state, is specified by 'z'
@@ -276,6 +276,14 @@ class ControlGate(Gate):
     def tensor(self) -> QubitTensor:
         # FIXME: This approach generates a tensor with unnecessary numerical noise.
         return UnitaryGate.from_hamiltonian(self.hamiltonian, self.qubits).tensor
+
+    def on(self, *qubits: Qubit) -> "ControlGate":
+        if len(qubits) != self.qubit_nb:
+            raise ValueError("Wrong number of qubits")
+        control_qubits = qubits[: self.control_qubit_nb]
+        target_qubits = qubits[self.control_qubit_nb :]
+        target = self.target.on(*target_qubits)
+        return ControlGate(target, control_qubits, self.axes)
 
     def resolve(self, subs: Mapping[str, float]) -> "ControlGate":
         target = self.target.resolve(subs)
@@ -701,7 +709,6 @@ class ConditionalGate(MultiplexedGate):
 # end class ConditionalGate
 
 
-# FIXME: resolve won't work
 class MultiplexedRzGate(MultiplexedGate):
     """Uniformly controlled (multiplexed) Rz gate"""
 
@@ -713,7 +720,7 @@ class MultiplexedRzGate(MultiplexedGate):
         thetas = tuple(thetas)
         gates = [Rz(theta, target) for theta in thetas]
         super().__init__(gates=gates, controls=controls)
-        self._params = thetas  # FIXME: This seems broken?
+        self._params = thetas
 
     @cached_property
     def tensor(self) -> QubitTensor:
@@ -736,6 +743,10 @@ class MultiplexedRzGate(MultiplexedGate):
         thetas = [e * p for p in self.params]
         return MultiplexedRzGate(thetas, self.controls, self.targets[0])
 
+    def resolve(self, subs: Mapping[str, float]) -> "MultiplexedRzGate":
+        thetas = [var.asfloat(t, subs) for t in self.params]
+        return MultiplexedRzGate(thetas, self.controls, self.targets[0])
+
 
 # end class MultiplexedRzGate
 
@@ -749,7 +760,7 @@ class MultiplexedRyGate(MultiplexedGate):
         thetas = tuple(thetas)
         gates = [Ry(theta, target) for theta in thetas]
         super().__init__(gates=gates, controls=controls)
-        self._params = thetas  # FIXME: This seems broken?
+        self._params = thetas
 
     @property
     def H(self) -> "MultiplexedRyGate":
@@ -757,6 +768,10 @@ class MultiplexedRyGate(MultiplexedGate):
 
     def __pow__(self, e: Variable) -> "MultiplexedRyGate":
         thetas = [e * p for p in self.params]
+        return MultiplexedRyGate(thetas, self.controls, self.targets[0])
+
+    def resolve(self, subs: Mapping[str, float]) -> "MultiplexedRyGate":
+        thetas = [var.asfloat(t, subs) for t in self.params]
         return MultiplexedRyGate(thetas, self.controls, self.targets[0])
 
 

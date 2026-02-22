@@ -258,14 +258,14 @@ class DAGCircuit(Operation):
         for _, node, key in self.graph.edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False  # Insanity check  # FIXME, raise exception
+        assert False  # Sanity check  # FIXME, raise exception
 
     # DOCME TESTME
     def prev_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
         for node, _, key in self.graph.in_edges(elem, keys=True):
             if qubit is None or key == qubit:
                 return node
-        assert False  # Insanity check  # FIXME, raise exception
+        assert False  # Sanity check  # FIXME, raise exception
 
     def next_edges(self, elem: Operation) -> List[Tuple[Any, Any, Qubit]]:
         qubits = elem.qubits

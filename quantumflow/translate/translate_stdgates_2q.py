@@ -129,7 +129,7 @@ def translate_can_to_cnot(
         Phys. Rev. A, 69:032315, 2004. quant-ph/0308006 :cite:`Vatan2004a` Fig. 6
 
         B. Kraus and J. I. Cirac, Phys. Rev. A 63, 062309 (2001).
-    """  # noqa: W291, E501
+    """
     # TODO: Other special cases
 
     # Note: sign flip on central ZPow, YPow, YPow because of differing sign
@@ -698,7 +698,7 @@ def translate_sqrtiswap_h_to_can(gate: SqrtISwap_H) -> Iterator[Can]:
 def translate_sqrtiswap_h_to_sqrtiswap(
     gate: SqrtISwap_H,
 ) -> Iterator[Union[SqrtISwap, Z]]:
-    """Translate square-root-iswap to it's inverse."""
+    """Translate square-root-iswap to its inverse."""
     q0, q1 = gate.qubits
     yield Z(q0)
     yield SqrtISwap(q0, q1)

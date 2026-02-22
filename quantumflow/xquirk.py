@@ -150,7 +150,7 @@ def open_quirk_webserver(circ: Circuit) -> None:  # pragma: no cover
 
 
 def translate_to_quirk(circ: Circuit) -> Circuit:
-    """Convert QF gates to gates understood by cirq"""
+    """Convert QF gates to gates understood by quirk"""
     circ = circuit_translate(circ, targets=QUIRK_GATES)
     return circ
 

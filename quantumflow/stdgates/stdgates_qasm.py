@@ -81,7 +81,7 @@ Measure
 Reset
 
 
-"""  # noqa: E501
+"""
 # Is QASM's U1 gate a PhaseShift gate or an RZ gate?
 # This is very confusing. In the QASM paper U1(lam) is defined as both
 # PhaseShift(lam) (Eq. 3) and as U3(0,0, lam), which is RZ(lam) (Bottom of
@@ -160,7 +160,7 @@ class U3(StdGate):
 
         # Alternative definition from paper
         # Differs by a phase from definition above, but this matches
-        # definition of CU3 in qsikit (but not definition of CU3 in paper.)
+        # definition of CU3 in qiskit (but not definition of CU3 in paper.)
         # circ = Circuit()
         # circ += RZ(lam)
         # circ += RY(theta)
@@ -220,8 +220,8 @@ class CU3(StdGate):
         lam = self.float_param("lam")
 
         # Note: Gate is defined via this circuit in QASM
-        # Except for first line, which was added to qsikit to make the
-        # definitions of cu3 and u3 in qsikit consistent.
+        # Except for first line, which was added to qiskit to make the
+        # definitions of cu3 and u3 in qiskit consistent.
         # https://github.com/Qiskit/qiskit-terra/pull/2755
         # That seems silly. They should have fixed the phase of u3 to match
         # the definition in the QASM paper, not change the cu3 gate to

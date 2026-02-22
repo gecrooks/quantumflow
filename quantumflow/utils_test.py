@@ -53,10 +53,10 @@ def test_frozen_dict() -> None:
 def test_frozen_dict_generic() -> None:
     f0: utils.FrozenDict[str, int] = utils.FrozenDict({"a": 1, "b": 2})
 
-    k1 = f0["b"]  # noqa
+    k1 = f0["b"]  # noqa: F841
 
-    f1: utils.FrozenDict[str, str] = utils.FrozenDict({"a": 1, "b": 2})  # noqa
-    k2: int = f0["b"]  # noqa
+    f1: utils.FrozenDict[str, str] = utils.FrozenDict({"a": 1, "b": 2})  # noqa: F841
+    k2: int = f0["b"]  # noqa: F841
 
 
 def test_bitlist_to_int() -> None:

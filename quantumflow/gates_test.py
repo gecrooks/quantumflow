@@ -563,6 +563,28 @@ def test_ControlGate_axes() -> None:
     assert qf.gates_close(gate0, gate1)
 
 
+def test_ControlGate_on_rewire() -> None:
+    gate0 = qf.ControlGate(qf.X(2), [0, 1], axes="ZZ")
+
+    # Test on()
+    gate1 = gate0.on(3, 4, 5)
+    assert gate1.qubits == (3, 4, 5)
+    assert gate1.control_qubits == (3, 4)
+    assert gate1.target_qubits == (5,)
+    assert np.allclose(gate0.tensor, gate1.tensor)
+
+    # Test rewire()
+    gate2 = gate0.rewire({0: 10, 1: 11, 2: 12})
+    assert gate2.qubits == (10, 11, 12)
+    assert gate2.control_qubits == (10, 11)
+    assert gate2.target_qubits == (12,)
+    assert np.allclose(gate0.tensor, gate2.tensor)
+
+    # Test that hamiltonian uses correct qubits after on()
+    ham = gate1.hamiltonian
+    assert all(q in (3, 4, 5) for q in ham.qubits)
+
+
 def test_ControlGate_diagram() -> None:
     gate0 = qf.ControlGate(qf.X(7), [0, 1, 2, 3, 4, 5], axes="XxyYzZ")
 

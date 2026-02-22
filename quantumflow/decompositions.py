@@ -660,7 +660,7 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
         tz, ty = ty, tz
         swap_ty_tz()
 
-    # Insanity check
+    # Sanity check
     assert _in_weyl(tx, ty, tz)
 
     circ_before_q0 = Circuit(before_q0)
@@ -755,7 +755,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
         yield from qs_deke(Unitary(V, controls), euler)
 
     circ = Circuit(qs_deke(gate, euler))
-    assert gates_close(circ.asgate(), gate)  # Insanity check
+    assert gates_close(circ.asgate(), gate)  # Sanity check
 
     return circ
 

@@ -8,7 +8,7 @@
 """Quantumflow Deprecated
 
 A module for obsolete functions and classes, where they can live out
-their pitiful existence of quite desperation.
+their pitiful existence of quiet desperation.
 """
 
 from . import tensors

@@ -169,7 +169,7 @@ def state_fidelity(ket0: State, ket1: State) -> float:
 def state_angle(ket0: State, ket1: State) -> float:
     """The Fubini-Study angle between states.
 
-    Equal to the Burrs angle for pure states.
+    Equal to the Bures angle for pure states.
     """
     ket1 = ket1.permute(ket0.qubits)
     return fubini_study_angle(ket0.tensor, ket1.tensor)

@@ -44,7 +44,7 @@ def isclose(
     """Compares two variables.
 
     Returns: True if variables are almost identical concrete numbers,
-        of if they are the same symbolic expression, else False.
+        or if they are the same symbolic expression, else False.
     """
     if not isinstance(x, sympy.Expr) and not isinstance(y, sympy.Expr):
         return bool(np.isclose(x, y, atol=atol, rtol=rtol))
@@ -53,7 +53,6 @@ def isclose(
     return False
 
 
-# DOCME # Testme
 def almost_zero(x: ComplexVariable, atol: float = ATOL) -> bool:
     """Is the variable symbolically zero, or numerically almost zero."""
     if x == sympy.S.Zero:

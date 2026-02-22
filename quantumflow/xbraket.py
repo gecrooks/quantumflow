@@ -6,13 +6,13 @@
 
 """
 .. contents:: :local:
-.. currentmodule:: quantumflow.xqiskit
+.. currentmodule:: quantumflow.xbraket
 
-Interface between IBM's Qiskit and QuantumFlow
+Interface between Amazon Braket and QuantumFlow
 
-.. autoclass:: QiskitSimulator
-.. autofunction:: qiskit_to_circuit
-.. autofunction:: circuit_to_qiskit
+.. autoclass:: BraketSimulator
+.. autofunction:: braket_to_circuit
+.. autofunction:: circuit_to_braket
 """
 
 from typing import TYPE_CHECKING, Optional

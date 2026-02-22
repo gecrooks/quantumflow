@@ -9,16 +9,16 @@ from numpy import pi
 
 pytest.importorskip("cirq")
 
-import quantumflow as qf  # noqa: E402
-from quantumflow.xcirq import CirqSimulator  # noqa: E402
-from quantumflow.xcirq import circuit_to_cirq  # noqa: E402
-from quantumflow.xcirq import cirq_to_circuit  # noqa: E402
-from quantumflow.xcirq import from_cirq_qubit  # noqa: E402
-from quantumflow.xcirq import to_cirq_qubit  # noqa: E402
+import quantumflow as qf
+from quantumflow.xcirq import CirqSimulator
+from quantumflow.xcirq import circuit_to_cirq
+from quantumflow.xcirq import cirq_to_circuit
+from quantumflow.xcirq import from_cirq_qubit
+from quantumflow.xcirq import to_cirq_qubit
 
 
 def test_from_cirq_qubit() -> None:
-    import cirq as cq  # noqa: E402
+    import cirq as cq
 
     assert from_cirq_qubit(cq.GridQubit(2, 3)) == (2, 3)
     assert from_cirq_qubit(cq.NamedQubit("A Name")) == "A Name"
@@ -26,7 +26,7 @@ def test_from_cirq_qubit() -> None:
 
 
 def test_to_cirq_qubit() -> None:
-    import cirq as cq  # noqa: E402
+    import cirq as cq
 
     assert cq.GridQubit(2, 3) == to_cirq_qubit((2, 3))
     assert cq.NamedQubit("A Name") == to_cirq_qubit("A Name")
@@ -34,7 +34,7 @@ def test_to_cirq_qubit() -> None:
 
 
 def test_cirq_to_circuit() -> None:
-    import cirq as cq  # noqa: E402
+    import cirq as cq
 
     q0 = cq.LineQubit(0)
     q1 = cq.LineQubit(1)
@@ -129,7 +129,7 @@ def version_to_versioninfo(version):  # type: ignore
 
 # Note: New interface in 0.7.0
 def test_cirq_to_circuit_0_7() -> None:
-    import cirq as cq  # noqa: E402
+    import cirq as cq
 
     q0 = cq.LineQubit(0)
     q1 = cq.LineQubit(1)
@@ -161,7 +161,7 @@ def test_cirq_to_circuit_0_7() -> None:
 
 
 def test_cirq_to_circuit2() -> None:
-    import cirq as cq  # noqa: E402
+    import cirq as cq
 
     q0 = cq.GridQubit(0, 0)
     q1 = cq.GridQubit(1, 0)
