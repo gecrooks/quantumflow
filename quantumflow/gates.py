@@ -277,6 +277,14 @@ class ControlGate(Gate):
         # FIXME: This approach generates a tensor with unnecessary numerical noise.
         return UnitaryGate.from_hamiltonian(self.hamiltonian, self.qubits).tensor
 
+    def on(self, *qubits: Qubit) -> "ControlGate":
+        if len(qubits) != self.qubit_nb:
+            raise ValueError("Wrong number of qubits")
+        control_qubits = qubits[: self.control_qubit_nb]
+        target_qubits = qubits[self.control_qubit_nb :]
+        target = self.target.on(*target_qubits)
+        return ControlGate(target, control_qubits, self.axes)
+
     def resolve(self, subs: Mapping[str, float]) -> "ControlGate":
         target = self.target.resolve(subs)
         return ControlGate(target, self.control_qubits, self.axes)
