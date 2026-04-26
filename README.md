@@ -28,7 +28,8 @@ To install the latest code from github ready for development:
 ```
 $ git clone https://github.com/gecrooks/quantumflow.git
 $ cd quantumflow
-$ pip install -e .[dev]
+$ uv sync --all-extras
 ```
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) to be installed.
 
 
