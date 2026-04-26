@@ -4,9 +4,9 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   schedule:
     - cron: "0 0 * * 0"  # Every Sunday
 
@@ -17,32 +17,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.12', '3.13', '3.14']
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v4
-      with: 
+      with:
         fetch-depth: 0
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install base
+        enable-cache: true
+    - name: Install base (no extras, no dev)
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install .
-        python -m pip install pytest
+        uv sync --no-dev
+        uv pip install pytest
     - name: Test with pytest (Tests should pass without extra dependancies installed)
       run: |
-        python -m quantumflow.about
-        python -m pytest
+        uv run --no-sync python -m quantumflow.about
+        uv run --no-sync pytest
     - name: Install extra dependencies
       if: runner.os == 'Linux'
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install wheel
-        python -m pip install '.[dev]'  # install package + test dependencies
+      run: uv sync --all-extras
     - name: Install extra Linux dependencies
       if: runner.os == 'Linux'
       run: |
@@ -53,28 +50,22 @@ jobs:
     - name: About
       if: runner.os == 'Linux'
       run: |
-        python -m quantumflow.about
+        uv run python -m quantumflow.about
         echo
         pdflatex --version
         pdftocairo -v
     - name: Test coverage with pytest
       if: runner.os == 'Linux'
-      run: |
-        python -m pytest --cov --cov-fail-under 95
+      run: uv run pytest --cov --cov-fail-under 95
     - name: Lint with ruff
       if: runner.os == 'Linux'
-      run: |
-        python -m ruff check     
+      run: uv run ruff check
     - name: Typecheck with mypy
       if: runner.os == 'Linux'
-      run: |
-        mypy quantumflow
+      run: uv run mypy quantumflow
     - name: Build documentation with sphinx
       if: runner.os == 'Linux'
-      run: |
-        sphinx-build -M html docs docs/_build
+      run: uv run sphinx-build -M html docs docs/_build
     - name: Test notebooks (against main)
       if: runner.os == 'Linux'
-      run: |
-        pytest --nbmake tutorial
-
+      run: uv run pytest --nbmake tutorial

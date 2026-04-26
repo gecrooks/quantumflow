@@ -6,11 +6,13 @@ Getting Started
 Installation
 ############
 
+Requires `uv <https://docs.astral.sh/uv/getting-started/installation/>`_ to be installed.
+
 .. code-block:: console
 
 	> git clone https://github.com/gecrooks/quantumflow.git
 	> cd quantumflow
-	> pip install -e .[dev]
+	> uv sync --all-extras
 	> make docs
 
 

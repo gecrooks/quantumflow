@@ -44,7 +44,7 @@ classifiers = [
 
 dependencies = [
     "typing_extensions       >= 4.1.1",
-    "numpy                   >= 1.21, < 2.0",   # 1.21 needed for numpy.typing
+    "numpy                   >= 1.21, < 3.0",   # 1.21 needed for numpy.typing
     "scipy                   >= 1.9, < 2.0",    # lower bound for numpy.typing compatibility; upper bound caps at next breaking major
     "sympy                   >= 1.6",
     "networkx                >= 2.6, < 4.0",
@@ -71,11 +71,11 @@ ext = [
     "qiskit                  >= 0.24.0",
     "qiskit-aer",
     "ruamel.yaml",                         # Additional requirement for pyquil
-    "pyquil                  >= 2.28.0",
+    "pyquil                  >= 2.28.0 ; python_version <= '3.12'",
     "qsimcirq                >= 0.10.2",
     "qutip",
     "qutip-qip",
-    "amazon-braket-sdk",    
+    "amazon-braket-sdk",
 ]
 docs = [
     "sphinx",
@@ -83,27 +83,15 @@ docs = [
     "guzzle-sphinx-theme",
     "setuptools_scm",
 ]
+
+
+# Development dependencies. Managed via uv (`uv sync --all-extras`).
+# https://peps.python.org/pep-0735/
+[dependency-groups]
 dev = [
-    "cirq                    >= 0.8.0",
-    "qiskit                  >= 0.24.0",
-    "qiskit-aer",
-    "ruamel.yaml",                         # Additional requirement for pyquil
-    "pyquil                  >= 2.28.0",
-    "qsimcirq                >= 0.10.2   ; python_version < '3.11'",   # PEP508 environment marker
-    "qutip",
-    "qutip-qip",
-    "amazon-braket-sdk",  
-
-    "sphinx",
-    "sphinxcontrib-bibtex",
-    "guzzle-sphinx-theme",
-    "setuptools_scm",
     "twine",
-
     "setupext-janitor",
-
-    "numpy                   >= 1.20",     # Needed for numpy.typehints
-    "pytest >= 4.6",
+    "pytest                  >= 4.6",
     "pytest-cov",
     "ruff",
     "mypy                    >= 0.931",

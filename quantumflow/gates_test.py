@@ -472,6 +472,17 @@ def test_MultiplexedGate_resolve() -> None:
     gate2 = qf.MultiplexedRzGate([0.1, 0.2, 0.3, 0.4], [0, 1], 2)
     assert qf.gates_close(gate1, gate2)
 
+    a, b = Symbol("a"), Symbol("b")
+    rz = qf.MultiplexedRzGate(thetas=[a, b], controls=[0], target=1)
+    rz_resolved = rz.resolve({a: 0.1, b: 0.2})  # type: ignore
+    assert isinstance(rz_resolved, qf.MultiplexedRzGate)
+    assert all(isinstance(p, float) for p in rz_resolved.params)
+
+    ry = qf.MultiplexedRyGate(thetas=[a, b], controls=[0], target=1)
+    ry_resolved = ry.resolve({a: 0.1, b: 0.2})  # type: ignore
+    assert isinstance(ry_resolved, qf.MultiplexedRyGate)
+    assert all(isinstance(p, float) for p in ry_resolved.params)
+
 
 def test_ConditionalGate() -> None:
     gate1 = qf.ConditionalGate(qf.H(1), qf.X(1), 0)
@@ -647,6 +658,12 @@ def test_CompositeGate() -> None:
 
     with pytest.raises(ValueError):
         gate0.param("theta")
+
+
+def test_ControlGate_on_wrong_qubit_count() -> None:
+    cg = qf.ControlGate(qf.X(1), [0])
+    with pytest.raises(ValueError, match="Wrong number of qubits"):
+        cg.on(0)
 
 
 # fin

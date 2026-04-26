@@ -6,6 +6,7 @@
 import glob
 import io
 import subprocess
+import sys
 
 import quantumflow as qf
 
@@ -23,7 +24,7 @@ def test_about() -> None:
 
 
 def test_about_main() -> None:
-    rval = subprocess.call(["python", "-m", "quantumflow.about"])
+    rval = subprocess.call([sys.executable, "-m", "quantumflow.about"])
     assert rval == 0
 
 
