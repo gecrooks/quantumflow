@@ -3748,7 +3748,6 @@ ext = [
 dev = [
     { name = "mypy" },
     { name = "nbmake" },
-    { name = "numpy" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -3788,7 +3787,6 @@ provides-extras = ["ext", "docs"]
 dev = [
     { name = "mypy", specifier = ">=0.931" },
     { name = "nbmake" },
-    { name = "numpy", specifier = ">=1.20" },
     { name = "pre-commit" },
     { name = "pytest", specifier = ">=4.6" },
     { name = "pytest-cov" },

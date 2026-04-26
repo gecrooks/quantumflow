@@ -91,7 +91,6 @@ docs = [
 dev = [
     "twine",
     "setupext-janitor",
-    "numpy                   >= 1.20",     # Needed for numpy.typehints
     "pytest                  >= 4.6",
     "pytest-cov",
     "ruff",
