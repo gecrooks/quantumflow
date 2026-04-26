@@ -25,7 +25,7 @@ test:		## Run unittests
 
 coverage:	## Report test coverage using current backend
 	@echo
-	uv run pytest --disable-pytest-warnings --cov
+	uv run pytest --disable-pytest-warnings --cov --cov-report=term-missing
 	@echo
 
 lint:		## Lint check python source
