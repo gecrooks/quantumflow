@@ -5,47 +5,47 @@
 .DEFAULT_GOAL := help
 
 PROJECT = quantumflow
-FILES = $(PROJECT) docs/conf.py setup.py examples/
+FILES = $(PROJECT) docs/conf.py examples/
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 init:  ## Install and initlize package ready for development
-	pip install -e '.[dev]'
+	uv sync --all-extras
 
 about:	## Report versions of dependent packages
-	@python -m $(PROJECT).about
+	@uv run python -m $(PROJECT).about
 
 status:  ## git status
 	@echo
 	@git status --short --branch
 
 test:		## Run unittests
-	pytest --disable-pytest-warnings
+	uv run pytest --disable-pytest-warnings
 
 coverage:	## Report test coverage using current backend
 	@echo
-	pytest --disable-pytest-warnings --cov
+	uv run pytest --disable-pytest-warnings --cov
 	@echo
 
 lint:		## Lint check python source
-	ruff check
+	uv run ruff check
 
 delint:   ## Run isort and black to delint project
-	ruff format
+	uv run ruff format
 
-typecheck:	## Static typechecking 
-	mypy $(PROJECT)
+typecheck:	## Static typechecking
+	uv run mypy $(PROJECT)
 
 docs:		## Build documentation
-	(cd docs; make html)
+	uv run make -C docs html
 
 docs-open:  ## Build documentation and open in webbrowser
-	(cd docs; make html)
+	uv run make -C docs html
 	open docs/_build/html/index.html
 
 docs-clean: 	## Clean documentation build
-	(cd docs; make clean)
+	uv run make -C docs clean
 
 testall: about coverage lint typecheck docs build   ## Run all tests
 
@@ -79,15 +79,14 @@ pragmas:	## Report all pragmas in code
 	@echo "** Typecheck pragmas **"
 	@grep '# type:' --color -r -n $(FILES) || echo "No Typecheck Pragmas"
 
-build: ## Setuptools build
-	./setup.py clean --all
-	./setup.py sdist bdist_wheel
+build: clean ## Build sdist and wheel
+	uv build
 
 requirements: ## Make requirements.txt
-	pip freeze > requirements.txt
+	uv export --no-hashes --no-emit-project -o requirements.txt
 
-clean: ## Clean up after setuptools
-	./setup.py clean --all
+clean: ## Remove build artifacts
+	git clean -fdX -- build dist '*.egg-info'
 
 
 .PHONY: help
