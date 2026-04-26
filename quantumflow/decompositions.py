@@ -184,9 +184,7 @@ def kronecker_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     rank = 2**gate.qubit_nb
     U /= np.linalg.det(U) ** (1 / rank)
 
-    R = U.reshape(2, 2, 2, 2)
-    R = R.transpose(0, 2, 1, 3)
-    R = R.reshape(4, 4)
+    R = U.reshape(2, 2, 2, 2).transpose(0, 2, 1, 3).reshape(4, 4)
 
     u, s, vh = np.linalg.svd(R)
     A = np.sqrt(s[0]) * u[:, 0].reshape(2, 2)
