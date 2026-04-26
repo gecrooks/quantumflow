@@ -3,6 +3,8 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+import importlib.util
+
 import pytest
 
 import quantumflow as qf
@@ -16,13 +18,9 @@ qiskit = pytest.importorskip("qiskit", reason="qiskit not installed")
 qutip_qip = pytest.importorskip("qutip_qip", reason="qutip-qip not installed")
 
 # qsimcirq is optional - some tests will skip if not available
-try:
-    import qsimcirq
-    HAS_QSIM = True
-except ImportError:
-    HAS_QSIM = False
+HAS_QSIM = importlib.util.find_spec("qsimcirq") is not None
 
-from quantumflow import xbraket, xcirq, xforest, xqiskit, xqutip
+from quantumflow import xbraket, xcirq, xforest, xqiskit, xqutip  # noqa: E402
 
 
 def test_transpile_formats_constant() -> None:
