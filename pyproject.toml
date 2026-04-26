@@ -44,7 +44,7 @@ classifiers = [
 
 dependencies = [
     "typing_extensions       >= 4.1.1",
-    "numpy                   >= 1.21, < 2.0",   # 1.21 needed for numpy.typing
+    "numpy                   >= 1.21, < 3.0",   # 1.21 needed for numpy.typing
     "scipy                   >= 1.9, < 2.0",    # lower bound for numpy.typing compatibility; upper bound caps at next breaking major
     "sympy                   >= 1.6",
     "networkx                >= 2.6, < 4.0",
