@@ -238,21 +238,37 @@ def join_channels(chan0: Channel, chan1: Channel) -> Channel:
     return Channel(tensor, tuple(chan0.qubits) + tuple(chan1.qubits))
 
 
-# TESTME
 def channel_to_kraus(chan: Channel) -> "Kraus":
     """Convert a channel superoperator into a Kraus operator representation
-    of the same channel."""
+    of the same channel.
+
+    Args:
+        chan: A quantum channel represented as a superoperator.
+
+    Returns:
+        A Kraus representation of the same channel.
+
+    Raises:
+        ValueError: If the Choi matrix has negative eigenvalues,
+            indicating an invalid quantum channel.
+    """
     qubits = chan.qubits
     N = chan.qubit_nb
 
     choi = chan.choi()
-    evals, evecs = np.linalg.eig(choi)
+    evals, evecs = np.linalg.eigh(choi)
     evecs = np.transpose(evecs)
 
-    assert np.allclose(evals.imag, 0.0)  # FIXME exception
-    assert np.all(evals.real >= 0.0)  # FIXME exception
+    # eigh returns real eigenvalues for Hermitian matrices
+    tol = 1e-9
+    if np.any(evals < -tol):
+        raise ValueError(
+            f"Choi matrix has negative eigenvalues (min={evals.min():.2e}), "
+            "indicating a non-physical (non-CP) channel"
+        )
+    evals = np.maximum(evals, 0.0)
 
-    values = np.sqrt(evals.real)
+    values = np.sqrt(evals)
 
     ops = []
     for i in range(2 ** (2 * N)):

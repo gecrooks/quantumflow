@@ -181,7 +181,8 @@ def tensormul(
 ) -> QubitTensor:
     N = np.ndim(tensor1)
     K = np.ndim(tensor0) // 2
-    assert K == len(indices)
+    if K != len(indices):
+        raise ValueError(f"Gate dimension ({K}) must match number of indices ({len(indices)})")
 
     gate = np.reshape(tensor0, [2**K, 2**K])
 
@@ -208,7 +209,8 @@ def tensormul_diagonal(
 ) -> QubitTensor:
     N = np.ndim(tensor1)
     K = np.ndim(tensor0_diagonal)
-    assert K == len(indices)
+    if K != len(indices):
+        raise ValueError(f"Diagonal dimension ({K}) must match number of indices ({len(indices)})")
 
     perm = list(indices) + [n for n in range(N) if n not in indices]
     inv_perm = np.argsort(perm)

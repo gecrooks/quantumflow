@@ -406,4 +406,15 @@ def test_random_channel() -> None:
     assert qf.almost_unital(chan)
 
 
+def test_channel_to_kraus_non_cp_raises() -> None:
+    """channel_to_kraus should raise ValueError for non-CP channels."""
+    chan = qf.Damping(0.1, 0).aschannel()
+    choi = chan.choi()
+    # Force a negative eigenvalue well below tolerance
+    bad_choi = choi - np.eye(choi.shape[0]) * 0.01
+    bad_chan = qf.Channel.from_choi(bad_choi, [0])
+    with pytest.raises(ValueError, match="negative eigenvalues"):
+        qf.channel_to_kraus(bad_chan)
+
+
 # fin
