@@ -86,7 +86,7 @@ requirements: ## Make requirements.txt
 	uv export --no-hashes --no-emit-project -o requirements.txt
 
 clean: ## Remove build artifacts
-	git clean -fdX -- build dist '*.egg-info'
+	git clean -fdX -- build dist quantumflow.egg-info
 
 
 .PHONY: help
