@@ -202,7 +202,7 @@ class Operation(ABC):
         Raise:
             KeyError: If unrecognized parameter name
         """
-        if self.cv_args is None:
+        if self.cv_args is None:  # pragma: no cover
             raise KeyError("No parameters")
         try:
             idx = self.cv_args.index(name)
@@ -448,7 +448,7 @@ class Gate(Operation):
     @property
     @abstractmethod
     def tensor(self) -> QubitTensor:
-        pass
+        pass  # pragma: no cover
 
     @cached_property
     def tensor_diagonal(self) -> QubitTensor:
@@ -590,7 +590,7 @@ class UnitaryGate(Gate):
     @cached_property
     def tensor(self) -> QubitTensor:
         """Returns the tensor representation of gate operator"""
-        if self._tensor is None:
+        if self._tensor is None:  # pragma: no cover
             raise ValueError("No tensor representation")
         return self._tensor
 
@@ -625,7 +625,7 @@ class Channel(Operation):
     @cached_property
     def tensor(self) -> QubitTensor:
         """Return the tensor representation of the channel's superoperator"""
-        if self._tensor is None:
+        if self._tensor is None:  # pragma: no cover
             raise ValueError("No tensor representation")
         return self._tensor
 

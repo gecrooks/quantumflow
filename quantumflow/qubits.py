@@ -31,10 +31,10 @@ class Qubit(Protocol):
     """
 
     def __lt__(self, other: Any, /) -> bool:
-        pass
+        pass  # pragma: no cover
 
     def __hash__(self) -> int:
-        pass
+        pass  # pragma: no cover
 
 
 Qubits: TypeAlias = Sequence[Qubit]

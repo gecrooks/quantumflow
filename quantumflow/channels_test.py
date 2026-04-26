@@ -417,4 +417,10 @@ def test_channel_to_kraus_non_cp_raises() -> None:
         qf.channel_to_kraus(bad_chan)
 
 
+def test_channel_wrong_qubit_count() -> None:
+    chan = qf.Damping(0.1, 0).aschannel()
+    with pytest.raises(ValueError, match="Wrong number of qubits"):
+        qf.Channel(chan.tensor, qubits=[0, 1])
+
+
 # fin
