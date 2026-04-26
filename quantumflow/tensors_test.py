@@ -68,4 +68,25 @@ def test_inner_product() -> None:
         tensors.inner(qf.CNot(0, 1).tensor, qf.X(0).tensor)
 
 
+def test_tensormul_dimension_mismatch() -> None:
+    """Test that tensormul raises ValueError for dimension mismatch."""
+    state = qf.zero_state(3).tensor
+    gate = qf.CNot(0, 1).tensor  # 2-qubit gate
+
+    # Provide wrong number of indices (3 indices for 2-qubit gate)
+    with pytest.raises(ValueError, match="Gate dimension"):
+        tensors.tensormul(gate, state, (0, 1, 2))
+
+
+def test_tensormul_diagonal_dimension_mismatch() -> None:
+    """Test that tensormul_diagonal raises ValueError for dimension mismatch."""
+    state = qf.zero_state(3).tensor
+    diagonal = np.array([1, 1, 1, 1])  # 2-qubit diagonal
+    diagonal = diagonal.reshape((2, 2))
+
+    # Provide wrong number of indices (3 indices for 2-qubit diagonal)
+    with pytest.raises(ValueError, match="Diagonal dimension"):
+        tensors.tensormul_diagonal(diagonal, state, (0, 1, 2))
+
+
 # fin
