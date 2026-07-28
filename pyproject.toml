@@ -50,7 +50,7 @@ dependencies = [
     "networkx                >= 2.6, < 4.0",
     "decorator               < 5.0.0",     # 5.0 breaks networkx dependency
     "opt_einsum",
-    "pillow                  >= 9.0, != 9.1.0",  # 9.1.0 has problems on some versions of MacOS
+    "pillow!=9.1.0,>=12.3.0",  # 9.1.0 has problems on some versions of MacOS
                                                  # https://github.com/python-pillow/Pillow/issues/6179
     "matplotlib              >= 3.5",
   ]
