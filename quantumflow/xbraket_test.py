@@ -35,6 +35,52 @@ def test_braket_to_circuit() -> None:
     print(circ)
 
 
+@pytest.mark.parametrize("angle", [0.0, 0.37, -1.1, np.pi, 4.0])
+@pytest.mark.parametrize("targets", [(0, 1), (1, 0)])
+@pytest.mark.parametrize("prefix", ["none", "rotation", "cnot", "xy"])
+def test_braket_xy_preserves_operator_and_parameters(angle, targets, prefix) -> None:
+    from braket.circuits import Circuit as bkCircuit
+
+    bkcirc = bkCircuit()
+    if prefix == "rotation":
+        bkcirc.rx(0, 0.83)
+    elif prefix == "cnot":
+        bkcirc.cnot(1, 0)
+    elif prefix == "xy":
+        bkcirc.xy(1, 0, -0.61)
+    bkcirc.xy(*targets, angle)
+
+    circ = braket_to_circuit(bkcirc)
+    xy = circ[-1]
+    assert isinstance(xy, qf.XY)
+    assert xy.qubits == targets
+    assert xy.params == (-angle / (2 * np.pi),)
+    # Both source and converted matrices order active wires ascending, with
+    # the first wire as the most significant tensor axis. Compare full complex
+    # operators, including phase, not just one input state's probabilities.
+    assert circ.qubits == (0, 1)
+    np.testing.assert_allclose(
+        circ.asgate().asoperator(), bkcirc.to_unitary(), atol=1e-12, rtol=1e-12
+    )
+    exported = circuit_to_braket(circ)
+    assert tuple(exported.instructions[-1].target) == targets
+    assert float(exported.instructions[-1].operator.angle) == pytest.approx(angle)
+    np.testing.assert_allclose(
+        exported.to_unitary(), bkcirc.to_unitary(), atol=1e-12, rtol=1e-12
+    )
+
+
+def test_braket_xy_asymmetric_surrounding_operations() -> None:
+    from braket.circuits import Circuit as bkCircuit
+
+    bkcirc = (bkCircuit().h(0).ry(1, 0.37).t(0).cnot(1, 0)
+              .xy(1, 0, -1.1).rz(0, 0.83).xy(0, 1, 0.29))
+    circ = braket_to_circuit(bkcirc)
+    np.testing.assert_allclose(
+        circ.asgate().asoperator(), bkcirc.to_unitary(), atol=1e-12, rtol=1e-12
+    )
+
+
 def test_circuit_to_qiskit() -> None:
     circ = qf.Circuit([qf.CNot(0, 1), qf.Rz(0.2, 1)])
     bkcirc = circuit_to_braket(circ)

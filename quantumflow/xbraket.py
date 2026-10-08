@@ -110,7 +110,7 @@ def braket_to_circuit(bkcircuit: "bkCircuit") -> Circuit:
             ]:
                 args = [angle / np.pi] + qubits  # Different parameterization
             elif name == "XY":
-                args = [-0.5 * args[0] / np.pi] + qubits
+                args = [-0.5 * angle / np.pi] + qubits
             else:
                 args = [angle] + qubits
         else:
