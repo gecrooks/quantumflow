@@ -143,7 +143,7 @@ class CompositeGate(Gate):
 
         for elem in circ:
             if not isinstance(elem, Gate):
-                raise ValueError("A CompositeGate must be composed of Gates")
+                raise TypeError("A CompositeGate must be composed of Gates")
 
         super().__init__(qubits=circ.qubits)
         self.circuit = circ
@@ -333,7 +333,7 @@ class MultiSwapGate(Gate):
             elif isinstance(gate, (I, IdentityGate)):
                 continue
             else:
-                raise ValueError("Swap gates must be built from swap gates")
+                raise TypeError("Swap gates must be built from swap gates")
 
         perm = list(range(N))
         for elem in circ:

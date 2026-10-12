@@ -87,7 +87,7 @@ def test_translate_to_qutip() -> None:
 
     circ1 = qf.Circuit()
     circ1 += qf.Can(0.1, 0.2, 0.3, "a", "b")
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         xqutip.circuit_to_qutip(circ1, translate=True)
 
 

@@ -124,7 +124,7 @@ def pyquil_to_circuit(program: "pqProgram") -> Circuit:
             gate = defgate(*chain((np.real(p) for p in inst.params), qubits))  # type: ignore
             circ += gate
         else:
-            raise ValueError("PyQuil program is not protoquil")  # pragma: no cover
+            raise TypeError("PyQuil program is not protoquil")  # pragma: no cover
 
     return circ
 

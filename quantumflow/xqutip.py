@@ -221,7 +221,7 @@ def circuit_to_qutip(circ: Circuit, translate: bool = False) -> "QubitCircuit":
 
     for q in circ.qubits:
         if not isinstance(q, int):
-            raise ValueError("QuTiP qubits must be integers")
+            raise TypeError("QuTiP qubits must be integers")
 
     N = cast(int, max(circ.qubits))
     qbc = QubitCircuit(N + 1)
