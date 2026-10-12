@@ -72,6 +72,6 @@ def _print_circuit_identity(
 
 if __name__ == "__main__":
     print()
-    print("# Validate and display various gate translations  " "(up to global phase)")
+    print("# Validate and display various gate translations  (up to global phase)")
     print()
     _check_circuit_translations()

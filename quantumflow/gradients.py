@@ -230,7 +230,9 @@ def parameter_shift_circuits(
 
     elem = circ[index]
     if not isinstance(elem, Gate):
-        raise TypeError(f"Gradient computation requires Gate operations, got {type(elem).__name__}")
+        raise TypeError(
+            f"Gradient computation requires Gate operations, got {type(elem).__name__}"
+        )
     gate_type = type(elem)
     if gate_type not in shift_constant:
         raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)

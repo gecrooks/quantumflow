@@ -171,7 +171,9 @@ def circuit_to_latex(
     """
 
     if package not in ["qcircuit", "quantikz"]:
-        raise ValueError(f"Unknown LaTeX package: {package}. Must be 'qcircuit' or 'quantikz'.")
+        raise ValueError(
+            f"Unknown LaTeX package: {package}. Must be 'qcircuit' or 'quantikz'."
+        )
 
     # TODO: I would be good to move much of the gate dependent details
     # into the gate classes, as has been done for circuit_to_diagram.
@@ -453,7 +455,7 @@ _QUANTIKZ = r"""\begin{quantikz}[%s]
 \end{quantikz}
 """
 
-_QUANTIKZ_OPTIONS = "thin lines, column sep=0.75em," "row sep={2.5em,between origins}"
+_QUANTIKZ_OPTIONS = "thin lines, column sep=0.75em,row sep={2.5em,between origins}"
 
 QUANTIKZ_FOOTER_ = r"""
 \end{document}

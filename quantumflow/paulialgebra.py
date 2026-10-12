@@ -551,7 +551,9 @@ def pauli_decompose_hermitian(
     if qubits is None:
         qubits = list(range(N))
     elif len(qubits) != N:
-        raise ValueError(f"Number of qubits ({len(qubits)}) must match matrix size ({N})")
+        raise ValueError(
+            f"Number of qubits ({len(qubits)}) must match matrix size ({N})"
+        )
 
     terms = []
     for ops in product("IXYZ", repeat=N):

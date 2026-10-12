@@ -299,7 +299,9 @@ def test_error() -> None:
 
 
 @pytest.mark.parametrize("basis", range(4))
-@pytest.mark.parametrize("amplitude", [1.0000000000000002, 0.99999998, np.sqrt(1 + 5e-8)])
+@pytest.mark.parametrize(
+    "amplitude", [1.0000000000000002, 0.99999998, np.sqrt(1 + 5e-8)]
+)
 def test_sample_deterministic_roundoff_preserves_axes_and_state(
     basis, amplitude, monkeypatch
 ):

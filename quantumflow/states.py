@@ -315,7 +315,7 @@ class State(QuantumState):
         for index, amplitude in np.ndenumerate(state):
             if not np.isclose(amplitude, 0.0):
                 ket = "|" + "".join([str(n) for n in index]) + ">"
-                s.append(f"({amplitude.real:0.04g}" f"{amplitude.imag:+0.04g}i) {ket}")
+                s.append(f"({amplitude.real:0.04g}{amplitude.imag:+0.04g}i) {ket}")
                 count += 1
                 if count > MAX_ELEMENTS:
                     s.append("...")
@@ -485,9 +485,7 @@ def random_density(
         return random_density_hs(qubits, rank)
     elif ensemble == "Bures":
         return random_density_bures(qubits, rank)
-    raise ValueError(
-        "Unknown ensemble. " "Valid Options are 'Hilbert–Schmidt' or 'Bures"
-    )
+    raise ValueError("Unknown ensemble. Valid Options are 'Hilbert–Schmidt' or 'Bures")
 
 
 # TODO: Check math
