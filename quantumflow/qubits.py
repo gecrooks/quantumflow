@@ -18,7 +18,8 @@ e.g. `[0, 1, 2]`, or `['a', 'b', 'c']`.
 
 """
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from .future import Protocol, TypeAlias
 
@@ -47,7 +48,7 @@ def sorted_qubits(qbs: Qubits) -> Qubits:
     Qubits can be of different types, so we sort first by type (as a string),
     then within types.
     """
-    return tuple(sorted(list(set(qbs)), key=lambda x: (str(type(x)), x)))
+    return tuple(sorted(set(qbs), key=lambda x: (str(type(x)), x)))
 
 
 # fin

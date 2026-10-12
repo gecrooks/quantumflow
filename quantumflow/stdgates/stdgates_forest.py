@@ -7,8 +7,6 @@
 QuantumFlow: Gates peculiar to Rigetti's Forest
 """
 
-from typing import List
-
 import numpy as np
 
 from .. import tensors, var
@@ -61,7 +59,7 @@ class CPhase(StdGate):
         theta = self.param("theta") * t
         return CPhase(theta, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL, "P({theta})"]
 
 
@@ -106,7 +104,7 @@ class CPhase00(StdGate):
         theta = self.param("theta")
         return CPhase00(theta * t, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [NCTRL + "({theta})", NCTRL + "({theta})"]
 
 
@@ -148,7 +146,7 @@ class CPhase01(StdGate):
         theta = self.param("theta")
         return CPhase01(theta * t, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [NCTRL + "({theta})", CTRL + "({theta})"]
 
 
@@ -191,7 +189,7 @@ class CPhase10(StdGate):
         theta = self.param("theta")
         return CPhase10(theta * t, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL + "({theta})", NCTRL + "({theta})"]
 
 

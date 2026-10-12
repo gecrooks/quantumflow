@@ -15,7 +15,7 @@ Interface between Amazon Braket and QuantumFlow
 .. autofunction:: circuit_to_braket
 """
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -168,7 +168,7 @@ def translate_to_braket(circ: Circuit) -> Circuit:
 
 
 class BraketSimulator(Simulator):
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         try:
             from braket.devices import LocalSimulator
         except ModuleNotFoundError as err:  # pragma: no cover

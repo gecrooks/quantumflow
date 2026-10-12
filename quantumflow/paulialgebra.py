@@ -31,11 +31,12 @@ QuantumFlow module for working with the Pauli algebra.
 
 import heapq
 from cmath import isclose  # type: ignore
+from collections.abc import Iterator
 from functools import reduce
 from itertools import groupby, product
 from numbers import Complex
 from operator import itemgetter, mul
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, cast
+from typing import Any, cast
 
 import numpy as np
 import sympy
@@ -49,23 +50,23 @@ from .tensors import QubitTensor
 from .var import ComplexVariable
 
 __all__ = [
-    "PauliTerm",
     "Pauli",
+    "PauliTerm",
+    "pauli_commuting_sets",
+    "pauli_decompose_hermitian",
+    "pauli_pow",
+    "pauli_product",
+    "pauli_sum",
+    "paulis_close",
+    "paulis_commute",
+    "sI",
     "sX",
     "sY",
     "sZ",
-    "sI",
-    "pauli_sum",
-    "pauli_product",
-    "pauli_pow",
-    "paulis_commute",
-    "pauli_commuting_sets",
-    "paulis_close",
-    "pauli_decompose_hermitian",
 ]
 
 
-PauliTerm = Tuple[Qubits, str, ComplexVariable]
+PauliTerm = tuple[Qubits, str, ComplexVariable]
 
 PAULI_OPS = ["X", "Y", "Z", "I"]
 
@@ -116,7 +117,7 @@ class Pauli(Operation):
 
     def __init__(self, *terms: PauliTerm) -> None:
         the_terms = []
-        qubits: Set[Qubit] = set()
+        qubits: set[Qubit] = set()
 
         if len(terms) != 0:  # == 0 zero element
             # print(terms)
@@ -133,7 +134,7 @@ class Pauli(Operation):
                 the_terms.append((tuple(qbs), "".join(ops), coeff))
                 qubits.update(qbs)
 
-        qbs = sorted(list(qubits))
+        qbs = sorted(qubits)
         super().__init__(qbs)
 
         self.terms = tuple(the_terms)
@@ -171,9 +172,7 @@ class Pauli(Operation):
             return False
         if len(self.terms) == 0:
             return True  # Zero element
-        if len(self.terms[0][0]) == 0:
-            return True
-        return False
+        return len(self.terms[0][0]) == 0
 
     @classmethod
     def identity(cls) -> "Pauli":
@@ -297,7 +296,7 @@ class Pauli(Operation):
             return NotImplemented
         return self.terms >= other.terms
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Pauli):
             return NotImplemented
         return self.terms == other.terms
@@ -305,7 +304,7 @@ class Pauli(Operation):
     def __hash__(self) -> int:
         return hash(self.terms)
 
-    def asoperator(self, qubits: Optional[Qubits] = None) -> QubitTensor:
+    def asoperator(self, qubits: Qubits | None = None) -> QubitTensor:
         # DOCME: Use of qubits argument here.
 
         # Late import to prevent circular imports
@@ -348,7 +347,7 @@ class Pauli(Operation):
 
         return self.rewire(dict(zip(self.qubits, qubits)))
 
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> "Pauli":
+    def rewire(self, labels: dict[Qubit, Qubit]) -> "Pauli":
         paulis = []
         for qbs, ops, coeff in self.terms:
             new_qbs = [labels[q] for q in qbs]
@@ -406,7 +405,7 @@ def pauli_product(*elements: Pauli) -> Pauli:
         key = itemgetter(0)
         for qubit, qops in groupby(heapq.merge(*ops, key=key), key=key):
             res = next(qops)[1]  # Operator: X Y Z
-            for op in qops:
+            for op in qops:  # noqa: B031  (continues the same iterator)
                 pair = res + op[1]
                 res, rescoeff = PAULI_PROD[pair]
                 coeff *= rescoeff
@@ -498,7 +497,7 @@ def paulis_commute(element0: Pauli, element1: Pauli) -> bool:
     return True
 
 
-def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
+def pauli_commuting_sets(element: Pauli) -> tuple[Pauli, ...]:
     """Gather the terms of a Pauli polynomial into commuting sets.
 
     Uses the algorithm defined in (Raeisi, Wiebe, Sanders,
@@ -508,7 +507,7 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
     if len(element) < 2:
         return (element,)
 
-    groups: List[Pauli] = []
+    groups: list[Pauli] = []
 
     for term in element:
         pterm = Pauli.term(*term)
@@ -526,7 +525,7 @@ def pauli_commuting_sets(element: Pauli) -> Tuple[Pauli, ...]:
 
 
 def pauli_decompose_hermitian(
-    matrix: np.ndarray, qubits: Optional[Qubits] = None
+    matrix: np.ndarray, qubits: Qubits | None = None
 ) -> Pauli:
     """Decompose a Hermitian matrix into an element of the Pauli algebra.
 

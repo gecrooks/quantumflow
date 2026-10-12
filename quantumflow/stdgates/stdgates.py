@@ -4,10 +4,12 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import ClassVar, Dict, List, Mapping, Type, TypeVar
+from collections.abc import Mapping
+from typing import ClassVar, TypeVar
 
 import numpy as np
 import scipy
+from typing_extensions import Self
 
 from ..config import CONJ, CTRL, SQRT
 from ..future import cached_property
@@ -18,17 +20,17 @@ from ..tensors import QubitTensor, asqutensor
 from ..var import Variable
 
 __all__ = (
-    "StdGate",
+    "STDCTRLGATES",
     "STDGATES",
     "StdCtrlGate",
-    "STDCTRLGATES",
+    "StdGate",
 )
 
 
-STDGATES: Dict[str, "Type[StdGate]"] = {}
+STDGATES: dict[str, "type[StdGate]"] = {}
 """All standard gates (All non-abstract subclasses of StdGate)"""
 
-STDCTRLGATES: Dict[str, "Type[StdCtrlGate]"] = {}
+STDCTRLGATES: dict[str, "type[StdCtrlGate]"] = {}
 """All standard control gates (All non-abstract subclasses of StdCtrlGate)"""
 
 
@@ -63,14 +65,14 @@ class StdGate(Gate):
         cls.cv_qubit_nb = qubit_nb
 
     def __repr__(self) -> str:
-        args: List[str] = []
+        args: list[str] = []
         args.extend(str(p) for p in self.params)
         args.extend(str(qubit) for qubit in self.qubits)
         fargs = ", ".join(args)
 
         return f"{self.name}({fargs})"
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         label = self.name
 
         label = label.replace("ISwap", "iSwap")
@@ -96,7 +98,7 @@ class StdGate(Gate):
 
         if self.qubit_nb > 1 and not self.cv_interchangeable:
             for i in range(self.qubit_nb):
-                labels[i] = labels[i] + "_%s" % i
+                labels[i] = labels[i] + f"_{i}"
 
         return labels
 
@@ -117,7 +119,7 @@ class StdCtrlGate(StdGate):
 
     from .stdgates_1q import I
 
-    cv_target: ClassVar[Type[StdGate]] = I  # null gate
+    cv_target: ClassVar[type[StdGate]] = I  # null gate
     """StdGate type that is the target of this controlled gate.
     Should be set by subclasses"""
 
@@ -165,11 +167,11 @@ class StdCtrlGate(StdGate):
 
         return asqutensor(unitary)
 
-    def resolve(self: StdCtrlGateTV, subs: Mapping[str, float]) -> StdCtrlGateTV:
+    def resolve(self, subs: Mapping[str, float]) -> Self:
         target = self.target.resolve(subs)
         return type(self)(*target.params, *self.qubits)  # type: ignore
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ([CTRL] * self.control_qubit_nb) + self.target._diagram_labels_()
 
 

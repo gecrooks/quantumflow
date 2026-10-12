@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import Iterator, Optional, Union
+from collections.abc import Iterator
 
 import networkx as nx
 import numpy as np
@@ -76,7 +76,7 @@ def translate_ReversalGate_to_swap_network(gate: ReversalGate) -> Iterator[Swap]
 
 
 @register_translation
-def translate_QFTGate(gate: QFTGate) -> Iterator[Union[H, CZPow, Swap]]:
+def translate_QFTGate(gate: QFTGate) -> Iterator[H | CZPow | Swap]:
     qubits = gate.qubits
     N = len(qubits)
     for n0 in range(N):
@@ -89,15 +89,15 @@ def translate_QFTGate(gate: QFTGate) -> Iterator[Union[H, CZPow, Swap]]:
 
 
 @register_translation
-def translate_InvQFTGate(gate: InvQFTGate) -> Iterator[Union[H, CZPow, Swap]]:
+def translate_InvQFTGate(gate: InvQFTGate) -> Iterator[H | CZPow | Swap]:
     gates = list(translate_QFTGate(QFTGate(gate.qubits)))
     yield from (gate.H for gate in gates[::-1])
 
 
 @register_translation
 def translate_PauliGate(
-    gate: PauliGate, topology: Optional[nx.Graph] = None
-) -> Iterator[Union[CNot, XPow, YPow, ZPow]]:
+    gate: PauliGate, topology: nx.Graph | None = None
+) -> Iterator[CNot | XPow | YPow | ZPow]:
     """
     Yields a circuit corresponding to the exponential of
     the Pauli algebra element object, i.e. exp[-1.0j * alpha * element]
@@ -153,7 +153,7 @@ def translate_PauliGate(
         cnot_seq = Circuit()
         order = list(reversed(list(nx.topological_sort(active_topology))))
         for q0 in order[:-1]:
-            q1 = list(active_topology.pred[q0])[0]
+            q1 = next(iter(active_topology.pred[q0]))
             if q1 not in active_qubits:
                 cnot_seq += Swap(q0, q1)
                 active_qubits.add(q1)
@@ -174,7 +174,7 @@ def translate_PauliGate(
 
 
 @register_translation
-def translate_DiagonalGate(gate: DiagonalGate) -> Iterator[Union[Rz, CNot]]:
+def translate_DiagonalGate(gate: DiagonalGate) -> Iterator[Rz | CNot]:
     diag_phases = gate.params
     N = gate.qubit_nb
     qbs = gate.qubits
@@ -196,7 +196,7 @@ def translate_DiagonalGate(gate: DiagonalGate) -> Iterator[Union[Rz, CNot]]:
 
 
 @register_translation
-def translate_MultiplexedRzGate(gate: MultiplexedRzGate) -> Iterator[Union[Rz, CNot]]:
+def translate_MultiplexedRzGate(gate: MultiplexedRzGate) -> Iterator[Rz | CNot]:
     thetas = gate.params
     N = gate.qubit_nb
     controls = gate.controls
@@ -230,7 +230,7 @@ def translate_MultiplexedRzGate(gate: MultiplexedRzGate) -> Iterator[Union[Rz, C
         # yield CNot(qbs[0], qbs[-1])
 
         M = len(thetas) // 4
-        quarters = list(thetas[i : i + M] for i in range(0, len(thetas), M))
+        quarters = [thetas[i : i + M] for i in range(0, len(thetas), M)]
 
         theta0 = [(t0 + t1 + t2 + t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
         theta1 = [(t0 - t1 + t2 - t3) / 4 for t0, t1, t2, t3 in zip(*quarters)]
@@ -261,7 +261,7 @@ def translate_MultiplexedRzGate(gate: MultiplexedRzGate) -> Iterator[Union[Rz, C
 @register_translation
 def translate_MultiplexedRyGate(
     gate: MultiplexedRyGate,
-) -> Iterator[Union[V, V_H, MultiplexedRzGate]]:
+) -> Iterator[V | V_H | MultiplexedRzGate]:
     thetas = gate.params
     controls = gate.controls
     target = gate.targets[0]

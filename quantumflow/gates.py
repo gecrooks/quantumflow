@@ -63,16 +63,8 @@ Explicitly creating the gate tensor may consume huge amounts of memory. Beware.
 
 """
 
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import (
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
     cast,
 )
 
@@ -92,21 +84,21 @@ from .tensors import QubitTensor, asqutensor
 from .var import Variable
 
 __all__ = (
-    "IdentityGate",
-    "PauliGate",
-    "MultiSwapGate",
-    "ReversalGate",
     "CircularShiftGate",
-    "QFTGate",
-    "InvQFTGate",
-    "DiagonalGate",
-    "ControlGate",
-    "MultiplexedGate",
-    "ConditionalGate",
-    "MultiplexedRzGate",
-    "MultiplexedRyGate",
-    "RandomGate",
     "CompositeGate",
+    "ConditionalGate",
+    "ControlGate",
+    "DiagonalGate",
+    "IdentityGate",
+    "InvQFTGate",
+    "MultiSwapGate",
+    "MultiplexedGate",
+    "MultiplexedRyGate",
+    "MultiplexedRzGate",
+    "PauliGate",
+    "QFTGate",
+    "RandomGate",
+    "ReversalGate",
 )
 
 
@@ -134,7 +126,7 @@ class IdentityGate(Gate):
     def H(self) -> "IdentityGate":
         return self
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["I"]
 
 
@@ -146,20 +138,20 @@ class CompositeGate(Gate):
     A quantum gate represented by a sequence of quantum gates.
     """
 
-    def __init__(self, *elements: Gate, qubits: Optional[Qubits] = None) -> None:
+    def __init__(self, *elements: Gate, qubits: Qubits | None = None) -> None:
         circ = Circuit(Circuit(elements).flat(), qubits=qubits)
 
         for elem in circ:
             if not isinstance(elem, Gate):
-                raise ValueError("A CompositeGate must be composed of Gates")
+                raise TypeError("A CompositeGate must be composed of Gates")
 
         super().__init__(qubits=circ.qubits)
         self.circuit = circ
 
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         return self.circuit.run(ket)
 
-    def evolve(self, rho: Optional[Density] = None) -> Density:
+    def evolve(self, rho: Density | None = None) -> Density:
         return self.circuit.evolve(rho)
 
     def aschannel(self) -> "Channel":
@@ -181,12 +173,12 @@ class CompositeGate(Gate):
     def on(self, *qubits: Qubit) -> "CompositeGate":
         return CompositeGate(*self.circuit.on(*qubits), qubits=qubits)
 
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> "CompositeGate":
+    def rewire(self, labels: dict[Qubit, Qubit]) -> "CompositeGate":
         circ = self.circuit.rewire(labels)
         return CompositeGate(*circ, qubits=circ.qubits)
 
     @property
-    def params(self) -> Tuple[Variable, ...]:
+    def params(self) -> tuple[Variable, ...]:
         return tuple(item for elem in self.circuit for item in elem.params)
 
     def param(self, name: str) -> Variable:
@@ -222,9 +214,7 @@ class ControlGate(Gate):
     # Note: ControlGate and StdCtrlGate share interface and code.
     # But unification probably not worth the trouble
 
-    def __init__(
-        self, target: Gate, controls: Qubits, axes: Optional[str] = None
-    ) -> None:
+    def __init__(self, target: Gate, controls: Qubits, axes: str | None = None) -> None:
         controls = tuple(controls)
         qubits = tuple(controls) + tuple(target.qubits)
         if len(set(qubits)) != len(qubits):
@@ -289,7 +279,7 @@ class ControlGate(Gate):
         target = self.target.resolve(subs)
         return ControlGate(target, self.control_qubits, self.axes)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         # TODO: Move to config?
         ctrl_labels = {
             "X": "⊖",
@@ -334,16 +324,16 @@ class MultiSwapGate(Gate):
         qubits_in = Circuit(gates).qubits
         N = len(qubits_in)
 
-        circ: List[Gate] = []
+        circ: list[Gate] = []
         for gate in gates:
             if isinstance(gate, Swap):
                 circ.append(gate)
             elif isinstance(gate, MultiSwapGate):
                 circ.extend(gate.decompose())
-            elif isinstance(gate, I) or isinstance(gate, IdentityGate):
+            elif isinstance(gate, (I, IdentityGate)):
                 continue
             else:
-                raise ValueError("Swap gates must be built from swap gates")
+                raise TypeError("Swap gates must be built from swap gates")
 
         perm = list(range(N))
         for elem in circ:
@@ -505,8 +495,8 @@ class PauliGate(Gate):
         return self
 
     def decompose(
-        self, topology: Optional[nx.Graph] = None
-    ) -> Iterator[Union[CNot, XPow, YPow, ZPow]]:
+        self, topology: nx.Graph | None = None
+    ) -> Iterator[CNot | XPow | YPow | ZPow]:
         """
         Returns a Circuit corresponding to the exponential of
         the Pauli algebra element object, i.e. exp[-1.0j * alpha * element]
@@ -556,7 +546,7 @@ def merge_diagonal_gates(
         gate1 = DiagonalGate(params.flatten(), extra_qubits1 + tuple(gate1.qubits))
     gate1 = gate1.permute(qubits)
 
-    params = list(a + b for a, b in zip(gate0.params, gate1.params))
+    params = [a + b for a, b in zip(gate0.params, gate1.params)]
     return DiagonalGate(params, qubits)
 
 
@@ -584,7 +574,7 @@ class DiagonalGate(Gate):
     cv_tensor_structure = "diagonal"
 
     def __init__(
-        self, diag_hamiltonian: Union[np.ndarray, Sequence[Variable]], qubits: Qubits
+        self, diag_hamiltonian: np.ndarray | Sequence[Variable], qubits: Qubits
     ) -> None:
         super().__init__(qubits=qubits, params=tuple(diag_hamiltonian))
 
@@ -728,7 +718,7 @@ class MultiplexedRzGate(MultiplexedGate):
 
     @cached_property
     def tensor_diagonal(self) -> QubitTensor:
-        diagonal: List[float] = []
+        diagonal: list[float] = []
         for theta in self.params:
             rz = Rz(theta, 0)
             diagonal.extend(np.diag(rz.tensor))

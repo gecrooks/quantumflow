@@ -7,8 +7,6 @@
 QuantumFlow: Standard three qubit gates
 """
 
-from typing import List
-
 import numpy as np
 
 from .. import tensors, utils, var
@@ -25,7 +23,7 @@ from .stdgates_2q import ISwap, Swap
 
 # 3-qubit gates, in alphabetic order
 
-__all__ = ("CCiX", "CCNot", "CCXPow", "CCZ", "CISwap", "CSwap", "Deutsch", "Margolus")
+__all__ = ("CCZ", "CCNot", "CCXPow", "CCiX", "CISwap", "CSwap", "Deutsch", "Margolus")
 
 # NB: Not all these control gates are StdCtrlGate subclasses since the target gate
 # may not exist in QF.
@@ -80,7 +78,7 @@ class CCiX(StdGate):
         )
         return tensors.asqutensor(unitary)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["─" + CTRL + "─", "─" + CTRL + "─", "iX─"]
 
 
@@ -202,7 +200,7 @@ class CCZ(StdCtrlGate):
         tensor[s11] *= -1
         return State(tensor, ket.qubits, ket.memory)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL, CTRL, CTRL]
 
 
@@ -331,7 +329,7 @@ class Deutsch(StdGate):
 
     # TODO: Specializes to Toffoli
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL, CTRL, "iRx({theta})^2"]
 
 

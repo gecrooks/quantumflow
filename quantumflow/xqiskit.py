@@ -21,7 +21,7 @@ Interface between IBM's Qiskit and QuantumFlow
 # since you might want to use those gates in QuantumFlow without loading
 # qiskit
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .circuits import Circuit
 from .gatesets import QISKIT_GATES
@@ -38,12 +38,12 @@ if TYPE_CHECKING:
 __all__ = [
     "QISKIT_GATES",
     "QiskitSimulator",
-    "qiskit_to_circuit",
-    "circuit_to_qiskit",
-    "translate_to_qiskit",
     "circuit_to_qasm",
+    "circuit_to_qiskit",
     "qasm_to_circuit",
+    "qiskit_to_circuit",
     "translate_gates_to_qiskit",  # Deprecated
+    "translate_to_qiskit",
 ]
 
 _IMPORT_ERROR_MSG = """External dependency 'qiskit' not installed. Install
@@ -94,7 +94,7 @@ QASM_TO_QF = {
 
 
 class QiskitSimulator(Simulator):
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         circ = self.circuit
         if ket is not None:
             circ = Circuit(Initialize(ket)) + circ

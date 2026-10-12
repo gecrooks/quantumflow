@@ -14,7 +14,7 @@ from typing import Any
 
 from .circuits import Circuit
 
-__all__ = "transpile", "TRANSPILE_FORMATS"
+__all__ = "TRANSPILE_FORMATS", "transpile"
 
 TRANSPILE_FORMATS = (
     "qasm",

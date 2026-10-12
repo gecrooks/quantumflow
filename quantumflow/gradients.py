@@ -21,7 +21,7 @@ QuantumFlow: Gradients of parameterized gates, and gradient descent optimizers
 
 """
 
-from typing import Callable, Optional, Sequence, Tuple
+from collections.abc import Callable, Sequence
 
 import numpy as np
 from numpy import pi
@@ -37,9 +37,9 @@ from .stdgates import XX, YY, ZZ, Rx, Ry, Rz, X, XPow, Y, YPow, Z, ZPow
 __all__ = (
     "GRADIENT_GATESET",
     "expectation_gradients",
-    "state_fidelity_gradients",
-    "state_angle_gradients",
     "parameter_shift_circuits",
+    "state_angle_gradients",
+    "state_fidelity_gradients",
     # 'SGD',
     # "Adam",
 )
@@ -85,7 +85,7 @@ def expectation_gradients(
     ket0: State,
     circ: Circuit,
     hermitian: Operation,
-    dfunc: Optional[Callable[[float], float]] = None,
+    dfunc: Callable[[float], float] | None = None,
 ) -> Sequence[float]:
     """
     Calculate the gradients of a function of expectation for a
@@ -201,7 +201,7 @@ def state_angle_gradients(ket0: State, ket1: State, circ: Circuit) -> Sequence[f
 
 def parameter_shift_circuits(
     circ: Circuit, index: int
-) -> Tuple[float, Circuit, Circuit]:
+) -> tuple[float, Circuit, Circuit]:
     """
     Calculate the gradients of state angle for a parameterized quantum
     circuit, using the parameter-shift rule.
@@ -238,7 +238,7 @@ def parameter_shift_circuits(
         raise ValueError(_UNDIFFERENTIABLE_GATE_MSG)
 
     r = shift_constant[gate_type]
-    param = list(elem.params)[0]
+    param = next(iter(elem.params))
     gate0 = gate_type(param - 0.25 * pi / r, *elem.qubits)  # type: ignore
     circ0 = list(circ)
     circ0[index] = gate0

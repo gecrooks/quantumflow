@@ -32,18 +32,9 @@ channels, circuits, or DAGCircuit's.
 import inspect
 import textwrap
 from abc import abstractmethod
+from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Hashable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
 )
 
 import numpy as np
@@ -59,22 +50,22 @@ from .tensors import QubitTensor
 from .var import Variable
 
 __all__ = [
-    "Moment",
-    "Measure",
-    "Reset",
-    "Initialize",
     "Barrier",
-    "Store",
-    "If",
-    "Display",
-    "StateDisplay",
-    "ProbabilityDisplay",
     "DensityDisplay",
-    "Projection",
-    "Simulator",
-    "QFSimulator",
+    "Display",
+    "If",
+    "Initialize",
+    "Measure",
+    "Moment",
+    "ProbabilityDisplay",
     "Project0",
     "Project1",
+    "Projection",
+    "QFSimulator",
+    "Reset",
+    "Simulator",
+    "StateDisplay",
+    "Store",
 ]
 
 
@@ -84,17 +75,17 @@ class Moment(Sequence, Operation):
     so that they may be applied at the same moment of time.
     """
 
-    def __init__(self, *elements: Operation, qubits: Optional[Qubits] = None) -> None:
+    def __init__(self, *elements: Operation, qubits: Qubits | None = None) -> None:
         circ = Circuit(Circuit(elements).flat(), qubits=qubits)  # type: ignore
 
-        qbs = list(q for elem in circ for q in elem.qubits)
+        qbs = [q for elem in circ for q in elem.qubits]
         if len(qbs) != len(set(qbs)):
             raise ValueError("Qubits of operations within Moments must be disjoint.")
 
         super().__init__(qubits=circ.qubits)
         self._circ = circ
 
-    def __getitem__(self, key: Union[int, slice]) -> Any:
+    def __getitem__(self, key: int | slice) -> Any:
         return self._circ[key]
 
     def __len__(self) -> int:
@@ -103,10 +94,10 @@ class Moment(Sequence, Operation):
     def __iter__(self) -> Iterator[Operation]:
         yield from self._circ
 
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         return self._circ.run(ket)
 
-    def evolve(self, rho: Optional[Density] = None) -> Density:
+    def evolve(self, rho: Density | None = None) -> Density:
         return self._circ.evolve(rho)
 
     def asgate(self) -> "Gate":
@@ -122,16 +113,16 @@ class Moment(Sequence, Operation):
     def __str__(self) -> str:
         circ_str = "\n".join([str(elem) for elem in self])
         circ_str = textwrap.indent(circ_str, " " * CIRCUIT_INDENT)
-        return "\n".join([self.name, circ_str])
+        return f"{self.name}\n{circ_str}"
 
     def on(self, *qubits: Qubit) -> "Moment":
         return Moment(Circuit(self).on(*qubits))
 
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> "Moment":
+    def rewire(self, labels: dict[Qubit, Qubit]) -> "Moment":
         return Moment(Circuit(self).rewire(labels))
 
     @property
-    def params(self) -> Tuple[Variable, ...]:
+    def params(self) -> tuple[Variable, ...]:
         return tuple(item for elem in self for item in elem.params)
 
     def param(self, name: str) -> Variable:
@@ -144,7 +135,7 @@ class Moment(Sequence, Operation):
 class Measure(Operation):
     """Measure a quantum bit and copy result to a classical bit"""
 
-    def __init__(self, qubit: Qubit, cbit: Optional[Hashable] = None) -> None:
+    def __init__(self, qubit: Qubit, cbit: Hashable | None = None) -> None:
         if cbit is None:
             cbit = qubit
 
@@ -184,7 +175,7 @@ class Measure(Operation):
             rho = rho.store({self.cbit: 1})
         return rho
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [f"M({self.cbit})"]
 
 
@@ -231,7 +222,7 @@ class Reset(Operation):
             return "Reset " + " ".join([str(q) for q in self.qubits])
         return "Reset"
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["┤ ⟨0|"]
 
 
@@ -280,7 +271,7 @@ class Barrier(Operation):
     def __str__(self) -> str:
         return self.name + " " + " ".join(str(q) for q in self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["┼"]
 
 
@@ -293,7 +284,7 @@ class Projection(Operation):
         self.states = states
 
         # gather, unique, and sort
-        qbs = sorted_qubits(list([q for state in self.states for q in state.qubits]))
+        qbs = sorted_qubits([q for state in self.states for q in state.qubits])
 
         super().__init__(qbs)
 
@@ -411,7 +402,7 @@ class DensityDisplay(Display):
         super().__init__(key, lambda state: state.asdensity(qubits), qubits=qubits)
 
 
-SIMULATORS: Dict[str, Type["Simulator"]] = {}
+SIMULATORS: dict[str, type["Simulator"]] = {}
 """All quantum circuit simulators (All non-abstract subclasses of Simulator)"""
 
 
@@ -443,7 +434,7 @@ class Simulator(Operation):
         raise NotImplementedError()
 
     @abstractmethod
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         raise NotImplementedError()
 
 
@@ -453,10 +444,10 @@ class Simulator(Operation):
 class QFSimulator(Simulator):
     """Our standard QuantumnFlow quantum circuit simulator as a Simulator subclass."""
 
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         return self.circuit.run(ket)
 
-    def evolve(self, rho: Optional[Density] = None) -> Density:
+    def evolve(self, rho: Density | None = None) -> Density:
         return self.circuit.evolve(rho)
 
 
@@ -477,7 +468,7 @@ class Project0(Gate):
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[1, 0], [0, 0]])
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["|0⟩⟨0|"]
 
 
@@ -495,7 +486,7 @@ class Project1(Gate):
     def tensor(self) -> QubitTensor:
         return tensors.asqutensor([[0, 0], [0, 1]])
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["|1⟩⟨1|"]
 
 

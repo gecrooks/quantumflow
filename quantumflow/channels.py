@@ -52,9 +52,9 @@ Standard channels
 
 # Kudos: Kraus maps originally adapted from Nick Rubin's reference-qvm
 
+from collections.abc import Sequence
 from functools import reduce
 from operator import add
-from typing import Optional, Sequence
 
 import numpy as np
 from scipy import linalg
@@ -66,13 +66,13 @@ from .states import Density, State
 from .stdgates import I, X, Y, Z
 
 __all__ = [
-    "Kraus",
-    "UnitaryMixture",
-    "Depolarizing",
     "Damping",
     "Dephasing",
-    "join_channels",
+    "Depolarizing",
+    "Kraus",
+    "UnitaryMixture",
     "channel_to_kraus",
+    "join_channels",
     "kraus_iscomplete",
     "random_channel",
 ]
@@ -85,7 +85,7 @@ class Kraus(Operation):
     # FIXME: Shouldn't take Gate, since may not be Unitary operators
 
     def __init__(
-        self, operators: Sequence[Gate], weights: Optional[Sequence[float]] = None
+        self, operators: Sequence[Gate], weights: Sequence[float] | None = None
     ) -> None:
         self.operators = operators
 
@@ -117,7 +117,7 @@ class Kraus(Operation):
     def run(self, ket: State) -> State:
         """Apply the action of this Kraus quantum operation upon a state"""
         res = [op.run(ket) for op in self.operators]
-        probs = np.asarray(list(ket.norm() * w for ket, w in zip(res, self.weights)))
+        probs = np.asarray([ket.norm() * w for ket, w in zip(res, self.weights)])
         probs = np.abs(probs)
         probs /= np.sum(probs)
         n = np.random.choice(len(res), p=probs)
@@ -143,7 +143,7 @@ class Kraus(Operation):
             TypeError: If qubits cannot be sorted into unique order.
         """
         # gather, unique, and sort
-        qbs = sorted_qubits(list(q for elem in self.operators for q in elem.qubits))
+        qbs = sorted_qubits([q for elem in self.operators for q in elem.qubits])
         return qbs
 
     @property
@@ -164,7 +164,7 @@ class UnitaryMixture(Kraus):
     """
 
     def __init__(
-        self, operators: Sequence[Gate], weights: Optional[Sequence[float]] = None
+        self, operators: Sequence[Gate], weights: Sequence[float] | None = None
     ) -> None:
         from .info import almost_unitary
 
@@ -302,7 +302,7 @@ def kraus_iscomplete(kraus: Kraus) -> bool:
 # TODO: as class RandomChannel?
 # Author: GEC (2019)
 def random_channel(
-    qubits: Qubits, rank: Optional[int] = None, unital: bool = False
+    qubits: Qubits, rank: int | None = None, unital: bool = False
 ) -> Channel:
     """
     Returns: A randomly sampled Channel drawn from the BCSZ ensemble with

@@ -5,7 +5,7 @@
 
 # 1-qubit gates
 
-from typing import Iterator, Union
+from collections.abc import Iterator
 
 from .. import var
 from ..stdgates import (
@@ -117,7 +117,7 @@ def translate_rz_to_tz(gate: Rz) -> Iterator[ZPow]:
 
 
 @register_translation
-def translate_rn_to_rz_ry(gate: Rn) -> Iterator[Union[Rz, Ry]]:
+def translate_rn_to_rz_ry(gate: Rn) -> Iterator[Rz | Ry]:
     """Translate Rn Bloch rotation to Rz Ry Rz Ry Rz.
 
     Refs:
@@ -183,7 +183,7 @@ def translate_tz_to_rz(gate: ZPow) -> Iterator[Rz]:
 
 
 @register_translation
-def translate_ty_to_xzx(gate: YPow) -> Iterator[Union[XPow, ZPow]]:
+def translate_ty_to_xzx(gate: YPow) -> Iterator[XPow | ZPow]:
     """Translate YPow gate to XPow and ZPow gates"""
     (q0,) = gate.qubits
     t = gate.param("t")
@@ -193,7 +193,7 @@ def translate_ty_to_xzx(gate: YPow) -> Iterator[Union[XPow, ZPow]]:
 
 
 @register_translation
-def translate_tx_to_zyz(gate: XPow) -> Iterator[Union[YPow, S, S_H]]:
+def translate_tx_to_zyz(gate: XPow) -> Iterator[YPow | S | S_H]:
     """Translate XPow gate to S and YPow gates"""
     (q0,) = gate.qubits
     t = gate.param("t")
@@ -203,7 +203,7 @@ def translate_tx_to_zyz(gate: XPow) -> Iterator[Union[YPow, S, S_H]]:
 
 
 @register_translation
-def translate_tz_to_xyx(gate: ZPow) -> Iterator[Union[YPow, V, V_H]]:
+def translate_tz_to_xyx(gate: ZPow) -> Iterator[YPow | V | V_H]:
     """Translate ZPow gate to V and YPow gates"""
     (q0,) = gate.qubits
     t = gate.param("t")
@@ -213,7 +213,7 @@ def translate_tz_to_xyx(gate: ZPow) -> Iterator[Union[YPow, V, V_H]]:
 
 
 @register_translation
-def translate_phased_x_to_zxz(gate: PhasedX) -> Iterator[Union[X, ZPow]]:
+def translate_phased_x_to_zxz(gate: PhasedX) -> Iterator[X | ZPow]:
     """Translate YPow gate to XPow and ZPow gates"""
     (q0,) = gate.qubits
     p = gate.param("p")
@@ -223,7 +223,7 @@ def translate_phased_x_to_zxz(gate: PhasedX) -> Iterator[Union[X, ZPow]]:
 
 
 @register_translation
-def translate_phased_tx_to_zxz(gate: PhasedXPow) -> Iterator[Union[XPow, ZPow]]:
+def translate_phased_tx_to_zxz(gate: PhasedXPow) -> Iterator[XPow | ZPow]:
     """Translate YPow gate to XPow and ZPow gates"""
     (q0,) = gate.qubits
     p, t = gate.params
@@ -247,7 +247,7 @@ def translate_invv_to_tx(gate: V_H) -> Iterator[XPow]:
 
 
 @register_translation
-def translate_th_to_tx(gate: HPow) -> Iterator[Union[XPow, H, S, T, S_H, T_H]]:
+def translate_th_to_tx(gate: HPow) -> Iterator[XPow | H | S | T | S_H | T_H]:
     """Translate powers of the Hadamard gate to XPow and YPow"""
     (q0,) = gate.qubits
     (t,) = gate.params
@@ -262,7 +262,7 @@ def translate_th_to_tx(gate: HPow) -> Iterator[Union[XPow, H, S, T, S_H, T_H]]:
 
 
 @register_translation
-def translate_ty_to_zxz(gate: YPow) -> Iterator[Union[XPow, S, S_H]]:
+def translate_ty_to_zxz(gate: YPow) -> Iterator[XPow | S | S_H]:
     """Translate YPow gate to ZPow and XPow gates"""
     (q0,) = gate.qubits
     t = gate.param("t")
@@ -272,7 +272,7 @@ def translate_ty_to_zxz(gate: YPow) -> Iterator[Union[XPow, S, S_H]]:
 
 
 @register_translation
-def translate_tx_to_zxzxz(gate: XPow) -> Iterator[Union[XPow, ZPow]]:
+def translate_tx_to_zxzxz(gate: XPow) -> Iterator[XPow | ZPow]:
     """Convert an arbitrary power of a Pauli-X gate to Z and V gates"""
     (q0,) = gate.qubits
     t = gate.param("t")
@@ -289,7 +289,7 @@ def translate_tx_to_zxzxz(gate: XPow) -> Iterator[Union[XPow, ZPow]]:
 
 
 @register_translation
-def translate_hadamard_to_zxz(gate: H) -> Iterator[Union[XPow, ZPow]]:
+def translate_hadamard_to_zxz(gate: H) -> Iterator[XPow | ZPow]:
     """Convert a Hadamard gate to a circuit with ZPow and XPow gates."""
     (q0,) = gate.qubits
     yield ZPow(0.5, q0)
@@ -298,7 +298,7 @@ def translate_hadamard_to_zxz(gate: H) -> Iterator[Union[XPow, ZPow]]:
 
 
 @register_translation
-def translate_u3_to_zyz(gate: U3) -> Iterator[Union[Rz, Ry]]:
+def translate_u3_to_zyz(gate: U3) -> Iterator[Rz | Ry]:
     """Translate QASMs U3 gate to Rz and Ry"""
     (q0,) = gate.qubits
     theta, phi, lam = gate.params
@@ -308,7 +308,7 @@ def translate_u3_to_zyz(gate: U3) -> Iterator[Union[Rz, Ry]]:
 
 
 @register_translation
-def translate_u2_to_zyz(gate: U2) -> Iterator[Union[Rz, Ry]]:
+def translate_u2_to_zyz(gate: U2) -> Iterator[Rz | Ry]:
     """Translate QASMs U2 gate to Rz and Ry"""
     (q0,) = gate.qubits
     phi, lam = gate.params
@@ -318,7 +318,7 @@ def translate_u2_to_zyz(gate: U2) -> Iterator[Union[Rz, Ry]]:
 
 
 @register_translation
-def translate_tx_to_hzh(gate: XPow) -> Iterator[Union[H, ZPow]]:
+def translate_tx_to_hzh(gate: XPow) -> Iterator[H | ZPow]:
     """Convert a XPow gate to a circuit with Hadamard and ZPow gates"""
     (q0,) = gate.qubits
     (t,) = gate.params

@@ -5,7 +5,7 @@
 
 # DOCME
 
-from typing import Mapping, Optional, Union
+from collections.abc import Mapping
 
 import numpy as np
 import sympy
@@ -14,17 +14,17 @@ from . import utils
 from .config import ATOL, RTOL
 from .future import TypeAlias
 
-__all__ = ("Variable", "ComplexVariable", "PI")
+__all__ = ("PI", "ComplexVariable", "Variable")
 
 
 Symbol = sympy.Symbol
 """Class for symbols in symbolic expressions"""
 
 
-Variable: TypeAlias = Union[float, sympy.Expr]
+Variable: TypeAlias = float | sympy.Expr
 """Type for parameters. Either a float, sympy.Symbol or sympy.Expr"""
 
-ComplexVariable: TypeAlias = Union[float, complex, sympy.Expr]
+ComplexVariable: TypeAlias = float | complex | sympy.Expr
 """Type for complex parameters. Either a float, complex, sympy.Symbol or sympy.Expr"""
 
 
@@ -60,7 +60,7 @@ def almost_zero(x: ComplexVariable, atol: float = ATOL) -> bool:
     return isclose(x, 0.0, atol=atol)
 
 
-def asfloat(x: Variable, subs: Optional[Mapping[str, float]] = None) -> float:
+def asfloat(x: Variable, subs: Mapping[str, float] | None = None) -> float:
     """Convert a variable to a float"""
     if is_symbolic(x) and subs:
         x = x.evalf(subs=subs)  # type: ignore

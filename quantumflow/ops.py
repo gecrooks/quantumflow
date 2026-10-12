@@ -32,28 +32,21 @@ DAGCircuit, and Pauli.
 
 import inspect
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Mapping, Sequence
 from copy import copy
 from functools import total_ordering
 from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
     TypeVar,
-    Union,
 )
 
 import numpy as np
 import scipy
 from scipy.linalg import fractional_matrix_power as matpow
 from scipy.linalg import logm
+from typing_extensions import Self
 
 from . import tensors, var
 from .future import cached_property
@@ -70,27 +63,33 @@ if TYPE_CHECKING:
     from .stdgates import StdGate  # pragma: no cover
 
 __all__ = [
-    "Operation",
-    "Gate",
-    "UnitaryGate",
-    "Channel",
-    "Unitary",
-    "OPERATIONS",
     "GATES",
+    "OPERATIONS",
+    "Channel",
+    "Gate",
+    "Operation",
+    "Unitary",
+    "UnitaryGate",
 ]
 
 
-_EXCLUDED_OPERATIONS = set(
-    ["Operation", "Gate", "StdGate", "StdCtrlGate", "In", "Out", "NoWire"]
-)
+_EXCLUDED_OPERATIONS = {
+    "Operation",
+    "Gate",
+    "StdGate",
+    "StdCtrlGate",
+    "In",
+    "Out",
+    "NoWire",
+}
 # Names of operations to exclude from registration. Includes (effectively) abstract base
 # classes and internal operations.
 
 
-OPERATIONS: Dict[str, Type["Operation"]] = {}
+OPERATIONS: dict[str, type["Operation"]] = {}
 """All quantum operations (All non-abstract subclasses of Operation)"""
 
-GATES: Dict[str, Type["Gate"]] = {}
+GATES: dict[str, type["Gate"]] = {}
 """All gates (All non-abstract subclasses of Gate)"""
 
 
@@ -111,7 +110,7 @@ class Operation(ABC):
     # Note: We prefix static class variables with "cv_" to avoid confusion
     # with instance variables
 
-    __slots__ = ["_tensor", "_qubits", "_params"]
+    __slots__ = ["_params", "_qubits", "_tensor"]
 
     cv_interchangeable: ClassVar[bool] = False
     """Is this a multi-qubit operation that is known to be invariant under
@@ -120,7 +119,7 @@ class Operation(ABC):
     cv_qubit_nb: ClassVar[int] = 0
     """The number of qubits, for operations with a fixed number of qubits"""
 
-    cv_args: ClassVar[Union[Tuple[str, ...], Tuple]] = ()
+    cv_args: ClassVar[tuple[str, ...] | tuple] = ()
     """The names of the parameters for this operation (For operations with a fixed
     number of float parameters)"""
 
@@ -135,19 +134,16 @@ class Operation(ABC):
     def __init__(
         self,
         qubits: Qubits,
-        params: Optional[Sequence[Variable]] = None,
+        params: Sequence[Variable] | None = None,
     ) -> None:
         self._qubits: Qubits = tuple(qubits)
-        self._params: Tuple[Variable, ...] = ()
+        self._params: tuple[Variable, ...] = ()
         if params is not None:
             self._params = tuple(params)
-        self._tensor: Optional[QubitTensor] = None
+        self._tensor: QubitTensor | None = None
 
-        if self.cv_qubit_nb != 0:
-            if self.cv_qubit_nb != len(self._qubits):
-                raise ValueError(
-                    "Wrong number of qubits for Operation"
-                )  # pragma: no cover
+        if self.cv_qubit_nb != 0 and self.cv_qubit_nb != len(self._qubits):
+            raise ValueError("Wrong number of qubits for Operation")  # pragma: no cover
 
     def __iter__(self) -> Iterator["Operation"]:
         yield self
@@ -167,7 +163,7 @@ class Operation(ABC):
         """Return the total number of qubits"""
         return len(self.qubits)
 
-    def on(self: OperationTV, *qubits: Qubit) -> OperationTV:
+    def on(self, *qubits: Qubit) -> Self:
         """Return a copy of this Operation with new qubits"""
         if len(qubits) != self.qubit_nb:
             raise ValueError("Wrong number of qubits")
@@ -175,12 +171,12 @@ class Operation(ABC):
         op._qubits = qubits
         return op
 
-    def rewire(self: OperationTV, labels: Dict[Qubit, Qubit]) -> OperationTV:
+    def rewire(self, labels: dict[Qubit, Qubit]) -> Self:
         """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
 
-    def qubit_indices(self, qubits: Qubits) -> Tuple[int, ...]:
+    def qubit_indices(self, qubits: Qubits) -> tuple[int, ...]:
         """Convert qubits to index positions.
 
         Raises:
@@ -192,7 +188,7 @@ class Operation(ABC):
             raise ValueError("Incommensurate qubits")
 
     @property
-    def params(self) -> Tuple[Variable, ...]:
+    def params(self) -> tuple[Variable, ...]:
         """Return all of the parameters of this Operation"""
         return self._params
 
@@ -212,9 +208,7 @@ class Operation(ABC):
         return self._params[idx]
 
     # rename? param_asfloat? Then use where needed.
-    def float_param(
-        self, name: str, subs: Optional[Mapping[str, float]] = None
-    ) -> float:
+    def float_param(self, name: str, subs: Mapping[str, float] | None = None) -> float:
         """Return a a named parameters of this Operation as a float.
 
         Args:
@@ -226,7 +220,7 @@ class Operation(ABC):
         """
         return var.asfloat(self.param(name), subs)
 
-    def resolve(self: OperationTV, subs: Mapping[str, float]) -> OperationTV:
+    def resolve(self, subs: Mapping[str, float]) -> Self:
         """Resolve symbolic parameters"""
         # params = {k: var.asfloat(v, subs) for k, v in self.params.items()}
         op = copy(self)
@@ -311,19 +305,19 @@ class Operation(ABC):
         """
         yield self  # pragma: no cover
 
-    def _repr_png_(self) -> Optional[bytes]:
+    def _repr_png_(self) -> bytes | None:
         """Jupyter/IPython rich display"""
         from .circuits import Circuit
 
         return Circuit(self)._repr_png_()
 
-    def _repr_html_(self) -> Optional[str]:
+    def _repr_html_(self) -> str | None:
         """Jupyter/IPython rich display"""
         from .circuits import Circuit
 
         return Circuit(self)._repr_html_()
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         """Labels for text-based circuit diagrams.
 
 
@@ -337,7 +331,7 @@ class Operation(ABC):
         if N != 1 and not self.cv_interchangeable:
             # If not interchangeable, we have to label connections
             for i in range(N):
-                labels[i] = labels[i] + "_%s" % i
+                labels[i] = labels[i] + f"_{i}"
 
         return labels
 
@@ -357,7 +351,7 @@ class Gate(Operation):
     cv_hermitian: ClassVar[bool] = False
     """Is this Gate know to always be hermitian?"""
 
-    cv_tensor_structure: ClassVar[Optional[str]] = None
+    cv_tensor_structure: ClassVar[str | None] = None
     """
     Is the tensor representation of this Operation known to have a particular
     structure in the computational basis?
@@ -411,7 +405,7 @@ class Gate(Operation):
         pauli = pauli_decompose_hermitian(H, self.qubits)
         return pauli
 
-    def asgate(self: GateTV) -> GateTV:
+    def asgate(self) -> Self:
         return self
 
     def aschannel(self) -> "Channel":
@@ -609,8 +603,8 @@ class Channel(Operation):
         self,
         tensor: "ArrayLike",
         qubits: Qubits,
-        params: Optional[Sequence[var.Variable]] = None,
-        name: Optional[str] = None,  # FIXME
+        params: Sequence[var.Variable] | None = None,
+        name: str | None = None,  # FIXME
     ) -> None:
         tensor = tensors.asqutensor(tensor)
 
@@ -692,9 +686,9 @@ class Channel(Operation):
         N = rho.qubit_nb
         qubits = rho.qubits
 
-        indices = list([qubits.index(q) for q in self.qubits]) + list(
-            [qubits.index(q) + N for q in self.qubits]
-        )
+        indices = [qubits.index(q) for q in self.qubits] + [
+            qubits.index(q) + N for q in self.qubits
+        ]
 
         tensor = tensors.tensormul(self.tensor, rho.tensor, tuple(indices))
         return Density(tensor, qubits, rho.memory)
@@ -720,9 +714,9 @@ class Channel(Operation):
         chan1 = other
         N = chan1.qubit_nb
         qubits = chan1.qubits
-        indices = list([chan1.qubits.index(q) for q in chan0.qubits]) + list(
-            [chan1.qubits.index(q) + N for q in chan0.qubits]
-        )
+        indices = [chan1.qubits.index(q) for q in chan0.qubits] + [
+            chan1.qubits.index(q) + N for q in chan0.qubits
+        ]
 
         tensor = tensors.tensormul(chan0.tensor, chan1.tensor, tuple(indices))
 

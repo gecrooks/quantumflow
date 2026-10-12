@@ -4,7 +4,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Type
+from collections.abc import Callable, Iterable, Sequence
 
 from ..circuits import Circuit
 from ..ops import Gate
@@ -12,14 +12,14 @@ from ..stdgates import S_H, T_H, CNot, H, I, Ph, S, T, YPow, ZPow
 
 __all__ = [
     "TRANSLATIONS",
+    "circuit_translate",
     "register_translation",
     "select_translations",
-    "circuit_translate",
     "translation_source_gate",
     "translation_target_gates",
 ]
 
-TRANSLATIONS: List[Callable] = []
+TRANSLATIONS: list[Callable] = []
 """A list of all registered gate translations"""
 
 
@@ -34,11 +34,11 @@ def register_translation(translation: Callable) -> Callable:
     return translation
 
 
-def translation_source_gate(trans: Callable) -> Type[Gate]:
+def translation_source_gate(trans: Callable) -> type[Gate]:
     return trans.__annotations__["gate"]
 
 
-def translation_target_gates(trans: Callable) -> Tuple[Type[Gate]]:
+def translation_target_gates(trans: Callable) -> tuple[type[Gate]]:
     try:
         ret = trans.__annotations__["return"].__args__[0]
     except KeyError:  # pragma: no cover   # FIXME
@@ -53,9 +53,9 @@ def translation_target_gates(trans: Callable) -> Tuple[Type[Gate]]:
 
 
 def select_translations(
-    target_gates: Iterable[Type[Gate]],
-    translations: Optional[Iterable[Callable]] = None,
-) -> List[Callable]:
+    target_gates: Iterable[type[Gate]],
+    translations: Iterable[Callable] | None = None,
+) -> list[Callable]:
     """Return a list of translations that will translate source gates to target
     gates.
 
@@ -115,8 +115,8 @@ select_translators = select_translations
 
 def circuit_translate(
     circ: Circuit,
-    translators: Optional[Sequence] = None,
-    targets: Optional[Iterable[Type[Gate]]] = None,
+    translators: Sequence | None = None,
+    targets: Iterable[type[Gate]] | None = None,
     recurse: bool = True,
 ) -> Circuit:
     """Apply a collection of translations to each gate in a circuit.
@@ -127,7 +127,7 @@ def circuit_translate(
         raise ValueError("Specify either targets or translators, not both")
 
     gates = list(reversed(list(circ)))
-    translated: List[Gate] = []
+    translated: list[Gate] = []
 
     if translators is None:
         if targets is None:

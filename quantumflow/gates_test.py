@@ -76,7 +76,7 @@ def test_multiswapgate() -> None:
     perm2 = qf.MultiSwapGate.from_gates(qf.Circuit([perm1]))
     assert qf.gates_close(perm0, perm2)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         qf.MultiSwapGate.from_gates(qf.Circuit(qf.CNot(0, 1)))
 
     N = 8
@@ -319,7 +319,7 @@ def test_merge_diagonal_gates_symbolic() -> None:
 
 def test_DiagonalGate_decomposition_count() -> None:
     for N in range(1, 9):
-        qbs = list(range(0, N))
+        qbs = list(range(N))
         params = np.random.rand(2**N)
         gate = qf.DiagonalGate(params, qbs)
         circ = qf.Circuit(gate.decompose())
@@ -631,7 +631,7 @@ def test_CompositeGate() -> None:
 
     assert qf.almost_identity(gate1 @ gate1.H)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         qf.CompositeGate(qf.Measure(0))  # type: ignore
 
     diag = qf.circuit_to_diagram(qf.Circuit(gate0))

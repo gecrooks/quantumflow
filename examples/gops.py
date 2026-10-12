@@ -15,11 +15,11 @@ def benchmark_circuit(N, gate_nb, gate):
     """Create a random circuit with N qubits and given number of gates.
     Half the gates will be 1-qubit, and half 2-qubit
     """
-    qubits = list(range(0, N))
+    qubits = list(range(N))
     circ = qf.Circuit()
     K = gate.qubit_nb
 
-    for _ in range(0, gate_nb):
+    for _ in range(gate_nb):
         qbs = random.sample(qubits, K)
         circ += gate.on(*qbs)
 
@@ -60,10 +60,10 @@ def _cli():
 
     for gate in gates:
         circ = benchmark_circuit(QUBITS, GATES, gate)
-        t = timeit.timeit(lambda: circ.run(), number=REPS, timer=time.process_time)
+        t = timeit.timeit(lambda c=circ: c.run(), number=REPS, timer=time.process_time)
 
         cq = qf.xcirq.CirqSimulator(circ)
-        t2 = timeit.timeit(lambda: cq.run(), number=REPS, timer=time.process_time)
+        t2 = timeit.timeit(lambda c=cq: c.run(), number=REPS, timer=time.process_time)
 
         gops = int((GATES * REPS) / t)
         gops = int((gops * 100) + 0.5) / 100.0

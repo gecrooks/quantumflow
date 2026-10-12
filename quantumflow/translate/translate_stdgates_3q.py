@@ -6,7 +6,7 @@
 
 # 3-qubit gates
 
-from typing import Iterator, Union
+from collections.abc import Iterator
 
 from .. import var
 from ..stdgates import (
@@ -35,7 +35,7 @@ from .translations import register_translation
 
 
 @register_translation
-def translate_ccix_to_cnot(gate: CCiX) -> Iterator[Union[CNot, H, T, T_H]]:
+def translate_ccix_to_cnot(gate: CCiX) -> Iterator[CNot | H | T | T_H]:
     """Decompose doubly-controlled iX-gate to 4 CNots.
 
     ::
@@ -66,7 +66,7 @@ def translate_ccix_to_cnot(gate: CCiX) -> Iterator[Union[CNot, H, T, T_H]]:
 
 
 @register_translation
-def translate_ccix_to_cnot_adjacent(gate: CCiX) -> Iterator[Union[CNot, H, T, T_H]]:
+def translate_ccix_to_cnot_adjacent(gate: CCiX) -> Iterator[CNot | H | T | T_H]:
     """Decompose doubly-controlled iX-gate to 8 CNots, respecting adjacency.
 
     ::
@@ -100,7 +100,7 @@ def translate_ccix_to_cnot_adjacent(gate: CCiX) -> Iterator[Union[CNot, H, T, T_
 
 
 @register_translation
-def translate_ccnot_to_ccz(gate: CCNot) -> Iterator[Union[H, CCZ]]:
+def translate_ccnot_to_ccz(gate: CCNot) -> Iterator[H | CCZ]:
     """Convert CCNot (Toffoli) gate to CCZ using Hadamards
     ::
 
@@ -119,7 +119,7 @@ def translate_ccnot_to_ccz(gate: CCNot) -> Iterator[Union[H, CCZ]]:
 
 
 @register_translation
-def translate_ccnot_to_cnot(gate: CCNot) -> Iterator[Union[H, T, T_H, CNot]]:
+def translate_ccnot_to_cnot(gate: CCNot) -> Iterator[H | T | T_H | CNot]:
     """Standard decomposition of CCNot (Toffoli) gate into six CNot gates.
     ::
 
@@ -153,7 +153,7 @@ def translate_ccnot_to_cnot(gate: CCNot) -> Iterator[Union[H, T, T_H, CNot]]:
 
 
 @register_translation
-def translate_ccnot_to_cnot_AMMR(gate: CCNot) -> Iterator[Union[H, T, T_H, CNot]]:
+def translate_ccnot_to_cnot_AMMR(gate: CCNot) -> Iterator[H | T | T_H | CNot]:
     """Depth 9 decomposition of CCNot (Toffoli) gate into 7 CNot gates.
     ::
 
@@ -194,7 +194,7 @@ def translate_ccnot_to_cnot_AMMR(gate: CCNot) -> Iterator[Union[H, T, T_H, CNot]
 
 
 @register_translation
-def translate_ccnot_to_cv(gate: CCNot) -> Iterator[Union[CV, CV_H, CNot]]:
+def translate_ccnot_to_cv(gate: CCNot) -> Iterator[CV | CV_H | CNot]:
     """Decomposition of CCNot (Toffoli) gate into 3 CV and 2 CNots.
     ::
 
@@ -221,7 +221,7 @@ def translate_ccnot_to_cv(gate: CCNot) -> Iterator[Union[CV, CV_H, CNot]]:
 
 
 @register_translation
-def translate_ccxpow_to_cnotpow(gate: CCXPow) -> Iterator[Union[CNot, CNotPow]]:
+def translate_ccxpow_to_cnotpow(gate: CCXPow) -> Iterator[CNot | CNotPow]:
     """Decomposition of powers of CCNot gates to powers of CNot gates."""
     q0, q1, q2 = gate.qubits
     (t,) = gate.params
@@ -233,7 +233,7 @@ def translate_ccxpow_to_cnotpow(gate: CCXPow) -> Iterator[Union[CNot, CNotPow]]:
 
 
 @register_translation
-def translate_ccz_to_adjacent_cnot(gate: CCZ) -> Iterator[Union[T, CNot, T_H]]:
+def translate_ccz_to_adjacent_cnot(gate: CCZ) -> Iterator[T | CNot | T_H]:
     """Decomposition of CCZ gate into 8 CNot gates.
     Respects linear adjacency of qubits.
     ::
@@ -273,7 +273,7 @@ def translate_ccz_to_adjacent_cnot(gate: CCZ) -> Iterator[Union[T, CNot, T_H]]:
 
 
 @register_translation
-def translate_ccz_to_ccnot(gate: CCZ) -> Iterator[Union[H, CCNot]]:
+def translate_ccz_to_ccnot(gate: CCZ) -> Iterator[H | CCNot]:
     """Convert  CCZ gate to CCNot gate using Hadamards
     ::
 
@@ -292,7 +292,7 @@ def translate_ccz_to_ccnot(gate: CCZ) -> Iterator[Union[H, CCNot]]:
 
 
 @register_translation
-def translate_ciswap_to_ccix(gate: CISwap) -> Iterator[Union[CNot, CCiX]]:
+def translate_ciswap_to_ccix(gate: CISwap) -> Iterator[CNot | CCiX]:
     """Translate a controlled-iswap gate to CCiX"""
     q0, q1, q2 = gate.qubits
     yield CNot(q2, q1)
@@ -301,7 +301,7 @@ def translate_ciswap_to_ccix(gate: CISwap) -> Iterator[Union[CNot, CCiX]]:
 
 
 @register_translation
-def translate_cswap_to_ccnot(gate: CSwap) -> Iterator[Union[CNot, CCNot]]:
+def translate_cswap_to_ccnot(gate: CSwap) -> Iterator[CNot | CCNot]:
     """Convert a CSwap gate to a circuit with a CCNot and 2 CNots"""
     q0, q1, q2 = gate.qubits
     yield CNot(q2, q1)
@@ -312,7 +312,7 @@ def translate_cswap_to_ccnot(gate: CSwap) -> Iterator[Union[CNot, CCNot]]:
 @register_translation
 def translate_cswap_to_cnot(
     gate: CSwap,
-) -> Iterator[Union[CNot, H, T, T_H, V, V_H, S, S_H]]:
+) -> Iterator[CNot | H | T | T_H | V | V_H | S | S_H]:
     """Adjacency respecting decomposition of CSwap to CNot.
     Assumes that q0 (control) is next to q1 is next to q2.
     ::
@@ -353,7 +353,7 @@ def translate_cswap_to_cnot(
 @register_translation
 def translate_cswap_inside_to_cnot(
     gate: CSwap,
-) -> Iterator[Union[CNot, H, T, T_H, V, V_H, S, S_H]]:
+) -> Iterator[CNot | H | T | T_H | V | V_H | S | S_H]:
     """Adjacency respecting decomposition of centrally controlled CSwap to CNot.
     Assumes that q0 (control) is next to q1 is next to q2.
     ::
@@ -413,7 +413,7 @@ def translate_deutsch_to_barenco(gate: Deutsch) -> Iterator[Barenco]:
 @register_translation
 def translate_margolus_to_cnot(
     gate: Margolus,
-) -> Iterator[Union[CNot, V, V_H, T, T_H]]:
+) -> Iterator[CNot | V | V_H | T | T_H]:
     """Decomposition of Margolus gate to 3 CNots.
 
     (Note that V_H T V = Ry(pi/4) up to phase)

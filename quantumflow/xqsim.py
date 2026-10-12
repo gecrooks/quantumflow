@@ -13,8 +13,6 @@ https://github.com/quantumlib/qsim
 
 """
 
-from typing import Optional
-
 from .circuits import Circuit
 from .gatesets import QSIM_GATES
 from .states import State
@@ -22,7 +20,7 @@ from .stdops import Simulator
 from .translate import circuit_translate
 from .xcirq import circuit_to_cirq
 
-__all__ = ["QSimSimulator", "translate_circuit_to_qsim", "QSIM_GATES"]
+__all__ = ["QSIM_GATES", "QSimSimulator", "translate_circuit_to_qsim"]
 
 
 _IMPORT_ERROR_MSG = """External dependency 'qsimcirq' not installed. Install
@@ -48,7 +46,7 @@ class QSimSimulator(Simulator):
         self._cirq = circuit_to_cirq(self.circuit)
         self._qsim_circuit = qsimcirq.QSimCircuit(self._cirq)
 
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         try:
             import qsimcirq
         except ModuleNotFoundError as err:  # pragma: no cover

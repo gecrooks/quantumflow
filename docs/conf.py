@@ -29,7 +29,7 @@ __version__ = get_version(root="..", relative_to=__file__)
 print("__version__", __version__)
 
 with open("./_templates/version.html", "w") as f:
-    f.write('<div align="center">v%s</div>' % __version__)
+    f.write(f'<div align="center">v{__version__}</div>')
 
 
 # -- Project information -----------------------------------------------------

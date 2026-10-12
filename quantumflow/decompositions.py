@@ -29,7 +29,8 @@ Two-qubit gate decompositions
 """
 
 import itertools
-from typing import Iterator, List, Sequence, Tuple, cast
+from collections.abc import Iterator, Sequence
+from typing import cast
 
 import numpy as np
 import scipy
@@ -43,16 +44,16 @@ from .stdgates import S_H, B, Can, I, Rn, S, V, X, Y, YPow, Z, ZPow
 from .translate import translate_can_to_cnot
 
 __all__ = [
+    "b_decomposition",
     "bloch_decomposition",
-    "zyz_decomposition",
+    "canonical_coords",
+    "canonical_decomposition",
+    "cnot_decomposition",
+    "convert_can_to_weyl",
     "euler_decomposition",
     "kronecker_decomposition",
-    "canonical_decomposition",
-    "canonical_coords",
-    "cnot_decomposition",
-    "b_decomposition",
-    "convert_can_to_weyl",
     "quantum_shannon_decomposition",
+    "zyz_decomposition",
 ]
 
 
@@ -319,7 +320,7 @@ def canonical_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
     return circ
 
 
-def _orthogonal_diagonalization(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def _orthogonal_diagonalization(M: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Orthogonal diagonalization of a complex symmetric  matrix
 
     The matrix should have the structure M = O D O^T, where O is
@@ -411,7 +412,7 @@ def _lambdas_to_coords(lambdas: np.ndarray) -> np.ndarray:
 
 def _constrain_to_weyl(
     lambdas: np.ndarray,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     for permutation in itertools.permutations(range(4)):
         for signs in ([1, 1, 1, 1], [1, 1, -1, -1], [-1, 1, -1, 1], [1, -1, -1, 1]):
             signed_lambdas = lambdas * np.asarray(signs)
@@ -532,13 +533,13 @@ def convert_can_to_weyl(gate: Can, euler: str = "ZYZ") -> Circuit:
     q0, q1 = gate.qubits
 
     # Local gates to put before the canonical Weyl gate
-    before_q0: List[Gate] = [I(q0)]
-    before_q1: List[Gate] = [I(q1)]
+    before_q0: list[Gate] = [I(q0)]
+    before_q1: list[Gate] = [I(q1)]
 
     # Local gates that come after the canonical Weyl gate, in reverse
     # (complex conjugate) order.
-    after_q0_H: List[Gate] = [I(q0)]
-    after_q1_H: List[Gate] = [I(q1)]
+    after_q0_H: list[Gate] = [I(q0)]
+    after_q1_H: list[Gate] = [I(q1)]
 
     def tx_minus_1() -> None:
         before_q0.append(Y(q0))

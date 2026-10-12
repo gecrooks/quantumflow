@@ -4,8 +4,8 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
+from collections.abc import Callable
 from itertools import chain
-from typing import Callable, List, Set, Type
 
 import numpy as np
 import pytest
@@ -112,11 +112,11 @@ terminal_2q_gate = (
 
 
 @pytest.mark.parametrize("term_gate", terminal_2q_gate)
-def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
+def test_decompose_to_terminal_2q_gate(term_gate: type[qf.StdGate]) -> None:
     # 1 qubit terminal gates
     # We include identity and global phase because translators can't
     # delete gates
-    gates: Set[Type[qf.StdGate]] = {qf.XPow, qf.ZPow, qf.I, qf.Ph}
+    gates: set[type[qf.StdGate]] = {qf.XPow, qf.ZPow, qf.I, qf.Ph}
 
     gates.add(term_gate)
     trans = qf.select_translations(gates, qf.TRANSLATIONS)  # type: ignore
@@ -124,7 +124,7 @@ def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
         gatet = translation_source_gate(t)
         gates.add(gatet)  # type: ignore
 
-    missing = set(list(qf.STDGATES.values())) - gates
+    missing = set(qf.STDGATES.values()) - gates
 
     if len(missing) != 0:
         print("Missing gates:", missing)
@@ -134,7 +134,7 @@ def test_decompose_to_terminal_2q_gate(term_gate: Type[qf.StdGate]) -> None:
 def test_circuit_translate_exception() -> None:
     circ0 = qf.Circuit([qf.CSwap(0, 1, 2)])
     with pytest.raises(ValueError):
-        gates: List[Type[qf.StdGate]] = [qf.XPow, qf.ZPow, qf.I, qf.Ph]
+        gates: list[type[qf.StdGate]] = [qf.XPow, qf.ZPow, qf.I, qf.Ph]
         translators = [
             qf.translate_cswap_to_ccnot,
             qf.translate_ccnot_to_cnot,

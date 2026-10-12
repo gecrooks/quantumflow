@@ -9,15 +9,9 @@ QuantumFlow: Directed Acyclic Graph representations of a Circuit.
 
 import itertools
 import textwrap
+from collections.abc import Generator, Iterable, Iterator
 from typing import (
     Any,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
 )
 
 import networkx as nx
@@ -40,7 +34,7 @@ class In(Operation):
     def __init__(self, q0: Qubit):
         super().__init__([q0])
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, In) and other.qubits == self.qubits
 
     def __hash__(self) -> int:
@@ -52,7 +46,7 @@ class Out(Operation):
     def __init__(self, q0: Qubit):
         super().__init__([q0])
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, Out) and other.qubits == self.qubits
 
     def __hash__(self) -> int:
@@ -90,8 +84,8 @@ class DAGCircuit(Operation):
 
     def __init__(self, elements: Iterable[Operation]) -> None:
         self.graph = nx.MultiDiGraph()
-        self._qubits_in: Dict[Qubit, In] = {}
-        self._qubits_out: Dict[Qubit, Out] = {}
+        self._qubits_in: dict[Qubit, In] = {}
+        self._qubits_out: dict[Qubit, Out] = {}
 
         for elem in elements:
             self.append(elem)  # type: ignore
@@ -107,7 +101,7 @@ class DAGCircuit(Operation):
                 self._qubits_out[qubit] = qout
                 G.add_edge(qin, qout, key=qubit)
             qout = self._qubits_out[qubit]
-            prev = list(G.predecessors(qout))[0]
+            prev = next(iter(G.predecessors(qout)))
             G.remove_edge(prev, qout)
             G.add_edge(prev, elem, key=qubit)
             G.add_edge(elem, qout, key=qubit)
@@ -123,7 +117,7 @@ class DAGCircuit(Operation):
     def on(self, *qubits: Qubit) -> "DAGCircuit":
         return DAGCircuit(Circuit(self).on(*qubits))
 
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> "DAGCircuit":
+    def rewire(self, labels: dict[Qubit, Qubit]) -> "DAGCircuit":
         return DAGCircuit(Circuit(self).rewire(labels))
 
     @property
@@ -196,7 +190,7 @@ class DAGCircuit(Operation):
         DAGCircuit can be split into."""
         return nx.number_weakly_connected_components(self.graph)
 
-    def components(self) -> List["DAGCircuit"]:
+    def components(self) -> list["DAGCircuit"]:
         """Split DAGCircuit into independent components"""
         G = self.graph
         comps = (G.subgraph(c).copy() for c in nx.weakly_connected_components(G))
@@ -211,18 +205,18 @@ class DAGCircuit(Operation):
         D = self.depth()
         G = self.graph
 
-        node_depth: Dict[Qubit, int] = {}
-        node_height: Dict[Qubit, int] = {}
+        node_depth: dict[Qubit, int] = {}
+        node_height: dict[Qubit, int] = {}
 
         for elem in self:
             depth = np.max(
-                list(node_depth.get(prev, -1) + 1 for prev in G.predecessors(elem))
+                [node_depth.get(prev, -1) + 1 for prev in G.predecessors(elem)]
             )
             node_depth[elem] = depth
 
         for elem in reversed(list(self)):
             height = np.min(
-                list(node_height.get(next, D) - 1 for next in G.successors(elem))
+                [node_height.get(next, D) - 1 for next in G.successors(elem)]
             )
             node_height[elem] = height
 
@@ -253,7 +247,7 @@ class DAGCircuit(Operation):
             if not isinstance(elem, In) and not isinstance(elem, Out):
                 yield elem
 
-    def next_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
+    def next_element(self, elem: Operation, qubit: Qubit | None = None) -> Operation:
         """Return the next element in the DAG following the given element.
 
         Args:
@@ -271,7 +265,7 @@ class DAGCircuit(Operation):
                 return node
         raise ValueError(f"No next element found for {elem!r} on qubit {qubit}")
 
-    def prev_element(self, elem: Operation, qubit: Optional[Qubit] = None) -> Operation:
+    def prev_element(self, elem: Operation, qubit: Qubit | None = None) -> Operation:
         """Return the previous element in the DAG before the given element.
 
         Args:
@@ -289,7 +283,7 @@ class DAGCircuit(Operation):
                 return node
         raise ValueError(f"No previous element found for {elem!r} on qubit {qubit}")
 
-    def next_edges(self, elem: Operation) -> List[Tuple[Any, Any, Qubit]]:
+    def next_edges(self, elem: Operation) -> list[tuple[Any, Any, Qubit]]:
         qubits = elem.qubits
         N = len(qubits)
         edges = [None] * N
@@ -298,7 +292,7 @@ class DAGCircuit(Operation):
 
         return list(edges)  # type: ignore
 
-    def prev_edges(self, elem: Operation) -> List[Tuple[Any, Any, Qubit]]:
+    def prev_edges(self, elem: Operation) -> list[tuple[Any, Any, Qubit]]:
         qubits = elem.qubits
         N = len(qubits)
         edges = [None] * N
@@ -310,7 +304,7 @@ class DAGCircuit(Operation):
     def __str__(self) -> str:
         circ_str = "\n".join([str(elem) for elem in self])
         circ_str = textwrap.indent(circ_str, " " * CIRCUIT_INDENT)
-        return "\n".join([self.name, circ_str])
+        return f"{self.name}\n{circ_str}"
 
 
 # End class DAGCircuit

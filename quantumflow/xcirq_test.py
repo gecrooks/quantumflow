@@ -10,11 +10,13 @@ from numpy import pi
 pytest.importorskip("cirq")
 
 import quantumflow as qf
-from quantumflow.xcirq import CirqSimulator
-from quantumflow.xcirq import circuit_to_cirq
-from quantumflow.xcirq import cirq_to_circuit
-from quantumflow.xcirq import from_cirq_qubit
-from quantumflow.xcirq import to_cirq_qubit
+from quantumflow.xcirq import (
+    CirqSimulator,
+    circuit_to_cirq,
+    cirq_to_circuit,
+    from_cirq_qubit,
+    to_cirq_qubit,
+)
 
 
 def test_from_cirq_qubit() -> None:
