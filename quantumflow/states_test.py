@@ -298,4 +298,72 @@ def test_error() -> None:
         qf.State(ket.tensor, [0, 1, 2])
 
 
+@pytest.mark.parametrize("basis", range(4))
+@pytest.mark.parametrize("amplitude", [1.0000000000000002, 0.99999998, np.sqrt(1 + 5e-8)])
+def test_sample_deterministic_roundoff_preserves_axes_and_state(
+    basis, amplitude, monkeypatch
+):
+    tensor = np.zeros((2, 2), dtype=complex)
+    tensor.flat[basis] = -amplitude
+    ket = qf.State(tensor, ["left", "right"], {"token": "unchanged"})
+    before = ket.tensor.copy()
+    probabilities = ket.probabilities().copy()
+    rng = np.random.default_rng(42)
+    monkeypatch.setattr(np.random, "multinomial", rng.multinomial)
+
+    samples = ket.sample(10**9)
+
+    expected = np.zeros((2, 2), dtype=np.int64)
+    expected.flat[basis] = 10**9
+    np.testing.assert_array_equal(samples, expected)
+    np.testing.assert_array_equal(ket.tensor, before)
+    np.testing.assert_array_equal(ket.probabilities(), probabilities)
+    assert ket.qubits == ("left", "right")
+    assert ket.memory["token"] == "unchanged"
+
+
+def test_sample_grover_deterministic_overshoot():
+    circuit = qf.Circuit(
+        [
+            qf.H(0),
+            qf.H(1),
+            qf.CZ(0, 1),
+            qf.H(0),
+            qf.H(1),
+            qf.X(0),
+            qf.X(1),
+            qf.CZ(0, 1),
+            qf.X(0),
+            qf.X(1),
+            qf.H(0),
+            qf.H(1),
+        ]
+    )
+    ket = circuit.run()
+    samples = ket.sample(1000)
+    np.testing.assert_array_equal(samples, [[0, 0], [0, 1000]])
+
+
+@pytest.mark.parametrize(
+    "tensor",
+    [
+        [0, 0],
+        [2, 0],
+        [0.5, 0],
+        [np.nan, 0],
+        [np.inf, 0],
+        [1e154, 1e154],
+        [np.sqrt(1 + 2e-7), 0],
+        [np.sqrt(1 - 2e-7), 0],
+    ],
+)
+def test_sample_refuses_invalid_state_before_rng(tensor, monkeypatch):
+    def unexpected_rng(*args, **kwargs):
+        pytest.fail("invalid state reached the random sampler")
+
+    monkeypatch.setattr(np.random, "multinomial", unexpected_rng)
+    with pytest.raises(ValueError, match="finite.*normalized"):
+        qf.State(tensor).sample(10)
+
+
 # fin

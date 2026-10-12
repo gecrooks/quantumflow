@@ -32,7 +32,7 @@ Actions on states
 """
 
 from abc import ABC
-from math import sqrt
+from math import fsum, sqrt
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -50,6 +50,7 @@ import numpy as np
 import opt_einsum
 
 from . import tensors, utils
+from .config import ATOL
 from .qubits import Qubit, Qubits, sorted_qubits
 from .tensors import QubitTensor
 
@@ -221,11 +222,27 @@ class State(QuantumState):
         return value * value
 
     def sample(self, trials: int) -> np.ndarray:
-        """Measure the state in the computational basis the the given number
+        """Measure the state in the computational basis for the given number
         of trials, and return the counts of each output configuration.
+
+        Probability mass within ``config.ATOL`` (absolute, no relative tolerance)
+        of one is normalized for sampling only; the state is not changed.
+
+        Raises:
+            ValueError: If the probabilities are nonfinite or the state is not
+                normalized within that tolerance.
         """
         # TODO: Can we do this within backend?
         probs = np.real(self.probabilities())
+        if not np.all(np.isfinite(probs)):
+            raise ValueError("Sampling requires a finite, normalized state")
+        try:
+            mass = fsum(probs.ravel())
+        except OverflowError as error:
+            raise ValueError("Sampling requires a finite, normalized state") from error
+        if not np.isclose(mass, 1.0, rtol=0, atol=ATOL):
+            raise ValueError("Sampling requires a finite, normalized state")
+        probs = probs / mass
         res = np.random.multinomial(trials, probs.ravel())
         res = res.reshape(probs.shape)
         return res
