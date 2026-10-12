@@ -110,12 +110,15 @@ fallback_version = "0.0.0-dev"
 # write_to = "example_python_project/_version.py"
 
 
-[tools.ruff]
+[tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
-
 
 line-length = 88
 indent-width = 4
+
+# Notebooks are authored in Colab (2-space JSON). Ruff rewrites any notebook it
+# touches into 1-space nbformat layout, so every save would churn the whole file.
+extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
 ignore = []
