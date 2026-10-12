@@ -319,7 +319,7 @@ def test_merge_diagonal_gates_symbolic() -> None:
 
 def test_DiagonalGate_decomposition_count() -> None:
     for N in range(1, 9):
-        qbs = list(range(0, N))
+        qbs = list(range(N))
         params = np.random.rand(2**N)
         gate = qf.DiagonalGate(params, qbs)
         circ = qf.Circuit(gate.decompose())

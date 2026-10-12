@@ -68,7 +68,7 @@ Fredkin                     CSwap       FREDKIN
 # qrot
 # QASMU
 
-from typing import TYPE_CHECKING, Dict, Optional, Type, cast
+from typing import TYPE_CHECKING, cast
 
 from . import var
 from .circuits import Circuit
@@ -107,14 +107,14 @@ from .utils import invert_map
 if TYPE_CHECKING:
     import QubitCircuit  # pragma: no cover
 
-__all__ = ("qutip_to_circuit", "circuit_to_qutip", "translate_to_qutip", "QUTIP_GATES")
+__all__ = ("QUTIP_GATES", "circuit_to_qutip", "qutip_to_circuit", "translate_to_qutip")
 
 
 _IMPORT_ERROR_MSG = """External dependency 'qutip' not installed. Install
 with 'pip install qutip'"""
 
 
-_QUTIP_GATE_NAMES: Dict[Type[Gate], Optional[str]] = {
+_QUTIP_GATE_NAMES: dict[type[Gate], str | None] = {
     I: None,
     Ph: "GLOBALPHASE",
     Rx: "RX",
@@ -230,7 +230,7 @@ def circuit_to_qutip(circ: Circuit, translate: bool = False) -> "QubitCircuit":
         if type(op) not in _QUTIP_GATE_NAMES:
             raise ValueError(f"Cannot convert operation to qutip: {op}")
 
-        gate_name = _QUTIP_GATE_NAMES[cast(Type[Gate], type(op))]
+        gate_name = _QUTIP_GATE_NAMES[cast(type[Gate], type(op))]
 
         if gate_name is None:
             continue

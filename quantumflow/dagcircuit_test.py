@@ -219,7 +219,7 @@ def test_on() -> None:
 
 def test_dag_next_prev_no_element() -> None:
     dag = qf.DAGCircuit(qf.Circuit([qf.X(0)]))
-    elem = list(dag)[0]
+    elem = next(iter(dag))
     with pytest.raises(ValueError, match="No next element"):
         dag.next_element(elem, qubit=99)
     with pytest.raises(ValueError, match="No previous element"):

@@ -30,14 +30,14 @@ def test_about_main() -> None:
 
 def test_copyright() -> None:
     """Check that source code files contain a copyright line"""
-    exclude = set(["quantumflow/version.py"])
+    exclude = {"quantumflow/version.py"}
     for fname in glob.glob("quantumflow/**/*.py", recursive=True):
         if fname in exclude:
             continue
         print("Checking " + fname + " for copyright header...  ", end="")
 
         with open(fname, encoding="utf-8") as f:
-            for line in f.readlines():
+            for line in f:
                 if not line.strip():
                     continue
                 assert line.startswith("# Copyright")

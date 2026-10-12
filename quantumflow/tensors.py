@@ -6,7 +6,8 @@
 # DOCME
 
 import string
-from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -53,7 +54,7 @@ def flatten(tensor: QubitTensor, rank: int) -> np.ndarray:
     return np.reshape(tensor, [2**N] * R)
 
 
-def transpose(tensor: QubitTensor, perm: Optional[Sequence[int]] = None) -> QubitTensor:
+def transpose(tensor: QubitTensor, perm: Sequence[int] | None = None) -> QubitTensor:
     """(Super)-operator transpose. Permutes the meta-indices.
     Default is to invert the meta-index order.
     """
@@ -77,8 +78,8 @@ def permute(tensor: QubitTensor, perm: Sequence[int]) -> QubitTensor:
     N = len(perm)
     R = np.ndim(tensor) // N
 
-    pperm: List[int] = []
-    for rr in range(0, R):
+    pperm: list[int] = []
+    for rr in range(R):
         pperm += [rr * N + idx for idx in perm]
     tensor = np.transpose(tensor, pperm)
 
@@ -105,7 +106,7 @@ def outer(tensor0: QubitTensor, tensor1: QubitTensor, rank: int) -> QubitTensor:
     # R = 2  perm = (0, 2, 1, 3)
     # R = 4  perm = (0, 4, 1, 5, 2, 6, 3, 7)
     tensor = np.reshape(tensor, ([2**N0] * R) + ([2**N1] * R))
-    perm = [idx for ij in zip(range(0, R), range(R, 2 * R)) for idx in ij]
+    perm = [idx for ij in zip(range(R), range(R, 2 * R)) for idx in ij]
     if R != 1:
         tensor = transpose(tensor, perm)
 
@@ -177,7 +178,7 @@ def partial_trace(
 
 # DOCME
 def tensormul(
-    tensor0: QubitTensor, tensor1: QubitTensor, indices: Tuple[int, ...]
+    tensor0: QubitTensor, tensor1: QubitTensor, indices: tuple[int, ...]
 ) -> QubitTensor:
     N = np.ndim(tensor1)
     K = np.ndim(tensor0) // 2
@@ -207,7 +208,7 @@ def tensormul(
 def tensormul_diagonal(
     tensor0_diagonal: QubitTensor,
     tensor1: QubitTensor,
-    indices: Tuple[int, ...],
+    indices: tuple[int, ...],
 ) -> QubitTensor:
     N = np.ndim(tensor1)
     K = np.ndim(tensor0_diagonal)

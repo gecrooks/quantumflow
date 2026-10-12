@@ -108,7 +108,7 @@ def test_cmp() -> None:
     with pytest.raises(TypeError):
         "foo" <= y
 
-    assert not 2 == y
+    assert 2 != y
 
 
 def test_hash() -> None:

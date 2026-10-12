@@ -10,7 +10,7 @@ QuantumFlow: Translate, transform, and compile circuits.
 
 # Note: Beta Prototype
 
-from typing import Callable, Generator, Set, Tuple
+from collections.abc import Callable, Generator
 
 from .circuits import Circuit
 from .dagcircuit import DAGCircuit
@@ -76,9 +76,9 @@ def compile_circuit(circ: Circuit) -> Circuit:
 
 def find_pattern(
     dagc: DAGCircuit,
-    gateset1: Set,
-    gateset2: Set,
-) -> Generator[Tuple[Operation, Operation], None, None]:
+    gateset1: set,
+    gateset2: set,
+) -> Generator[tuple[Operation, Operation], None, None]:
     """Find where a gate from gateset1 is followed by a gate from gateset2 in
     a DAGCircuit"""
     for elem2 in dagc:

@@ -32,22 +32,19 @@ Actions on states
 """
 
 from abc import ABC
+from collections.abc import Mapping
 from math import fsum, sqrt
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
-    Mapping,
     Optional,
     TextIO,
-    Tuple,
     TypeVar,
-    Union,
 )
 
 import numpy as np
 import opt_einsum
+from typing_extensions import Self
 
 from . import tensors, utils
 from .config import ATOL
@@ -59,18 +56,18 @@ if TYPE_CHECKING:
 
 
 __all__ = [
+    "Density",
     "State",
+    "ghz_state",
+    "join_densities",
     "join_states",
+    "mixed_density",
     "print_probabilities",
     "print_state",
+    "random_density",
     "random_state",
-    "ghz_state",
     "w_state",
     "zero_state",
-    "Density",
-    "mixed_density",
-    "random_density",
-    "join_densities",
 ]
 
 QuantumStateTV = TypeVar("QuantumStateTV", bound="QuantumState")
@@ -78,7 +75,7 @@ QuantumStateTV = TypeVar("QuantumStateTV", bound="QuantumState")
 
 class QuantumState(ABC):
     def __init__(
-        self, tensor: "ArrayLike", qubits: Qubits, memory: Optional[Mapping] = None
+        self, tensor: "ArrayLike", qubits: Qubits, memory: Mapping | None = None
     ) -> None:
         """
         Abstract base class for representations of a quantum state.
@@ -120,12 +117,12 @@ class QuantumState(ABC):
         return len(self._qubits)
 
     def replace(
-        self: QuantumStateTV,
+        self,
         *,
         tensor: Optional["ArrayLike"] = None,
-        qubits: Optional[Qubits] = None,
-        memory: Optional[Mapping] = None,
-    ) -> QuantumStateTV:
+        qubits: Qubits | None = None,
+        memory: Mapping | None = None,
+    ) -> Self:
         """
         Creates a copy of this state, replacing the fields specified.
         """
@@ -135,25 +132,23 @@ class QuantumState(ABC):
         memory = self.memory if memory is None else memory
         return type(self)(tensor, qubits, memory)
 
-    def store(self: QuantumStateTV, *args: Any, **kwargs: Any) -> QuantumStateTV:
+    def store(self, *args: Any, **kwargs: Any) -> Self:
         """Update information in classical memory and return a new State."""
         mem = self.memory.update(*args, **kwargs)
         return self.replace(memory=mem)
 
     # TESTME
-    def on(self: QuantumStateTV, *qubits: Qubit) -> QuantumStateTV:
+    def on(self, *qubits: Qubit) -> Self:
         """Return a copy of this State with new qubits"""
         return self.replace(qubits=qubits)
 
     # TESTME
-    def rewire(self: QuantumStateTV, labels: Dict[Qubit, Qubit]) -> QuantumStateTV:
+    def rewire(self, labels: dict[Qubit, Qubit]) -> Self:
         """Relabel qubits and return copy of this Operation"""
         qubits = tuple(labels[q] for q in self.qubits)
         return self.on(*qubits)
 
-    def permute(
-        self: QuantumStateTV, qubits: Optional[Qubits] = None
-    ) -> QuantumStateTV:
+    def permute(self, qubits: Qubits | None = None) -> Self:
         """Return a copy of this state with state tensor transposed to
         put qubits in the given order. If an explicit qubit
         ordering isn't supplied, we put qubits in sorted order.
@@ -163,7 +158,7 @@ class QuantumState(ABC):
         tensor = tensors.permute(self.tensor, self.qubit_indices(qubits))
         return self.replace(tensor=tensor, qubits=qubits)
 
-    def qubit_indices(self, qubits: Qubits) -> Tuple[int, ...]:
+    def qubit_indices(self, qubits: Qubits) -> tuple[int, ...]:
         """Convert qubits to index positions.
 
         Raises:
@@ -187,8 +182,8 @@ class State(QuantumState):
     def __init__(
         self,
         tensor: "ArrayLike",
-        qubits: Optional[Qubits] = None,
-        memory: Optional[Mapping] = None,
+        qubits: Qubits | None = None,
+        memory: Mapping | None = None,
     ) -> None:
         """Create a new State from a tensor of qubit amplitudes
 
@@ -248,7 +243,7 @@ class State(QuantumState):
         return res
 
     def expectation(
-        self, diag_hermitian: "ArrayLike", trials: Optional[int] = None
+        self, diag_hermitian: "ArrayLike", trials: int | None = None
     ) -> QubitTensor:
         """Return the expectation of a measurement. Since we can only measure
         our computer in the computational basis, we only require the diagonal
@@ -277,7 +272,7 @@ class State(QuantumState):
         res = np.random.choice(probs.size, p=probs.ravel())
         return indices[res]
 
-    def asdensity(self, qubits: Optional[Qubits] = None) -> "Density":
+    def asdensity(self, qubits: Qubits | None = None) -> "Density":
         """Convert a pure state to a density matrix.
 
         Args:
@@ -289,11 +284,11 @@ class State(QuantumState):
         if qubits is None:
             qubits = self.qubits
 
-        contract_qubits: List[Qubit] = list(self.qubits)
+        contract_qubits: list[Qubit] = list(self.qubits)
         for q in qubits:
             contract_qubits.remove(q)
 
-        left_subs = np.asarray(list(range(0, N)))
+        left_subs = np.asarray(list(range(N)))
         right_subs = np.asarray(list(range(N, 2 * N)))
 
         indices = [self.qubits.index(qubit) for qubit in contract_qubits]
@@ -326,7 +321,7 @@ class State(QuantumState):
 # End class State
 
 
-def zero_state(qubits: Union[int, Qubits]) -> State:
+def zero_state(qubits: int | Qubits) -> State:
     """Return the all-zero state on N qubits"""
     N, qubits = _qubits_count_tuple(qubits)
     ket = np.zeros(shape=[2] * N)
@@ -334,7 +329,7 @@ def zero_state(qubits: Union[int, Qubits]) -> State:
     return State(ket, qubits)
 
 
-def w_state(qubits: Union[int, Qubits]) -> State:
+def w_state(qubits: int | Qubits) -> State:
     """Return a W state on N qubits"""
     N, qubits = _qubits_count_tuple(qubits)
     ket = np.zeros(shape=[2] * N)
@@ -345,7 +340,7 @@ def w_state(qubits: Union[int, Qubits]) -> State:
     return State(ket, qubits)
 
 
-def ghz_state(qubits: Union[int, Qubits]) -> State:
+def ghz_state(qubits: int | Qubits) -> State:
     """Return a GHZ state on N qubits"""
     N, qubits = _qubits_count_tuple(qubits)
     ket = np.zeros(shape=[2] * N)
@@ -354,7 +349,7 @@ def ghz_state(qubits: Union[int, Qubits]) -> State:
     return State(ket, qubits)
 
 
-def random_state(qubits: Union[int, Qubits]) -> State:
+def random_state(qubits: int | Qubits) -> State:
     """Return a random state from the space of N qubits"""
     N, qubits = _qubits_count_tuple(qubits)
     ket = np.random.normal(size=([2] * N)) + 1j * np.random.normal(size=([2] * N))
@@ -377,7 +372,7 @@ def join_states(ket0: State, ket1: State) -> State:
 # TODO: clean up. Move to visualization?
 
 
-def print_state(state: State, file: Optional[TextIO] = None) -> None:
+def print_state(state: State, file: TextIO | None = None) -> None:
     """Print a state vector"""
     for index, amplitude in np.ndenumerate(state.tensor):
         ket = "".join([str(n) for n in index])
@@ -386,7 +381,7 @@ def print_state(state: State, file: Optional[TextIO] = None) -> None:
 
 # TODO: Should work for density also. Check
 def print_probabilities(
-    state: State, ndigits: int = 4, file: Optional[TextIO] = None
+    state: State, ndigits: int = 4, file: TextIO | None = None
 ) -> None:
     """
     Pretty print state probabilities.
@@ -396,8 +391,8 @@ def print_probabilities(
         ndigits: Number of digits of accuracy
         file: Output stream (Defaults to stdout)
     """
-    prob = state.probabilities()
-    for index, prob in np.ndenumerate(prob):
+    probs = state.probabilities()
+    for index, prob in np.ndenumerate(probs):
         p = round(float(prob), ndigits)
         if prob == 0.0:
             continue
@@ -414,8 +409,8 @@ class Density(QuantumState):
     def __init__(
         self,
         tensor: "ArrayLike",
-        qubits: Optional[Qubits] = None,
-        memory: Optional[Mapping] = None,
+        qubits: Qubits | None = None,
+        memory: Mapping | None = None,
     ) -> None:
         tensor = tensors.asqutensor(tensor)
 
@@ -446,14 +441,14 @@ class Density(QuantumState):
         """Return the density matrix as a square array"""
         return tensors.flatten(self.tensor, rank=2)
 
-    def asdensity(self, qubits: Optional[Qubits] = None) -> "Density":
+    def asdensity(self, qubits: Qubits | None = None) -> "Density":
         if qubits is None:
             return self
         tensor = tensors.partial_trace(self.tensor, self.qubit_indices(qubits))
         return Density(tensor, qubits, self.memory)
 
 
-def mixed_density(qubits: Union[int, Qubits]) -> Density:
+def mixed_density(qubits: int | Qubits) -> Density:
     """Returns the completely mixed density matrix"""
     N, qubits = _qubits_count_tuple(qubits)
     matrix = np.eye(2**N) / 2**N
@@ -461,8 +456,8 @@ def mixed_density(qubits: Union[int, Qubits]) -> Density:
 
 
 def random_density(
-    qubits: Union[int, Qubits],
-    rank: Optional[int] = None,
+    qubits: int | Qubits,
+    rank: int | None = None,
     ensemble: str = "Hilbert–Schmidt",
 ) -> Density:
     """
@@ -489,9 +484,7 @@ def random_density(
 
 
 # TODO: Check math
-def random_density_hs(
-    qubits: Union[int, Qubits], rank: Optional[int] = None
-) -> Density:
+def random_density_hs(qubits: int | Qubits, rank: int | None = None) -> Density:
     """
     Returns: A randomly sampled Density from the Hilbert–Schmidt
                 ensemble of quantum states.
@@ -516,9 +509,7 @@ def random_density_hs(
 
 
 # TODO: Check math
-def random_density_bures(
-    qubits: Union[int, Qubits], rank: Optional[int] = None
-) -> Density:
+def random_density_bures(qubits: int | Qubits, rank: int | None = None) -> Density:
     """
     Returns: A random Density drawn from the Bures measure.
 
@@ -550,7 +541,7 @@ def join_densities(rho0: Density, rho1: Density) -> Density:
     return Density(tensor, qubits, memory)
 
 
-def _qubits_count_tuple(qubits: Union[int, Qubits]) -> Tuple[int, Qubits]:
+def _qubits_count_tuple(qubits: int | Qubits) -> tuple[int, Qubits]:
     """Utility method for unraveling 'qubits: Union[int, Qubits]' arguments"""
     if isinstance(qubits, int):
         return qubits, tuple(range(qubits))

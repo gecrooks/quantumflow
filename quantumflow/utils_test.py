@@ -29,7 +29,7 @@ def test_invert_dict() -> None:
 
     foo = {1: 7, 2: 8, 3: 7}
     bar = utils.invert_map(foo, one_to_one=False)
-    assert bar == {7: set([1, 3]), 8: set([2])}
+    assert bar == {7: {1, 3}, 8: {2}}
 
 
 def test_frozen_dict() -> None:

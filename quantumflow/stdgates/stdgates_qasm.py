@@ -103,8 +103,6 @@ Reset
 # U1 is now Phase or in circuits 'p' (i.e. PhaseShift gate)
 # CU1 is now CPhase or in circuits 'cp'
 
-from typing import List
-
 import numpy as np
 
 from .. import tensors
@@ -118,7 +116,7 @@ from .stdgates_1q import PhaseShift, Rx, Ry, Rz
 from .stdgates_2q import XX, YY, ZZ, CNot
 from .stdgates_forest import CPhase
 
-__all__ = ("U3", "U2", "CU3", "CRZ", "RZZ", "CRx", "CRy", "CRz", "Rxx", "Ryy", "Rzz")
+__all__ = ("CRZ", "CU3", "RZZ", "U2", "U3", "CRx", "CRy", "CRz", "Rxx", "Ryy", "Rzz")
 
 
 U1 = PhaseShift
@@ -246,7 +244,7 @@ class CU3(StdGate):
         theta, phi, lam = self.params
         return CU3(-theta, -lam, -phi, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL, "U3({theta}, {phi}, {lam})"]
 
 

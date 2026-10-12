@@ -65,8 +65,6 @@ Channel Measures
 .. autofunction:: almost_unital
 """
 
-from typing import Optional
-
 import numpy as np
 import scipy.stats
 from scipy.linalg import sqrtm  # matrix square root
@@ -82,33 +80,33 @@ from .states import Density, State, random_state
 from .tensors import QubitTensor
 
 __all__ = (
-    "fubini_study_angle",
-    "fubini_study_fidelity",
-    "fubini_study_close",
-    "state_fidelity",
-    "state_angle",
-    "states_close",
-    "purity",
-    "fidelity",
-    "bures_distance",
+    "almost_hermitian",
+    "almost_identity",
+    "almost_unital",
+    "almost_unitary",
+    "average_gate_fidelity",
     "bures_angle",
-    "density_angle",
-    "densities_close",
-    "entropy",
-    "mutual_info",
-    "gate_angle",
+    "bures_distance",
     "channel_angle",
-    "gates_close",
-    "gates_phase_close",
-    "gates_commute",
     "channels_close",
     "circuits_close",
+    "densities_close",
+    "density_angle",
+    "entropy",
+    "fidelity",
+    "fubini_study_angle",
+    "fubini_study_close",
+    "fubini_study_fidelity",
+    "gate_angle",
+    "gates_close",
+    "gates_commute",
+    "gates_phase_close",
+    "mutual_info",
+    "purity",
+    "state_angle",
+    "state_fidelity",
+    "states_close",
     "trace_distance",
-    "average_gate_fidelity",
-    "almost_unitary",
-    "almost_identity",
-    "almost_hermitian",
-    "almost_unital",
 )
 
 
@@ -248,7 +246,7 @@ def densities_close(rho0: Density, rho1: Density, atol: float = ATOL) -> bool:
     return fubini_study_close(rho0.tensor, rho1.tensor, atol)
 
 
-def entropy(rho: Density, base: Optional[float] = None) -> float:
+def entropy(rho: Density, base: float | None = None) -> float:
     """
     Returns the von-Neumann entropy of a mixed quantum state.
 
@@ -270,8 +268,8 @@ def entropy(rho: Density, base: Optional[float] = None) -> float:
 def mutual_info(
     rho: Density,
     qubits0: Qubits,
-    qubits1: Optional[Qubits] = None,
-    base: Optional[float] = None,
+    qubits1: Qubits | None = None,
+    base: float | None = None,
 ) -> float:
     """Compute the bipartite von-Neumann mutual information of a mixed
     quantum state.
@@ -406,7 +404,7 @@ def channels_close(chan0: Channel, chan1: Channel, atol: float = ATOL) -> bool:
 
 
 # TESTME  multiqubits
-def average_gate_fidelity(kraus: Kraus, target: Optional[Gate] = None) -> float:
+def average_gate_fidelity(kraus: Kraus, target: Gate | None = None) -> float:
     """Return the average gate fidelity between a noisy gate (specified by a
     Kraus representation of a superoperator), and a purely unitary target gate.
 

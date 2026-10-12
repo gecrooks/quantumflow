@@ -256,9 +256,9 @@ def test_addition_circuit() -> None:
     # Two bit addition circuit
     circ = qf.addition_circuit([0, 1], [2, 3], [4, 5])
 
-    for c0 in range(0, 2):
-        for a0 in range(0, 4):
-            for a1 in range(0, 4):
+    for c0 in range(2):
+        for a0 in range(4):
+            for a1 in range(4):
                 expected = a0 + a1 + c0
                 b0 = int_to_bitlist(a0, 2)
                 b1 = int_to_bitlist(a1, 2)
@@ -278,9 +278,9 @@ def test_addition_circuit() -> None:
 
     # Three bit addition circuit
     circ = qf.addition_circuit([0, 1, 2], [3, 4, 5], [6, 7])
-    for c0 in range(0, 2):
-        for a0 in range(0, 8):
-            for a1 in range(0, 8):
+    for c0 in range(2):
+        for a0 in range(8):
+            for a1 in range(8):
                 expected = a0 + a1 + c0
                 b0 = int_to_bitlist(a0, 3)
                 b1 = int_to_bitlist(a1, 3)

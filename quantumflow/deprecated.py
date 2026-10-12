@@ -18,8 +18,8 @@ from .stdops import Project0, Project1
 from .utils import deprecated
 
 __all__ = (
-    "join_gates",
     "conditional_gate",
+    "join_gates",
 )
 
 

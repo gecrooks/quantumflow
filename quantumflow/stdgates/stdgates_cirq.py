@@ -7,8 +7,6 @@
 QuantumFlow: Gates peculiar to Cirq
 """
 
-from typing import List
-
 import numpy as np
 
 from .. import tensors, var
@@ -22,7 +20,7 @@ from .stdgates import StdGate
 from .stdgates_1q import I, X, XPow, ZPow
 from .stdgates_2q import CZ, Swap
 
-__all__ = ("PhasedX", "PhasedXPow", "FSim", "FSwap", "FSwapPow", "Sycamore")
+__all__ = ("FSim", "FSwap", "FSwapPow", "PhasedX", "PhasedXPow", "Sycamore")
 
 
 # Kudos: Phased X gate and powers of phased X gates adapted from Cirq
@@ -101,7 +99,7 @@ class PhasedXPow(StdGate):
             return XPow(t, *qbs).specialize()
         return self
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["PhX({p})^{t}"]
 
 
@@ -202,7 +200,7 @@ class FSwap(StdGate):
     def __pow__(self, t: Variable) -> "FSwapPow":
         return FSwapPow(t, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [SWAP_TARGET + "ᶠ"] * 2
 
 
@@ -249,7 +247,7 @@ class FSwapPow(StdGate):
         (t,) = self.params
         return FSwapPow(e * t, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [SWAP_TARGET + "ᶠ^{t}"] * 2
 
 

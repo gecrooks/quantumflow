@@ -8,7 +8,7 @@ import importlib.util
 import pytest
 
 import quantumflow as qf
-from quantumflow.transpile import _guess_format, transpile, TRANSPILE_FORMATS
+from quantumflow.transpile import TRANSPILE_FORMATS, _guess_format, transpile
 
 # Check which optional dependencies are available
 pyquil = pytest.importorskip("pyquil", reason="pyquil not installed")
@@ -20,7 +20,7 @@ qutip_qip = pytest.importorskip("qutip_qip", reason="qutip-qip not installed")
 # qsimcirq is optional - some tests will skip if not available
 HAS_QSIM = importlib.util.find_spec("qsimcirq") is not None
 
-from quantumflow import xbraket, xcirq, xforest, xqiskit, xqutip  # noqa: E402
+from quantumflow import xbraket, xcirq, xforest, xqiskit, xqutip
 
 
 def test_transpile_formats_constant() -> None:

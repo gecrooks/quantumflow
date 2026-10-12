@@ -12,7 +12,8 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Any, Dict, List, Optional, Sequence, TextIO
+from collections.abc import Sequence
+from typing import Any, TextIO
 
 import numpy as np
 import sympy
@@ -30,10 +31,10 @@ from .stdops import Project0, Project1, Reset
 
 __all__ = (
     "LATEX_GATESET",
+    "circuit_to_diagram",
+    "circuit_to_image",
     "circuit_to_latex",
     "latex_to_image",
-    "circuit_to_image",
-    "circuit_to_diagram",
     "print_gate",
 )
 
@@ -130,20 +131,20 @@ kwarg_to_symbol = {
 class NoWire(IdentityGate):
     """Dummy gate used to draw a gap in a circuit"""
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["  "]
 
 
 def circuit_to_latex(
     circ: Circuit,
-    qubits: Optional[Qubits] = None,
+    qubits: Qubits | None = None,
     document: bool = True,
     package: str = "quantikz",
-    options: Optional[str] = None,
+    options: str | None = None,
     scale: float = 0.75,
     qubit_labels: bool = True,
-    left_labels: Optional[Sequence[str]] = None,  # DOCME TESTME
-    right_labels: Optional[Sequence[str]] = None,  # DOCME TESTME
+    left_labels: Sequence[str] | None = None,  # DOCME TESTME
+    right_labels: Sequence[str] | None = None,  # DOCME TESTME
 ) -> str:
     """
     Create an image of a quantum circuit in LaTeX.
@@ -233,11 +234,11 @@ def circuit_to_latex(
     layer_code = []
 
     if qubit_labels:
-        code = [r"\lstick{%s}" % q for q in qubits]
+        code = [rf"\lstick{{{q}}}" for q in qubits]
         layer_code.append(code)
 
     if left_labels:
-        code = [r"\lstick{%s}" % L for L in left_labels]
+        code = [rf"\lstick{{{L}}}" for L in left_labels]
         layer_code.append(code)
 
     for layer in layers:
@@ -252,7 +253,7 @@ def circuit_to_latex(
             if name not in LATEX_GATESET:
                 raise NotImplementedError(str(gate))
 
-            pretty_params: Dict[str, str] = {}
+            pretty_params: dict[str, str] = {}
             # FIXME: Do I need gate isinstance (Also below)
             if isinstance(elem, Gate) and elem.params:
                 assert gate.cv_args is not None  # FIXME
@@ -276,13 +277,13 @@ def circuit_to_latex(
                 if pretty_params:
                     params_text = ",".join(pretty_params.values())
 
-                    text_labels = [name + "(%s)" % params_text] * len(idx)
+                    text_labels = [name + f"({params_text})"] * len(idx)
                 else:
                     text_labels = [name] * len(idx)
                 if len(idx) != 1 and not elem.cv_interchangeable:
                     # If not interchangeable, we have to label connections
                     for i in range(elem.qubit_nb):
-                        text_labels[i] = text_labels[i] + "_{%s}" % i
+                        text_labels[i] = text_labels[i] + f"_{{{i}}}"
 
             # Special 1-qubit gates
             if isinstance(gate, NoWire):
@@ -331,21 +332,18 @@ def circuit_to_latex(
                 # or bit symmetric gate
                 if package == "qcircuit":
                     if bot - top == 1:
-                        code[top] = r"\multigate{1}{%s}" % text_labels[0]
-                        code[bot] = r"\ghost{%s}" % text_labels[0]
+                        code[top] = rf"\multigate{{1}}{{{text_labels[0]}}}"
+                        code[bot] = rf"\ghost{{{text_labels[0]}}}"
                     else:
-                        code[top] = r"\sgate{%s}{%s}" % (text_labels[0], str(bot - top))
-                        code[bot] = r"\gate{%s}" % (text_labels[1])
+                        code[top] = rf"\sgate{{{text_labels[0]}}}{{{bot - top!s}}}"
+                        code[bot] = rf"\gate{{{text_labels[1]}}}"
                 else:  # quantikz
                     if bot - top == 1:
-                        code[top] = r"\gate[2]{%s}" % text_labels[0]
+                        code[top] = rf"\gate[2]{{{text_labels[0]}}}"
                         code[bot] = r""
                     else:
-                        code[top] = r"\gate{%s}\vqw{%s}" % (
-                            text_labels[0],
-                            str(bot - top),
-                        )
-                        code[bot] = r"\gate{%s}" % (text_labels[1])
+                        code[top] = rf"\gate{{{text_labels[0]}}}\vqw{{{bot - top!s}}}"
+                        code[bot] = rf"\gate{{{text_labels[1]}}}"
 
             # Special three-qubit gates
             elif isinstance(gate, CSwap):
@@ -397,7 +395,7 @@ def circuit_to_latex(
     layer_code.append(code)
 
     if right_labels:
-        code = [r"\rstick{%s}" % L for L in right_labels]
+        code = [rf"\rstick{{{L}}}" for L in right_labels]
         layer_code.append(code)
 
     latex_lines = [""] * N
@@ -418,7 +416,7 @@ def circuit_to_latex(
         if options is None:
             options = _QUANTIKZ_OPTIONS
         latex_code = _QUANTIKZ % (options, "\n".join(latex_lines))
-        latex_code = (r"\adjustbox{scale=%s}{" % scale) + latex_code + "}"
+        latex_code = (rf"\adjustbox{{scale={scale}}}{{") + latex_code + "}"
 
         if document:
             latex_code = _QUANTIKZ_HEADER + latex_code + QUANTIKZ_FOOTER_
@@ -504,14 +502,15 @@ def latex_to_image(latex: str) -> Image.Image:
         )
 
         subprocess.run(
-            ["pdftocairo", "-singlefile", "-png", "-q", tmppath + ".pdf", tmppath]
+            ["pdftocairo", "-singlefile", "-png", "-q", tmppath + ".pdf", tmppath],
+            check=True,
         )
         img = Image.open(tmppath + ".png")
 
     return img
 
 
-def circuit_to_image(circ: Circuit, qubits: Optional[Qubits] = None) -> Image.Image:
+def circuit_to_image(circ: Circuit, qubits: Qubits | None = None) -> Image.Image:
     """Create an image of a quantum circuit.
 
     A convenience function that calls circuit_to_latex() and latex_to_image().
@@ -534,7 +533,7 @@ def circuit_to_image(circ: Circuit, qubits: Optional[Qubits] = None) -> Image.Im
 
 def circuit_to_diagram(
     circ: Circuit,
-    qubits: Optional[Qubits] = None,
+    qubits: Qubits | None = None,
     use_unicode: bool = True,
     transpose: bool = False,
     qubit_labels: bool = True,
@@ -556,7 +555,7 @@ def circuit_to_diagram(
 
     BOX_CHARS = STD_BOX_CHARS
 
-    def qpad(lines: List[str]) -> List[str]:
+    def qpad(lines: list[str]) -> list[str]:
         max_length = max(len(k) for k in lines)
         tot_length = max_length + 3
 
@@ -565,7 +564,7 @@ def circuit_to_diagram(
             lines[k] = lines[k].ljust(tot_length, pad_char)
         return lines
 
-    def draw_line(code: List[str], i0: int, i1: int, left_pad: int = 0) -> None:
+    def draw_line(code: list[str], i0: int, i1: int, left_pad: int = 0) -> None:
         i0, i1 = sorted([i0, i1])
         for i in range(i0 + 1, i1, 2):
             code[i] = (" " * left_pad) + BOX_CHARS[BOT + TOP]
@@ -599,7 +598,7 @@ def circuit_to_diagram(
             idx = [qubit_idx[q] for q in elem.qubits]
 
             # Pretty print parameters
-            pretty_params: Dict[str, str] = {}
+            pretty_params: dict[str, str] = {}
             params = elem.params
             if params:
                 assert elem.cv_args is not None  # FIXME
@@ -665,7 +664,7 @@ def _display_layers(circ: Circuit, qubits: Qubits) -> Circuit:
     # control lines do not visually overlap.
     layers = []
     for gl in gate_layers:
-        lcirc: List[Operation] = []
+        lcirc: list[Operation] = []
         layers.append(lcirc)
         unused = [True] * N
         for gate in gl:
@@ -711,7 +710,7 @@ def _pretty(obj: Any, format: str = "text") -> str:
 
     if isinstance(obj, sympy.Expr):
         if format == "latex":
-            return sympy.latex(_round_sympy_expr((obj)))  # pragma: no cover  # FIXME
+            return sympy.latex(_round_sympy_expr(obj))  # pragma: no cover  # FIXME
         else:
             return str(obj)
 
@@ -768,7 +767,7 @@ def _unicode_to_ascii(text: str) -> str:
     return "".join(unicode_ascii.get(c, c) for c in text)
 
 
-def print_gate(gate: Gate, ndigits: int = 2, file: Optional[TextIO] = None) -> None:
+def print_gate(gate: Gate, ndigits: int = 2, file: TextIO | None = None) -> None:
     """Pretty print a gate tensor
 
     Args:

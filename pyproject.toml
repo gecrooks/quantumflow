@@ -121,13 +121,11 @@ indent-width = 4
 extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
-# Ruff 0.16+ enables ~400 rules by default (was E4/E7/E9/F). Keep the classic
-# set until the pyupgrade/RUF/C4 findings are addressed in a dedicated PR.
-select = ["E4", "E7", "E9", "F"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
+"*_test.py" = ["B015", "B018"]  # bare expressions that assert "does not raise"
 
 
 # pytest configuration

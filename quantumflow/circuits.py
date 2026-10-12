@@ -41,18 +41,10 @@ Visualizations
 
 import textwrap
 from collections import defaultdict
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from itertools import chain
 from typing import (
     Any,
-    Dict,
-    Iterable,
-    Iterator,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
     overload,
 )
 
@@ -68,17 +60,17 @@ from .var import Variable
 
 __all__ = [
     "Circuit",
-    "count_operations",
-    "map_gate",
-    "control_circuit",
-    "euler_circuit",
-    "zyz_circuit",
-    "phase_estimation_circuit",
     "addition_circuit",
+    "control_circuit",
+    "count_operations",
+    "euler_circuit",
     "ghz_circuit",
     "graph_circuit",
     "graph_circuit_params",
     "graph_state_circuit",
+    "map_gate",
+    "phase_estimation_circuit",
+    "zyz_circuit",
 ]
 
 
@@ -89,8 +81,8 @@ class Circuit(Sequence, Operation):
 
     def __init__(
         self,
-        *elements: Union[Iterable[Operation], Operation],
-        qubits: Optional[Qubits] = None,
+        *elements: Iterable[Operation] | Operation,
+        qubits: Qubits | None = None,
     ) -> None:
         elements = tuple(elements)
 
@@ -110,7 +102,7 @@ class Circuit(Sequence, Operation):
                 )
 
         super().__init__(qubits=qubits)
-        self._elements: Tuple[Operation, ...] = elements  # type: ignore
+        self._elements: tuple[Operation, ...] = elements  # type: ignore
 
     # Methods for Sequence
     @overload
@@ -119,7 +111,7 @@ class Circuit(Sequence, Operation):
     @overload
     def __getitem__(self, key: slice) -> "Circuit": ...  # pragma: no cover
 
-    def __getitem__(self, key: Union[int, slice]) -> Operation:
+    def __getitem__(self, key: int | slice) -> Operation:
         if isinstance(key, slice):
             return Circuit(self._elements[key])
         return self._elements[key]
@@ -134,7 +126,7 @@ class Circuit(Sequence, Operation):
     def __add__(self, other: "Circuit") -> "Circuit":
         return self.add(other)
 
-    def __iadd__(self, other: Iterable[Any]) -> "Circuit":
+    def __iadd__(self, other: Iterable[Any]) -> "Circuit":  # noqa: PYI034
         return self.add(other)
 
     def __iter__(self) -> Iterator[Operation]:
@@ -163,12 +155,12 @@ class Circuit(Sequence, Operation):
 
         return self.rewire(labels)
 
-    def rewire(self, labels: Dict[Qubit, Qubit]) -> "Circuit":
+    def rewire(self, labels: dict[Qubit, Qubit]) -> "Circuit":
         return Circuit(
             [elem.rewire(labels) for elem in self], qubits=list(labels.values())
         )
 
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         """
         Apply the action of this circuit upon a state.
 
@@ -182,7 +174,7 @@ class Circuit(Sequence, Operation):
             ket = elem.run(ket)
         return ket
 
-    def evolve(self, rho: Optional[Density] = None) -> Density:
+    def evolve(self, rho: Density | None = None) -> Density:
         if rho is None:
             qubits = self.qubits
             rho = zero_state(qubits=qubits).asdensity()
@@ -217,7 +209,7 @@ class Circuit(Sequence, Operation):
     def __str__(self) -> str:
         circ_str = "\n".join([str(elem) for elem in self])
         circ_str = textwrap.indent(circ_str, " " * CIRCUIT_INDENT)
-        return "\n".join([self.name, circ_str])
+        return f"{self.name}\n{circ_str}"
 
     # TESTME
     def resolve(self, subs: Mapping[str, float]) -> "Circuit":
@@ -225,7 +217,7 @@ class Circuit(Sequence, Operation):
         return Circuit(*[op.resolve(subs) for op in self], qubits=self.qubits)
 
     @property
-    def params(self) -> Tuple[Variable, ...]:
+    def params(self) -> tuple[Variable, ...]:
         return tuple(item for elem in self for item in elem.params)
 
     def param(self, name: str) -> Variable:
@@ -242,16 +234,16 @@ class Circuit(Sequence, Operation):
 
         yield from circuit_translate(self)
 
-    def _repr_png_(self) -> Optional[bytes]:  # pragma: no cover
+    def _repr_png_(self) -> bytes | None:  # pragma: no cover
         """Jupyter/IPython rich display"""
         from .visualization import circuit_to_image
 
         try:
             return circuit_to_image(self)._repr_png_()
-        except (ValueError, IOError):
+        except (OSError, ValueError):
             return None
 
-    def _repr_html_(self) -> Optional[str]:  # pragma: no cover
+    def _repr_html_(self) -> str | None:  # pragma: no cover
         """Jupyter/IPython rich display"""
         from .visualization import circuit_to_diagram
 
@@ -262,11 +254,11 @@ class Circuit(Sequence, Operation):
 # End class Circuit
 
 
-def count_operations(elements: Iterable[Operation]) -> Dict[Type[Operation], int]:
+def count_operations(elements: Iterable[Operation]) -> dict[type[Operation], int]:
     """Return a count of different operation types given a collection of
     operations, such as a Circuit or DAGCircuit
     """
-    op_count: Dict[Type[Operation], int] = defaultdict(int)
+    op_count: dict[type[Operation], int] = defaultdict(int)
     for elem in elements:
         op_count[type(elem)] += 1
     return dict(op_count)
@@ -461,7 +453,7 @@ def ghz_circuit(qubits: Qubits) -> Circuit:
     circ = Circuit()
 
     circ += H(qubits[0])
-    for q0 in range(0, len(qubits) - 1):
+    for q0 in range(len(qubits) - 1):
         circ += CNot(qubits[q0], qubits[q0 + 1])
 
     return circ

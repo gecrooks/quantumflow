@@ -117,7 +117,7 @@ def test_kronecker_decomp_errors() -> None:
 
 
 def test_canonical_decomposition() -> None:
-    for tt1 in range(0, 6):
+    for tt1 in range(6):
         for tt2 in range(tt1):
             for tt3 in range(tt2):
                 t1, t2, t3 = tt1 / 12, tt2 / 12, tt3 / 12

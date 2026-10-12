@@ -11,7 +11,6 @@ import platform
 import re
 import sys
 import typing
-from typing import Optional
 
 from .future import importlib_metadata
 
@@ -22,7 +21,7 @@ package_name = "quantumflow"
 
 try:
     __version__ = importlib_metadata.version(package_name)  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:  # noqa: BLE001  # pragma: no cover
     # package is not installed
     __version__ = "?.?.?"
 
@@ -57,7 +56,7 @@ CONJ = "⁺"  # Unicode "superscript plus sign"
 SQRT = "√"
 
 
-def about(file: Optional[typing.TextIO] = None) -> None:
+def about(file: typing.TextIO | None = None) -> None:
     """Print information about the configuration
 
      ``> python -m quantumflow.about``
@@ -75,7 +74,7 @@ def about(file: Optional[typing.TextIO] = None) -> None:
         name = re.split("[; =><]", req)[0]
         try:
             versions[name] = importlib_metadata.version(name)  # type: ignore
-        except Exception:  # pragma: no cover
+        except Exception:  # noqa: BLE001, S110  # pragma: no cover
             pass
 
     print(file=file)

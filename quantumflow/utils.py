@@ -8,21 +8,12 @@ Useful routines not necessarily intended to be part of the public API.
 """
 
 import warnings
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from fractions import Fraction
 from functools import wraps
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
     TypeVar,
-    Union,
 )
 
 import networkx as nx
@@ -31,24 +22,24 @@ import numpy as np
 from .future import importlib_metadata  # noqa: F401  # Backwards compatibility
 
 __all__ = (
-    "deprecated",
-    # Collections
-    "multi_slice",
-    "invert_map",
     "FrozenDict",
     # Math
     "almost_integer",
     "bitlist_to_int",
-    "int_to_bitlist",
-    "rationalize",
     "complex_ginibre_ensemble",
-    "unitary_ensemble",
+    "deprecated",
     # Graphs
     "from_graph6",
-    "to_graph6",
-    "spanning_tree_count",
+    "int_to_bitlist",
+    "invert_map",
+    # Collections
+    "multi_slice",
     "octagonal_tiling_graph",
+    "rationalize",
+    "spanning_tree_count",
+    "to_graph6",
     "truncated_grid_2d_graph",
+    "unitary_ensemble",
 )
 
 
@@ -75,16 +66,14 @@ def deprecated(func: Callable) -> Callable:
 # -- Collections --
 
 
-def multi_slice(
-    axes: Sequence, items: Sequence, axes_nb: Optional[int] = None
-) -> Tuple:
+def multi_slice(axes: Sequence, items: Sequence, axes_nb: int | None = None) -> tuple:
     """Construct a multidimensional slice to access array data.
     e.g. mydata[multi_slice([3,5], [1,2]))] is equivalent to
     mydata[:,:,:,1,:,2,...]
     """
 
     N = max(axes) + 1 if axes_nb is None else axes_nb
-    slices: List[Any] = [slice(None)] * N
+    slices: list[Any] = [slice(None)] * N
     for axis, item in zip(axes, items):
         slices[axis] = item
     if axes_nb is None:
@@ -122,8 +111,8 @@ class FrozenDict(Mapping[KeyType, ValueType]):
     # immutable dictionary.
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._dict: Dict[KeyType, ValueType] = dict(*args, **kwargs)
-        self._hash: Optional[int] = None
+        self._dict: dict[KeyType, ValueType] = dict(*args, **kwargs)
+        self._hash: int | None = None
 
     def __getitem__(self, key: KeyType) -> ValueType:
         return self._dict[key]
@@ -147,7 +136,7 @@ class FrozenDict(Mapping[KeyType, ValueType]):
         return len(self._dict)
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self._dict)
+        return f"{self.__class__.__name__}({self._dict!r})"
 
     def __hash__(self) -> int:
         if not self._hash:
@@ -158,7 +147,7 @@ class FrozenDict(Mapping[KeyType, ValueType]):
 # -- Math --
 
 
-def almost_integer(number: Union[float, complex], atol: float = 1e-08) -> bool:
+def almost_integer(number: complex, atol: float = 1e-08) -> bool:
     if isinstance(number, complex):
         if not np.isclose(number.imag, 0, atol=atol):
             return False
@@ -182,7 +171,7 @@ def bitlist_to_int(bitlist: Sequence[int]) -> int:
     return out
 
 
-def int_to_bitlist(x: int, pad: Optional[int] = None) -> List[int]:
+def int_to_bitlist(x: int, pad: int | None = None) -> list[int]:
     """Converts an integer to a binary sequence of bits.
 
     Pad prepends with sufficient zeros to ensures that the returned list
@@ -197,40 +186,38 @@ def int_to_bitlist(x: int, pad: Optional[int] = None) -> List[int]:
     else:
         form = "{:0" + str(pad) + "b}"
 
-    return list(int(b) for b in form.format(x))
+    return [int(b) for b in form.format(x)]
 
 
-_DENOMINATORS = set(
-    [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        12,
-        16,
-        32,
-        64,
-        100,
-        128,
-        256,
-        512,
-        1000,
-        1024,
-        2048,
-        4096,
-        8192,
-        10000,
-    ]
-)
+_DENOMINATORS = {
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    16,
+    32,
+    64,
+    100,
+    128,
+    256,
+    512,
+    1000,
+    1024,
+    2048,
+    4096,
+    8192,
+    10000,
+}
 
 
-def rationalize(flt: float, denominators: Optional[Set[int]] = None) -> Fraction:
+def rationalize(flt: float, denominators: set[int] | None = None) -> Fraction:
     """Convert a floating point number to a Fraction with a small
     denominator.
 
@@ -251,7 +238,7 @@ def rationalize(flt: float, denominators: Optional[Set[int]] = None) -> Fraction
     return frac
 
 
-def complex_ginibre_ensemble(size: Tuple[int, ...]) -> np.ndarray:
+def complex_ginibre_ensemble(size: tuple[int, ...]) -> np.ndarray:
     """Returns a random complex matrix with values drawn from a standard normal
     distribution.
 
@@ -297,7 +284,7 @@ def spanning_tree_count(graph: nx.Graph) -> int:
     laplacian = nx.laplacian_matrix(graph).toarray()
     comatrix = laplacian[:-1, :-1]
     det = np.linalg.det(comatrix)
-    count = int(round(det))
+    count = round(det)
     return count
 
 
@@ -338,7 +325,7 @@ def octagonal_tiling_graph(M: int, N: int) -> nx.Graph:
     return grp
 
 
-def truncated_grid_2d_graph(m: int, n: int, t: Optional[int] = None) -> nx.Graph:
+def truncated_grid_2d_graph(m: int, n: int, t: int | None = None) -> nx.Graph:
     """Generate a rectangular grid graph (of width `m` and height `n`),
     with corners removed. It the truncation `t` is not given, then it
     is set to half the shortest side (rounded down)

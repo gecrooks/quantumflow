@@ -7,8 +7,6 @@
 QuantumFlow: Standard two qubit gates
 """
 
-from typing import List
-
 import numpy as np
 
 from .. import tensors, utils, var
@@ -28,23 +26,27 @@ _H = H
 # 2 qubit gates, alphabetic order
 
 __all__ = (
-    "A",
-    "B",
-    "Barenco",
-    "Can",
     "CH",
-    "CNot",
-    "CNotPow",
-    "CrossResonance",
     "CS",
     "CT",
     "CV",
     "CV_H",
     "CY",
-    "CYPow",
     "CZ",
-    "CZPow",
     "ECP",
+    "XX",
+    "XY",
+    "YY",
+    "ZZ",
+    "A",
+    "B",
+    "Barenco",
+    "CNot",
+    "CNotPow",
+    "CYPow",
+    "CZPow",
+    "Can",
+    "CrossResonance",
     "Exch",
     "Givens",
     "ISwap",
@@ -54,10 +56,6 @@ __all__ = (
     "SqrtSwap_H",
     "Swap",
     "W",
-    "XX",
-    "XY",
-    "YY",
-    "ZZ",
 )
 
 
@@ -180,7 +178,7 @@ class Barenco(StdGate):
         phi = phi + PI
         return Barenco(phi, alpha, theta, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["───" + CTRL + "───", "Barenco({phi}, {alpha}, {theta})"]
 
 
@@ -324,7 +322,7 @@ class CNot(StdCtrlGate):
         tensor[s11] = ket.tensor[s10]
         return State(tensor, ket.qubits, ket.memory)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL, TARGET]
 
 
@@ -410,7 +408,7 @@ class CrossResonance(StdGate):
         s, b, c = self.params
         return CrossResonance(t * s, b, c, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["CR({s}, {b}, {c})_0", "CR({s}, {b}, {c})_1"]
 
 
@@ -590,7 +588,7 @@ class CZ(StdCtrlGate):
         tensor[s11] *= -1
         return State(tensor, ket.qubits, ket.memory)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [CTRL, CTRL]
 
 
@@ -982,7 +980,7 @@ class Swap(StdGate):
         tensor = np.transpose(ket.tensor, perm)
         return State(tensor, ket.qubits, ket.memory)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return [SWAP_TARGET] * 2
 
 
@@ -1092,7 +1090,7 @@ class XX(StdGate):
             return I(qbs[0])
         return self
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["XX^{t}"] * 2
 
 
@@ -1127,7 +1125,7 @@ class XY(StdGate):
         (t,) = self.params
         return XY(e * t, *self.qubits)
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["XY^{t}"] * 2
 
 
@@ -1179,7 +1177,7 @@ class YY(StdGate):
             return I(qbs[0])
         return self
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["YY^{t}"] * 2
 
 
@@ -1239,7 +1237,7 @@ class ZZ(StdGate):
             return I(qbs[0])
         return self
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["ZZ^{t}"] * 2
 
 

@@ -19,13 +19,13 @@ https://algassert.com/quirk
 import json
 import urllib
 import webbrowser
-from typing import Dict, List, cast
+from typing import cast
 
 from .circuits import Circuit
 from .gatesets import QUIRK_GATES
 from .translate import circuit_translate
 
-__all__ = "circuit_to_quirk", "quirk_url", "open_quirk_webserver", "QUIRK_GATES"
+__all__ = "QUIRK_GATES", "circuit_to_quirk", "open_quirk_webserver", "quirk_url"
 
 
 # TODOs
@@ -48,7 +48,7 @@ __all__ = "circuit_to_quirk", "quirk_url", "open_quirk_webserver", "QUIRK_GATES"
 # Add QUIRK_OPS
 # TODO: Docs
 
-quirk_labels: Dict[str, List] = {
+quirk_labels: dict[str, list] = {
     "I": [1],
     "H": ["H"],
     "X": ["X"],
@@ -91,14 +91,14 @@ def circuit_to_quirk(circ: Circuit, translate: bool = False) -> str:
 
     # Relabel qubits to consecutive integers
     N = circ.qubit_nb
-    circ = circ.on(*range(0, N))
+    circ = circ.on(*range(N))
 
     columns = []
-    col: List = [1] * N
+    col: list = [1] * N
     columns.append(col)
 
     for op in circ:
-        qbs = cast(List[int], op.qubits)
+        qbs = cast(list[int], op.qubits)
 
         if op.name in quirk_labels:
             labels = quirk_labels[op.name]

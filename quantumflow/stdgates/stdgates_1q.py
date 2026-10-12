@@ -7,8 +7,6 @@
 Standard one qubit gates
 """
 
-from typing import Dict, List, Type
-
 import numpy as np
 
 from .. import tensors, utils, var
@@ -21,34 +19,34 @@ from ..var import PI, Variable
 from .stdgates import StdGate
 
 __all__ = (
+    "S_H",
+    "T_H",
+    "V_H",
+    "H",
+    "HPow",
     "I",
     "Ph",
-    "X",
-    "Y",
-    "Z",
-    "H",
-    "S",
-    "T",
     "PhaseShift",
+    "Rn",
     "Rx",
     "Ry",
     "Rz",
-    "Rn",
-    "XPow",
-    "YPow",
-    "ZPow",
-    "HPow",
-    "S_H",
-    "T_H",
-    "V",
-    "V_H",
+    "S",
     "SqrtY",
     "SqrtY_H",
+    "T",
+    "V",
+    "X",
+    "XPow",
+    "Y",
+    "YPow",
+    "Z",
+    "ZPow",
 )
 
 
 def _specialize_gate(
-    gate: StdGate, periods: List[float], opts: Dict[float, Type[StdGate]]
+    gate: StdGate, periods: list[float], opts: dict[float, type[StdGate]]
 ) -> StdGate:
     """Return a specialized instance of a given general gate. Used
     by the specialize code of various gates.
@@ -73,7 +71,7 @@ def _specialize_gate(
 # Standard 1 qubit gates
 
 
-class I(StdGate):  # noqa: E742
+class I(StdGate):
     r"""
     The 1-qubit identity gate.
 
@@ -463,7 +461,7 @@ class PhaseShift(StdGate):
         gate1 = gate0.specialize()
         return gate1
 
-    def _diagram_labels_(self) -> List[str]:
+    def _diagram_labels_(self) -> list[str]:
         return ["P({theta})"]
 
 

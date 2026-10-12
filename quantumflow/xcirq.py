@@ -24,7 +24,7 @@ Interface between Google's Cirq and QuantumFlow
 # Conventions
 # cqc: Abbreviation for Cirq circuit
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -64,12 +64,12 @@ if TYPE_CHECKING:
     import cirq  # pragma: no cover
 
 __all__ = (
+    "CIRQ_GATES",
+    "CirqSimulator",
+    "circuit_to_cirq",
+    "cirq_to_circuit",
     "from_cirq_qubit",
     "to_cirq_qubit",
-    "cirq_to_circuit",
-    "circuit_to_cirq",
-    "CirqSimulator",
-    "CIRQ_GATES",
 )
 
 
@@ -90,7 +90,7 @@ class CirqSimulator(Simulator):
         super().__init__(circ)
         self._cqc = circuit_to_cirq(self.circuit, translate=True)
 
-    def run(self, ket: Optional[State] = None) -> State:
+    def run(self, ket: State | None = None) -> State:
         try:
             import cirq
         except ModuleNotFoundError as err:  # pragma: no cover
