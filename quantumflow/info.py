@@ -163,7 +163,7 @@ def state_fidelity(ket0: State, ket1: State) -> float:
     """Return the quantum fidelity between pure states."""
     ket1 = ket1.permute(ket0.qubits)
     tensor = np.absolute(tensors.inner(ket0.tensor, ket1.tensor)) ** 2
-    return np.real(tensor)
+    return float(np.real(tensor))
 
 
 def state_angle(ket0: State, ket1: State) -> float:

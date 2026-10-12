@@ -173,7 +173,7 @@ def state_fidelity_gradients(
         f0 = gen.run(forward)
         g = -r * 2 * np.imag(tensors.inner(f0.tensor, back.tensor) * np.conj(ol))
 
-        grads.append(g)
+        grads.append(float(g))
 
     return grads
 

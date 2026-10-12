@@ -737,7 +737,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
         thetas = np.real(np.log(eigvals) * 1j)
 
         yield from qs_deke(Unitary(W, controls), euler)
-        yield MultiplexedRzGate(thetas, controls=controls, target=target)
+        yield MultiplexedRzGate(thetas.tolist(), controls=controls, target=target)
         yield from qs_deke(Unitary(V, controls), euler)
 
         yield MultiplexedRyGate(halfthetas * 2, controls=controls, target=target)
@@ -749,7 +749,7 @@ def quantum_shannon_decomposition(gate: Gate, euler: str = "ZYZ") -> Circuit:
         thetas = np.real(np.log(eigvals) * 1j)
 
         yield from qs_deke(Unitary(W, controls), euler)
-        yield MultiplexedRzGate(thetas, controls=controls, target=target)
+        yield MultiplexedRzGate(thetas.tolist(), controls=controls, target=target)
         yield from qs_deke(Unitary(V, controls), euler)
 
     circ = Circuit(qs_deke(gate, euler))
