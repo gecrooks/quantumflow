@@ -618,6 +618,6 @@ def _check_circuit_identities(circuit_identities):
 
 if __name__ == "__main__":
     print()
-    print("# Validate and report various circuit identities " "(up to global phase)")
+    print("# Validate and report various circuit identities (up to global phase)")
     print()
     _check_circuit_identities(identities())

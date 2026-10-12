@@ -20,7 +20,7 @@ if shutil.which("pdflatex") is None:
     sys.exit()
 
 if shutil.which("pdftocairo") is None:
-    print("Failed: External dependency `pdftocairo` not found. " "Install `poppler`.")
+    print("Failed: External dependency `pdftocairo` not found. Install `poppler`.")
     sys.exit()
 
 # Display Bell state preparation

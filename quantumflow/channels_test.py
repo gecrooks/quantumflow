@@ -108,7 +108,6 @@ def test_identity() -> None:
     assert chan.name == "Channel"
 
 
-
 def test_channle_choi() -> None:
     chan0 = qf.Damping(0.1, 0).aschannel()
     choi = chan0.choi()

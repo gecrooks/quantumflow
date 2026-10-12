@@ -117,7 +117,7 @@ def pyquil_to_circuit(program: "pqProgram") -> Circuit:
         if isinstance(inst, pqPragma):  # Ignore
             continue  # pragma: no cover
         elif isinstance(inst, pqMeasurement):  # pragma: no cover
-            circ += Measure(inst.qubit.index) # type: ignore
+            circ += Measure(inst.qubit.index)  # type: ignore
         elif isinstance(inst, pqGate):
             name = QUIL_TO_QF[inst.name]
             defgate = STDGATES[name]

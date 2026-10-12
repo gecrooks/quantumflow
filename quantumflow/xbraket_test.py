@@ -73,8 +73,16 @@ def test_braket_xy_preserves_operator_and_parameters(angle, targets, prefix) -> 
 def test_braket_xy_asymmetric_surrounding_operations() -> None:
     from braket.circuits import Circuit as bkCircuit
 
-    bkcirc = (bkCircuit().h(0).ry(1, 0.37).t(0).cnot(1, 0)
-              .xy(1, 0, -1.1).rz(0, 0.83).xy(0, 1, 0.29))
+    bkcirc = (
+        bkCircuit()
+        .h(0)
+        .ry(1, 0.37)
+        .t(0)
+        .cnot(1, 0)
+        .xy(1, 0, -1.1)
+        .rz(0, 0.83)
+        .xy(0, 1, 0.29)
+    )
     circ = braket_to_circuit(bkcirc)
     np.testing.assert_allclose(
         circ.asgate().asoperator(), bkcirc.to_unitary(), atol=1e-12, rtol=1e-12
